@@ -51,6 +51,8 @@ type Game struct {
 	Seen    []bool
 	Safe    []bool
 	Message string
+	// ShowMap says whether the mini-map is shown.
+	ShowMap bool
 
 	// rng is the random source of everything but the layout of the
 	// floors (combat, for now), so that what the player does never
@@ -299,6 +301,9 @@ func (g *Game) Do(action string, args []string) error {
 	}
 	switch action {
 	case "redraw":
+	case "map":
+		// Showing the mini-map costs no turn.
+		g.ShowMap = !g.ShowMap
 	case "move":
 		name, d, err := dir()
 		if err != nil {

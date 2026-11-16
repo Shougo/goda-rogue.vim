@@ -13,6 +13,7 @@ Actions			|goda-rogue-actions|
 Variables		|goda-rogue-variables|
 Highlights		|goda-rogue-highlights|
 Screen			|goda-rogue-screen|
+Mini-map		|goda-rogue-mini-map|
 
 ==============================================================================
 INTRODUCTION                                          *goda-rogue-introduction*
@@ -22,8 +23,8 @@ like rogue: the map is drawn with full-width characters, enemies are kanji,
 and their rank is their color.  The game is Go, in a binary built from this
 plugin, and Vim talks to it through goda.vim.
 
-It is a prototype: it shows the dungeon, the player moves around and
-attacks.  The enemies do not act yet.
+It is a prototype: it shows the dungeon and a mini-map, the player moves
+around and attacks.  The enemies do not act yet.
 
 ==============================================================================
 INSTALL                                                    *goda-rogue-install*
@@ -56,6 +57,7 @@ There are no default mappings: map the actions in the game buffer. >vim
 	  nnoremap <buffer> <Space> <Cmd>call goda_rogue#do('attack')<CR>
 	  nnoremap <buffer> . <Cmd>call goda_rogue#do('wait')<CR>
 	  nnoremap <buffer> > <Cmd>call goda_rogue#do('stairs')<CR>
+	  nnoremap <buffer> m <Cmd>call goda_rogue#do('map')<CR>
 	endfunction
 
 	call goda_rogue#start()
@@ -115,6 +117,10 @@ stairs							*goda-rogue-stairs*
 		Go down the stairs the player stands on.  An ally next to
 		the player comes along.
 
+map							*goda-rogue-map*
+		Show or hide the mini-map (|goda-rogue-mini-map|).  It costs
+		no turn.
+
 redraw							*goda-rogue-redraw*
 		Show the screen again.  Done for every window that shows the
 		game when it is resized.
@@ -173,6 +179,21 @@ The background of the tile the player faces (and attacks) is
 The window shows the part of the floor around the player that fits.  Under
 the map are the status line (the floor, the turn, the direction the player
 faces and the seed) and the last message.
+
+==============================================================================
+MINI-MAP                                                  *goda-rogue-mini-map*
+
+The part of the floor the player has seen, reduced to one half-width
+character a tile, in a popup window (Vim) or a floating window (Neovim).  It
+goes to the corner of the game window away from the player, and is hidden
+while the game buffer is not shown.
+
+	@	the player
+	.	the floor of a room or a corridor (walls are left out)
+	>	the stairs
+	*	an item
+	o	a monster the player sees (the color of its rank) or an
+		ally (underlined)
 
 ==============================================================================
 vim:tw=78:ts=8:noet:ft=help:norl:

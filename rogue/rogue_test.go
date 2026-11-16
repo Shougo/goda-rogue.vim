@@ -367,3 +367,64 @@ func TestFacingHighlight(t *testing.T) {
 		}
 	}
 }
+
+func TestMinimap(t *testing.T) {
+	g := NewGame("minimap")
+	if s := g.Render(Size{80, 24}); s.Minimap != nil {
+		t.Fatal("the mini-map is shown without asking")
+	}
+	if err := g.Do("map", nil); err != nil {
+		t.Fatal(err)
+	}
+	if g.Turn != 0 {
+		t.Errorf("the map cost a turn")
+	}
+	m := g.Render(Size{80, 24}).Minimap
+	if m == nil {
+		t.Fatal("no mini-map")
+	}
+	// Only what has been seen: the first room, and the tiles around the
+	// player.
+	x0, y0, x1, y1 := g.seenBounds()
+	r := g.Level.Rooms[g.Level.RoomAt(g.Player)]
+	// (Doorways are in its walls.)
+	if !r.Around(Point{x0, y0}) || !r.Around(Point{x1, y1}) || x0 > r.X || x1 < r.X+r.W-1 {
+		t.Errorf("bounds %d,%d-%d,%d for the room %+v", x0, y0, x1, y1, r)
+	}
+	w, h := x1-x0+1, y1-y0+1
+	if len(m.Lines) != h {
+		t.Fatalf("%d lines, want %d", len(m.Lines), h)
+	}
+	for i, line := range m.Lines {
+		if len(line) != w || utf8.RuneCountInString(line) != w {
+			t.Fatalf("line %d: %q", i+1, line)
+		}
+	}
+	px, py := g.Player.X-x0, g.Player.Y-y0
+	if c := m.Lines[py][px]; c != miniPlayer {
+		t.Errorf("%q at the player", c)
+	}
+	for group, spans := range m.Highlights {
+		for _, sp := range spans {
+			if sp.Col < 1 || sp.End > w+1 || sp.End <= sp.Col || sp.Line > h {
+				t.Errorf("%s span %v", group, sp)
+			}
+		}
+	}
+	if got := m.Highlights[hlPlayer]; len(got) != 1 || got[0] != (Span{py + 1, px + 1, px + 2}) {
+		t.Errorf("player span %v", got)
+	}
+	// The whole floor, when all of it has been seen.
+	for i := range g.Seen {
+		g.Seen[i] = true
+	}
+	if m := g.minimap(); len(m.Lines) > MapHeight || len(m.Lines[0]) > MapWidth || len(m.Lines) < MapHeight/2 {
+		t.Errorf("%d lines of %d", len(m.Lines), len(m.Lines[0]))
+	}
+	if err := g.Do("map", nil); err != nil {
+		t.Fatal(err)
+	}
+	if g.Render(Size{80, 24}).Minimap != nil {
+		t.Error("the mini-map is still shown")
+	}
+}

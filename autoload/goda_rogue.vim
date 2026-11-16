@@ -16,6 +16,11 @@ let s:ns = has('nvim') ? nvim_create_namespace('goda-rogue') : 0
 " Highlights over the others (the background of the tile the player faces).
 let s:over = #{GodaRogueFacing: 1}
 
+" The window of the mini-map (a popup in Vim, a floating window in Neovim),
+" and its buffer in Neovim.
+let s:map = -1
+let s:map_buf = -1
+
 " ---------------------------------------------------------------------------
 " Setup
 
@@ -168,12 +173,17 @@ function! goda_rogue#start(options = {}) abort
     return
   endtry
   call s:draw(screen)
+
+  " The mini-map goes with the game buffer.
+  autocmd! goda-rogue * <buffer>
+  autocmd goda-rogue BufLeave <buffer> call s:close_map()
+  autocmd goda-rogue BufEnter <buffer> call goda_rogue#do('redraw')
 endfunction
 
 " Run the action {action} of the game, with its arguments: >
 "	call goda_rogue#do('move', 'left')
 " Actions: move, dash and turn (with a direction: left, right, up, down,
-" upleft, upright, downleft, downright), attack, wait, stairs, redraw.
+" upleft, upright, downleft, downright), attack, wait, stairs, map, redraw.
 function! goda_rogue#do(action, ...) abort
   if &filetype !=# 'goda-rogue'
     return
@@ -206,28 +216,97 @@ function! s:draw(screen) abort
   endif
   setlocal nomodifiable
 
+  call s:highlight_buffer(bufnr('%'), a:screen.highlights)
+  call cursor(a:screen.cursor[0], a:screen.cursor[1])
+
+  if has_key(a:screen, 'minimap')
+    call s:draw_map(a:screen.minimap)
+  else
+    call s:close_map()
+  endif
+endfunction
+
+" Set {highlights} ({group: spans}) of the Go side in the buffer {bufnr}.
+function! s:highlight_buffer(bufnr, highlights) abort
   if has('nvim')
-    call nvim_buf_clear_namespace(0, s:ns, 0, -1)
-    for [group, spans] in items(a:screen.highlights)
+    call nvim_buf_clear_namespace(a:bufnr, s:ns, 0, -1)
+    for [group, spans] in items(a:highlights)
       for s in spans
-        call nvim_buf_set_extmark(0, s:ns, s.line - 1, s.col - 1,
+        call nvim_buf_set_extmark(a:bufnr, s:ns, s.line - 1, s.col - 1,
               \ #{end_col: s.end - 1, hl_group: group,
               \   priority: has_key(s:over, group) ? 4200 : 4096})
       endfor
     endfor
-  else
-    call prop_clear(1, line('$'))
-    for [group, spans] in items(a:screen.highlights)
-      if empty(prop_type_get(group))
-        call prop_type_add(group, #{highlight: group, combine: v:true,
-              \ priority: has_key(s:over, group) ? 10 : 0})
-      endif
-      call prop_add_list(#{type: group},
-            \ map(copy(spans), {_, s -> [s.line, s.col, s.line, s.end]}))
-    endfor
+    return
   endif
+  call prop_clear(1, getbufinfo(a:bufnr)[0].linecount, #{bufnr: a:bufnr})
+  for [group, spans] in items(a:highlights)
+    if empty(prop_type_get(group))
+      call prop_type_add(group, #{highlight: group, combine: v:true,
+            \ priority: has_key(s:over, group) ? 10 : 0})
+    endif
+    call prop_add_list(#{type: group, bufnr: a:bufnr},
+          \ map(copy(spans), {_, s -> [s.line, s.col, s.line, s.end]}))
+  endfor
+endfunction
 
-  call cursor(a:screen.cursor[0], a:screen.cursor[1])
+" Show {minimap} in the corner of the current window (the game's) away from
+" the player (the cursor), to cover as little around it as possible.
+function! s:draw_map(minimap) abort
+  let lines = a:minimap.lines
+  let info = getwininfo(win_getid())[0]
+  let right = wincol() <= info.width / 2
+  let bottom = winline() <= info.height / 2
+  if has('nvim')
+    if s:map_buf < 0 || !nvim_buf_is_valid(s:map_buf)
+      let s:map_buf = nvim_create_buf(v:false, v:true)
+    endif
+    call nvim_buf_set_lines(s:map_buf, 0, -1, v:true, lines)
+    " (Placed again every time: the window may have been resized.)
+    let config = #{
+          \ relative: 'win', win: win_getid(),
+          \ anchor: (bottom ? 'S' : 'N') . (right ? 'E' : 'W'),
+          \ row: bottom ? info.height : 0, col: right ? info.width : 0,
+          \ width: strwidth(lines[0]), height: len(lines),
+          \ border: 'single', title: ' map ',
+          \ }
+    if s:map < 0 || !nvim_win_is_valid(s:map)
+      let s:map = nvim_open_win(s:map_buf, v:false, extend(config,
+            \ #{style: 'minimal', focusable: v:false, zindex: 50}))
+    else
+      call nvim_win_set_config(s:map, config)
+    endif
+    call s:highlight_buffer(s:map_buf, a:minimap.highlights)
+    return
+  endif
+  let pos = #{
+        \ line: bottom ? info.winrow + info.height - 1 : info.winrow,
+        \ col: right ? info.wincol + info.width - 1 : info.wincol,
+        \ pos: (bottom ? 'bot' : 'top') . (right ? 'right' : 'left'),
+        \ }
+  if s:map < 0 || empty(popup_getpos(s:map))
+    let s:map = popup_create(lines, extend(#{
+          \ border: [], title: ' map ', highlight: 'Normal', zindex: 50,
+          \ }, pos))
+  else
+    call popup_settext(s:map, lines)
+    call popup_move(s:map, pos)
+  endif
+  call s:highlight_buffer(winbufnr(s:map), a:minimap.highlights)
+endfunction
+
+function! s:close_map() abort
+  if s:map < 0
+    return
+  endif
+  if has('nvim')
+    if nvim_win_is_valid(s:map)
+      call nvim_win_close(s:map, v:true)
+    endif
+  else
+    call popup_close(s:map)
+  endif
+  let s:map = -1
 endfunction
 
 " Draw the game again in every window that shows it, for its new size.

@@ -6,8 +6,8 @@ images: the map is drawn with full-width characters, enemies are kanji, and
 their rank is their color.
 
 > Status: a prototype. It shows the dungeon: floors made from a seed, the
-> player `主`, walls, stairs, enemies and items, moving around, and
-> attacking. Enemies do not act yet.
+> player `主`, walls, stairs, enemies and items, moving around,
+> attacking, and a mini-map. Enemies do not act yet.
 
 ## Requirements
 
@@ -33,6 +33,7 @@ function s:goda_rogue_settings() abort
   nnoremap <buffer> <Space> <Cmd>call goda_rogue#do('attack')<CR>
   nnoremap <buffer> . <Cmd>call goda_rogue#do('wait')<CR>
   nnoremap <buffer> > <Cmd>call goda_rogue#do('stairs')<CR>
+  nnoremap <buffer> m <Cmd>call goda_rogue#do('map')<CR>
 endfunction
 ```
 

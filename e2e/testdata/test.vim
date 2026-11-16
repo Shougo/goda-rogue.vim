@@ -43,6 +43,20 @@ function! s:cursor_char() abort
   return strcharpart(getline('.')[col('.') - 1 :], 0, 1)
 endfunction
 
+" The lines of the mini-map window, or [] when there is none.
+function! s:map_lines() abort
+  if has('nvim')
+    for winid in nvim_list_wins()
+      if nvim_win_get_config(winid).relative !=# ''
+        return getbufline(winbufnr(winid), 1, '$')
+      endif
+    endfor
+    return []
+  endif
+  let popups = popup_list()
+  return empty(popups) ? [] : getbufline(winbufnr(popups[0]), 1, '$')
+endfunction
+
 function! s:status() abort
   return getline(line('$') - 1)
 endfunction
@@ -102,6 +116,28 @@ function! s:actions() abort
   call s:check('facing', index(s:all_groups(), 'GodaRogueFacing') >= 0, 1)
   call goda_rogue#do('attack')
   call s:check('attack', getline('$') =~# '^\%(空振りした。\|仲間は攻撃しない。\|.*のダメージ。\|.*にかわされた。\)', 1)
+
+  " The mini-map: a popup / floating window, toggled.
+  let status = s:status()
+  call goda_rogue#do('map')
+  call s:check('map costs no turn', s:status(), status)
+  let map = s:map_lines()
+  call s:check('map lines', len(map) > 0 && len(map) <= 36, 1)
+  call s:check('map player', len(filter(copy(map), {_, l -> l =~# '@'})), 1)
+  call s:check('map width', strwidth(get(map, 0, '')) <= 66, 1)
+  call goda_rogue#do('wait')
+  call s:check('map stays', len(s:map_lines()) > 0, 1)
+  call goda_rogue#do('map')
+  call s:check('map closed', s:map_lines(), [])
+
+  " Leaving the game buffer closes it, and coming back shows it again.
+  call goda_rogue#do('map')
+  let game = bufnr('%')
+  enew
+  call s:check('map closed elsewhere', s:map_lines(), [])
+  execute 'buffer' game
+  call s:check('map back', len(s:map_lines()) > 0, 1)
+  call goda_rogue#do('map')
 
   " An error is printed, not thrown, and the screen stays.
   let before = getline(1, '$')
