@@ -166,8 +166,8 @@ function! goda_rogue#dungeons() abort
 endfunction
 
 " Start a new game in the current window. {options}:
-"   dungeon	The ID of the dungeon (goda_rogue#dungeons()).  Default: the
-"		built-in one.
+"   dungeon	The ID of the dungeon (goda_rogue#dungeons()).  Default: ask
+"		which one, with the selection UI.
 "   seed	The same seed makes the same floors (a string or a number).
 "		Default: a random one.
 function! goda_rogue#start(options = {}) abort
@@ -175,6 +175,25 @@ function! goda_rogue#start(options = {}) abort
   if type(get(options, 'seed', '')) == v:t_number
     let options.seed = string(options.seed)
   endif
+  if has_key(options, 'dungeon')
+    call s:start_game(options)
+    return
+  endif
+  " Choose the dungeon.
+  try
+    let dungeons = goda_rogue#dungeons()
+  catch
+    call s:print_error(v:exception)
+    return
+  endtry
+  let choices = map(copy(dungeons),
+        \ {_, d -> printf('%s（%dF）  %s', d.name, d.floors, d.description)})
+  call s:select('ダンジョン', choices,
+        \ {idx -> idx > 0 ? s:start_game(extend(options, #{dungeon: dungeons[idx - 1].id})) : 0})
+endfunction
+
+function! s:start_game(options) abort
+  let options = a:options
   let bufnr = bufadd('goda-rogue://game')
   call setbufvar(bufnr, '&buftype', 'nofile')
   call setbufvar(bufnr, '&bufhidden', 'hide')
@@ -268,9 +287,17 @@ let s:prompt = -1
 
 function! s:ask(prompt) abort
   let winid = win_getid()
+  call s:select(a:prompt.title, a:prompt.choices,
+        \ {idx -> goda_rogue#_answer(winid, idx)})
+endfunction
+
+" Ask to choose one of {choices} with the selection UI; {callback} gets the
+" choice, from 1 (0 or less for none).
+function! s:select(title, choices, callback) abort
+  let s:on_select = a:callback
   if !empty(get(g:, 'goda_rogue#prompt_func', ''))
     call call(g:goda_rogue#prompt_func,
-          \ [a:prompt, {idx -> goda_rogue#_answer(winid, idx)}])
+          \ [#{title: a:title, choices: a:choices}, {idx -> s:selected(idx)}])
   elseif has('nvim')
     " Ask once the current action is over: an answer comes inside
     " win_execute(), where the default vim.ui.select() (inputlist()) does
@@ -279,15 +306,28 @@ function! s:ask(prompt) abort
     call luaeval('vim.schedule(function()'
           \ . ' vim.cmd("redraw")'
           \ . ' vim.ui.select(_A[1], {prompt = _A[2]}, function(_, idx)'
-          \ . ' vim.fn["goda_rogue#_answer"](_A[3], idx or 0) end) end)',
-          \ [a:prompt.choices, a:prompt.title, winid])
+          \ . ' vim.fn["goda_rogue#_selected"](idx or 0) end) end)',
+          \ [a:choices, a:title])
   else
     call s:close_prompt()
-    let s:prompt = popup_menu(a:prompt.choices, #{
-          \ title: ' ' . a:prompt.title . ' ',
-          \ callback: {_, result -> goda_rogue#_answer(winid, result)},
+    let s:prompt = popup_menu(a:choices, #{
+          \ title: ' ' . a:title . ' ',
+          \ callback: {_, result -> s:selected(result)},
           \ })
   endif
+endfunction
+
+function! goda_rogue#_selected(idx) abort
+  call s:selected(a:idx)
+endfunction
+
+function! s:selected(idx) abort
+  if a:idx == -2
+    " A popup closed by the game: no answer.
+    return
+  endif
+  let s:prompt = -1
+  call call(s:on_select, [a:idx])
 endfunction
 
 function! s:close_prompt() abort
@@ -300,12 +340,8 @@ function! s:close_prompt() abort
 endfunction
 
 " Answer the prompt shown in the window {winid} with the choice {idx}, from
-" 1 (0 or less to cancel). Called by the selection UIs.
+" 1 (0 or less to cancel).
 function! goda_rogue#_answer(winid, idx) abort
-  if a:idx == -2
-    return
-  endif
-  let s:prompt = -1
   let cmd = a:idx > 0
         \ ? printf('call goda_rogue#do("choose", "%d")', a:idx - 1)
         \ : 'call goda_rogue#do("cancel")'

@@ -52,9 +52,10 @@ endfunction
 Then:
 
 ```vim
+" Choose a dungeon, and start.
 call goda_rogue#start()
 " The same seed makes the same floors.
-call goda_rogue#start(#{seed: 'vim'})
+call goda_rogue#start(#{dungeon: 'cave', seed: 'vim'})
 ```
 
 The binary is built on the first start (it takes a while), into a cache

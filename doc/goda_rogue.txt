@@ -139,7 +139,8 @@ goda_rogue#start([{options}])
 		{options} is a |Dictionary|:
 		  dungeon	The ID of the dungeon (see
 				|goda_rogue#dungeons()|).
-				Default: "cave", the built-in one.
+				Default: ask which, with the
+				selection UI (|goda-rogue-prompts|).
 		  seed		A string or a number.  The same seed
 				makes the same floors in the same
 				dungeon, whatever the player does on
@@ -305,10 +306,13 @@ The background of the tile the player faces (and attacks) is
 
 The top line shows what matters all the time: the floor, the level, HP
 with a bar, the fullness, and the gold.  Then the window shows the part of the floor
-around the player that fits.  Under the map are the status line (the attack, the
-defense and the strength, the turn, the direction the player faces as an arrow, the seed,
-and the turns until the next wind once it has blown) and the last three messages, those of the actions
-before the last one dimmed (|GodaRogueOldMessage|).
+around the player that fits.  Under the map are the status line (the
+attack, the defense and the strength, the turn and the turns on this
+floor, the steps, the play time (as of the last action), the direction
+the player faces as an arrow, the seed, and the turns until the next
+wind once it has blown) and the last three messages, those of the
+actions before the last one dimmed (|GodaRogueOldMessage|).  The result
+screen shows the turns, the steps and the play time too.
 
 ==============================================================================
 PROMPTS                                                    *goda-rogue-prompts*

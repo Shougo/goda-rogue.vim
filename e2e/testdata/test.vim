@@ -68,7 +68,14 @@ function! s:messages() abort
 endfunction
 
 function! s:start() abort
+  " Without a dungeon, the game asks which.
+  let g:goda_rogue#prompt_func = function('s:fake_prompt')
+  let s:asked = {}
   call goda_rogue#start(#{seed: 'e2e'})
+  call s:check('dungeon prompt', get(s:asked, 'title', ''), 'ダンジョン')
+  call s:check('dungeon choice', get(s:asked, 'choices', [''])[0] =~# '^はじまりの洞窟（30F）', 1)
+  call s:answer(1)
+  unlet g:goda_rogue#prompt_func
   call s:check('filetype', &filetype, 'goda-rogue')
   call s:check('modifiable', &modifiable, 0)
 
@@ -82,7 +89,7 @@ function! s:start() abort
     call s:check('tiles of ' . lnum, strchars(getline(lnum)), tiles)
     call s:check('width of ' . lnum, strdisplaywidth(getline(lnum)), tiles * 2)
   endfor
-  call s:check('status', s:status() =~# '^攻撃 9  防御 0  ちから 8  ターン 0  向き ↓  シード e2e$', 1)
+  call s:check('status', s:status() =~# '^攻撃 9  防御 0  ちから 8  ターン 0（この階 0）  歩数 0  時間 0:00:0\d  向き ↓  シード e2e$', 1)
   call s:check('message', s:messages(), ['1F に着いた。'])
 
   call s:check('cursor', s:cursor_char(), '主')
@@ -100,7 +107,7 @@ function! s:start() abort
   call s:check('dungeon floors', filter(copy(dungeons), 'v:val.id ==# "cave"')[0].floors, 30)
 
   let first = getline(1, '$')
-  call goda_rogue#start(#{seed: 'e2e'})
+  call goda_rogue#start(#{dungeon: 'cave', seed: 'e2e'})
   call s:check('same seed', getline(1, '$'), first)
 endfunction
 
@@ -115,7 +122,7 @@ function! s:items() abort
   " Walk until something is picked up (another run if the player falls).
   let dirs = ['right', 'down', 'left', 'up', 'downright', 'upleft', 'downleft', 'upright']
   for seed in range(20)
-    call goda_rogue#start(#{seed: 'items' . seed})
+    call goda_rogue#start(#{dungeon: 'cave', seed: 'items' . seed})
     for n in range(100)
       call goda_rogue#do('dash', dirs[n % len(dirs)])
       call goda_rogue#do('pickup')
@@ -155,22 +162,22 @@ function! s:items() abort
 endfunction
 
 function! s:actions() abort
-  call goda_rogue#start(#{seed: 42})
+  call goda_rogue#start(#{dungeon: 'cave', seed: 42})
   call s:check('number seed', s:status() =~# 'シード 42$', 1)
 
   call goda_rogue#do('turn')
-  call s:check('turn to an enemy', s:status() =~# '  ターン 0 ', 1)
+  call s:check('turn to an enemy', s:status() =~# '  ターン 0（', 1)
   call goda_rogue#do('turn', 'upleft')
-  call s:check('turn', s:status() =~# '  ターン 0  向き ↖ ', 1)
+  call s:check('turn', s:status() =~# '  ターン 0（.*  向き ↖ ', 1)
 
   " A move in some direction succeeds: the turn goes on.
   for dir in ['left', 'right', 'up', 'down', 'upleft', 'upright', 'downleft', 'downright']
     call goda_rogue#do('move', dir)
-    if s:status() =~# 'ターン 1 '
+    if s:status() =~# 'ターン 1（'
       break
     endif
   endfor
-  call s:check('move', s:status() =~# '  ターン 1 ', 1)
+  call s:check('move', s:status() =~# '  ターン 1（', 1)
   call s:check('cursor after move', s:cursor_char(), '主')
   " Walked tiles show as safe (the ally following the player may stand on
   " the first one).

@@ -80,6 +80,8 @@ type Game struct {
 	Kills int
 	// Started and Ended are when the run began and ended (play time).
 	Started, Ended time.Time
+	// Steps are the steps the player has taken.
+	Steps int
 	// FloorTurns are the turns on this floor, and Wind how many times
 	// Kron's wind has blown on it.
 	FloorTurns int
@@ -669,6 +671,7 @@ func (g *Game) step(d Point, pick bool) bool {
 	// Entering or leaving a room wakes the monsters dozing in it.
 	from := g.Level.RoomAt(g.Player)
 	g.Player = to
+	g.Steps++
 	if room := g.Level.RoomAt(to); room != from {
 		g.wake(from)
 		g.wake(room)
@@ -751,8 +754,9 @@ func (g *Game) visibleEnemies() []*Monster {
 
 // Status is the status line, under the map.
 func (g *Game) Status() string {
-	s := fmt.Sprintf("攻撃 %d  防御 %d  ちから %d  ターン %d  向き %s  シード %s",
-		g.Attack(), g.Defense(), g.CurrentStrength(), g.Turn, directionArrows[g.Facing], g.Seed)
+	s := fmt.Sprintf("攻撃 %d  防御 %d  ちから %d  ターン %d（この階 %d）  歩数 %d  時間 %s  向き %s  シード %s",
+		g.Attack(), g.Defense(), g.CurrentStrength(), g.Turn, g.FloorTurns, g.Steps,
+		playTime(g.PlayTime()), directionArrows[g.Facing], g.Seed)
 	if w := g.Dungeon.Rules.WindTurns; g.Wind > 0 && g.Wind < len(w) {
 		s += fmt.Sprintf("  次の風まで %d", w[g.Wind]-g.FloorTurns)
 	}
@@ -769,4 +773,20 @@ func (g *Game) struggle() {
 		g.say("トラばさみにかかっていて動けない。")
 	}
 	g.endTurn(true)
+}
+
+// PlayTime is how long the run has been played: until now, or until its
+// end.
+func (g *Game) PlayTime() time.Duration {
+	end := g.Ended
+	if end.IsZero() {
+		end = time.Now()
+	}
+	return end.Sub(g.Started)
+}
+
+// playTime formats d as h:mm:ss.
+func playTime(d time.Duration) string {
+	d = d.Truncate(time.Second)
+	return fmt.Sprintf("%d:%02d:%02d", int(d.Hours()), int(d.Minutes())%60, int(d.Seconds())%60)
 }

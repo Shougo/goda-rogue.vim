@@ -3,7 +3,6 @@ package rogue
 import (
 	"fmt"
 	"strings"
-	"time"
 )
 
 // The glyphs of the map. All of them are full-width (East Asian Width F or
@@ -154,7 +153,6 @@ func (g *Game) result(s *Screen) {
 	if g.Cleared {
 		title = "踏破！"
 	}
-	d := g.Ended.Sub(g.Started).Truncate(time.Second)
 	s.Lines = append(s.Lines, "")
 	s.Highlights[hlTitle] = []Span{{len(s.Lines) + 1, 3, 3 + len(title)}}
 	s.Lines = append(s.Lines,
@@ -165,7 +163,8 @@ func (g *Game) result(s *Screen) {
 		fmt.Sprintf("  レベル    Lv%d", g.PlayerLevel),
 		fmt.Sprintf("  倒した敵  %d", g.Kills),
 		fmt.Sprintf("  ターン    %d", g.Turn),
-		fmt.Sprintf("  時間      %d:%02d:%02d", int(d.Hours()), int(d.Minutes())%60, int(d.Seconds())%60),
+		fmt.Sprintf("  歩数      %d", g.Steps),
+		"  時間      "+playTime(g.PlayTime()),
 		"  シード    "+g.Seed,
 		"",
 		"  新しい冒険は goda_rogue#start() で。",
