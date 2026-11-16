@@ -277,3 +277,77 @@ func TestUpgradeRoll(t *testing.T) {
 		}
 	}
 }
+
+func TestBracelets(t *testing.T) {
+	g, _ := roomGame(t, 6, 3)
+	base, attack := g.CurrentStrength(), g.Attack()
+	power := carry(g, "chikara", 0)
+	command(t, g, power, commandEquip)
+	if g.CurrentStrength() != base+3 || g.Attack() <= attack {
+		t.Errorf("strength %d, attack %d with the bracelet", g.CurrentStrength(), g.Attack())
+	}
+	if !strings.Contains(g.Status(), fmt.Sprintf("  ちから %d  ", base+3)) {
+		t.Errorf("status %q", g.Status())
+	}
+	if power.Label() != "腕 力の腕輪 [装備]" {
+		t.Errorf("label %q", power.Label())
+	}
+
+	// One bracelet at a time.
+	regen := carry(g, "kaifuku", 0)
+	command(t, g, regen, commandEquip)
+	if power.Equipped || g.CurrentStrength() != base {
+		t.Errorf("both bracelets: strength %d", g.CurrentStrength())
+	}
+
+	// HP comes back twice as fast.
+	restored := func() int {
+		g.HP, g.MaxHP = 1, 999
+		wait(t, g, 10*g.Dungeon.Rules.RegenTurns)
+		return g.HP - 1
+	}
+	with := restored()
+	command(t, g, regen, commandUnequip)
+	if without := restored(); with != 2*without {
+		t.Errorf("restored %d with the bracelet, %d without", with, without)
+	}
+}
+
+func TestSensingBracelets(t *testing.T) {
+	g, r := roomGame(t, 4, 3)
+	// A tile the player has not seen, outside the room.
+	far := Point{-1, -1}
+	for i, seen := range g.Seen {
+		p := Point{i % g.Level.W, i / g.Level.W}
+		if !seen && g.Level.At(p).Walkable() && g.Level.RoomAt(p) != g.Level.RoomAt(Point{r.X, r.Y}) {
+			far = p
+			break
+		}
+	}
+	if far.X < 0 {
+		t.Fatal("no unseen tile")
+	}
+	m := place(g, kind("nezumi1"), far)
+	m.Dozing = true
+	glyph := func() string { s, _ := g.glyph(far); return s }
+	if glyph() != glyphUnknown {
+		t.Fatalf("%q before", glyph())
+	}
+	command(t, g, carry(g, "kehai", 0), commandEquip)
+	if glyph() != m.Glyph {
+		t.Errorf("%q with 気配察知", glyph())
+	}
+	if c, _ := g.miniGlyph(far); c != miniMonster {
+		t.Errorf("mini-map %q", c)
+	}
+
+	g.Monsters = nil
+	it := item(g, "yakusou", far)
+	if glyph() != glyphUnknown {
+		t.Errorf("%q: 気配察知 shows an item", glyph())
+	}
+	command(t, g, carry(g, "dougu", 0), commandEquip)
+	if glyph() != it.Glyph {
+		t.Errorf("%q with 道具感知", glyph())
+	}
+}

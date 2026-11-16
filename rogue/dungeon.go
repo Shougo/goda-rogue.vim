@@ -21,7 +21,8 @@ import (
 //	monsters.txt       the monsters (a table)
 //	monster_table.txt  which monsters appear on which floors (a table)
 //	items.txt          the items (a table; 種類 is their category, 強さ
-//	                   the strength of a weapon or a shield)
+//	                   the strength of a weapon or a shield, 効果 what
+//	                   a bracelet does)
 //	item_table.txt     which items appear on which floors (a table)
 //	floors.txt         how many monsters and items a floor has (a table)
 //	growth.txt         the growth tables (a table)
@@ -96,9 +97,25 @@ type ItemDef struct {
 	Glyph    string
 	Name     string
 	Category Category
-	// Strength is the attack of a weapon, the defense of a shield.
+	// Strength is the attack of a weapon, the defense of a shield, what
+	// the effect of a bracelet adds.
 	Strength int
+	// Effect is what a bracelet does while it is worn ("" for nothing).
+	Effect Effect
 }
+
+// Effect is what a bracelet does while it is worn.
+type Effect string
+
+// The effects of bracelets.
+const (
+	EffectStrength   Effect = "ちから"
+	EffectRegen      Effect = "回復"
+	EffectSenseEnemy Effect = "気配察知"
+	EffectSenseItem  Effect = "道具感知"
+)
+
+var effects = []Effect{EffectStrength, EffectRegen, EffectSenseEnemy, EffectSenseItem}
 
 // FloorRow is a row of an appearance table: id appears on the floors
 // [First, Last], with a weight.
@@ -424,6 +441,14 @@ func (l *loader) load() {
 		it.Category = c
 		if _, ok := row.cols["強さ"]; ok {
 			it.Strength = l.int(row, "強さ", 0)
+		}
+		if e, ok := row.cols["効果"]; ok && e != "-" && e != "" {
+			if !slices.Contains(effects, Effect(e)) {
+				l.errorf(row.file, row.n, "効果: unknown %q", e)
+			} else if c != CategoryBracelet {
+				l.errorf(row.file, row.n, "効果: only bracelets have one, not %s", c)
+			}
+			it.Effect = Effect(e)
 		}
 		if d.Item(it.ID) != nil {
 			l.errorf(row.file, row.n, "the ID %q again", it.ID)

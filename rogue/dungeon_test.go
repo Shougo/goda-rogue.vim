@@ -74,6 +74,12 @@ func TestDungeonErrors(t *testing.T) {
 		{"bad speed", func(m fstest.MapFS) {
 			m["monsters.txt"].Data = append(m["monsters.txt"].Data, "x1\t鼠\tx\t1\t1\t1\t1\t1\t光速\n"...)
 		}, `速度`},
+		{"unknown effect", func(m fstest.MapFS) {
+			m["items.txt"].Data = append(m["items.txt"].Data, "x\t腕\tx\t腕輪\t0\t飛行\n"...)
+		}, `効果: unknown "飛行"`},
+		{"effect of a grass", func(m fstest.MapFS) {
+			m["items.txt"].Data = append(m["items.txt"].Data, "x\t草\tx\t草\t0\t回復\n"...)
+		}, `効果: only bracelets`},
 		{"missing file", func(m fstest.MapFS) {
 			delete(m, "growth.txt")
 		}, `growth.txt`},

@@ -28,8 +28,9 @@ plugin, and Vim talks to it through goda.vim.
 It is a prototype: it shows the dungeon and a mini-map, the player moves
 around and attacks, and the enemies wander, chase and attack the player.
 Going down the stairs of the 30th floor clears the dungeon.  Items can be
-picked up and dropped, and a weapon and a shield equipped (weapons add to
-the attack, shields make the defense); other items cannot be used yet.
+picked up and dropped, and a weapon, a shield and a bracelet equipped
+(weapons add to the attack, shields make the defense, a bracelet has its
+effect while it is worn); other items cannot be used yet.
 
 Every action that takes a turn (moving, attacking, waiting, a step of a
 dash) is followed by the turn of the monsters.  Slow monsters act every
@@ -249,8 +250,8 @@ The background of the tile the player faces (and attacks) is
 
 The top line shows what matters all the time: the floor, the level, HP
 with a bar, and the gold.  Then the window shows the part of the floor
-around the player that fits.  Under the map are the status line (the attack and the
-defense, the turn, the direction the player faces as an arrow, the seed,
+around the player that fits.  Under the map are the status line (the attack, the
+defense and the strength, the turn, the direction the player faces as an arrow, the seed,
 and the turns until the next wind once it has blown) and the last three messages, those of the actions
 before the last one dimmed (|GodaRogueOldMessage|).
 
@@ -285,7 +286,12 @@ floors once the files change.
 	items.txt		The items, a table.  種類 is the kind of an
 				item, which decides what it can do: 武器 盾
 				腕輪 矢 草 巻物 杖 壺 食料 お金.  強さ is
-				the strength of a weapon or a shield.
+				the strength of a weapon or a shield, 効果
+				what a bracelet does while it is worn (-
+				for nothing): ちから adds 強さ to the
+				strength, 回復 restores HP twice as fast,
+				気配察知 shows the monsters of the floor,
+				道具感知 its items.
 	item_table.txt		Which items appear on which floors, a table.
 	floors.txt		How many monsters and items a floor starts
 				with (min-max), a table.

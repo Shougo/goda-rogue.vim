@@ -473,6 +473,9 @@ func (g *Game) endTurn(rest bool) {
 	g.Turn++
 	if rest && g.HP < g.MaxHP {
 		g.regen++
+		if g.wears(EffectRegen) {
+			g.regen++
+		}
 		if g.regen >= g.Dungeon.Rules.RegenTurns {
 			g.regen = 0
 			g.HP++
@@ -648,8 +651,8 @@ func (g *Game) visibleEnemies() []*Monster {
 
 // Status is the status line, under the map.
 func (g *Game) Status() string {
-	s := fmt.Sprintf("攻撃 %d  防御 %d  ターン %d  向き %s  シード %s",
-		g.Attack(), g.Defense(), g.Turn, directionArrows[g.Facing], g.Seed)
+	s := fmt.Sprintf("攻撃 %d  防御 %d  ちから %d  ターン %d  向き %s  シード %s",
+		g.Attack(), g.Defense(), g.CurrentStrength(), g.Turn, directionArrows[g.Facing], g.Seed)
 	if w := g.Dungeon.Rules.WindTurns; g.Wind > 0 && g.Wind < len(w) {
 		s += fmt.Sprintf("  次の風まで %d", w[g.Wind]-g.FloorTurns)
 	}

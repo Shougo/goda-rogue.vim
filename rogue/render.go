@@ -253,7 +253,8 @@ func (g *Game) minimap() *Minimap {
 }
 
 // seenBounds returns the smallest rectangle around the floor the player
-// has seen (walls left out, as on the mini-map).
+// has seen (walls left out, as on the mini-map), and what a bracelet
+// shows.
 func (g *Game) seenBounds() (x0, y0, x1, y1 int) {
 	x0, y0, x1, y1 = g.Player.X, g.Player.Y, g.Player.X, g.Player.Y
 	for i, seen := range g.Seen {
@@ -263,6 +264,19 @@ func (g *Game) seenBounds() (x0, y0, x1, y1 int) {
 		x, y := i%g.Level.W, i/g.Level.W
 		x0, y0, x1, y1 = min(x0, x), min(y0, y), max(x1, x), max(y1, y)
 	}
+	// What a bracelet shows, too.
+	var sensed []Point
+	for _, m := range g.Monsters {
+		sensed = append(sensed, m.Pos)
+	}
+	for _, it := range g.Items {
+		sensed = append(sensed, it.Pos)
+	}
+	for _, p := range sensed {
+		if g.senses(p) {
+			x0, y0, x1, y1 = min(x0, p.X), min(y0, p.Y), max(x1, p.X), max(y1, p.Y)
+		}
+	}
 	return x0, y0, x1, y1
 }
 
@@ -270,10 +284,10 @@ func (g *Game) miniGlyph(p Point) (byte, string) {
 	if p == g.Player {
 		return miniPlayer, hlPlayer
 	}
-	if !g.IsSeen(p) {
+	if !g.IsSeen(p) && !g.senses(p) {
 		return miniUnknown, ""
 	}
-	if m := g.MonsterAt(p); m != nil && (m.Ally || g.Visible(p)) {
+	if m := g.MonsterAt(p); m != nil && (m.Ally || g.Visible(p) || g.wears(EffectSenseEnemy)) {
 		if m.Ally {
 			return miniMonster, hlAlly + string(rune('0'+m.Rank))
 		}
@@ -309,10 +323,10 @@ func (g *Game) glyph(p Point) (string, string) {
 	if p == g.Player {
 		return glyphPlayer, hlPlayer
 	}
-	if !g.IsSeen(p) {
+	if !g.IsSeen(p) && !g.senses(p) {
 		return glyphUnknown, ""
 	}
-	if m := g.MonsterAt(p); m != nil && (m.Ally || g.Visible(p)) {
+	if m := g.MonsterAt(p); m != nil && (m.Ally || g.Visible(p) || g.wears(EffectSenseEnemy)) {
 		if m.Ally {
 			return m.Glyph, hlAlly + string(rune('0'+m.Rank))
 		}
@@ -331,4 +345,17 @@ func (g *Game) glyph(p Point) (string, string) {
 		return glyphFloor, hlFloor
 	}
 	return glyphWall, hlWall
+}
+
+// senses says whether a bracelet shows what is at p on a tile the player
+// has not seen: a monster, or an item.
+func (g *Game) senses(p Point) bool {
+	if g.wears(EffectSenseEnemy) && g.MonsterAt(p) != nil {
+		return true
+	}
+	if g.wears(EffectSenseItem) {
+		_, ok := g.ItemAt(p)
+		return ok
+	}
+	return false
 }

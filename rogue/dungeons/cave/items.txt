@@ -1,18 +1,26 @@
 # The items. 種類 is what the item is, and decides what it can do:
 # 武器 盾 腕輪 矢 草 巻物 杖 壺 食料 お金.
 # 強さ is the strength of a weapon (attack) or a shield (defense).
-ID	字	名前	種類	強さ
-bokutou	剣	木刀	武器	3
-tetsuken	剣	鉄の剣	武器	7
-kitate	盾	木の盾	盾	3
-tetsutate	盾	鉄の盾	盾	7
-chikara	腕	力の腕輪	腕輪	0
-kiya	矢	木の矢	矢	0
-yakusou	草	薬草	草	0
-otogiri	草	弟切草	草	0
-shikibetsu	巻	識別の巻物	巻物	0
-akari	巻	あかりの巻物	巻物	0
-fukitobashi	杖	吹き飛ばしの杖	杖	0
-hozon	壺	保存の壺	壺	0
-onigiri	食	おにぎり	食料	0
-okane	金	お金	お金	0
+# 効果 is what a bracelet does while it is worn (- for nothing):
+#   ちから    adds 強さ to the strength
+#   回復      restores HP twice as fast
+#   気配察知  shows the monsters of the floor
+#   道具感知  shows the items of the floor
+ID	字	名前	種類	強さ	効果
+bokutou	剣	木刀	武器	3	-
+tetsuken	剣	鉄の剣	武器	7	-
+kitate	盾	木の盾	盾	3	-
+tetsutate	盾	鉄の盾	盾	7	-
+chikara	腕	力の腕輪	腕輪	3	ちから
+kaifuku	腕	回復の腕輪	腕輪	0	回復
+kehai	腕	気配察知の腕輪	腕輪	0	気配察知
+dougu	腕	道具感知の腕輪	腕輪	0	道具感知
+kiya	矢	木の矢	矢	0	-
+yakusou	草	薬草	草	0	-
+otogiri	草	弟切草	草	0	-
+shikibetsu	巻	識別の巻物	巻物	0	-
+akari	巻	あかりの巻物	巻物	0	-
+fukitobashi	杖	吹き飛ばしの杖	杖	0	-
+hozon	壺	保存の壺	壺	0	-
+onigiri	食	おにぎり	食料	0	-
+okane	金	お金	お金	0	-

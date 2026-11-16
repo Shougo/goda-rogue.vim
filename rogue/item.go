@@ -42,8 +42,19 @@ type Item struct {
 	Equipped bool
 }
 
-// equipment says whether the item is worn: a weapon or a shield.
+// equipment says whether the item is worn: a weapon, a shield or a
+// bracelet.
 func (it *Item) equipment() bool {
+	switch it.Def.Category {
+	case CategoryWeapon, CategoryShield, CategoryBracelet:
+		return true
+	}
+	return false
+}
+
+// upgradable says whether the item has an upgrade value: a weapon or a
+// shield.
+func (it *Item) upgradable() bool {
 	return it.Def.Category == CategoryWeapon || it.Def.Category == CategoryShield
 }
 
@@ -54,7 +65,7 @@ func (it *Item) Strength() int { return max(it.Def.Strength+it.Upgrade, 0) }
 // name, its upgrade value, and whether it is equipped.
 func (it *Item) Label() string {
 	s := it.Glyph + " " + it.Def.Name
-	if it.equipment() && it.Upgrade != 0 {
+	if it.upgradable() && it.Upgrade != 0 {
 		s += fmt.Sprintf("%+d", it.Upgrade)
 	}
 	if it.Equipped {
@@ -248,12 +259,29 @@ func (g *Game) unequip(it *Item) {
 	g.say(it.Def.Name + "を外した。")
 }
 
+// wears says whether the player wears a bracelet with the effect e.
+func (g *Game) wears(e Effect) bool {
+	b := g.equipped(CategoryBracelet)
+	return b != nil && b.Def.Effect == e
+}
+
+// CurrentStrength is the strength of the player, with what its bracelet
+// adds.
+func (g *Game) CurrentStrength() int {
+	s := g.Strength
+	if b := g.equipped(CategoryBracelet); b != nil && b.Def.Effect == EffectStrength {
+		s += b.Def.Strength
+	}
+	return s
+}
+
 // Attack is the attack of the player: its level and strength, and its
 // weapon (as Shiren 6: weapon x (0.75 + strength / 32)).
 func (g *Game) Attack() int {
-	a := playerAttack(g.PlayerLevel, g.Strength)
+	s := g.CurrentStrength()
+	a := playerAttack(g.PlayerLevel, s)
 	if w := g.equipped(CategoryWeapon); w != nil {
-		a += int(float64(w.Strength()) * (0.75 + float64(g.Strength)/32))
+		a += int(float64(w.Strength()) * (0.75 + float64(s)/32))
 	}
 	return a
 }
