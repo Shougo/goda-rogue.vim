@@ -1,9 +1,23 @@
+<p align="center">
+  <img src="assets/logo.svg" alt="goda-rogue.vim: a room of the game, 主 among enemies in the colors of their ranks">
+</p>
+
 # goda-rogue.vim
 
 A mystery-dungeon roguelike in Vim and Neovim on
 [goda.vim](https://github.com/Shougo/goda.vim). It looks like `rogue`, with no
 images: the map is drawn with full-width characters, enemies are kanji, and
 their rank is their color.
+
+```
+＃＃＃＃＃＃＃＃＃＃＃＃＃
+＃．．．．．．．．鼠．．＃　　主  you
+＃．．主．．．．．．．．．　　段  the stairs down
+＃．．．．草．．．蛇．．＃　　草  an item (a grass)
+＃．鬼．．．．．．．．段＃　　鼠 蛇 鬼 竜  enemies: green, blue,
+＃．．．．．．竜．．．．＃　　            purple, red by rank
+＃＃＃＃＃＃＃＃＃＃＃＃＃
+```
 
 > Status: a prototype. It shows the dungeon: floors made from a seed, the
 > player `主`, walls, stairs, enemies and items, moving around,

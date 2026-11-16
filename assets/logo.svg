@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="248" viewBox="0 0 720 248" role="img" aria-label="goda-rogue.vim">
+  <title>goda-rogue.vim</title>
+  <rect width="720" height="248" rx="16" fill="#1c1c1c"/>
+  <g font-family="'Noto Sans Mono CJK JP', 'Noto Sans CJK JP', 'Hiragino Sans', 'Yu Gothic', 'MS Gothic', monospace" font-size="20" text-anchor="middle">
+  <rect x="124" y="90" width="22" height="22" fill="#444444"/>
+    <text x="47" y="61.16" fill="#5fafaf">＃</text>
+    <text x="69" y="61.16" fill="#5fafaf">＃</text>
+    <text x="91" y="61.16" fill="#5fafaf">＃</text>
+    <text x="113" y="61.16" fill="#5fafaf">＃</text>
+    <text x="135" y="61.16" fill="#5fafaf">＃</text>
+    <text x="157" y="61.16" fill="#5fafaf">＃</text>
+    <text x="179" y="61.16" fill="#5fafaf">＃</text>
+    <text x="201" y="61.16" fill="#5fafaf">＃</text>
+    <text x="223" y="61.16" fill="#5fafaf">＃</text>
+    <text x="245" y="61.16" fill="#5fafaf">＃</text>
+    <text x="267" y="61.16" fill="#5fafaf">＃</text>
+    <text x="289" y="61.16" fill="#5fafaf">＃</text>
+    <text x="311" y="61.16" fill="#5fafaf">＃</text>
+    <text x="47" y="83.16" fill="#5fafaf">＃</text>
+    <text x="69" y="83.16" fill="#585858">．</text>
+    <text x="91" y="83.16" fill="#585858">．</text>
+    <text x="113" y="83.16" fill="#585858">．</text>
+    <text x="135" y="83.16" fill="#585858">．</text>
+    <text x="157" y="83.16" fill="#585858">．</text>
+    <text x="179" y="83.16" fill="#585858">．</text>
+    <text x="201" y="83.16" fill="#585858">．</text>
+    <text x="223" y="83.16" fill="#585858">．</text>
+    <text x="245" y="83.16" fill="#5fd75f" font-weight="bold">鼠</text>
+    <text x="267" y="83.16" fill="#585858">．</text>
+    <text x="289" y="83.16" fill="#585858">．</text>
+    <text x="311" y="83.16" fill="#5fafaf">＃</text>
+    <text x="47" y="105.16" fill="#5fafaf">＃</text>
+    <text x="69" y="105.16" fill="#585858">．</text>
+    <text x="91" y="105.16" fill="#585858">．</text>
+    <text x="113" y="105.16" fill="#ffffff" font-weight="bold">主</text>
+    <text x="135" y="105.16" fill="#585858">．</text>
+    <text x="157" y="105.16" fill="#585858">．</text>
+    <text x="179" y="105.16" fill="#585858">．</text>
+    <text x="201" y="105.16" fill="#585858">．</text>
+    <text x="223" y="105.16" fill="#585858">．</text>
+    <text x="245" y="105.16" fill="#585858">．</text>
+    <text x="267" y="105.16" fill="#585858">．</text>
+    <text x="289" y="105.16" fill="#585858">．</text>
+    <text x="311" y="105.16" fill="#585858">．</text>
+    <text x="47" y="127.16" fill="#5fafaf">＃</text>
+    <text x="69" y="127.16" fill="#585858">．</text>
+    <text x="91" y="127.16" fill="#585858">．</text>
+    <text x="113" y="127.16" fill="#585858">．</text>
+    <text x="135" y="127.16" fill="#585858">．</text>
+    <text x="157" y="127.16" fill="#e4e4e4">草</text>
+    <text x="179" y="127.16" fill="#585858">．</text>
+    <text x="201" y="127.16" fill="#585858">．</text>
+    <text x="223" y="127.16" fill="#585858">．</text>
+    <text x="245" y="127.16" fill="#5f87ff" font-weight="bold">蛇</text>
+    <text x="267" y="127.16" fill="#585858">．</text>
+    <text x="289" y="127.16" fill="#585858">．</text>
+    <text x="311" y="127.16" fill="#5fafaf">＃</text>
+    <text x="47" y="149.16" fill="#5fafaf">＃</text>
+    <text x="69" y="149.16" fill="#585858">．</text>
+    <text x="91" y="149.16" fill="#d75fd7" font-weight="bold">鬼</text>
+    <text x="113" y="149.16" fill="#585858">．</text>
+    <text x="135" y="149.16" fill="#585858">．</text>
+    <text x="157" y="149.16" fill="#585858">．</text>
+    <text x="179" y="149.16" fill="#585858">．</text>
+    <text x="201" y="149.16" fill="#585858">．</text>
+    <text x="223" y="149.16" fill="#585858">．</text>
+    <text x="245" y="149.16" fill="#585858">．</text>
+    <text x="267" y="149.16" fill="#585858">．</text>
+    <text x="289" y="149.16" fill="#ffd700" font-weight="bold">段</text>
+    <text x="311" y="149.16" fill="#5fafaf">＃</text>
+    <text x="47" y="171.16" fill="#5fafaf">＃</text>
+    <text x="69" y="171.16" fill="#585858">．</text>
+    <text x="91" y="171.16" fill="#585858">．</text>
+    <text x="113" y="171.16" fill="#585858">．</text>
+    <text x="135" y="171.16" fill="#585858">．</text>
+    <text x="157" y="171.16" fill="#585858">．</text>
+    <text x="179" y="171.16" fill="#585858">．</text>
+    <text x="201" y="171.16" fill="#ff5f5f" font-weight="bold">竜</text>
+    <text x="223" y="171.16" fill="#585858">．</text>
+    <text x="245" y="171.16" fill="#585858">．</text>
+    <text x="267" y="171.16" fill="#585858">．</text>
+    <text x="289" y="171.16" fill="#585858">．</text>
+    <text x="311" y="171.16" fill="#5fafaf">＃</text>
+    <text x="47" y="193.16" fill="#5fafaf">＃</text>
+    <text x="69" y="193.16" fill="#5fafaf">＃</text>
+    <text x="91" y="193.16" fill="#5fafaf">＃</text>
+    <text x="113" y="193.16" fill="#5fafaf">＃</text>
+    <text x="135" y="193.16" fill="#5fafaf">＃</text>
+    <text x="157" y="193.16" fill="#5fafaf">＃</text>
+    <text x="179" y="193.16" fill="#5fafaf">＃</text>
+    <text x="201" y="193.16" fill="#5fafaf">＃</text>
+    <text x="223" y="193.16" fill="#5fafaf">＃</text>
+    <text x="245" y="193.16" fill="#5fafaf">＃</text>
+    <text x="267" y="193.16" fill="#5fafaf">＃</text>
+    <text x="289" y="193.16" fill="#5fafaf">＃</text>
+    <text x="311" y="193.16" fill="#5fafaf">＃</text>
+  </g>
+  <g font-family="'Noto Sans Mono CJK JP', 'Noto Sans CJK JP', 'Hiragino Sans', 'Yu Gothic', 'MS Gothic', monospace">
+    <text x="358" y="104" font-size="40" font-weight="bold" fill="#ffffff">goda-rogue<tspan fill="#5fafaf">.vim</tspan></text>
+    <text x="358" y="140" font-size="17" fill="#bcbcbc">Vim と Neovim で遊ぶローグライク</text>
+    <text x="358" y="184" font-size="22" font-weight="bold" fill="#5fd75f">鼠</text>
+    <text x="384" y="184" font-size="13" fill="#808080">ランク1</text>
+    <text x="446" y="184" font-size="22" font-weight="bold" fill="#5f87ff">蛇</text>
+    <text x="472" y="184" font-size="13" fill="#808080">ランク2</text>
+    <text x="534" y="184" font-size="22" font-weight="bold" fill="#d75fd7">鬼</text>
+    <text x="560" y="184" font-size="13" fill="#808080">ランク3</text>
+    <text x="622" y="184" font-size="22" font-weight="bold" fill="#ff5f5f">竜</text>
+    <text x="648" y="184" font-size="13" fill="#808080">ランク4</text>
+  </g>
+</svg>
