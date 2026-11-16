@@ -351,3 +351,149 @@ func TestSensingBracelets(t *testing.T) {
 		t.Errorf("%q with 道具感知", glyph())
 	}
 }
+
+// leave leaves the floor by its stairs.
+func leave(t *testing.T, g *Game) {
+	t.Helper()
+	g.Depth = 1 // Never the last floor.
+	g.Player = g.Stairs
+	if err := g.Do("stairs", nil); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCracks(t *testing.T) {
+	g, _ := roomGame(t, 4, 3)
+	g.Stairs = g.Player
+	b := carry(g, "kehai", 0)
+	if b.Def.Crack == 0 || g.Dungeon.Rules.CrackStages == 0 {
+		t.Fatal("気配察知の腕輪 does not crack")
+	}
+	command(t, g, b, commandEquip)
+
+	// No crack without the effect: no monster out of sight.
+	g.Monsters = nil
+	b.used = false
+	for range 20 {
+		leave(t, g)
+		g.Monsters = nil
+		b.used = false
+	}
+	if b.Cracks != 0 {
+		t.Fatalf("%d cracks without the effect", b.Cracks)
+	}
+
+	// Cracks, one stage after another, and breaks.
+	stages := g.Dungeon.Rules.CrackStages
+	var messages []string
+	for floors := 0; slices.Contains(g.Inventory, b); floors++ {
+		if floors > 1000 {
+			t.Fatal("never breaks")
+		}
+		before := b.Cracks
+		b.used = true
+		leave(t, g)
+		if g.Over != "" {
+			t.Fatal(g.Over)
+		}
+		if b.Cracks != before && b.Cracks != before+1 {
+			t.Fatalf("%d cracks after %d", b.Cracks, before)
+		}
+		if b.Cracks > stages {
+			t.Fatalf("%d cracks", b.Cracks)
+		}
+		for _, m := range g.Log {
+			if strings.Contains(m, "ひび") || strings.Contains(m, "壊れ") {
+				messages = append(messages, m)
+			}
+		}
+		g.Log = nil
+	}
+	want := []string{"気配察知の腕輪にひびが入った。"}
+	for range stages - 1 {
+		want = append(want, "気配察知の腕輪のひびが広がった。")
+	}
+	want = append(want, "気配察知の腕輪が壊れた。")
+	if !slices.Equal(messages, want) {
+		t.Errorf("messages %q", messages)
+	}
+	if g.equipped(CategoryBracelet) != nil {
+		t.Error("still wears a broken bracelet")
+	}
+}
+
+func TestCrackLabel(t *testing.T) {
+	g, _ := roomGame(t, 4, 3)
+	b := carry(g, "dougu", 0)
+	b.Cracks, b.Equipped = 2, true
+	if b.Label() != "腕 道具感知の腕輪 [ひび2] [装備]" {
+		t.Errorf("label %q", b.Label())
+	}
+	// A bracelet that never cracks.
+	p := carry(g, "chikara", 0)
+	p.used = true
+	g.Stairs = g.Player
+	leave(t, g)
+	if p.Cracks != 0 || p.used {
+		t.Errorf("%d cracks, used %v", p.Cracks, p.used)
+	}
+}
+
+func TestEffectsUsed(t *testing.T) {
+	g, r := roomGame(t, 6, 3)
+	power := carry(g, "chikara", 0)
+	command(t, g, power, commandEquip)
+	if power.used {
+		t.Fatal("used before attacking")
+	}
+	m := place(g, kind("nezumi1"), Point{r.X + 1, r.Y})
+	m.HP = 9999
+	g.HP, g.MaxHP = 9999, 9999
+	g.Facing = "right"
+	for range 20 {
+		if err := g.Do("attack", nil); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if !power.used {
+		t.Error("ちから not used after attacking")
+	}
+
+	g.Monsters = nil
+	regen := carry(g, "kaifuku", 0)
+	command(t, g, regen, commandEquip)
+	g.HP, g.MaxHP = 15, 15
+	wait(t, g, 5)
+	if regen.used {
+		t.Error("回復 used at full HP")
+	}
+	g.HP = 1
+	wait(t, g, 1)
+	if !regen.used {
+		t.Error("回復 not used")
+	}
+}
+
+func TestWear(t *testing.T) {
+	for _, tc := range []struct {
+		wear, cracks int
+	}{
+		{0, 0},   // never
+		{700, 3}, // 15 x 7 = 105 %: every floor
+	} {
+		g, _ := roomGame(t, 4, 3)
+		d := *g.Dungeon
+		d.Rules.Wear = tc.wear
+		g.Dungeon = &d
+		g.Stairs = g.Player
+		b := carry(g, "kehai", 0)
+		b.Equipped = true
+		for range 3 {
+			b.used = true
+			leave(t, g)
+		}
+		if b.Cracks != tc.cracks {
+			t.Errorf("wear %d: %d cracks, want %d", tc.wear, b.Cracks, tc.cracks)
+		}
+	}
+}

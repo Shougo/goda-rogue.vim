@@ -410,6 +410,7 @@ func (g *Game) Do(action string, args []string) error {
 			g.end(fmt.Sprintf("%dF を踏破した", g.Depth), true)
 			return nil
 		}
+		g.wearAndTear()
 		g.descend()
 	default:
 		return fmt.Errorf("unknown action %q", action)
@@ -457,6 +458,7 @@ func (g *Game) attack() bool {
 		return true
 	}
 	n := damage(g.rng, g.Attack(), m.Defense, r.DefenseK)
+	g.use(EffectStrength)
 	m.HP -= n
 	g.say(fmt.Sprintf("%sに%dのダメージ。", m.Name, n))
 	if m.HP <= 0 {
@@ -475,6 +477,7 @@ func (g *Game) endTurn(rest bool) {
 		g.regen++
 		if g.wears(EffectRegen) {
 			g.regen++
+			g.use(EffectRegen)
 		}
 		if g.regen >= g.Dungeon.Rules.RegenTurns {
 			g.regen = 0
@@ -482,6 +485,7 @@ func (g *Game) endTurn(rest bool) {
 		}
 	}
 	g.monstersAct()
+	g.sense()
 	if g.Over == "" {
 		g.FloorTurns++
 		g.linger()

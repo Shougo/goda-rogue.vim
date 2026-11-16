@@ -22,7 +22,7 @@ import (
 //	monster_table.txt  which monsters appear on which floors (a table)
 //	items.txt          the items (a table; 種類 is their category, 強さ
 //	                   the strength of a weapon or a shield, 効果 what
-//	                   a bracelet does)
+//	                   a bracelet does, ひび how easily it cracks)
 //	item_table.txt     which items appear on which floors (a table)
 //	floors.txt         how many monsters and items a floor has (a table)
 //	growth.txt         the growth tables (a table)
@@ -74,6 +74,10 @@ type Rules struct {
 	StrongerBy int
 	// Capacity is how many items the player can carry.
 	Capacity int
+	// CrackStages is how many cracks a bracelet can have.
+	CrackStages int
+	// Wear is how easily bracelets crack, a percent of their Crack.
+	Wear int
 }
 
 // MonsterDef is a kind of monster. Kinds of the same glyph are one family,
@@ -102,6 +106,8 @@ type ItemDef struct {
 	Strength int
 	// Effect is what a bracelet does while it is worn ("" for nothing).
 	Effect Effect
+	// Crack is how easily a bracelet cracks, a percent (0 for never).
+	Crack int
 }
 
 // Effect is what a bracelet does while it is worn.
@@ -355,7 +361,7 @@ func (l *loader) load() {
 	rk := l.keys("rules.txt", []string{
 		"最大HP", "ちから", "回復ターン", "湧きターン", "最大モンスター数",
 		"風1", "風2", "風3", "防御K", "主の命中", "敵の命中", "成長", "最初の仲間", "強敵ランク差",
-		"持ち物の数",
+		"持ち物の数", "ひびの段階", "腕輪の傷みやすさ",
 	})
 	r := &d.Rules
 	r.PlayerHP = l.keyInt("rules.txt", rk, "最大HP", 1)
@@ -374,6 +380,8 @@ func (l *loader) load() {
 	r.MonsterHitRate = l.keyInt("rules.txt", rk, "敵の命中", 0)
 	r.StrongerBy = l.keyInt("rules.txt", rk, "強敵ランク差", 0)
 	r.Capacity = l.keyInt("rules.txt", rk, "持ち物の数", 1)
+	r.CrackStages = l.keyInt("rules.txt", rk, "ひびの段階", 0)
+	r.Wear = l.keyInt("rules.txt", rk, "腕輪の傷みやすさ", 0)
 	if ln, ok := rk["成長"]; ok {
 		r.Growth = ln.fields[1]
 	} else {
@@ -449,6 +457,14 @@ func (l *loader) load() {
 				l.errorf(row.file, row.n, "効果: only bracelets have one, not %s", c)
 			}
 			it.Effect = Effect(e)
+		}
+		if _, ok := row.cols["ひび"]; ok {
+			it.Crack = l.int(row, "ひび", 0)
+			if it.Crack > 100 {
+				l.errorf(row.file, row.n, "ひび: %d above 100", it.Crack)
+			} else if it.Crack > 0 && c != CategoryBracelet {
+				l.errorf(row.file, row.n, "ひび: only bracelets crack, not %s", c)
+			}
 		}
 		if d.Item(it.ID) != nil {
 			l.errorf(row.file, row.n, "the ID %q again", it.ID)

@@ -23,3 +23,8 @@
 最初の仲間	nezumi1
 # How many items the player can carry.
 持ち物の数	20
+# How many cracks a bracelet can have: one more breaks it.
+ひびの段階	3
+# How easily bracelets crack, a percent of their ひび (100: as items.txt
+# says, 0: never).
+腕輪の傷みやすさ	100

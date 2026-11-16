@@ -291,7 +291,18 @@ floors once the files change.
 				for nothing): ちから adds 強さ to the
 				strength, 回復 restores HP twice as fast,
 				気配察知 shows the monsters of the floor,
-				道具感知 its items.
+				道具感知 its items.  ひび is how easily a
+				bracelet cracks, a percent (0 for never).
+				Leaving a floor where a bracelet had its
+				effect (it showed a monster out of sight,
+				restored HP, added to an attack), it cracks
+				with ひび x (cracks + 1) % (times
+				腕輪の傷みやすさ, a percent, in rules.txt:
+				100 as items.txt says, 0 never, 200 twice
+				as easily), and one crack
+				more than ひびの段階 (rules.txt) breaks it.
+				The cracks are shown in the inventory
+				([ひび1]).
 	item_table.txt		Which items appear on which floors, a table.
 	floors.txt		How many monsters and items a floor starts
 				with (min-max), a table.

@@ -40,6 +40,10 @@ type Item struct {
 	// Upgrade is the upgrade value of a weapon or a shield (+3, -1).
 	Upgrade  int
 	Equipped bool
+	// Cracks are the cracks of a bracelet.
+	Cracks int
+	// used says whether a bracelet had its effect on this floor.
+	used bool
 }
 
 // equipment says whether the item is worn: a weapon, a shield or a
@@ -67,6 +71,9 @@ func (it *Item) Label() string {
 	s := it.Glyph + " " + it.Def.Name
 	if it.upgradable() && it.Upgrade != 0 {
 		s += fmt.Sprintf("%+d", it.Upgrade)
+	}
+	if it.Cracks > 0 {
+		s += fmt.Sprintf(" [ひび%d]", it.Cracks)
 	}
 	if it.Equipped {
 		s += " [装備]"
@@ -228,7 +235,7 @@ func (g *Game) drop(i int) bool {
 		return false
 	}
 	g.Inventory = slices.Delete(g.Inventory, i, i+1)
-	it.Equipped = false
+	it.Equipped, it.used = false, false
 	it.Pos = g.Player
 	g.Items = append(g.Items, it)
 	g.say(it.Def.Name + "を置いた。")
@@ -292,4 +299,57 @@ func (g *Game) Defense() int {
 		return s.Strength()
 	}
 	return 0
+}
+
+// use notes that the bracelet with the effect e, if the player wears it,
+// had its effect.
+func (g *Game) use(e Effect) {
+	if b := g.equipped(CategoryBracelet); b != nil && b.Def.Effect == e {
+		b.used = true
+	}
+}
+
+// sense notes whether the sensing bracelets had their effect: whether they
+// show what the player would not see.
+func (g *Game) sense() {
+	for _, m := range g.Monsters {
+		if !m.Ally && !g.Visible(m.Pos) {
+			g.use(EffectSenseEnemy)
+			break
+		}
+	}
+	for _, it := range g.Items {
+		if !g.IsSeen(it.Pos) {
+			g.use(EffectSenseItem)
+			break
+		}
+	}
+}
+
+// wearAndTear cracks, as the player leaves the floor, the bracelets that
+// had their effect on it: with ひび x (cracks + 1) % times the wear of the
+// dungeon, so a crack is more likely with each crack, and one crack too
+// many breaks a bracelet.
+func (g *Game) wearAndTear() {
+	for _, it := range slices.Clone(g.Inventory) {
+		if !it.used {
+			continue
+		}
+		it.used = false
+		chance := it.Def.Crack * (it.Cracks + 1) * g.Dungeon.Rules.Wear // in 1/10000
+		if chance == 0 || g.rng.IntN(10000) >= chance {
+			continue
+		}
+		switch {
+		case it.Cracks >= g.Dungeon.Rules.CrackStages:
+			g.Inventory = slices.DeleteFunc(g.Inventory, func(x *Item) bool { return x == it })
+			g.say(it.Def.Name + "が壊れた。")
+		case it.Cracks == 0:
+			it.Cracks++
+			g.say(it.Def.Name + "にひびが入った。")
+		default:
+			it.Cracks++
+			g.say(it.Def.Name + "のひびが広がった。")
+		}
+	}
 }
