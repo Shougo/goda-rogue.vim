@@ -1,0 +1,4 @@
+# The built-in dungeon: a plain 30-floor dive.
+名前	はじまりの洞窟
+説明	30階を目指す、持ち込みなしの素潜りダンジョン。
+階数	30

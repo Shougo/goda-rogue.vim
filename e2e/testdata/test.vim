@@ -95,6 +95,10 @@ function! s:start() abort
   endfor
   call s:check('ally', len(filter(copy(groups), {_, g -> g =~# '^GodaRogueAlly[1-4]$'})), 1)
 
+  let dungeons = goda_rogue#dungeons()
+  call s:check('dungeons', index(map(copy(dungeons), 'v:val.id'), 'cave') >= 0, 1)
+  call s:check('dungeon floors', filter(copy(dungeons), 'v:val.id ==# "cave"')[0].floors, 30)
+
   let first = getline(1, '$')
   call goda_rogue#start(#{seed: 'e2e'})
   call s:check('same seed', getline(1, '$'), first)

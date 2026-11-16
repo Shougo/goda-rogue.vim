@@ -157,7 +157,14 @@ augroup END
 " ---------------------------------------------------------------------------
 " API
 
+" The dungeons there are: [{id, name, description, floors}].
+function! goda_rogue#dungeons() abort
+  return goda#request('rogue', 'dungeons')
+endfunction
+
 " Start a new game in the current window. {options}:
+"   dungeon	The ID of the dungeon (goda_rogue#dungeons()).  Default: the
+"		built-in one.
 "   seed	The same seed makes the same floors (a string or a number).
 "		Default: a random one.
 function! goda_rogue#start(options = {}) abort

@@ -1,0 +1,12 @@
+# The items (they do nothing yet).
+ID	字	名前
+ken	剣	武器
+tate	盾	盾
+ude	腕	腕輪
+kusa	草	草
+maki	巻	巻物
+tsue	杖	杖
+tsubo	壺	壺
+ya	矢	矢
+kane	金	お金
+shoku	食	食べ物

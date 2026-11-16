@@ -1,0 +1,3 @@
+# How many monsters and items a floor starts with (min-max).
+開始	終了	敵の数	道具の数
+1	30	5-8	6-10

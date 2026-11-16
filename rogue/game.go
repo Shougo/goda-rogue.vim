@@ -11,12 +11,15 @@ import (
 
 // Item is an item lying on the floor.
 type Item struct {
+	Def   *ItemDef
 	Pos   Point
 	Glyph string
 }
 
 // Game is one run.
 type Game struct {
+	// Dungeon is what the run is in.
+	Dungeon *Dungeon
 	// Seed is the text the run was started from: the same seed makes the
 	// same floors.
 	Seed     string
@@ -66,9 +69,6 @@ type Game struct {
 	rng *rand.Rand
 }
 
-// itemGlyphs are the kinds of items of the prototype.
-var itemGlyphs = []string{"剣", "盾", "腕", "草", "巻", "杖", "壺", "矢", "金", "食"}
-
 // Directions are the names of the eight directions.
 var Directions = map[string]Point{
 	"left": {-1, 0}, "right": {1, 0}, "up": {0, -1}, "down": {0, 1},
@@ -83,12 +83,13 @@ var directionArrows = map[string]string{
 	"upleft": "↖", "upright": "↗", "downleft": "↙", "downright": "↘",
 }
 
-// NewGame starts a run on the first floor.
-func NewGame(seed string) *Game {
+// NewGame starts a run in the dungeon d on its first floor.
+func NewGame(d *Dungeon, seed string) *Game {
+	r := d.Rules
 	g := &Game{
-		Seed: seed, Facing: "down",
-		HP: playerHP, MaxHP: playerHP, PlayerLevel: 1, Strength: playerStrength,
-		rng:     rand.New(rand.NewPCG(seedHash(seed), math.MaxUint64)),
+		Dungeon: d, Seed: seed, Facing: "down",
+		HP: r.PlayerHP, MaxHP: r.PlayerHP, PlayerLevel: 1, Strength: r.Strength,
+		rng:     rand.New(rand.NewPCG(seedHash(d, seed), math.MaxUint64)),
 		Started: time.Now(),
 	}
 	g.descend()
@@ -97,13 +98,16 @@ func NewGame(seed string) *Game {
 
 // floorRNG is the random source of the layout of the floor depth: the
 // same for the same seed whatever the player did before.
-func floorRNG(seed string, depth int) *rand.Rand {
-	return rand.New(rand.NewPCG(seedHash(seed), uint64(depth)))
+func (g *Game) floorRNG(depth int) *rand.Rand {
+	return rand.New(rand.NewPCG(seedHash(g.Dungeon, g.Seed), uint64(depth)))
 }
 
-func seedHash(seed string) uint64 {
+// seedHash is the seed of the random sources: the seed, in the dungeon as
+// it is defined (the same seed with another definition makes other
+// floors).
+func seedHash(d *Dungeon, seed string) uint64 {
 	h := fnv.New64a()
-	h.Write([]byte(seed))
+	h.Write([]byte(d.ID + "\x00" + d.Hash + "\x00" + seed))
 	return h.Sum64()
 }
 
@@ -118,7 +122,7 @@ func (g *Game) descend() {
 
 	g.Depth++
 	g.FloorTurns, g.Wind = 0, 0
-	rng := floorRNG(g.Seed, g.Depth)
+	rng := g.floorRNG(g.Depth)
 	g.Level = Generate(rng)
 	g.Seen = make([]bool, len(g.Level.Tiles))
 	g.Safe = make([]bool, len(g.Level.Tiles))
@@ -141,24 +145,24 @@ func (g *Game) descend() {
 	}
 	g.Stairs = g.randomTile(rng, stairsRoom)
 
-	for range between(rng, 5, 8) {
-		k := monsterKinds[rng.IntN(len(monsterKinds))]
+	d := g.Dungeon
+	c := d.counts(g.Depth)
+	for range between(rng, c.MinMonster, c.MaxMonster) {
 		pos := g.randomTile(rng, rooms[rng.IntN(len(rooms))])
-		m := newMonster(k, floorRank(rng, g.Depth))
+		m := newMonster(d.Monster(pick(rng, d.MonsterRows, g.Depth)))
 		m.Pos = pos
 		// A third of them doze, but never in the player's room.
 		m.Dozing = rng.IntN(3) == 0 && g.Level.RoomAt(pos) != start
 		g.Monsters = append(g.Monsters, m)
 	}
-	for range between(rng, 6, 10) {
+	for range between(rng, c.MinItem, c.MaxItem) {
 		pos := g.randomTile(rng, rooms[rng.IntN(len(rooms))])
-		g.Items = append(g.Items, Item{Pos: pos, Glyph: itemGlyphs[rng.IntN(len(itemGlyphs))]})
+		def := d.Item(pick(rng, d.ItemRows, g.Depth))
+		g.Items = append(g.Items, Item{Def: def, Pos: pos, Glyph: def.Glyph})
 	}
 
-	if g.Depth == 1 {
-		// The prototype starts with an ally, to see how one looks.
-		k := monsterKinds[rng.IntN(len(monsterKinds))]
-		ally = newMonster(k, 1)
+	if g.Depth == 1 && d.Rules.FirstAlly != "" {
+		ally = newMonster(d.Monster(d.Rules.FirstAlly))
 		ally.Ally = true
 	}
 	if ally != nil {
@@ -170,17 +174,6 @@ func (g *Game) descend() {
 	g.look()
 	g.markSafe(g.Player)
 	g.say(fmt.Sprintf("%dF に着いた。", g.Depth))
-}
-
-// floorRank returns the rank of a monster on the floor depth: 1 on the
-// first floors, one more every four floors, and sometimes one above (not
-// on the first three floors: no equipment yet to face it).
-func floorRank(rng *rand.Rand, depth int) int {
-	rank := 1 + (depth-1)/4
-	if rng.IntN(5) == 0 && depth > 3 {
-		rank++
-	}
-	return min(rank, 4)
 }
 
 // randomTile returns a free tile of the room i.
@@ -376,7 +369,7 @@ func (g *Game) Do(action string, args []string) error {
 			return nil
 		}
 		g.Turn++
-		if g.Depth >= finalFloor {
+		if g.Depth >= g.Dungeon.Floors {
 			g.end(fmt.Sprintf("%dF を踏破した", g.Depth), true)
 			return nil
 		}
@@ -421,11 +414,12 @@ func (g *Game) attack() bool {
 		return true
 	}
 	m.Dozing = false
-	if !hits(g.rng, playerHitRate) {
+	r := g.Dungeon.Rules
+	if !hits(g.rng, r.PlayerHitRate) {
 		g.say(m.Name + "にかわされた。")
 		return true
 	}
-	n := damage(g.rng, playerAttack(g.PlayerLevel, g.Strength), m.Defense)
+	n := damage(g.rng, playerAttack(g.PlayerLevel, g.Strength), m.Defense, r.DefenseK)
 	m.HP -= n
 	g.say(fmt.Sprintf("%sに%dのダメージ。", m.Name, n))
 	if m.HP <= 0 {
@@ -442,7 +436,7 @@ func (g *Game) endTurn(rest bool) {
 	g.Turn++
 	if rest && g.HP < g.MaxHP {
 		g.regen++
-		if g.regen >= regenTurns {
+		if g.regen >= g.Dungeon.Rules.RegenTurns {
 			g.regen = 0
 			g.HP++
 		}
@@ -457,10 +451,12 @@ func (g *Game) endTurn(rest bool) {
 // linger is what lingering on a floor brings: new monsters now and then,
 // and Kron's wind.
 func (g *Game) linger() {
-	if g.FloorTurns%spawnTurns == 0 && len(g.Monsters) < maxMonsters {
-		g.spawn(floorRank(g.rng, g.Depth))
+	d := g.Dungeon
+	r := d.Rules
+	if g.FloorTurns%r.SpawnTurns == 0 && len(g.Monsters) < r.MaxMonsters {
+		g.spawn(d.Monster(pick(g.rng, d.MonsterRows, g.Depth)))
 	}
-	if g.Wind >= len(windTurns) || g.FloorTurns < windTurns[g.Wind] {
+	if g.Wind >= len(r.WindTurns) || g.FloorTurns < r.WindTurns[g.Wind] {
 		return
 	}
 	g.Wind++
@@ -471,10 +467,13 @@ func (g *Game) linger() {
 		g.say("強い風が吹いてきた！　何かが近づいてくる。")
 		for _, m := range g.Monsters {
 			if !m.Ally {
-				rankUp(m)
+				g.rankUp(m)
 			}
 		}
-		if m := g.spawn(min(1+(g.Depth-1)/4+2, len(rankStats)-1)); m != nil {
+		// A monster ranks above the floor's.
+		rank := d.Monster(pick(g.rng, d.MonsterRows, g.Depth)).Rank + r.StrongerBy
+		kinds := d.ofRank(min(rank, maxRank))
+		if m := g.spawn(kinds[g.rng.IntN(len(kinds))]); m != nil {
 			m.Hunter = true
 		}
 	case 3:
@@ -482,15 +481,15 @@ func (g *Game) linger() {
 	}
 }
 
-// spawn puts a new monster of rank on a free tile out of the player's
-// sight, and returns it (nil if there is no room).
-func (g *Game) spawn(rank int) *Monster {
+// spawn puts a new monster of the kind def on a free tile out of the
+// player's sight, and returns it (nil if there is no room).
+func (g *Game) spawn(def *MonsterDef) *Monster {
 	for range 100 {
 		p := g.wanderTarget()
 		if !g.Level.At(p).Walkable() || g.occupied(p) || g.Visible(p) || chebyshev(p, g.Player) <= 4 {
 			continue
 		}
-		m := newMonster(monsterKinds[g.rng.IntN(len(monsterKinds))], rank)
+		m := newMonster(def)
 		m.Pos = p
 		m.Spawned = true
 		g.Monsters = append(g.Monsters, m)
@@ -609,8 +608,8 @@ func (g *Game) visibleEnemies() []*Monster {
 // Status is the status line, under the map.
 func (g *Game) Status() string {
 	s := fmt.Sprintf("ターン %d  向き %s  シード %s", g.Turn, directionArrows[g.Facing], g.Seed)
-	if g.Wind > 0 && g.Wind < len(windTurns) {
-		s += fmt.Sprintf("  次の風まで %d", windTurns[g.Wind]-g.FloorTurns)
+	if w := g.Dungeon.Rules.WindTurns; g.Wind > 0 && g.Wind < len(w) {
+		s += fmt.Sprintf("  次の風まで %d", w[g.Wind]-g.FloorTurns)
 	}
 	return s
 }

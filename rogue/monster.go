@@ -31,6 +31,8 @@ func (s Speed) actions(turn int) int {
 // Monster is a creature on the floor: an enemy, or an ally of the player
 // (the same creature on the other side).
 type Monster struct {
+	// Def is its kind.
+	Def   *MonsterDef
 	Pos   Point
 	Glyph string
 	Name  string
@@ -63,25 +65,11 @@ type Monster struct {
 	hasTarget bool
 }
 
-// monsterKind is a kind of monster of the prototype, until monsters are
-// data.
-type monsterKind struct {
-	Glyph, Name string
-	Speed       Speed
-}
-
-var monsterKinds = []monsterKind{
-	{"鼠", "鼠", SpeedNormal}, {"蛇", "蛇", SpeedNormal}, {"狼", "狼", SpeedDouble},
-	{"骸", "骸骨", SpeedSlow}, {"霊", "亡霊", SpeedNormal}, {"鬼", "鬼", SpeedNormal},
-	{"竜", "竜", SpeedNormal}, {"盗", "盗賊", SpeedNormal},
-}
-
-func newMonster(k monsterKind, rank int) *Monster {
-	s := rankStats[rank]
+func newMonster(def *MonsterDef) *Monster {
 	return &Monster{
-		Glyph: k.Glyph, Name: k.Name, Rank: rank, Speed: k.Speed,
-		HP: s.HP, MaxHP: s.HP, Attack: s.Attack, Defense: s.Defense,
-		EXP: rankEXP[rank], Level: 1,
+		Def: def, Glyph: def.Glyph, Name: def.Name, Rank: def.Rank, Speed: def.Speed,
+		HP: def.HP, MaxHP: def.HP, Attack: def.Attack, Defense: def.Defense,
+		EXP: def.EXP, Level: 1,
 	}
 }
 
@@ -254,11 +242,12 @@ func (g *Game) distances(to Point) []int {
 
 // hitPlayer is an attack of m on the player.
 func (g *Game) hitPlayer(m *Monster) {
-	if !hits(g.rng, monsterHitRate) {
+	r := g.Dungeon.Rules
+	if !hits(g.rng, r.MonsterHitRate) {
 		g.say(m.Name + "の攻撃は外れた。")
 		return
 	}
-	n := damage(g.rng, m.Attack, 0)
+	n := damage(g.rng, m.Attack, 0, r.DefenseK)
 	g.HP -= n
 	g.say(fmt.Sprintf("%sの攻撃。%dのダメージ。", m.Name, n))
 	if g.HP <= 0 {
@@ -271,13 +260,14 @@ func (g *Game) hitPlayer(m *Monster) {
 func (g *Game) hitMonster(a, m *Monster) {
 	m.Dozing = false
 	shown := g.sees(g.Player, a.Pos) || g.sees(g.Player, m.Pos)
-	if !hits(g.rng, monsterHitRate) {
+	r := g.Dungeon.Rules
+	if !hits(g.rng, r.MonsterHitRate) {
 		if shown {
 			g.say(a.Name + "の攻撃は外れた。")
 		}
 		return
 	}
-	n := damage(g.rng, a.Attack, m.Defense)
+	n := damage(g.rng, a.Attack, m.Defense, r.DefenseK)
 	m.HP -= n
 	if shown {
 		g.say(fmt.Sprintf("%sは%sに%dのダメージ。", a.Name, m.Name, n))
@@ -301,10 +291,12 @@ func (g *Game) defeated(m *Monster) {
 		return
 	}
 	g.EXP += m.EXP
-	for g.PlayerLevel-1 < len(levelEXP) && g.EXP >= levelEXP[g.PlayerLevel-1] {
+	growth := g.Dungeon.Growth[g.Dungeon.Rules.Growth]
+	for g.PlayerLevel-1 < len(growth) && g.EXP >= growth[g.PlayerLevel-1].EXP {
+		gr := growth[g.PlayerLevel-1]
 		g.PlayerLevel++
-		g.MaxHP += levelHP
-		g.HP += levelHP
+		g.MaxHP += gr.HP
+		g.HP += gr.HP
 		g.say(fmt.Sprintf("主はレベル%dに上がった。", g.PlayerLevel))
 	}
 	for _, a := range g.Monsters {
@@ -312,30 +304,29 @@ func (g *Game) defeated(m *Monster) {
 			continue
 		}
 		a.Gained += m.EXP
-		for a.Level-1 < len(levelEXP) && a.Gained >= levelEXP[a.Level-1] {
+		growth := g.Dungeon.Growth[a.Def.Growth]
+		for a.Level-1 < len(growth) && a.Gained >= growth[a.Level-1].EXP {
+			gr := growth[a.Level-1]
 			a.Level++
-			a.MaxHP += allyLevelHP
-			a.HP += allyLevelHP
-			a.Attack += allyLevelAtk
-			a.Defense += allyLevelDef
+			a.MaxHP += gr.HP
+			a.HP += gr.HP
+			a.Attack += gr.Attack
+			a.Defense += gr.Defense
 			g.say(fmt.Sprintf("%sはレベル%dに上がった。", a.Name, a.Level))
 		}
 	}
 }
 
-func (g *Game) remove(m *Monster) {
-	g.Monsters = slices.DeleteFunc(g.Monsters, func(x *Monster) bool { return x == m })
-}
-
-// rankUp makes m one rank stronger (up to 4), its HP in proportion.
-func rankUp(m *Monster) {
-	if m.Rank >= len(rankStats)-1 {
+// rankUp makes m the kind of its family one rank above, if there is one,
+// its HP in proportion. Its EXP stays what it was worth.
+func (g *Game) rankUp(m *Monster) {
+	next := g.Dungeon.nextRank(m.Def)
+	if next == nil {
 		return
 	}
-	m.Rank++
-	s := rankStats[m.Rank]
-	m.HP = max(m.HP*s.HP/m.MaxHP, 1)
-	m.MaxHP, m.Attack, m.Defense = s.HP, s.Attack, s.Defense
+	m.Def, m.Name, m.Rank, m.Speed = next, next.Name, next.Rank, next.Speed
+	m.HP = max(m.HP*next.HP/m.MaxHP, 1)
+	m.MaxHP, m.Attack, m.Defense = next.HP, next.Attack, next.Defense
 }
 
 // wake wakes the dozing monsters in the room i.
@@ -349,4 +340,8 @@ func (g *Game) wake(i int) {
 			m.Dozing = false
 		}
 	}
+}
+
+func (g *Game) remove(m *Monster) {
+	g.Monsters = slices.DeleteFunc(g.Monsters, func(x *Monster) bool { return x == m })
 }

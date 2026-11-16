@@ -53,6 +53,12 @@ call goda_rogue#start(#{seed: 'vim'})
 The binary is built on the first start (it takes a while), into a cache
 directory. See `:help goda-rogue` for everything else.
 
+## Dungeons
+
+Dungeons are data: tab-separated text files in `rogue/dungeons/{id}/`
+(monsters, which floors they appear on, items, rules, growth tables).
+See `:help goda-rogue-dungeons`.
+
 ## License
 
 MIT, see [LICENSE](LICENSE).

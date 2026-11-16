@@ -39,8 +39,14 @@ func (*Plugin) Name() string { return PluginName }
 // ScriptVersion implements sdk.ScriptVersioner.
 func (*Plugin) ScriptVersion() int { return ScriptVersion }
 
+// DefaultDungeon is the dungeon of goda_rogue#start() without one.
+const DefaultDungeon = "cave"
+
 // StartOptions are the options of a new game.
 type StartOptions struct {
+	// Dungeon is the ID of the dungeon. Empty for the built-in one
+	// (DefaultDungeon).
+	Dungeon string `json:"dungeon"`
 	// Seed makes the floors: the same seed, the same floors. Empty for a
 	// random one.
 	Seed string `json:"seed"`
@@ -49,6 +55,7 @@ type StartOptions struct {
 // Handlers implements sdk.Plugin.
 //
 //	start(options, size): start a new game, and return its Screen.
+//	dungeons(): the dungeons there are: id, name, description, floors.
 //	do(action, args, size): run an action of the game, and return the
 //	Screen after it.
 func (p *Plugin) Handlers() map[string]sdk.Handler {
@@ -64,8 +71,28 @@ func (p *Plugin) Handlers() map[string]sdk.Handler {
 			}
 			p.mu.Lock()
 			defer p.mu.Unlock()
-			p.game = NewGame(opts.Seed)
+			if opts.Dungeon == "" {
+				opts.Dungeon = DefaultDungeon
+			}
+			d, err := LoadBuiltin(opts.Dungeon)
+			if err != nil {
+				return nil, fmt.Errorf("dungeon %q: %w", opts.Dungeon, err)
+			}
+			p.game = NewGame(d, opts.Seed)
 			return sdk.Generic(p.game.Render(size))
+		},
+		"dungeons": func(ctx context.Context, h sdk.Host, params []any) (any, error) {
+			var list []map[string]any
+			for _, id := range BuiltinDungeons() {
+				d, err := LoadBuiltin(id)
+				if err != nil {
+					return nil, fmt.Errorf("dungeon %q: %w", id, err)
+				}
+				list = append(list, map[string]any{
+					"id": d.ID, "name": d.Name, "description": d.Description, "floors": d.Floors,
+				})
+			}
+			return sdk.Generic(list)
 		},
 		"do": func(ctx context.Context, h sdk.Host, params []any) (any, error) {
 			var action string

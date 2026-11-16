@@ -1,0 +1,12 @@
+# Which items appear on which floors, by weight (頻度).
+開始	終了	ID	頻度
+1	30	ken	1
+1	30	tate	1
+1	30	ude	1
+1	30	kusa	1
+1	30	maki	1
+1	30	tsue	1
+1	30	tsubo	1
+1	30	ya	1
+1	30	kane	1
+1	30	shoku	1

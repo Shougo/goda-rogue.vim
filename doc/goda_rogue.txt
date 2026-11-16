@@ -13,6 +13,7 @@ Actions			|goda-rogue-actions|
 Variables		|goda-rogue-variables|
 Highlights		|goda-rogue-highlights|
 Screen			|goda-rogue-screen|
+Dungeons		|goda-rogue-dungeons|
 Mini-map		|goda-rogue-mini-map|
 
 ==============================================================================
@@ -92,9 +93,19 @@ goda_rogue#start([{options}])
 		Start a new game in the current window, in the buffer
 		"goda-rogue://game" (filetype "goda-rogue").
 		{options} is a |Dictionary|:
-		  seed	A string or a number.  The same seed makes the
-			same floors, whatever the player does on them.
-			Default: a random one, shown in the status line.
+		  dungeon	The ID of the dungeon (see
+				|goda_rogue#dungeons()|).
+				Default: "cave", the built-in one.
+		  seed		A string or a number.  The same seed
+				makes the same floors in the same
+				dungeon, whatever the player does on
+				them.  Default: a random one, shown in
+				the status line.
+
+                                                     *goda_rogue#dungeons()*
+goda_rogue#dungeons()
+		The dungeons there are: a |List| of |Dictionary| with
+		"id", "name", "description" and "floors".
 
                                                            *goda_rogue#do()*
 goda_rogue#do({action} [, {arg}...])
@@ -215,6 +226,39 @@ that fits.  Under the map are the status line (the turn, the direction the
 player faces as an arrow, the seed, and the turns until the next wind
 once it has blown) and the last three messages, those of the actions
 before the last one dimmed (|GodaRogueOldMessage|).
+
+==============================================================================
+DUNGEONS                                                  *goda-rogue-dungeons*
+
+A dungeon is data: a directory of tab-separated text files, in
+"rogue/dungeons/{id}/" of this plugin for the built-in ones.  Lines that
+start with "#" are comments.  Change them and build the binary again
+(|goda_rogue#build()|) to change the dungeon.  The same seed makes other
+floors once the files change.
+
+	header.txt		The name (名前), the description (説明) and
+				the number of floors (階数): key<TAB>value.
+	rules.txt		The rules: the player at the start, HP
+				regeneration, spawning, Kron's wind, combat
+				constants, the growth table of the player,
+				the first ally: key<TAB>value.  A later line
+				overrides an earlier one.
+	monsters.txt		The monsters, a table.  A family is a glyph
+				(字), a kind of it a rank (ランク, 1 to 4).
+	monster_table.txt	Which monsters appear on which floors (開始
+				to 終了), by weight (頻度), a table.
+	items.txt		The items, a table.
+	item_table.txt		Which items appear on which floors, a table.
+	floors.txt		How many monsters and items a floor starts
+				with (min-max), a table.
+	growth.txt		The growth tables: the total EXP for each
+				level from 2, and the HP, attack and defense
+				a level adds, a table.
+
+A table starts with a line of column names, in any order; the files of
+"cave" show them.  Mistakes are reported with their file and line: glyphs
+must be one full-width character, IDs must exist, every floor needs its
+monsters, items and counts, levels go in order.
 
 ==============================================================================
 MINI-MAP                                                  *goda-rogue-mini-map*

@@ -4,29 +4,22 @@ import (
 	"math/rand/v2"
 )
 
-// The provisional combat rules. They are to be chosen with a balance
-// simulator, and then to become data: keep them in this file, behind these
-// functions.
+// The provisional combat formulas. They are to be chosen with a balance
+// simulator; their constants are rules of the dungeon. Keep them in this
+// file, behind these functions.
 
-// defenseK is K of the provisional defense curve, damage x K / (K +
-// defense): every point of defense cuts the same fraction of the damage,
-// whatever the attack, and defense never makes it 0.
-const defenseK = 20
-
-// damage returns the damage of an attack of attack on a defense of defense:
-// randomized by +-1/8, and at least 1.
-func damage(rng *rand.Rand, attack, defense int) int {
+// damage returns the damage of an attack of attack on a defense of
+// defense, by the provisional defense curve damage x k / (k + defense)
+// (every point of defense cuts the same fraction of the damage, whatever
+// the attack, and defense never makes it 0): randomized by +-1/8, and at
+// least 1. k is a rule of the dungeon.
+func damage(rng *rand.Rand, attack, defense, k int) int {
 	r := 0.875 + rng.Float64()*0.25
-	d := float64(attack) * r * defenseK / float64(defenseK+defense)
+	d := float64(attack) * r * float64(k) / float64(k+defense)
 	return max(int(d+0.5), 1)
 }
 
-// The hit rates, in percent (as in Shiren 5).
-const (
-	playerHitRate  = 92
-	monsterHitRate = 88
-)
-
+// hits says whether an attack of a hit rate (in percent) hits.
 func hits(rng *rand.Rand, rate int) bool { return rng.IntN(100) < rate }
 
 // playerAttack returns the attack of the player: from its level (as Shiren
@@ -44,60 +37,3 @@ func playerAttack(level, strength int) int {
 	}
 	return int(lv) + strength
 }
-
-// rankStats are the stats of a monster by its rank, until monsters are
-// data.
-var rankStats = [...]struct{ HP, Attack, Defense int }{
-	{},
-	{HP: 6, Attack: 3, Defense: 1},
-	{HP: 15, Attack: 6, Defense: 4},
-	{HP: 30, Attack: 11, Defense: 8},
-	{HP: 60, Attack: 18, Defense: 14},
-}
-
-// The player at the start of a run.
-const (
-	playerHP       = 15
-	playerStrength = 8
-)
-
-// rankEXP is the EXP a monster gives by its rank (the rank it had when the
-// floor began: growing stronger by lingering does not raise it).
-var rankEXP = [...]int{0, 3, 10, 30, 90}
-
-// levelEXP are the total EXP for each level from 2: the growth table
-// "normal", shared by the player and its allies until growth tables are
-// data.
-var levelEXP = []int{
-	10, 30, 60, 100, 150, 230, 350, 500, 700, 950,
-	1200, 1500, 1800, 2300, 3000, 4000, 6000, 9000, 15000, 22500,
-	35000, 50000, 70000, 100000, 140000, 190000, 250000, 330000, 430000,
-}
-
-// What a level up adds.
-const (
-	levelHP      = 5
-	allyLevelHP  = 4
-	allyLevelAtk = 1
-	allyLevelDef = 1
-)
-
-// finalFloor is the last floor: going down its stairs clears the dungeon,
-// until dungeons are data.
-const finalFloor = 30
-
-// regenTurns is how many turns of walking or waiting restore 1 HP.
-const regenTurns = 2
-
-// The rules of lingering on a floor, until dungeons are data.
-const (
-	// spawnTurns is how often a monster appears, out of the player's
-	// sight; maxMonsters is how many there can be.
-	spawnTurns  = 40
-	maxMonsters = 16
-)
-
-// windTurns are the turns on a floor at which Kron's wind blows: a
-// warning, then a strong monster (and every enemy one rank stronger), then
-// the end of the run.
-var windTurns = [3]int{800, 900, 1000}

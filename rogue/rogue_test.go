@@ -29,7 +29,7 @@ func reachable(l *Level, p Point) map[Point]bool {
 
 func TestGenerateConnected(t *testing.T) {
 	for seed := range 200 {
-		g := NewGame(fmt.Sprint(seed))
+		g := NewGame(cave(), fmt.Sprint(seed))
 		l := g.Level
 		if len(l.Rooms) != gridCols*gridRows {
 			t.Fatalf("seed %d: %d rooms", seed, len(l.Rooms))
@@ -59,7 +59,7 @@ func TestGenerateConnected(t *testing.T) {
 // TestSeed: the same seed makes the same floors, whatever the player did
 // on the floors before.
 func TestSeed(t *testing.T) {
-	a, b := NewGame("vim"), NewGame("vim")
+	a, b := NewGame(cave(), "vim"), NewGame(cave(), "vim")
 	if !slices.Equal(a.Level.Tiles, b.Level.Tiles) || a.Player != b.Player || a.Stairs != b.Stairs {
 		t.Fatal("the same seed made different first floors")
 	}
@@ -75,13 +75,13 @@ func TestSeed(t *testing.T) {
 	if !slices.Equal(a.Level.Tiles, b.Level.Tiles) || a.Stairs != b.Stairs {
 		t.Fatal("the same seed made different second floors")
 	}
-	if c := NewGame("emacs"); slices.Equal(a.Level.Tiles, c.Level.Tiles) {
+	if c := NewGame(cave(), "emacs"); slices.Equal(a.Level.Tiles, c.Level.Tiles) {
 		t.Fatal("different seeds made the same floor")
 	}
 }
 
 func TestRender(t *testing.T) {
-	g := NewGame("render")
+	g := NewGame(cave(), "render")
 	for _, size := range []Size{{80, 24}, {200, 60}, {7, 3}} {
 		s := g.Render(size)
 		// The map is between the top line, and the status line and the
@@ -125,7 +125,7 @@ func TestRender(t *testing.T) {
 func find(t *testing.T, ok func(*Game) bool) *Game {
 	t.Helper()
 	for seed := range 1000 {
-		g := NewGame(fmt.Sprint(seed))
+		g := NewGame(cave(), fmt.Sprint(seed))
 		if ok(g) {
 			return g
 		}
@@ -147,7 +147,7 @@ func TestMoveIntoRock(t *testing.T) {
 }
 
 func TestTurnCostsNothing(t *testing.T) {
-	g := NewGame("turn")
+	g := NewGame(cave(), "turn")
 	if err := g.Do("turn", []string{"upleft"}); err != nil {
 		t.Fatal(err)
 	}
@@ -160,7 +160,7 @@ func TestTurnCostsNothing(t *testing.T) {
 }
 
 func TestSwapWithAlly(t *testing.T) {
-	g := NewGame("ally")
+	g := NewGame(cave(), "ally")
 	var ally *Monster
 	for _, m := range g.Monsters {
 		if m.Ally {
@@ -190,7 +190,7 @@ func TestSwapWithAlly(t *testing.T) {
 }
 
 func TestStairs(t *testing.T) {
-	g := NewGame("stairs")
+	g := NewGame(cave(), "stairs")
 	if err := g.Do("stairs", nil); err != nil {
 		t.Fatal(err)
 	}
@@ -207,7 +207,7 @@ func TestStairs(t *testing.T) {
 }
 
 func TestDash(t *testing.T) {
-	g := NewGame("dash")
+	g := NewGame(cave(), "dash")
 	g.Monsters = nil
 	g.Items = nil
 	g.Stairs = Point{-1, -1}
@@ -227,7 +227,7 @@ func TestDash(t *testing.T) {
 // only right outside a doorway, so rooms do not look merged.
 func TestCorridorsAwayFromWalls(t *testing.T) {
 	for seed := range 200 {
-		l := NewGame(fmt.Sprint(seed)).Level
+		l := NewGame(cave(), fmt.Sprint(seed)).Level
 		for _, r := range l.Rooms {
 			if r.Dummy {
 				continue
@@ -252,7 +252,7 @@ func TestCorridorsAwayFromWalls(t *testing.T) {
 }
 
 func TestSafe(t *testing.T) {
-	g := NewGame("safe")
+	g := NewGame(cave(), "safe")
 	start := g.Player
 	if !g.IsSafe(start) {
 		t.Fatal("the start tile is not safe")
@@ -322,7 +322,7 @@ func TestAttack(t *testing.T) {
 		t.Errorf("attacked the ally: turn %d, HP %d", g.Turn, ally.HP)
 	}
 
-	m := newMonster(monsterKinds[0], 4)
+	m := newMonster(kind("nezumi4"))
 	m.Pos = right
 	g.Monsters = []*Monster{m}
 	// Moving toward it only faces it.
@@ -352,7 +352,7 @@ func TestAttack(t *testing.T) {
 
 // TestAttackRNG: combat does not change the floors of a seed.
 func TestAttackRNG(t *testing.T) {
-	a, b := NewGame("rng"), NewGame("rng")
+	a, b := NewGame(cave(), "rng"), NewGame(cave(), "rng")
 	for range 20 {
 		if err := a.Do("attack", nil); err != nil {
 			t.Fatal(err)
@@ -366,7 +366,7 @@ func TestAttackRNG(t *testing.T) {
 }
 
 func TestFacingHighlight(t *testing.T) {
-	g := NewGame("facing")
+	g := NewGame(cave(), "facing")
 	for dir, d := range Directions {
 		g.Facing = dir
 		s := g.Render(Size{200, 60})
@@ -380,7 +380,7 @@ func TestFacingHighlight(t *testing.T) {
 }
 
 func TestMinimap(t *testing.T) {
-	g := NewGame("minimap")
+	g := NewGame(cave(), "minimap")
 	if s := g.Render(Size{80, 24}); s.Minimap != nil {
 		t.Fatal("the mini-map is shown without asking")
 	}
@@ -459,11 +459,11 @@ func TestFaceEnemy(t *testing.T) {
 	}
 
 	for _, d := range []Point{{-1, 0}, {1, 0}} {
-		m := newMonster(monsterKinds[0], 1)
+		m := newMonster(kind("nezumi1"))
 		m.Pos = g.Player.Add(d)
 		g.Monsters = append(g.Monsters, m)
 	}
-	ally := newMonster(monsterKinds[2], 1)
+	ally := newMonster(kind("ookami1"))
 	ally.Ally = true
 	ally.Pos = g.Player.Add(Point{0, 1})
 	g.Monsters = append(g.Monsters, ally)
@@ -498,8 +498,8 @@ func roomGame(t *testing.T, w, h int) (*Game, Room) {
 	return g, r
 }
 
-func place(g *Game, k monsterKind, rank int, p Point) *Monster {
-	m := newMonster(k, rank)
+func place(g *Game, def *MonsterDef, p Point) *Monster {
+	m := newMonster(def)
 	m.Pos = p
 	g.Monsters = append(g.Monsters, m)
 	return m
@@ -516,16 +516,16 @@ func wait(t *testing.T, g *Game, n int) {
 
 func TestMonsterChases(t *testing.T) {
 	for _, tc := range []struct {
-		kind  monsterKind
+		kind  *MonsterDef
 		turns int
 		steps int
 	}{
-		{monsterKinds[0], 1, 1}, // normal
-		{monsterKinds[2], 1, 2}, // double speed
-		{monsterKinds[3], 2, 1}, // slow
+		{kind("nezumi1"), 1, 1},   // normal
+		{kind("ookami1"), 1, 2},   // double speed
+		{kind("gaikotsu1"), 2, 1}, // slow
 	} {
 		g, r := roomGame(t, 8, 3)
-		m := place(g, tc.kind, 1, Point{r.X + 7, r.Y})
+		m := place(g, tc.kind, Point{r.X + 7, r.Y})
 		before := chebyshev(m.Pos, g.Player)
 		wait(t, g, tc.turns)
 		if got := chebyshev(m.Pos, g.Player); got != before-tc.steps {
@@ -537,9 +537,9 @@ func TestMonsterChases(t *testing.T) {
 func TestMonsterAttacks(t *testing.T) {
 	g, r := roomGame(t, 4, 3)
 	g.HP, g.MaxHP = 9999, 9999
-	place(g, monsterKinds[0], 1, Point{r.X + 1, r.Y})
+	place(g, kind("nezumi1"), Point{r.X + 1, r.Y})
 	wait(t, g, 20)
-	if g.HP >= 9999-20/regenTurns {
+	if g.HP >= 9999-20/g.Dungeon.Rules.RegenTurns {
 		t.Errorf("HP %d: the monster next to the player never hit it", g.HP)
 	}
 }
@@ -548,7 +548,7 @@ func TestPlayerDies(t *testing.T) {
 	g, r := roomGame(t, 4, 3)
 	g.HP = 1
 	g.MaxHP = 1
-	place(g, monsterKinds[0], 4, Point{r.X + 1, r.Y})
+	place(g, kind("nezumi4"), Point{r.X + 1, r.Y})
 	for n := 0; g.Over == ""; n++ {
 		if n > 100 {
 			t.Fatal("the player never dies")
@@ -588,7 +588,7 @@ func TestDozing(t *testing.T) {
 	g.Stairs = Point{-1, -1}
 	g.HP, g.MaxHP = 9999, 9999
 	g.Player = Point{r.X - 1, r.Y}
-	m := place(g, monsterKinds[0], 1, Point{r.X + r.W - 1, r.Y + r.H - 1})
+	m := place(g, kind("nezumi1"), Point{r.X + r.W - 1, r.Y + r.H - 1})
 	m.Dozing = true
 	pos := m.Pos
 	wait(t, g, 3)
@@ -606,7 +606,7 @@ func TestDozing(t *testing.T) {
 func TestAlly(t *testing.T) {
 	g, r := roomGame(t, 8, 3)
 	g.HP, g.MaxHP = 9999, 9999
-	ally := place(g, monsterKinds[0], 1, Point{r.X + 5, r.Y})
+	ally := place(g, kind("nezumi1"), Point{r.X + 5, r.Y})
 	ally.Ally = true
 	wait(t, g, 1)
 	if d := chebyshev(ally.Pos, g.Player); d != 4 {
@@ -616,7 +616,7 @@ func TestAlly(t *testing.T) {
 	// An enemy next to the ally, not to the player: they fight.
 	ally.Pos = Point{r.X + 3, r.Y + 2}
 	ally.HP, ally.MaxHP = 9999, 9999
-	enemy := place(g, monsterKinds[0], 1, Point{r.X + 4, r.Y + 2})
+	enemy := place(g, kind("nezumi1"), Point{r.X + 4, r.Y + 2})
 	for n := 0; slices.Contains(g.Monsters, enemy); n++ {
 		if n > 100 {
 			t.Fatal("the ally never defeats the enemy")
@@ -627,7 +627,7 @@ func TestAlly(t *testing.T) {
 }
 
 func TestTopLine(t *testing.T) {
-	g := NewGame("top")
+	g := NewGame(cave(), "top")
 	for _, tc := range []struct {
 		hp           int
 		group        string
@@ -665,13 +665,13 @@ func TestTopLine(t *testing.T) {
 func TestSpawn(t *testing.T) {
 	g, _ := roomGame(t, 4, 3)
 	g.HP, g.MaxHP = 9999, 9999
-	wait(t, g, spawnTurns-1)
+	wait(t, g, g.Dungeon.Rules.SpawnTurns-1)
 	if len(g.Monsters) != 0 {
-		t.Fatalf("%d monsters before %d turns", len(g.Monsters), spawnTurns)
+		t.Fatalf("%d monsters before %d turns", len(g.Monsters), g.Dungeon.Rules.SpawnTurns)
 	}
 	wait(t, g, 1)
 	if len(g.Monsters) != 1 {
-		t.Fatalf("%d monsters after %d turns", len(g.Monsters), spawnTurns)
+		t.Fatalf("%d monsters after %d turns", len(g.Monsters), g.Dungeon.Rules.SpawnTurns)
 	}
 	if m := g.Monsters[0]; !m.Spawned || chebyshev(m.Pos, g.Player) <= 4 {
 		t.Errorf("spawned %+v, the player at %v", m, g.Player)
@@ -681,19 +681,19 @@ func TestSpawn(t *testing.T) {
 func TestWind(t *testing.T) {
 	g, r := roomGame(t, 8, 3)
 	g.HP, g.MaxHP = 9999, 9999
-	m := place(g, monsterKinds[0], 1, Point{r.X + 7, r.Y + 2})
+	m := place(g, kind("nezumi1"), Point{r.X + 7, r.Y + 2})
 	m.Dozing = true
 
-	g.FloorTurns = windTurns[0] - 1
+	g.FloorTurns = g.Dungeon.Rules.WindTurns[0] - 1
 	wait(t, g, 1)
 	if g.Wind != 1 || !strings.Contains(g.Message, "風が吹いてきた") {
 		t.Errorf("first wind: %d, %q", g.Wind, g.Message)
 	}
-	if !strings.Contains(g.Status(), fmt.Sprintf("次の風まで %d", windTurns[1]-windTurns[0])) {
+	if !strings.Contains(g.Status(), fmt.Sprintf("次の風まで %d", g.Dungeon.Rules.WindTurns[1]-g.Dungeon.Rules.WindTurns[0])) {
 		t.Errorf("status %q", g.Status())
 	}
 
-	g.FloorTurns = windTurns[1] - 1
+	g.FloorTurns = g.Dungeon.Rules.WindTurns[1] - 1
 	n := len(g.Monsters)
 	wait(t, g, 1)
 	if g.Wind != 2 || len(g.Monsters) != n+1 || m.Rank != 2 {
@@ -704,7 +704,7 @@ func TestWind(t *testing.T) {
 		t.Errorf("the strong monster %+v", hunter)
 	}
 
-	g.FloorTurns = windTurns[2] - 1
+	g.FloorTurns = g.Dungeon.Rules.WindTurns[2] - 1
 	wait(t, g, 1)
 	if g.Wind != 3 || !strings.Contains(g.Over, "風") {
 		t.Errorf("third wind: %d, %q", g.Wind, g.Over)
@@ -750,12 +750,12 @@ func TestMessages(t *testing.T) {
 func TestLevelUp(t *testing.T) {
 	g, r := roomGame(t, 6, 3)
 	g.HP, g.MaxHP = 9999, 9999
-	ally := place(g, monsterKinds[0], 1, Point{r.X, r.Y + 1})
+	ally := place(g, kind("nezumi1"), Point{r.X, r.Y + 1})
 	ally.Ally = true
 	g.Facing = "right"
 
 	// A spawned monster gives nothing.
-	m := place(g, monsterKinds[0], 1, Point{r.X + 1, r.Y})
+	m := place(g, kind("nezumi1"), Point{r.X + 1, r.Y})
 	m.Spawned, m.HP = true, 1
 	g.rng = rand.New(rand.NewPCG(1, 1))
 	for slices.Contains(g.Monsters, m) {
@@ -768,35 +768,37 @@ func TestLevelUp(t *testing.T) {
 	}
 
 	// The player and the ally get the whole EXP each, and level up.
-	m = place(g, monsterKinds[0], 1, Point{r.X + 1, r.Y})
-	m.HP, m.EXP = 1, levelEXP[1]
+	m = place(g, kind("nezumi1"), Point{r.X + 1, r.Y})
+	growth := g.Dungeon.Growth[g.Dungeon.Rules.Growth]
+	m.HP, m.EXP = 1, growth[1].EXP
 	for slices.Contains(g.Monsters, m) {
 		if err := g.Do("attack", nil); err != nil {
 			t.Fatal(err)
 		}
 	}
-	if g.PlayerLevel != 3 || g.MaxHP != 9999+2*levelHP || !strings.Contains(g.Message, "主はレベル3に上がった。") {
+	if g.PlayerLevel != 3 || g.MaxHP != 9999+growth[0].HP+growth[1].HP || !strings.Contains(g.Message, "主はレベル3に上がった。") {
 		t.Errorf("player: Lv%d, max HP %d, %q", g.PlayerLevel, g.MaxHP, g.Message)
 	}
-	if ally.Level != 3 || ally.Gained != levelEXP[1] || ally.Attack != rankStats[1].Attack+2*allyLevelAtk {
+	if ally.Level != 3 || ally.Gained != growth[1].EXP || ally.Attack != ally.Def.Attack+growth[0].Attack+growth[1].Attack {
 		t.Errorf("ally: Lv%d, EXP %d, attack %d", ally.Level, ally.Gained, ally.Attack)
 	}
-	if got := playerAttack(3, playerStrength); got <= playerAttack(1, playerStrength) {
+	if got := playerAttack(3, 8); got <= playerAttack(1, 8) {
 		t.Errorf("attack at Lv3 %d", got)
 	}
 }
 
 func TestRankUpKeepsEXP(t *testing.T) {
-	m := newMonster(monsterKinds[0], 1)
-	rankUp(m)
-	if m.Rank != 2 || m.EXP != rankEXP[1] || m.Attack != rankStats[2].Attack {
+	g := NewGame(cave(), "rank")
+	m := newMonster(kind("nezumi1"))
+	g.rankUp(m)
+	if m.Rank != 2 || m.EXP != kind("nezumi1").EXP || m.Def.ID != "nezumi2" || m.Name != "大鼠" {
 		t.Errorf("%+v", m)
 	}
 }
 
 func TestClear(t *testing.T) {
-	g := NewGame("clear")
-	for g.Depth < finalFloor {
+	g := NewGame(cave(), "clear")
+	for g.Depth < g.Dungeon.Floors {
 		g.descend()
 	}
 	g.Player = g.Stairs
@@ -807,7 +809,7 @@ func TestClear(t *testing.T) {
 		t.Fatalf("cleared %v, %q", g.Cleared, g.Over)
 	}
 	s := g.Render(Size{80, 24})
-	if !slices.Contains(s.Lines, "  踏破！") || !slices.Contains(s.Lines, fmt.Sprintf("  到達      %dF", finalFloor)) {
+	if !slices.Contains(s.Lines, "  踏破！") || !slices.Contains(s.Lines, fmt.Sprintf("  到達      %dF", g.Dungeon.Floors)) {
 		t.Errorf("result %q", s.Lines)
 	}
 }
@@ -818,7 +820,7 @@ func TestClear(t *testing.T) {
 func TestRandomPlay(t *testing.T) {
 	actions := []string{"move", "move", "move", "dash", "attack", "turn", "wait", "stairs"}
 	for seed := range 20 {
-		g := NewGame(fmt.Sprint("play", seed))
+		g := NewGame(cave(), fmt.Sprint("play", seed))
 		rng := rand.New(rand.NewPCG(uint64(seed), 0))
 		for range 3000 {
 			if g.Over != "" {
@@ -858,7 +860,7 @@ func TestRandomPlay(t *testing.T) {
 func TestResultShowsMap(t *testing.T) {
 	g, r := roomGame(t, 4, 3)
 	g.HP, g.MaxHP = 1, 1
-	place(g, monsterKinds[0], 4, Point{r.X + 1, r.Y})
+	place(g, kind("nezumi4"), Point{r.X + 1, r.Y})
 	for n := 0; g.Over == ""; n++ {
 		if n > 100 {
 			t.Fatal("the player never dies")
@@ -881,18 +883,41 @@ func TestResultShowsMap(t *testing.T) {
 	}
 }
 
+// TestFirstFloorsRank: no monster of a rank above the floor's on the
+// first three floors of the built-in dungeon.
 func TestFirstFloorsRank(t *testing.T) {
+	d := cave()
 	rng := rand.New(rand.NewPCG(1, 2))
-	for range 1000 {
-		if r := floorRank(rng, 3); r != 1 {
-			t.Fatalf("rank %d on 3F", r)
+	for floor := 1; floor <= 3; floor++ {
+		for range 1000 {
+			if r := d.Monster(pick(rng, d.MonsterRows, floor)).Rank; r != 1 {
+				t.Fatalf("rank %d on %dF", r, floor)
+			}
 		}
 	}
 	bumped := false
 	for range 1000 {
-		bumped = bumped || floorRank(rng, 4) == 2
+		bumped = bumped || d.Monster(pick(rng, d.MonsterRows, 4)).Rank == 2
 	}
 	if !bumped {
 		t.Error("never a rank above on 4F")
 	}
+}
+
+// cave returns the built-in dungeon.
+func cave() *Dungeon {
+	d, err := LoadBuiltin(DefaultDungeon)
+	if err != nil {
+		panic(err)
+	}
+	return d
+}
+
+// kind returns the monster id of the built-in dungeon.
+func kind(id string) *MonsterDef {
+	m := cave().Monster(id)
+	if m == nil {
+		panic(id)
+	}
+	return m
 }

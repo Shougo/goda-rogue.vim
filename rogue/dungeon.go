@@ -1,0 +1,538 @@
+package rogue
+
+import (
+	"crypto/sha256"
+	"embed"
+	"errors"
+	"fmt"
+	"io/fs"
+	"math/rand/v2"
+	"path"
+	"slices"
+	"strconv"
+	"strings"
+)
+
+// A dungeon is a directory of tab-separated text files: what is in the
+// dungeon, and its rules. Lines starting with "#" are comments.
+//
+//	header.txt         name, description, floors (key<TAB>value)
+//	rules.txt          the rules of the run (key<TAB>value)
+//	monsters.txt       the monsters (a table)
+//	monster_table.txt  which monsters appear on which floors (a table)
+//	items.txt          the items (a table)
+//	item_table.txt     which items appear on which floors (a table)
+//	floors.txt         how many monsters and items a floor has (a table)
+//	growth.txt         the growth tables (a table)
+//
+// In key<TAB>value files, a later line overrides an earlier one. A table
+// starts with a line of column names; then every line is a row. "開始" and
+// "終了" are the first and last floors a row is for.
+
+//go:embed dungeons
+var builtinFS embed.FS
+
+// Dungeon is a dungeon, loaded and checked.
+type Dungeon struct {
+	ID          string
+	Name        string
+	Description string
+	Floors      int
+	Rules       Rules
+	Monsters    []*MonsterDef
+	MonsterRows []FloorRow
+	Items       []*ItemDef
+	ItemRows    []FloorRow
+	FloorRows   []FloorCounts
+	Growth      map[string][]GrowthRow
+	// Hash is a hash of all the files: the same seed makes the same
+	// floors only with the same definition.
+	Hash string
+}
+
+// Rules are the rules of a run.
+type Rules struct {
+	PlayerHP       int
+	Strength       int
+	RegenTurns     int
+	SpawnTurns     int
+	MaxMonsters    int
+	WindTurns      [3]int
+	DefenseK       int
+	PlayerHitRate  int
+	MonsterHitRate int
+	// Growth is the growth table of the player and of monsters without
+	// one of their own.
+	Growth string
+	// FirstAlly is the monster that comes along from the start ("" for
+	// none).
+	FirstAlly string
+	// StrongerBy is how many ranks above the floor's the monster of the
+	// second wind is.
+	StrongerBy int
+}
+
+// MonsterDef is a kind of monster. Kinds of the same glyph are one family,
+// one kind a rank.
+type MonsterDef struct {
+	ID      string
+	Glyph   string
+	Name    string
+	Rank    int
+	HP      int
+	Attack  int
+	Defense int
+	EXP     int
+	Speed   Speed
+	Growth  string
+}
+
+// ItemDef is a kind of item.
+type ItemDef struct {
+	ID    string
+	Glyph string
+	Name  string
+}
+
+// FloorRow is a row of an appearance table: id appears on the floors
+// [First, Last], with a weight.
+type FloorRow struct {
+	First, Last int
+	ID          string
+	Weight      int
+}
+
+// FloorCounts are how many monsters and items the floors [First, Last]
+// have, between the minimum and the maximum.
+type FloorCounts struct {
+	First, Last            int
+	MinMonster, MaxMonster int
+	MinItem, MaxItem       int
+}
+
+// GrowthRow is a level of a growth table: the total EXP for it, and what
+// it adds.
+type GrowthRow struct {
+	Level, EXP          int
+	HP, Attack, Defense int
+}
+
+// DungeonError is a mistake in a dungeon's files, at a line (0 for the
+// file as a whole).
+type DungeonError struct {
+	File string
+	Line int
+	Msg  string
+}
+
+func (e *DungeonError) Error() string {
+	if e.Line == 0 {
+		return fmt.Sprintf("%s: %s", e.File, e.Msg)
+	}
+	return fmt.Sprintf("%s:%d: %s", e.File, e.Line, e.Msg)
+}
+
+// BuiltinDungeons returns the IDs of the dungeons in the binary.
+func BuiltinDungeons() []string {
+	entries, _ := fs.ReadDir(builtinFS, "dungeons")
+	var ids []string
+	for _, e := range entries {
+		if e.IsDir() {
+			ids = append(ids, e.Name())
+		}
+	}
+	return ids
+}
+
+// LoadBuiltin loads the dungeon id of the binary.
+func LoadBuiltin(id string) (*Dungeon, error) {
+	sub, err := fs.Sub(builtinFS, path.Join("dungeons", id))
+	if err != nil {
+		return nil, err
+	}
+	return LoadDungeon(sub, id)
+}
+
+// LoadDungeon loads the dungeon id from the files of fsys, and checks it.
+// The error lists every mistake found (errors.Join of *DungeonError).
+func LoadDungeon(fsys fs.FS, id string) (*Dungeon, error) {
+	l := &loader{fsys: fsys, d: &Dungeon{ID: id, Growth: map[string][]GrowthRow{}}}
+	l.load()
+	if len(l.errs) > 0 {
+		return nil, errors.Join(l.errs...)
+	}
+	return l.d, nil
+}
+
+type loader struct {
+	fsys fs.FS
+	d    *Dungeon
+	errs []error
+	h    []byte
+}
+
+func (l *loader) errorf(file string, line int, format string, args ...any) {
+	l.errs = append(l.errs, &DungeonError{file, line, fmt.Sprintf(format, args...)})
+}
+
+// line is a line of a file, split at tabs.
+type line struct {
+	n      int
+	fields []string
+}
+
+// read returns the lines of file that are not empty nor comments.
+func (l *loader) read(file string) []line {
+	b, err := fs.ReadFile(l.fsys, file)
+	if err != nil {
+		l.errorf(file, 0, "%v", err)
+		return nil
+	}
+	l.h = append(l.h, file...)
+	l.h = append(l.h, 0)
+	l.h = append(l.h, b...)
+	var lines []line
+	for i, s := range strings.Split(strings.ReplaceAll(string(b), "\r\n", "\n"), "\n") {
+		if strings.TrimSpace(s) == "" || strings.HasPrefix(s, "#") {
+			continue
+		}
+		fields := strings.Split(s, "\t")
+		for j := range fields {
+			fields[j] = strings.TrimSpace(fields[j])
+		}
+		lines = append(lines, line{i + 1, fields})
+	}
+	return lines
+}
+
+// keys reads a key<TAB>value file, the later lines overriding.
+func (l *loader) keys(file string, known []string) map[string]line {
+	m := map[string]line{}
+	for _, ln := range l.read(file) {
+		if len(ln.fields) != 2 {
+			l.errorf(file, ln.n, "want key<TAB>value")
+			continue
+		}
+		if !slices.Contains(known, ln.fields[0]) {
+			l.errorf(file, ln.n, "unknown key %q", ln.fields[0])
+			continue
+		}
+		m[ln.fields[0]] = ln
+	}
+	return m
+}
+
+// row is a row of a table, by column name.
+type row struct {
+	file string
+	n    int
+	cols map[string]string
+}
+
+// table reads a table file: its first line names the columns, which must
+// include required.
+func (l *loader) table(file string, required ...string) []row {
+	lines := l.read(file)
+	if len(lines) == 0 {
+		return nil
+	}
+	head := lines[0]
+	for _, c := range required {
+		if !slices.Contains(head.fields, c) {
+			l.errorf(file, head.n, "no column %q", c)
+		}
+	}
+	var rows []row
+	for _, ln := range lines[1:] {
+		if len(ln.fields) != len(head.fields) {
+			l.errorf(file, ln.n, "%d columns, want %d (%s)", len(ln.fields), len(head.fields), strings.Join(head.fields, " "))
+			continue
+		}
+		r := row{file, ln.n, map[string]string{}}
+		for i, c := range head.fields {
+			r.cols[c] = ln.fields[i]
+		}
+		rows = append(rows, r)
+	}
+	return rows
+}
+
+// int parses the column c of r; at least min.
+func (l *loader) int(r row, c string, min int) int {
+	n, err := strconv.Atoi(r.cols[c])
+	if err != nil || n < min {
+		l.errorf(r.file, r.n, "%s: want a number of at least %d, not %q", c, min, r.cols[c])
+	}
+	return n
+}
+
+// keyInt parses the value of key in m; at least min. A missing key is a
+// mistake.
+func (l *loader) keyInt(file string, m map[string]line, key string, min int) int {
+	ln, ok := m[key]
+	if !ok {
+		l.errorf(file, 0, "no %q", key)
+		return 0
+	}
+	n, err := strconv.Atoi(ln.fields[1])
+	if err != nil || n < min {
+		l.errorf(file, ln.n, "%s: want a number of at least %d, not %q", key, min, ln.fields[1])
+	}
+	return n
+}
+
+// floors parses the columns 開始 and 終了 of r: a range of floors of the
+// dungeon.
+func (l *loader) floors(r row) (int, int) {
+	first, last := l.int(r, "開始", 1), l.int(r, "終了", 1)
+	if last < first || last > l.d.Floors {
+		l.errorf(r.file, r.n, "floors %d-%d out of 1-%d", first, last, l.d.Floors)
+	}
+	return first, last
+}
+
+// span parses a column of the form "min-max" (or one number).
+func (l *loader) span(r row, c string) (int, int) {
+	lo, hi, ok := strings.Cut(r.cols[c], "-")
+	if !ok {
+		hi = lo
+	}
+	a, err1 := strconv.Atoi(lo)
+	b, err2 := strconv.Atoi(hi)
+	if err1 != nil || err2 != nil || a < 0 || b < a {
+		l.errorf(r.file, r.n, "%s: want min-max, not %q", c, r.cols[c])
+	}
+	return a, b
+}
+
+// glyph checks that a glyph is one full-width character, as the map needs.
+func (l *loader) glyph(r row, c string) string {
+	g := r.cols[c]
+	if n := len([]rune(g)); n != 1 || len(g) != glyphBytes {
+		l.errorf(r.file, r.n, "%s: want one full-width character (3 bytes in UTF-8), not %q", c, g)
+	}
+	return g
+}
+
+var speeds = map[string]Speed{"鈍足": SpeedSlow, "通常": SpeedNormal, "倍速": SpeedDouble}
+
+func (l *loader) load() {
+	d := l.d
+	h := l.keys("header.txt", []string{"名前", "説明", "階数"})
+	if ln, ok := h["名前"]; ok {
+		d.Name = ln.fields[1]
+	} else {
+		l.errorf("header.txt", 0, "no %q", "名前")
+	}
+	if ln, ok := h["説明"]; ok {
+		d.Description = ln.fields[1]
+	}
+	d.Floors = l.keyInt("header.txt", h, "階数", 1)
+
+	rk := l.keys("rules.txt", []string{
+		"最大HP", "ちから", "回復ターン", "湧きターン", "最大モンスター数",
+		"風1", "風2", "風3", "防御K", "主の命中", "敵の命中", "成長", "最初の仲間", "強敵ランク差",
+	})
+	r := &d.Rules
+	r.PlayerHP = l.keyInt("rules.txt", rk, "最大HP", 1)
+	r.Strength = l.keyInt("rules.txt", rk, "ちから", 0)
+	r.RegenTurns = l.keyInt("rules.txt", rk, "回復ターン", 1)
+	r.SpawnTurns = l.keyInt("rules.txt", rk, "湧きターン", 1)
+	r.MaxMonsters = l.keyInt("rules.txt", rk, "最大モンスター数", 1)
+	for i := range r.WindTurns {
+		r.WindTurns[i] = l.keyInt("rules.txt", rk, fmt.Sprint("風", i+1), 1)
+		if i > 0 && r.WindTurns[i] <= r.WindTurns[i-1] {
+			l.errorf("rules.txt", rk[fmt.Sprint("風", i+1)].n, "風%d must come after 風%d", i+1, i)
+		}
+	}
+	r.DefenseK = l.keyInt("rules.txt", rk, "防御K", 1)
+	r.PlayerHitRate = l.keyInt("rules.txt", rk, "主の命中", 0)
+	r.MonsterHitRate = l.keyInt("rules.txt", rk, "敵の命中", 0)
+	r.StrongerBy = l.keyInt("rules.txt", rk, "強敵ランク差", 0)
+	if ln, ok := rk["成長"]; ok {
+		r.Growth = ln.fields[1]
+	} else {
+		l.errorf("rules.txt", 0, "no %q", "成長")
+	}
+	if ln, ok := rk["最初の仲間"]; ok {
+		r.FirstAlly = ln.fields[1]
+	}
+
+	for _, row := range l.table("growth.txt", "名前", "レベル", "経験値", "HP", "攻撃", "防御") {
+		name := row.cols["名前"]
+		g := GrowthRow{
+			Level: l.int(row, "レベル", 2), EXP: l.int(row, "経験値", 1),
+			HP: l.int(row, "HP", 0), Attack: l.int(row, "攻撃", 0), Defense: l.int(row, "防御", 0),
+		}
+		rows := d.Growth[name]
+		if want := len(rows) + 2; g.Level != want {
+			l.errorf(row.file, row.n, "%s: level %d, want %d (levels in order from 2)", name, g.Level, want)
+		} else if len(rows) > 0 && g.EXP <= rows[len(rows)-1].EXP {
+			l.errorf(row.file, row.n, "%s: EXP %d not above the level before", name, g.EXP)
+		}
+		d.Growth[name] = append(rows, g)
+	}
+	if _, ok := d.Growth[r.Growth]; !ok && r.Growth != "" {
+		l.errorf("rules.txt", rk["成長"].n, "no growth table %q", r.Growth)
+	}
+
+	ids := map[string]bool{}
+	for _, row := range l.table("monsters.txt", "ID", "字", "名前", "ランク", "HP", "攻撃", "防御", "経験値", "速度") {
+		m := &MonsterDef{
+			ID: row.cols["ID"], Glyph: l.glyph(row, "字"), Name: row.cols["名前"],
+			Rank: l.int(row, "ランク", 1), HP: l.int(row, "HP", 1),
+			Attack: l.int(row, "攻撃", 0), Defense: l.int(row, "防御", 0), EXP: l.int(row, "経験値", 0),
+			Growth: row.cols["成長"],
+		}
+		if m.Rank > maxRank {
+			l.errorf(row.file, row.n, "ランク: %d above %d", m.Rank, maxRank)
+		}
+		s, ok := speeds[row.cols["速度"]]
+		if !ok {
+			l.errorf(row.file, row.n, "速度: want 鈍足, 通常 or 倍速, not %q", row.cols["速度"])
+		}
+		m.Speed = s
+		if m.Growth == "" {
+			m.Growth = r.Growth
+		} else if _, ok := d.Growth[m.Growth]; !ok {
+			l.errorf(row.file, row.n, "no growth table %q", m.Growth)
+		}
+		if ids[m.ID] {
+			l.errorf(row.file, row.n, "the ID %q again", m.ID)
+		}
+		ids[m.ID] = true
+		d.Monsters = append(d.Monsters, m)
+	}
+	if r.FirstAlly != "" && d.Monster(r.FirstAlly) == nil {
+		l.errorf("rules.txt", rk["最初の仲間"].n, "no monster %q", r.FirstAlly)
+	}
+
+	for _, row := range l.table("items.txt", "ID", "字", "名前") {
+		it := &ItemDef{ID: row.cols["ID"], Glyph: l.glyph(row, "字"), Name: row.cols["名前"]}
+		if d.Item(it.ID) != nil {
+			l.errorf(row.file, row.n, "the ID %q again", it.ID)
+		}
+		d.Items = append(d.Items, it)
+	}
+
+	d.MonsterRows = l.appearance("monster_table.txt", func(id string) bool { return d.Monster(id) != nil })
+	d.ItemRows = l.appearance("item_table.txt", func(id string) bool { return d.Item(id) != nil })
+
+	for _, row := range l.table("floors.txt", "開始", "終了", "敵の数", "道具の数") {
+		c := FloorCounts{}
+		c.First, c.Last = l.floors(row)
+		c.MinMonster, c.MaxMonster = l.span(row, "敵の数")
+		c.MinItem, c.MaxItem = l.span(row, "道具の数")
+		d.FloorRows = append(d.FloorRows, c)
+	}
+
+	// Every floor needs its monsters, items and counts.
+	for f := 1; f <= d.Floors; f++ {
+		if !slices.ContainsFunc(d.MonsterRows, func(r FloorRow) bool { return r.First <= f && f <= r.Last }) {
+			l.errorf("monster_table.txt", 0, "no monster on %dF", f)
+		}
+		if !slices.ContainsFunc(d.ItemRows, func(r FloorRow) bool { return r.First <= f && f <= r.Last }) {
+			l.errorf("item_table.txt", 0, "no item on %dF", f)
+		}
+		if !slices.ContainsFunc(d.FloorRows, func(r FloorCounts) bool { return r.First <= f && f <= r.Last }) {
+			l.errorf("floors.txt", 0, "no counts for %dF", f)
+		}
+	}
+
+	sum := sha256.Sum256(l.h)
+	d.Hash = fmt.Sprintf("%x", sum[:4])
+}
+
+// appearance reads an appearance table; known says whether an ID exists.
+func (l *loader) appearance(file string, known func(string) bool) []FloorRow {
+	var rows []FloorRow
+	for _, row := range l.table(file, "開始", "終了", "ID", "頻度") {
+		r := FloorRow{ID: row.cols["ID"], Weight: l.int(row, "頻度", 1)}
+		r.First, r.Last = l.floors(row)
+		if !known(r.ID) {
+			l.errorf(row.file, row.n, "no such ID %q", r.ID)
+		}
+		rows = append(rows, r)
+	}
+	return rows
+}
+
+// maxRank is the highest rank (red).
+const maxRank = 4
+
+// Monster returns the monster id, or nil.
+func (d *Dungeon) Monster(id string) *MonsterDef {
+	for _, m := range d.Monsters {
+		if m.ID == id {
+			return m
+		}
+	}
+	return nil
+}
+
+// Item returns the item id, or nil.
+func (d *Dungeon) Item(id string) *ItemDef {
+	for _, it := range d.Items {
+		if it.ID == id {
+			return it
+		}
+	}
+	return nil
+}
+
+// pick returns an ID of rows for the floor, by weight.
+func pick(rng *rand.Rand, rows []FloorRow, floor int) string {
+	total := 0
+	for _, r := range rows {
+		if r.First <= floor && floor <= r.Last {
+			total += r.Weight
+		}
+	}
+	n := rng.IntN(total)
+	for _, r := range rows {
+		if r.First <= floor && floor <= r.Last {
+			if n < r.Weight {
+				return r.ID
+			}
+			n -= r.Weight
+		}
+	}
+	panic("unreachable")
+}
+
+// counts returns the counts of the floor (the first row that has it).
+func (d *Dungeon) counts(floor int) FloorCounts {
+	for _, c := range d.FloorRows {
+		if c.First <= floor && floor <= c.Last {
+			return c
+		}
+	}
+	return FloorCounts{}
+}
+
+// nextRank returns the kind of the family of m one rank above, or nil.
+func (d *Dungeon) nextRank(m *MonsterDef) *MonsterDef {
+	for _, n := range d.Monsters {
+		if n.Glyph == m.Glyph && n.Rank == m.Rank+1 {
+			return n
+		}
+	}
+	return nil
+}
+
+// ofRank returns the kinds of rank, or of the highest rank below it there
+// is.
+func (d *Dungeon) ofRank(rank int) []*MonsterDef {
+	for ; rank > 0; rank-- {
+		var ms []*MonsterDef
+		for _, m := range d.Monsters {
+			if m.Rank == rank {
+				ms = append(ms, m)
+			}
+		}
+		if len(ms) > 0 {
+			return ms
+		}
+	}
+	return nil
+}
