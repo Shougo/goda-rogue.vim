@@ -852,3 +852,47 @@ func TestRandomPlay(t *testing.T) {
 		_ = g.Render(Size{80, 24})
 	}
 }
+
+// TestResultShowsMap: the result screen keeps the floor as it was at the
+// end, with the cursor on the player.
+func TestResultShowsMap(t *testing.T) {
+	g, r := roomGame(t, 4, 3)
+	g.HP, g.MaxHP = 1, 1
+	place(g, monsterKinds[0], 4, Point{r.X + 1, r.Y})
+	for n := 0; g.Over == ""; n++ {
+		if n > 100 {
+			t.Fatal("the player never dies")
+		}
+		wait(t, g, 1)
+	}
+	s := g.Render(Size{80, 40})
+	if !slices.Contains(s.Lines, "  冒険の結果") || !slices.Contains(s.Lines, "  結果      "+g.Over) {
+		t.Fatalf("no result: %q", s.Lines)
+	}
+	c := s.Cursor
+	if !strings.HasPrefix(s.Lines[c[0]-1][c[1]-1:], glyphPlayer) {
+		t.Errorf("the cursor %v is not on the player: %q", c, s.Lines[c[0]-1])
+	}
+	if got := s.Highlights[hlTitle]; len(got) != 1 || s.Lines[got[0].Line-1] != "  冒険の結果" {
+		t.Errorf("title %v", got)
+	}
+	if len(s.Lines) > 40 {
+		t.Errorf("%d lines for a window of 40", len(s.Lines))
+	}
+}
+
+func TestFirstFloorsRank(t *testing.T) {
+	rng := rand.New(rand.NewPCG(1, 2))
+	for range 1000 {
+		if r := floorRank(rng, 3); r != 1 {
+			t.Fatalf("rank %d on 3F", r)
+		}
+	}
+	bumped := false
+	for range 1000 {
+		bumped = bumped || floorRank(rng, 4) == 2
+	}
+	if !bumped {
+		t.Error("never a rank above on 4F")
+	}
+}

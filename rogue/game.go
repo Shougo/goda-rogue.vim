@@ -173,10 +173,11 @@ func (g *Game) descend() {
 }
 
 // floorRank returns the rank of a monster on the floor depth: 1 on the
-// first floors, one more every four floors, and sometimes one above.
+// first floors, one more every four floors, and sometimes one above (not
+// on the first three floors: no equipment yet to face it).
 func floorRank(rng *rand.Rand, depth int) int {
 	rank := 1 + (depth-1)/4
-	if rng.IntN(5) == 0 {
+	if rng.IntN(5) == 0 && depth > 3 {
 		rank++
 	}
 	return min(rank, 4)

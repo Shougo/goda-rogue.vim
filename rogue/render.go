@@ -87,22 +87,33 @@ const hpBarWidth = 10
 
 // Render returns the screen for a window of size: the top line, the part
 // of the floor around the player that fits, then the status line and the
-// message.
+// messages. At the end of a run, the result comes under the top line, and
+// the floor as it was at the end under it, to see what happened.
 func (g *Game) Render(size Size) Screen {
-	if g.Over != "" {
-		return g.result()
-	}
-	l := g.Level
-	viewW := max(size.Width/2, 1)
-	viewH := max(size.Height-statusLines, 1)
-	x0, w := window(g.Player.X, l.W, viewW)
-	y0, h := window(g.Player.Y, l.H, viewH)
-
 	s := Screen{Highlights: map[string][]Span{}}
 	s.Lines = append(s.Lines, g.topLine(s.Highlights))
+	if g.Over != "" {
+		g.result(&s)
+	}
+	g.renderMap(&s, max(size.Width/2, 1), max(size.Height-len(s.Lines)-1-messageLines, 1))
+	s.Lines = append(s.Lines, g.Status())
+	g.messages(&s)
+	if g.ShowMap {
+		s.Minimap = g.minimap()
+	}
+	return s
+}
+
+// renderMap adds to s the part of the floor around the player that fits
+// in viewW x viewH tiles.
+func (g *Game) renderMap(s *Screen, viewW, viewH int) {
+	l := g.Level
+	x0, w := window(g.Player.X, l.W, viewW)
+	y0, h := window(g.Player.Y, l.H, viewH)
+	top := len(s.Lines)
 	for row := range h {
 		var b strings.Builder
-		lnum := row + 2
+		lnum := top + row + 1
 		var last *Span
 		lastGroup := ""
 		for col := range w {
@@ -130,44 +141,33 @@ func (g *Game) Render(size Size) Screen {
 	}
 	if f := g.Player.Add(Directions[g.Facing]); f.X >= x0 && f.X < x0+w && f.Y >= y0 && f.Y < y0+h {
 		col := (f.X-x0)*glyphBytes + 1
-		s.Highlights[hlFacing] = []Span{{f.Y - y0 + 2, col, col + glyphBytes}}
+		s.Highlights[hlFacing] = []Span{{top + f.Y - y0 + 1, col, col + glyphBytes}}
 	}
-	s.Lines = append(s.Lines, g.Status())
-	g.messages(&s)
-	if g.ShowMap {
-		s.Minimap = g.minimap()
-	}
-	return s
 }
 
-// result returns the screen of the end of a run: its result.
-func (g *Game) result() Screen {
-	s := Screen{Highlights: map[string][]Span{}, Cursor: [2]int{1, 1}}
+// result adds to s the result of the run.
+func (g *Game) result(s *Screen) {
 	title := "冒険の結果"
 	if g.Cleared {
 		title = "踏破！"
 	}
 	d := g.Ended.Sub(g.Started).Truncate(time.Second)
-	s.Lines = []string{
-		g.topLine(s.Highlights),
+	s.Lines = append(s.Lines, "")
+	s.Highlights[hlTitle] = []Span{{len(s.Lines) + 1, 3, 3 + len(title)}}
+	s.Lines = append(s.Lines,
+		"  "+title,
 		"",
-		"  " + title,
-		"",
-		"  結果      " + g.Over,
+		"  結果      "+g.Over,
 		fmt.Sprintf("  到達      %dF", g.Depth),
 		fmt.Sprintf("  レベル    Lv%d", g.PlayerLevel),
 		fmt.Sprintf("  倒した敵  %d", g.Kills),
 		fmt.Sprintf("  ターン    %d", g.Turn),
 		fmt.Sprintf("  時間      %d:%02d:%02d", int(d.Hours()), int(d.Minutes())%60, int(d.Seconds())%60),
-		"  シード    " + g.Seed,
+		"  シード    "+g.Seed,
 		"",
 		"  新しい冒険は goda_rogue#start() で。",
-	}
-	s.Highlights[hlTitle] = []Span{{3, 3, 3 + len(title)}}
-	if g.ShowMap {
-		s.Minimap = g.minimap()
-	}
-	return s
+		"",
+	)
 }
 
 // messages adds the last messages to s: always messageLines lines, those

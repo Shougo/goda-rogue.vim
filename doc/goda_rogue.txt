@@ -37,7 +37,8 @@ restore HP; at 0 HP the run is over.
 Defeating an enemy gives its EXP to the player and to every ally, whole:
 they level up on the same table.  At the end of a run, the result screen
 shows how it ended, the floor, the level, the enemies defeated, the
-turns, the play time and the seed.
+turns, the play time and the seed, and under it the floor as it was at
+the end, with the last messages, to see what happened.
 
 Lingering on a floor does not pay: now and then a monster appears out of
 sight, and it gives nothing for defeating it.  Then Kron's wind blows:
