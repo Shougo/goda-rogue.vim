@@ -279,3 +279,91 @@ func TestSafe(t *testing.T) {
 		t.Errorf("%d safe tiles on a new floor, want 1", n)
 	}
 }
+
+func TestAttack(t *testing.T) {
+	g := find(t, func(g *Game) bool { return g.Level.At(g.Player.Add(Point{1, 0})).Walkable() })
+	var ally *Monster
+	for _, m := range g.Monsters {
+		if m.Ally {
+			ally = m
+		}
+	}
+	g.Monsters = nil
+	g.Items = nil
+	right := g.Player.Add(Point{1, 0})
+
+	if err := g.Do("turn", []string{"right"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := g.Do("attack", nil); err != nil {
+		t.Fatal(err)
+	}
+	if g.Turn != 1 || g.Message != "空振りした。" {
+		t.Errorf("attacking the air: turn %d, %q", g.Turn, g.Message)
+	}
+
+	ally.Pos = right
+	g.Monsters = []*Monster{ally}
+	if err := g.Do("attack", nil); err != nil {
+		t.Fatal(err)
+	}
+	if g.Turn != 1 || ally.HP != rankHP[ally.Rank] {
+		t.Errorf("attacked the ally: turn %d, HP %d", g.Turn, ally.HP)
+	}
+
+	m := newMonster("鼠", "鼠", 4)
+	m.Pos = right
+	g.Monsters = []*Monster{m}
+	// Moving toward it only faces it.
+	g.Facing = "left"
+	if err := g.Do("move", []string{"right"}); err != nil {
+		t.Fatal(err)
+	}
+	if g.Player == right || g.Facing != "right" || m.HP != rankHP[4] {
+		t.Errorf("moved into the enemy: %v, facing %s, HP %d", g.Player, g.Facing, m.HP)
+	}
+	for n := 0; len(g.Monsters) > 0; n++ {
+		if n > 100 {
+			t.Fatal("the enemy never dies")
+		}
+		hp := m.HP
+		if err := g.Do("attack", nil); err != nil {
+			t.Fatal(err)
+		}
+		if m.HP > hp || (m.HP == hp && !strings.HasSuffix(g.Message, "にかわされた。")) {
+			t.Fatalf("HP %d -> %d: %q", hp, m.HP, g.Message)
+		}
+	}
+	if !strings.HasSuffix(g.Message, "鼠を倒した。") {
+		t.Errorf("message %q", g.Message)
+	}
+}
+
+// TestAttackRNG: combat does not change the floors of a seed.
+func TestAttackRNG(t *testing.T) {
+	a, b := NewGame("rng"), NewGame("rng")
+	for range 20 {
+		if err := a.Do("attack", nil); err != nil {
+			t.Fatal(err)
+		}
+	}
+	a.descend()
+	b.descend()
+	if !slices.Equal(a.Level.Tiles, b.Level.Tiles) {
+		t.Fatal("attacks changed the next floor")
+	}
+}
+
+func TestFacingHighlight(t *testing.T) {
+	g := NewGame("facing")
+	for dir, d := range Directions {
+		g.Facing = dir
+		s := g.Render(Size{200, 60})
+		f := g.Player.Add(d)
+		spans := s.Highlights[hlFacing]
+		want := []Span{{f.Y + 1, f.X*glyphBytes + 1, f.X*glyphBytes + 1 + glyphBytes}}
+		if !slices.Equal(spans, want) {
+			t.Errorf("%s: %v, want %v", dir, spans, want)
+		}
+	}
+}

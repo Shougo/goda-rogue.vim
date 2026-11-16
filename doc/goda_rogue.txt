@@ -22,8 +22,8 @@ like rogue: the map is drawn with full-width characters, enemies are kanji,
 and their rank is their color.  The game is Go, in a binary built from this
 plugin, and Vim talks to it through goda.vim.
 
-It is a prototype: it shows the dungeon, and the player moves around.  There
-is no combat yet, and the enemies do not move.
+It is a prototype: it shows the dungeon, the player moves around and
+attacks.  The enemies do not act yet.
 
 ==============================================================================
 INSTALL                                                    *goda-rogue-install*
@@ -53,6 +53,7 @@ There are no default mappings: map the actions in the game buffer. >vim
 	    execute $'nnoremap <buffer> {key->toupper()}'
 	          \ $'<Cmd>call goda_rogue#do("dash", "{dir}")<CR>'
 	  endfor
+	  nnoremap <buffer> <Space> <Cmd>call goda_rogue#do('attack')<CR>
 	  nnoremap <buffer> . <Cmd>call goda_rogue#do('wait')<CR>
 	  nnoremap <buffer> > <Cmd>call goda_rogue#do('stairs')<CR>
 	endfunction
@@ -91,12 +92,18 @@ The directions are "left", "right", "up", "down", "upleft", "upright",
 move {direction}					*goda-rogue-move*
 		Face {direction} and step there.  Diagonal steps around a
 		corner of a wall are not possible.  Stepping onto an ally
-		changes places with it.
+		changes places with it.  Toward an enemy, the player only
+		faces it: attacking is |goda-rogue-attack|.
 
 dash {direction}					*goda-rogue-dash*
 		Step to {direction} until something stops the player: a
 		wall, a monster, an item or the stairs under it, or entering
 		or leaving a room.
+
+attack							*goda-rogue-attack*
+		Attack the tile the player faces.  It costs a turn, even
+		when nothing is there, but allies are not attacked.  There is
+		no attack around a corner of a wall.
 
 turn {direction}					*goda-rogue-turn*
 		Face {direction}.  It costs no turn.
@@ -133,6 +140,8 @@ GodaRogueFloor		The floor of rooms and corridors.
 GodaRogueFloorSafe	The floor known to have no trap: where the player
 			has walked.
 GodaRogueStairs		The stairs.
+GodaRogueFacing		The tile the player faces: its background, over the
+			highlight of what is there.
 GodaRogueRank1		Enemies of rank 1 to 4: green, blue, purple, red.
 ...
 GodaRogueRank4
@@ -157,6 +166,9 @@ Every tile is one full-width character, two cells wide:
 		items
 	鼠 蛇 狼 骸 霊 鬼 竜 盗
 		enemies (their color is their rank)
+
+The background of the tile the player faces (and attacks) is
+|GodaRogueFacing|.
 
 The window shows the part of the floor around the player that fits.  Under
 the map are the status line (the floor, the turn, the direction the player

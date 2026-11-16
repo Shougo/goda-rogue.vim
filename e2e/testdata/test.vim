@@ -99,6 +99,10 @@ function! s:actions() abort
   call goda_rogue#do('stairs')
   call s:check('no stairs', getline('$'), 'ここに階段はない。')
 
+  call s:check('facing', index(s:all_groups(), 'GodaRogueFacing') >= 0, 1)
+  call goda_rogue#do('attack')
+  call s:check('attack', getline('$') =~# '^\%(空振りした。\|仲間は攻撃しない。\|.*のダメージ。\|.*にかわされた。\)', 1)
+
   " An error is printed, not thrown, and the screen stays.
   let before = getline(1, '$')
   call goda_rogue#do('fly')

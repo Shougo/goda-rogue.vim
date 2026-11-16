@@ -3,6 +3,7 @@ package rogue
 import (
 	"fmt"
 	"hash/fnv"
+	"math"
 	"math/rand/v2"
 	"slices"
 )
@@ -15,6 +16,15 @@ type Monster struct {
 	// Rank is 1 to 4, shown as its color.
 	Rank int
 	Ally bool
+	HP   int
+}
+
+// rankHP is the HP of a monster by its rank (the prototype has no monster
+// data yet).
+var rankHP = [...]int{0, 5, 10, 20, 40}
+
+func newMonster(glyph, name string, rank int) *Monster {
+	return &Monster{Glyph: glyph, Name: name, Rank: rank, HP: rankHP[rank]}
 }
 
 // Item is an item lying on the floor.
@@ -41,6 +51,11 @@ type Game struct {
 	Seen    []bool
 	Safe    []bool
 	Message string
+
+	// rng is the random source of everything but the layout of the
+	// floors (combat, for now), so that what the player does never
+	// changes the floors of a seed.
+	rng *rand.Rand
 }
 
 // The kinds of monsters and items of the prototype.
@@ -66,7 +81,7 @@ var directionNames = map[string]string{
 
 // NewGame starts a run on the first floor.
 func NewGame(seed string) *Game {
-	g := &Game{Seed: seed, Facing: "down"}
+	g := &Game{Seed: seed, Facing: "down", rng: rand.New(rand.NewPCG(seedHash(seed), math.MaxUint64))}
 	g.descend()
 	return g
 }
@@ -74,9 +89,13 @@ func NewGame(seed string) *Game {
 // floorRNG is the random source of the layout of the floor depth: the
 // same for the same seed whatever the player did before.
 func floorRNG(seed string, depth int) *rand.Rand {
+	return rand.New(rand.NewPCG(seedHash(seed), uint64(depth)))
+}
+
+func seedHash(seed string) uint64 {
 	h := fnv.New64a()
 	h.Write([]byte(seed))
-	return rand.New(rand.NewPCG(h.Sum64(), uint64(depth)))
+	return h.Sum64()
 }
 
 // descend makes the next floor. An ally next to the player comes along.
@@ -115,7 +134,9 @@ func (g *Game) descend() {
 	for range between(rng, 5, 8) {
 		k := monsterKinds[rng.IntN(len(monsterKinds))]
 		pos := g.randomTile(rng, rooms[rng.IntN(len(rooms))])
-		g.Monsters = append(g.Monsters, &Monster{Pos: pos, Glyph: k.Glyph, Name: k.Name, Rank: 1 + rng.IntN(4)})
+		m := newMonster(k.Glyph, k.Name, 1+rng.IntN(4))
+		m.Pos = pos
+		g.Monsters = append(g.Monsters, m)
 	}
 	for range between(rng, 6, 10) {
 		pos := g.randomTile(rng, rooms[rng.IntN(len(rooms))])
@@ -125,7 +146,8 @@ func (g *Game) descend() {
 	if g.Depth == 1 {
 		// The prototype starts with an ally, to see how one looks.
 		k := monsterKinds[rng.IntN(len(monsterKinds))]
-		ally = &Monster{Glyph: k.Glyph, Name: k.Name, Rank: 1 + rng.IntN(4), Ally: true}
+		ally = newMonster(k.Glyph, k.Name, 1+rng.IntN(4))
+		ally.Ally = true
 	}
 	if ally != nil {
 		if p, ok := g.freeNeighbor(g.Player); ok {
@@ -300,6 +322,9 @@ func (g *Game) Do(action string, args []string) error {
 		g.Message = ""
 		g.Facing = name
 		g.dash(d)
+	case "attack":
+		g.Message = ""
+		g.attack()
 	case "wait":
 		g.Message = ""
 		g.Turn++
@@ -316,18 +341,49 @@ func (g *Game) Do(action string, args []string) error {
 	return nil
 }
 
-// canStep says whether the player can go from its tile by d: onto a
-// walkable tile, and not diagonally around a corner of rock.
-func (g *Game) canStep(d Point) bool {
-	l := g.Level
-	to := g.Player.Add(d)
-	if !l.At(to).Walkable() {
-		return false
+// attack attacks the tile the player faces. It costs a turn, even when it
+// hits nothing, but an ally is not attacked.
+func (g *Game) attack() {
+	d := Directions[g.Facing]
+	m := g.MonsterAt(g.Player.Add(d))
+	if m != nil && m.Ally {
+		g.Message = "仲間は攻撃しない。"
+		return
 	}
+	g.Turn++
+	// No attack around a corner of rock.
+	if m == nil || !g.clear(d) {
+		g.Message = "空振りした。"
+		return
+	}
+	if g.rng.IntN(10) == 0 {
+		g.Message = m.Name + "にかわされた。"
+		return
+	}
+	damage := 3 + g.rng.IntN(5)
+	m.HP -= damage
+	g.Message = fmt.Sprintf("%sに%dのダメージ。", m.Name, damage)
+	if m.HP <= 0 {
+		g.Monsters = slices.DeleteFunc(g.Monsters, func(x *Monster) bool { return x == m })
+		g.Message += m.Name + "を倒した。"
+	}
+}
+
+// clear says whether nothing is in the way from the player by d: a
+// diagonal is not around a corner of rock.
+func (g *Game) clear(d Point) bool {
+	l := g.Level
 	if d.X != 0 && d.Y != 0 {
 		return l.At(g.Player.Add(Point{d.X, 0})).Walkable() && l.At(g.Player.Add(Point{0, d.Y})).Walkable()
 	}
 	return true
+}
+
+// canStep says whether the player can go from its tile by d: onto a
+// walkable tile, and not diagonally around a corner of rock.
+func (g *Game) canStep(d Point) bool {
+	l := g.Level
+	return l.At(g.Player.Add(d)).Walkable() && g.clear(d)
 }
 
 // step moves the player by d; it says whether it moved.

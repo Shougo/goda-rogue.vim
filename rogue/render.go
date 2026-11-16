@@ -25,6 +25,9 @@ const (
 	hlStairs = "GodaRogueStairs"
 	hlRank   = "GodaRogueRank"
 	hlAlly   = "GodaRogueAlly"
+	// hlFacing is the tile the player faces (and attacks), over its own
+	// highlight.
+	hlFacing = "GodaRogueFacing"
 )
 
 // Size is the size of the window in cells.
@@ -89,6 +92,10 @@ func (g *Game) Render(size Size) Screen {
 			last, lastGroup = &spans[len(spans)-1], group
 		}
 		s.Lines = append(s.Lines, b.String())
+	}
+	if f := g.Player.Add(Directions[g.Facing]); f.X >= x0 && f.X < x0+w && f.Y >= y0 && f.Y < y0+h {
+		col := (f.X-x0)*glyphBytes + 1
+		s.Highlights[hlFacing] = []Span{{f.Y - y0 + 1, col, col + glyphBytes}}
 	}
 	s.Lines = append(s.Lines, g.Status(), g.Message)
 	return s
