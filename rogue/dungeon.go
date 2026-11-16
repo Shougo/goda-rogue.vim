@@ -20,7 +20,8 @@ import (
 //	rules.txt          the rules of the run (key<TAB>value)
 //	monsters.txt       the monsters (a table)
 //	monster_table.txt  which monsters appear on which floors (a table)
-//	items.txt          the items (a table; 種類 is their category)
+//	items.txt          the items (a table; 種類 is their category, 強さ
+//	                   the strength of a weapon or a shield)
 //	item_table.txt     which items appear on which floors (a table)
 //	floors.txt         how many monsters and items a floor has (a table)
 //	growth.txt         the growth tables (a table)
@@ -95,6 +96,8 @@ type ItemDef struct {
 	Glyph    string
 	Name     string
 	Category Category
+	// Strength is the attack of a weapon, the defense of a shield.
+	Strength int
 }
 
 // FloorRow is a row of an appearance table: id appears on the floors
@@ -419,6 +422,9 @@ func (l *loader) load() {
 			l.errorf(row.file, row.n, "種類: unknown %q", c)
 		}
 		it.Category = c
+		if _, ok := row.cols["強さ"]; ok {
+			it.Strength = l.int(row, "強さ", 0)
+		}
 		if d.Item(it.ID) != nil {
 			l.errorf(row.file, row.n, "the ID %q again", it.ID)
 		}

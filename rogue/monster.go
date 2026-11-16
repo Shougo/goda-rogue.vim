@@ -247,7 +247,7 @@ func (g *Game) hitPlayer(m *Monster) {
 		g.say(m.Name + "の攻撃は外れた。")
 		return
 	}
-	n := damage(g.rng, m.Attack, 0, r.DefenseK)
+	n := damage(g.rng, m.Attack, g.Defense(), r.DefenseK)
 	g.HP -= n
 	g.say(fmt.Sprintf("%sの攻撃。%dのダメージ。", m.Name, n))
 	if g.HP <= 0 {

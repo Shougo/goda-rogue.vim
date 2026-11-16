@@ -2,6 +2,7 @@ package rogue
 
 import (
 	"fmt"
+	"math/rand/v2"
 	"slices"
 	"strconv"
 )
@@ -36,12 +37,46 @@ type Item struct {
 	Glyph string
 	// Amount is how much money it is, for money.
 	Amount int
+	// Upgrade is the upgrade value of a weapon or a shield (+3, -1).
+	Upgrade  int
+	Equipped bool
 }
 
-// Label is the item as the inventory shows it: its glyph as an icon, and
-// its name.
+// equipment says whether the item is worn: a weapon or a shield.
+func (it *Item) equipment() bool {
+	return it.Def.Category == CategoryWeapon || it.Def.Category == CategoryShield
+}
+
+// Strength is the strength of a weapon or a shield, upgrade included.
+func (it *Item) Strength() int { return max(it.Def.Strength+it.Upgrade, 0) }
+
+// Label is the item as the inventory shows it: its glyph as an icon, its
+// name, its upgrade value, and whether it is equipped.
 func (it *Item) Label() string {
-	return it.Glyph + " " + it.Def.Name
+	s := it.Glyph + " " + it.Def.Name
+	if it.equipment() && it.Upgrade != 0 {
+		s += fmt.Sprintf("%+d", it.Upgrade)
+	}
+	if it.Equipped {
+		s += " [装備]"
+	}
+	return s
+}
+
+// rollUpgrade returns the upgrade value of a weapon or a shield found on
+// the floor (provisional, until it is data): mostly 0.
+func rollUpgrade(rng *rand.Rand) int {
+	switch n := rng.IntN(20); {
+	case n < 14:
+		return 0
+	case n < 17:
+		return 1
+	case n < 18:
+		return 2
+	case n < 19:
+		return 3
+	}
+	return -1
 }
 
 // Prompt is a choice the game asks the player for: the Vim script shows
@@ -64,7 +99,24 @@ const (
 )
 
 // The commands of an item.
-const commandDrop = "置く"
+const (
+	commandEquip   = "装備する"
+	commandUnequip = "外す"
+	commandDrop    = "置く"
+)
+
+// commands returns what can be done with it.
+func (it *Item) commands() []string {
+	var cs []string
+	if it.equipment() {
+		if it.Equipped {
+			cs = append(cs, commandUnequip)
+		} else {
+			cs = append(cs, commandEquip)
+		}
+	}
+	return append(cs, commandDrop)
+}
 
 // sortInventory sorts the inventory by category, and by the order of the
 // items of the dungeon in it.
@@ -134,14 +186,21 @@ func (g *Game) choose(arg string) (bool, error) {
 	g.Prompt = nil
 	switch p.kind {
 	case promptInventory:
+		it := g.Inventory[n]
 		g.Prompt = &Prompt{
-			Title:   g.Inventory[n].Label(),
-			Choices: []string{commandDrop},
+			Title:   it.Label(),
+			Choices: it.commands(),
 			kind:    promptItem, item: n,
 		}
 		return false, nil
 	case promptItem:
 		switch p.Choices[n] {
+		case commandEquip:
+			g.equip(g.Inventory[p.item])
+			return true, nil
+		case commandUnequip:
+			g.unequip(g.Inventory[p.item])
+			return true, nil
 		case commandDrop:
 			return g.drop(p.item), nil
 		}
@@ -158,8 +217,51 @@ func (g *Game) drop(i int) bool {
 		return false
 	}
 	g.Inventory = slices.Delete(g.Inventory, i, i+1)
+	it.Equipped = false
 	it.Pos = g.Player
 	g.Items = append(g.Items, it)
 	g.say(it.Def.Name + "を置いた。")
 	return true
+}
+
+// equipped returns the equipped item of the category c, or nil.
+func (g *Game) equipped(c Category) *Item {
+	for _, it := range g.Inventory {
+		if it.Equipped && it.Def.Category == c {
+			return it
+		}
+	}
+	return nil
+}
+
+// equip equips it, in place of the item of its category.
+func (g *Game) equip(it *Item) {
+	if old := g.equipped(it.Def.Category); old != nil {
+		old.Equipped = false
+	}
+	it.Equipped = true
+	g.say(it.Def.Name + "を装備した。")
+}
+
+func (g *Game) unequip(it *Item) {
+	it.Equipped = false
+	g.say(it.Def.Name + "を外した。")
+}
+
+// Attack is the attack of the player: its level and strength, and its
+// weapon (as Shiren 6: weapon x (0.75 + strength / 32)).
+func (g *Game) Attack() int {
+	a := playerAttack(g.PlayerLevel, g.Strength)
+	if w := g.equipped(CategoryWeapon); w != nil {
+		a += int(float64(w.Strength()) * (0.75 + float64(g.Strength)/32))
+	}
+	return a
+}
+
+// Defense is the defense of the player: its shield.
+func (g *Game) Defense() int {
+	if s := g.equipped(CategoryShield); s != nil {
+		return s.Strength()
+	}
+	return 0
 }

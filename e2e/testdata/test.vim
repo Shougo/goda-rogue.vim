@@ -82,7 +82,7 @@ function! s:start() abort
     call s:check('tiles of ' . lnum, strchars(getline(lnum)), tiles)
     call s:check('width of ' . lnum, strdisplaywidth(getline(lnum)), tiles * 2)
   endfor
-  call s:check('status', s:status() =~# '^ターン 0  向き ↓  シード e2e$', 1)
+  call s:check('status', s:status() =~# '^攻撃 9  防御 0  ターン 0  向き ↓  シード e2e$', 1)
   call s:check('message', s:messages(), ['1F に着いた。'])
 
   call s:check('cursor', s:cursor_char(), '主')
@@ -112,12 +112,17 @@ function! s:fake_prompt(prompt, answer) abort
 endfunction
 
 function! s:items() abort
-  call goda_rogue#start(#{seed: 'items'})
-  " Walk until something is picked up.
+  " Walk until something is picked up (another run if the player falls).
   let dirs = ['right', 'down', 'left', 'up', 'downright', 'upleft', 'downleft', 'upright']
-  for n in range(400)
-    call goda_rogue#do('dash', dirs[n % len(dirs)])
-    call goda_rogue#do('pickup')
+  for seed in range(20)
+    call goda_rogue#start(#{seed: 'items' . seed})
+    for n in range(100)
+      call goda_rogue#do('dash', dirs[n % len(dirs)])
+      call goda_rogue#do('pickup')
+      if join(s:messages()) =~# 'を拾った。\|冒険は終わった'
+        break
+      endif
+    endfor
     if join(s:messages()) =~# 'を拾った。'
       break
     endif
@@ -132,7 +137,7 @@ function! s:items() abort
   let name = s:asked.choices[0]
   call s:answer(1)
   call s:check('item prompt', s:asked.title, name)
-  call s:check('item commands', s:asked.choices, ['置く'])
+  call s:check('item commands', s:asked.choices[-1], '置く')
   let turn = s:status()
   call s:answer(0)
   call s:check('cancel', s:status(), turn)
@@ -154,9 +159,9 @@ function! s:actions() abort
   call s:check('number seed', s:status() =~# 'シード 42$', 1)
 
   call goda_rogue#do('turn')
-  call s:check('turn to an enemy', s:status() =~# '^ターン 0 ', 1)
+  call s:check('turn to an enemy', s:status() =~# '  ターン 0 ', 1)
   call goda_rogue#do('turn', 'upleft')
-  call s:check('turn', s:status() =~# '^ターン 0  向き ↖ ', 1)
+  call s:check('turn', s:status() =~# '  ターン 0  向き ↖ ', 1)
 
   " A move in some direction succeeds: the turn goes on.
   for dir in ['left', 'right', 'up', 'down', 'upleft', 'upright', 'downleft', 'downright']
@@ -165,7 +170,7 @@ function! s:actions() abort
       break
     endif
   endfor
-  call s:check('move', s:status() =~# '^ターン 1 ', 1)
+  call s:check('move', s:status() =~# '  ターン 1 ', 1)
   call s:check('cursor after move', s:cursor_char(), '主')
   " Walked tiles show as safe (the ally following the player may stand on
   " the first one).

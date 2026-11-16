@@ -158,8 +158,11 @@ func (g *Game) descend() {
 		pos := g.randomTile(rng, rooms[rng.IntN(len(rooms))])
 		def := d.Item(pick(rng, d.ItemRows, g.Depth))
 		it := &Item{Def: def, Pos: pos, Glyph: def.Glyph}
-		if def.Category == CategoryMoney {
+		switch {
+		case def.Category == CategoryMoney:
 			it.Amount = between(rng, 10, 30+g.Depth*10)
+		case it.equipment():
+			it.Upgrade = rollUpgrade(rng)
 		}
 		g.Items = append(g.Items, it)
 	}
@@ -453,7 +456,7 @@ func (g *Game) attack() bool {
 		g.say(m.Name + "にかわされた。")
 		return true
 	}
-	n := damage(g.rng, playerAttack(g.PlayerLevel, g.Strength), m.Defense, r.DefenseK)
+	n := damage(g.rng, g.Attack(), m.Defense, r.DefenseK)
 	m.HP -= n
 	g.say(fmt.Sprintf("%sに%dのダメージ。", m.Name, n))
 	if m.HP <= 0 {
@@ -645,7 +648,8 @@ func (g *Game) visibleEnemies() []*Monster {
 
 // Status is the status line, under the map.
 func (g *Game) Status() string {
-	s := fmt.Sprintf("ターン %d  向き %s  シード %s", g.Turn, directionArrows[g.Facing], g.Seed)
+	s := fmt.Sprintf("攻撃 %d  防御 %d  ターン %d  向き %s  シード %s",
+		g.Attack(), g.Defense(), g.Turn, directionArrows[g.Facing], g.Seed)
 	if w := g.Dungeon.Rules.WindTurns; g.Wind > 0 && g.Wind < len(w) {
 		s += fmt.Sprintf("  次の風まで %d", w[g.Wind]-g.FloorTurns)
 	}

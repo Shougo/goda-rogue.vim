@@ -1,6 +1,8 @@
 package rogue
 
 import (
+	"fmt"
+	"math/rand/v2"
 	"slices"
 	"strings"
 	"testing"
@@ -170,5 +172,108 @@ func TestInventoryPrompt(t *testing.T) {
 	}
 	if err := g.Do("choose", []string{"0"}); err == nil {
 		t.Error("choose without a prompt was accepted")
+	}
+}
+
+// carry gives the player the item id.
+func carry(g *Game, id string, upgrade int) *Item {
+	def := g.Dungeon.Item(id)
+	it := &Item{Def: def, Glyph: def.Glyph, Upgrade: upgrade}
+	g.Inventory = append(g.Inventory, it)
+	g.sortInventory()
+	return it
+}
+
+// command chooses the item it of the inventory, and then the command c.
+func command(t *testing.T, g *Game, it *Item, c string) {
+	t.Helper()
+	if err := g.Do("inventory", nil); err != nil {
+		t.Fatal(err)
+	}
+	if err := g.Do("choose", []string{fmt.Sprint(slices.Index(g.Inventory, it))}); err != nil {
+		t.Fatal(err)
+	}
+	i := slices.Index(g.Prompt.Choices, c)
+	if i < 0 {
+		t.Fatalf("no %q in %q", c, g.Prompt.Choices)
+	}
+	if err := g.Do("choose", []string{fmt.Sprint(i)}); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestEquip(t *testing.T) {
+	g, _ := roomGame(t, 6, 3)
+	bare := g.Attack()
+	sword := carry(g, "tetsuken", 2)
+	shield := carry(g, "kitate", 0)
+	if g.Defense() != 0 {
+		t.Fatalf("defense %d with nothing equipped", g.Defense())
+	}
+
+	turn := g.Turn
+	command(t, g, sword, commandEquip)
+	if !sword.Equipped || g.Turn != turn+1 {
+		t.Fatalf("equipped %v, turn %d", sword.Equipped, g.Turn)
+	}
+	// At strength 8, a point of the sword is 0.75 + 8/32 = 1 of attack.
+	if got, want := g.Attack(), bare+9; got != want {
+		t.Errorf("attack %d, want %d", got, want)
+	}
+	if sword.Label() != "剣 鉄の剣+2 [装備]" {
+		t.Errorf("label %q", sword.Label())
+	}
+	command(t, g, shield, commandEquip)
+	if g.Defense() != 3 {
+		t.Errorf("defense %d", g.Defense())
+	}
+	if !strings.HasPrefix(g.Status(), fmt.Sprintf("攻撃 %d  防御 3  ", bare+9)) {
+		t.Errorf("status %q", g.Status())
+	}
+
+	// Another sword replaces the first.
+	wood := carry(g, "bokutou", 0)
+	command(t, g, wood, commandEquip)
+	if sword.Equipped || !wood.Equipped || g.Attack() != bare+3 {
+		t.Errorf("swap: %v %v, attack %d", sword.Equipped, wood.Equipped, g.Attack())
+	}
+	command(t, g, wood, commandUnequip)
+	if wood.Equipped || g.Attack() != bare {
+		t.Errorf("unequip: %v, attack %d", wood.Equipped, g.Attack())
+	}
+
+	// Dropping an equipped item unequips it.
+	command(t, g, shield, commandDrop)
+	if shield.Equipped || g.Defense() != 0 {
+		t.Errorf("dropped: %v, defense %d", shield.Equipped, g.Defense())
+	}
+}
+
+func TestShieldDefends(t *testing.T) {
+	hurt := func(defense int) int {
+		g, r := roomGame(t, 4, 3)
+		g.HP, g.MaxHP = 99999, 99999
+		if defense > 0 {
+			carry(g, "tetsutate", defense-7).Equipped = true
+		}
+		place(g, kind("nezumi4"), Point{r.X + 1, r.Y})
+		wait(t, g, 200)
+		return 99999 + 200/g.Dungeon.Rules.RegenTurns - g.HP
+	}
+	if a, b := hurt(0), hurt(20); b*3 > a*2 {
+		t.Errorf("damage %d with no shield, %d with 20", a, b)
+	}
+}
+
+func TestUpgradeRoll(t *testing.T) {
+	rng := rand.New(rand.NewPCG(3, 4))
+	seen := map[int]bool{}
+	for range 1000 {
+		seen[rollUpgrade(rng)] = true
+	}
+	for _, n := range []int{-1, 0, 1, 2, 3} {
+		if !seen[n] {
+			t.Errorf("never %+d", n)
+		}
 	}
 }
