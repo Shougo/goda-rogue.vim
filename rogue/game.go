@@ -55,6 +55,8 @@ type Game struct {
 	// Lit says whether the floor is lit (a scroll): the player sees it
 	// all.
 	Lit bool
+	// sights are what the prompt of look lists.
+	sights []sight
 	// Dark says whether the floor is dark: the player sees only around.
 	Dark bool
 	// Traps are the traps of the floor.
@@ -417,6 +419,10 @@ func (g *Game) Do(action string, args []string) error {
 	case "map":
 		// Showing the mini-map costs no turn.
 		g.ShowMap = !g.ShowMap
+	case "look":
+		// Looking costs no turn.
+		g.beginAction()
+		g.lookAround()
 	case "move":
 		name, d, err := dir()
 		if err != nil {

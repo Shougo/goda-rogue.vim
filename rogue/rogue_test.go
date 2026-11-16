@@ -823,7 +823,7 @@ func TestClear(t *testing.T) {
 // breaks: no two creatures on one tile, everyone on a walkable tile, HP in
 // bounds, and the run ending only for a reason.
 func TestRandomPlay(t *testing.T) {
-	actions := []string{"move", "move", "move", "dash", "attack", "turn", "wait", "stairs", "inventory", "pickup", "shoot", "choose", "cancel"}
+	actions := []string{"move", "move", "move", "dash", "attack", "turn", "wait", "stairs", "inventory", "pickup", "shoot", "look", "choose", "cancel"}
 	for seed := range 20 {
 		g := NewGame(cave(), fmt.Sprint("play", seed))
 		rng := rand.New(rand.NewPCG(uint64(seed), 0))

@@ -222,8 +222,8 @@ endfunction
 " Run the action {action} of the game, with its arguments: >
 "	call goda_rogue#do('move', 'left')
 " Actions: move, dash and turn (with a direction: left, right, up, down,
-" upleft, upright, downleft, downright), attack, wait, stairs, pickup,
-" inventory, choose (an index, from 0), cancel, map, log, redraw.
+" upleft, upright, downleft, downright), attack, shoot, wait, stairs, pickup,
+" inventory, choose (an index, from 0), cancel, look, map, log, redraw.
 function! goda_rogue#do(action, ...) abort
   if &filetype !=# 'goda-rogue'
     return
