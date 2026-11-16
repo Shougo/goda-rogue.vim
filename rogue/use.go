@@ -142,7 +142,10 @@ func (g *Game) getHungry() {
 		}
 		return
 	}
-	g.hunger++
+	// The seal ハラヘラズ: every other turn only.
+	if !g.sealed(SealNoHunger) || g.Turn%2 == 0 {
+		g.hunger++
+	}
 	if g.wears(EffectRegen) {
 		g.hunger++
 	}

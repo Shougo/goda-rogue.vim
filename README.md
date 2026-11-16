@@ -12,7 +12,8 @@ their rank is their color.
 > up and dropped, weapons, shields and bracelets equipped, and grasses,
 > scrolls, staffs and food used, arrows shot, items thrown and
 > identified; the player gets hungry, and finds traps by swinging at
-> nothing. Some floors are a big room, a maze, or have a monster house.
+> nothing. Pots keep and merge items; weapons and shields have seals.
+> Some floors are a big room, a maze, or have a monster house.
 
 ## Requirements
 

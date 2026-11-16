@@ -32,7 +32,15 @@ picked up and dropped, and a weapon, a shield and a bracelet equipped
 (weapons add to the attack, shields make the defense, a bracelet has its
 effect while it is worn).  Grasses are drunk, scrolls read, staffs waved
 (a magic bolt to the front) and food eaten, arrows shot, and any item
-thrown; pots cannot be used yet.
+thrown.  Pots hold items: a pot of keeping to take them out again, a pot
+of synthesis merges them (a weapon or a shield gets the seals and the
+upgrade value of another of its kind put in after it; a bracelet is
+mended by the same bracelet).  A thrown pot breaks, and what was in it
+falls around.
+
+Weapons and shields can have seals (印), one kanji each, shown in the
+inventory (鉄の剣+2【会必】): they work while the weapon or the shield is
+equipped, as many as it has room for.
 
 Grasses, scrolls, staffs, bracelets and pots are unidentified at first:
 they go by names such as 赤い草 (with a "?" in the inventory), different
@@ -207,8 +215,9 @@ inventory						*goda-rogue-inventory*
 		振る (a staff), 食べる (food), 装備する or 外す (a weapon, a
 		shield, a bracelet or arrows), 投げる (throw it to the front,
 		as an arrow flies: a grass has its effect on the monster it
-		hits, other items hurt it a little and fall by it), 置く
-		(drop it).  The items are sorted by kind,
+		hits, other items hurt it a little and fall by it), 入れる
+		or 出す (put an item in a pot, take one out), 置く (drop
+		it).  The items are sorted by kind,
 		each with the glyph of its kind as an icon.
 
 choose {index}						*goda-rogue-choose*
@@ -344,10 +353,14 @@ floors once the files change.
 				  巻物: あかり 識別
 				  杖: 吹き飛ばし
 				  食料: 満腹
+				  壺: 保存 合成
 				The 強さ of arrows is their attack.  回数 is
 				how many times a staff can be waved, how
-				many arrows there are (min-max; - for other
-				items).  ひび is how easily a
+				many arrows there are, how many items a pot
+				holds (min-max; - for other items).  印 is
+				the seal a weapon or a shield is born with
+				(- for none), 印数 how many seals it can
+				have.  ひび is how easily a
 				bracelet cracks, a percent (0 for never).
 				Leaving a floor where a bracelet had its
 				effect (it showed a monster out of sight,
@@ -360,6 +373,10 @@ floors once the files change.
 				The cracks are shown in the inventory
 				([ひび1]).
 	item_table.txt		Which items appear on which floors, a table.
+	seals.txt		The seals of weapons and shields, a table:
+				印 is the kanji of a seal, 効果 what it does
+				(the comments of the built-in seals.txt tell
+				what each does), 強さ how much.
 	fake_names.txt		The names of unidentified items, by kind
 				(種類), a table.  The items of a kind with
 				names are unidentified at first, each with

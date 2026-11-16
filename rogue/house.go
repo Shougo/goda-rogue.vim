@@ -11,6 +11,11 @@ func (g *Game) newItem(rng *rand.Rand, pos Point) *Item {
 		it.Amount = between(rng, 10, 30+g.Depth*10)
 	case it.upgradable():
 		it.Upgrade = rollUpgrade(rng)
+		if def.Seal != "" {
+			it.Seals = []string{def.Seal}
+		}
+	case def.Category == CategoryPot:
+		it.Charges = between(rng, def.Charges[0], def.Charges[1])
 	case def.Category == CategoryStaff:
 		it.Charges = between(rng, def.Charges[0], def.Charges[1])
 	case def.Category == CategoryArrow:

@@ -143,6 +143,10 @@ func (g *Game) stepOn(t *Trap) bool {
 		g.Fullness = max(g.Fullness-n, 0)
 		g.say("お腹が減った。")
 	case TrapRust:
+		if g.sealed(SealNoRust) {
+			g.say("サビよけの印で守られた。")
+			return true
+		}
 		rusted := false
 		for _, c := range []Category{CategoryWeapon, CategoryShield} {
 			if it := g.equipped(c); it != nil {

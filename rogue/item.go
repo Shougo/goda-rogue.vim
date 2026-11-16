@@ -46,6 +46,10 @@ type Item struct {
 	Charges int
 	// Count is how many arrows it is.
 	Count int
+	// Seals are the seals of a weapon or a shield (their glyphs).
+	Seals []string
+	// Contents are the items in a pot; Charges is how many it holds.
+	Contents []*Item
 	// Known says whether the player knows the upgrade value of a weapon
 	// or a shield, the charges of a staff.
 	Known bool
@@ -86,8 +90,13 @@ func (g *Game) describe(it *Item) string {
 		s += "?"
 	}
 	switch {
-	case it.upgradable() && it.Known && it.Upgrade != 0:
-		s += fmt.Sprintf("%+d", it.Upgrade)
+	case it.upgradable():
+		if it.Known && it.Upgrade != 0 {
+			s += fmt.Sprintf("%+d", it.Upgrade)
+		}
+		s += sealsLabel(it)
+	case it.Def.Category == CategoryPot:
+		s += g.potLabel(it)
 	case it.Def.Category == CategoryArrow:
 		s += fmt.Sprintf("[%d]", it.Count)
 	case it.Def.Category == CategoryStaff && g.identified[it.Def.ID]:
@@ -169,6 +178,9 @@ func (it *Item) commands() []string {
 	var cs []string
 	if c, ok := useCommands[it.Def.Category]; ok {
 		cs = append(cs, c)
+	}
+	if it.Def.Category == CategoryPot {
+		cs = append(cs, commandPutIn, commandTakeOut)
 	}
 	if it.equipment() {
 		if it.Equipped {
@@ -264,6 +276,11 @@ func (g *Game) choose(arg string) (bool, error) {
 			kind:    promptItem, item: n,
 		}
 		return false, nil
+	case promptPutIn:
+		g.putIn(g.Inventory[p.item], g.Inventory[p.items[n]])
+		return true, nil
+	case promptTakeOut:
+		return g.takeOut(g.Inventory[p.item], n), nil
 	case promptIdentify:
 		it := g.Inventory[p.items[n]]
 		g.learn(it)
@@ -279,6 +296,16 @@ func (g *Game) choose(arg string) (bool, error) {
 			return true, nil
 		case commandDrop:
 			return g.drop(p.item), nil
+		case commandPutIn:
+			return g.askPutIn(p.item), nil
+		case commandTakeOut:
+			pot := g.Inventory[p.item]
+			if pot.Def.Effect == EffectSynthesis {
+				g.learn(pot)
+				g.say(g.Name(pot) + "からは出せない。")
+				return true, nil
+			}
+			return g.askTakeOut(p.item), nil
 		case commandThrow:
 			g.throwItem(g.Inventory[p.item])
 			return true, nil
@@ -356,15 +383,16 @@ func (g *Game) Attack() int {
 	if w := g.equipped(CategoryWeapon); w != nil {
 		a += int(float64(w.Strength()) * (0.75 + float64(s)/32))
 	}
-	return a
+	return a + g.sealStrength(SealAttack)
 }
 
 // Defense is the defense of the player: its shield.
 func (g *Game) Defense() int {
+	d := g.sealStrength(SealDefense)
 	if s := g.equipped(CategoryShield); s != nil {
-		return s.Strength()
+		d += s.Strength()
 	}
-	return 0
+	return d
 }
 
 // use notes that the bracelet with the effect e, if the player wears it,

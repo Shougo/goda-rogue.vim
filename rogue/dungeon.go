@@ -24,8 +24,11 @@ import (
 //	                   the strength of a weapon or a shield, 効果 what
 //	                   an item does, ひび how easily a bracelet cracks, 回数
 //	                   how many times a staff can be waved, how many
-//	                   arrows there are)
+//	                   arrows there are, how many items a pot holds,
+//	                   印 the seal a weapon or a shield is born with,
+//	                   印数 how many seals it can have)
 //	item_table.txt     which items appear on which floors (a table)
+//	seals.txt          the seals of weapons and shields (a table)
 //	fake_names.txt     the names of unidentified items, by kind (a table)
 //	traps.txt          the traps (a table)
 //	trap_table.txt     which traps appear on which floors (a table)
@@ -54,6 +57,7 @@ type Dungeon struct {
 	ItemRows    []FloorRow
 	Traps       []*TrapDef
 	TrapRows    []FloorRow
+	Seals       []*SealDef
 	// FakeNames are the names of unidentified items, by category; items
 	// of a category without them are identified from the start.
 	FakeNames map[Category][]string
@@ -127,8 +131,12 @@ type ItemDef struct {
 	Effect Effect
 	// Crack is how easily a bracelet cracks, a percent (0 for never).
 	Crack int
+	// Seal is the seal a weapon or a shield is born with ("" for none),
+	// Slots how many seals it can have.
+	Seal  string
+	Slots int
 	// Charges are how many times a staff can be waved, how many arrows
-	// there are: from, to.
+	// there are, how many items a pot holds: from, to.
 	Charges [2]int
 }
 
@@ -147,6 +155,8 @@ const (
 	EffectIdentify   Effect = "識別"
 	EffectBlowAway   Effect = "吹き飛ばし"
 	EffectFood       Effect = "満腹"
+	EffectKeep       Effect = "保存"
+	EffectSynthesis  Effect = "合成"
 )
 
 // effects are the effects the items of each category can have.
@@ -156,6 +166,7 @@ var effects = map[Category][]Effect{
 	CategoryScroll:   {EffectLight, EffectIdentify},
 	CategoryStaff:    {EffectBlowAway},
 	CategoryFood:     {EffectFood},
+	CategoryPot:      {EffectKeep, EffectSynthesis},
 }
 
 // FloorRow is a row of an appearance table: id appears on the floors
@@ -506,6 +517,21 @@ func (l *loader) load() {
 		l.errorf("rules.txt", rk["最初の仲間"].n, "no monster %q", r.FirstAlly)
 	}
 
+	for _, row := range l.table("seals.txt", "印", "名前", "効果", "強さ") {
+		s := &SealDef{Glyph: row.cols["印"], Name: row.cols["名前"], Effect: SealEffect(row.cols["効果"])}
+		if len([]rune(s.Glyph)) != 1 {
+			l.errorf(row.file, row.n, "印: want one character, not %q", s.Glyph)
+		}
+		if !slices.Contains(sealEffects, s.Effect) {
+			l.errorf(row.file, row.n, "効果: unknown %q", s.Effect)
+		}
+		s.Strength = l.int(row, "強さ", 0)
+		if d.Seal(s.Glyph) != nil {
+			l.errorf(row.file, row.n, "the seal %q again", s.Glyph)
+		}
+		d.Seals = append(d.Seals, s)
+	}
+
 	for _, row := range l.table("items.txt", "ID", "字", "名前", "種類") {
 		it := &ItemDef{ID: row.cols["ID"], Glyph: l.glyph(row, "字"), Name: row.cols["名前"]}
 		c := Category(row.cols["種類"])
@@ -523,12 +549,27 @@ func (l *loader) load() {
 			it.Effect = Effect(e)
 		}
 		if n, ok := row.cols["回数"]; ok && n != "-" && n != "" {
-			if c != CategoryStaff && c != CategoryArrow {
-				l.errorf(row.file, row.n, "回数: only staffs and arrows have one, not %s", c)
+			if c != CategoryStaff && c != CategoryArrow && c != CategoryPot {
+				l.errorf(row.file, row.n, "回数: only staffs, arrows and pots have one, not %s", c)
 			}
 			it.Charges[0], it.Charges[1] = l.span(row, "回数")
 		}
-		if (c == CategoryStaff || c == CategoryArrow) && it.Charges[1] == 0 {
+		if seal, ok := row.cols["印"]; ok && seal != "-" && seal != "" {
+			if d.Seal(seal) == nil {
+				l.errorf(row.file, row.n, "印: no seal %q", seal)
+			}
+			it.Seal = seal
+		}
+		if _, ok := row.cols["印数"]; ok {
+			it.Slots = l.int(row, "印数", 0)
+		}
+		if (it.Seal != "" || it.Slots > 0) && c != CategoryWeapon && c != CategoryShield {
+			l.errorf(row.file, row.n, "印: only weapons and shields have seals, not %s", c)
+		}
+		if it.Seal != "" && it.Slots == 0 {
+			l.errorf(row.file, row.n, "印数: no room for its seal %q", it.Seal)
+		}
+		if (c == CategoryStaff || c == CategoryArrow || c == CategoryPot) && it.Charges[1] == 0 {
 			l.errorf(row.file, row.n, "回数: %s needs some", c)
 		}
 		if _, ok := row.cols["ひび"]; ok {
@@ -743,6 +784,16 @@ func (d *Dungeon) Trap(id string) *TrapDef {
 	for _, t := range d.Traps {
 		if t.ID == id {
 			return t
+		}
+	}
+	return nil
+}
+
+// Seal returns the seal of the glyph, or nil.
+func (d *Dungeon) Seal(glyph string) *SealDef {
+	for _, s := range d.Seals {
+		if s.Glyph == glyph {
+			return s
 		}
 	}
 	return nil

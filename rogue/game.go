@@ -519,11 +519,15 @@ func (g *Game) attack() bool {
 	}
 	m.Dozing = false
 	r := g.Dungeon.Rules
-	if !hits(g.rng, r.PlayerHitRate) {
+	if !g.sealed(SealSure) && !hits(g.rng, r.PlayerHitRate) {
 		g.say(m.Name + "にかわされた。")
 		return true
 	}
 	n := damage(g.rng, g.Attack(), m.Defense, r.DefenseK)
+	if c := g.sealStrength(SealCrit); c > 0 && g.rng.IntN(100) < c {
+		n *= 2
+		g.say("会心の一撃！")
+	}
 	g.use(EffectStrength)
 	m.HP -= n
 	g.say(fmt.Sprintf("%sに%dのダメージ。", m.Name, n))
@@ -538,6 +542,10 @@ func (g *Game) attack() bool {
 // endTurn ends a turn of the player: walking or waiting restores HP (other
 // actions do not), and then the monsters act.
 func (g *Game) endTurn(rest bool) {
+	if g.Over != "" {
+		// It ended in the action (a trap).
+		return
+	}
 	g.Turn++
 	if rest && g.HP < g.MaxHP && g.Fullness > 0 {
 		g.regen++

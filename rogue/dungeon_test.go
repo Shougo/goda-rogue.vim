@@ -75,19 +75,19 @@ func TestDungeonErrors(t *testing.T) {
 			m["monsters.txt"].Data = append(m["monsters.txt"].Data, "x1\t鼠\tx\t1\t1\t1\t1\t1\t光速\n"...)
 		}, `速度`},
 		{"unknown effect", func(m fstest.MapFS) {
-			m["items.txt"].Data = append(m["items.txt"].Data, "x\t腕\tx\t腕輪\t0\t飛行\t0\t-\n"...)
+			m["items.txt"].Data = append(m["items.txt"].Data, "x\t腕\tx\t腕輪\t0\t飛行\t0\t-\t-\t0\n"...)
 		}, `効果: 腕輪 has no effect "飛行"`},
 		{"effect of a grass", func(m fstest.MapFS) {
-			m["items.txt"].Data = append(m["items.txt"].Data, "x\t草\tx\t草\t0\t回復\t0\t-\n"...)
+			m["items.txt"].Data = append(m["items.txt"].Data, "x\t草\tx\t草\t0\t回復\t0\t-\t-\t0\n"...)
 		}, `効果: 草 has no effect "回復"`},
 		{"charges of a grass", func(m fstest.MapFS) {
-			m["items.txt"].Data = append(m["items.txt"].Data, "x\t草\tx\t草\t0\t-\t0\t3\n"...)
-		}, `回数: only staffs and arrows`},
+			m["items.txt"].Data = append(m["items.txt"].Data, "x\t草\tx\t草\t0\t-\t0\t3\t-\t0\n"...)
+		}, `回数: only staffs, arrows and pots`},
 		{"bad charges", func(m fstest.MapFS) {
-			m["items.txt"].Data = append(m["items.txt"].Data, "x\t杖\tx\t杖\t0\t-\t0\t5-2\n"...)
+			m["items.txt"].Data = append(m["items.txt"].Data, "x\t杖\tx\t杖\t0\t-\t0\t5-2\t-\t0\n"...)
 		}, `回数: want min-max`},
 		{"staff without charges", func(m fstest.MapFS) {
-			m["items.txt"].Data = append(m["items.txt"].Data, "x\t杖\tx\t杖\t0\t-\t0\t-\n"...)
+			m["items.txt"].Data = append(m["items.txt"].Data, "x\t杖\tx\t杖\t0\t-\t0\t-\t-\t0\n"...)
 		}, `回数: 杖 needs some`},
 		{"too few fake names", func(m fstest.MapFS) {
 			m["fake_names.txt"].Data = []byte("種類\t名前\n草\t赤い草\n")
@@ -113,8 +113,23 @@ func TestDungeonErrors(t *testing.T) {
 		{"too many special floors", func(m fstest.MapFS) {
 			m["floors.txt"].Data = append(m["floors.txt"].Data, "1\t1\t5-8\t6-10\t0\t通常\t60\t50\t0\n"...)
 		}, `大部屋 and 迷路: 110% together`},
+		{"unknown seal", func(m fstest.MapFS) {
+			m["items.txt"].Data = append(m["items.txt"].Data, "x\t剣\tx\t武器\t1\t-\t0\t-\t炎\t2\n"...)
+		}, `印: no seal "炎"`},
+		{"seal of a grass", func(m fstest.MapFS) {
+			m["items.txt"].Data = append(m["items.txt"].Data, "x\t草\tx\t草\t1\t-\t0\t-\t会\t2\n"...)
+		}, `印: only weapons and shields`},
+		{"no slot for its seal", func(m fstest.MapFS) {
+			m["items.txt"].Data = append(m["items.txt"].Data, "x\t剣\tx\t武器\t1\t-\t0\t-\t会\t0\n"...)
+		}, `印数: no room`},
+		{"unknown seal effect", func(m fstest.MapFS) {
+			m["seals.txt"].Data = append(m["seals.txt"].Data, "炎\t炎の印\t炎\t1\n"...)
+		}, `効果: unknown "炎"`},
+		{"seal of two characters", func(m fstest.MapFS) {
+			m["seals.txt"].Data = append(m["seals.txt"].Data, "炎炎\t炎の印\t攻撃\t1\n"...)
+		}, `印: want one character`},
 		{"cracking grass", func(m fstest.MapFS) {
-			m["items.txt"].Data = append(m["items.txt"].Data, "x\t草\tx\t草\t0\t-\t5\t-\n"...)
+			m["items.txt"].Data = append(m["items.txt"].Data, "x\t草\tx\t草\t0\t-\t5\t-\t-\t0\n"...)
 		}, `ひび: only bracelets`},
 		{"missing file", func(m fstest.MapFS) {
 			delete(m, "growth.txt")

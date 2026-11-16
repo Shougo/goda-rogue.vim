@@ -256,6 +256,11 @@ func (g *Game) hitPlayer(m *Monster) {
 	if g.HP <= 0 {
 		g.HP = 0
 		g.end(m.Name+"に倒された", false)
+		return
+	}
+	if c := g.sealStrength(SealCounter); c > 0 && g.rng.IntN(100) < c {
+		g.say("反撃した！")
+		g.hurt(m, n)
 	}
 }
 

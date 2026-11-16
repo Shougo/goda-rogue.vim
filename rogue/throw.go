@@ -61,6 +61,10 @@ func (g *Game) throwItem(it *Item) {
 		}
 		break
 	}
+	if thrown.Def.Category == CategoryPot {
+		g.smash(thrown, p)
+		return
+	}
 	g.land(thrown, p)
 }
 
@@ -86,6 +90,10 @@ func (g *Game) hitBy(it *Item, m *Monster) bool {
 		return true
 	}
 	g.hurt(m, between(g.rng, 1, 2))
+	if it.Def.Category == CategoryPot {
+		g.smash(it, m.Pos)
+		return true
+	}
 	return false
 }
 
