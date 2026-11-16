@@ -178,7 +178,7 @@ The background of the tile the player faces (and attacks) is
 
 The window shows the part of the floor around the player that fits.  Under
 the map are the status line (the floor, the turn, the direction the player
-faces and the seed) and the last message.
+faces as an arrow, and the seed) and the last message.
 
 ==============================================================================
 MINI-MAP                                                  *goda-rogue-mini-map*

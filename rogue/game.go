@@ -75,10 +75,12 @@ var Directions = map[string]Point{
 	"upleft": {-1, -1}, "upright": {1, -1}, "downleft": {-1, 1}, "downright": {1, 1},
 }
 
-// directionNames are the directions as the status line shows them.
-var directionNames = map[string]string{
-	"left": "左", "right": "右", "up": "上", "down": "下",
-	"upleft": "左上", "upright": "右上", "downleft": "左下", "downright": "右下",
+// directionArrows are the directions as the status line shows them. The
+// arrows are of ambiguous width, which is fine there: the status line is
+// not a part of the map.
+var directionArrows = map[string]string{
+	"left": "←", "right": "→", "up": "↑", "down": "↓",
+	"upleft": "↖", "upright": "↗", "downleft": "↙", "downright": "↘",
 }
 
 // NewGame starts a run on the first floor.
@@ -441,5 +443,5 @@ func (g *Game) dash(d Point) {
 
 // Status is the status line.
 func (g *Game) Status() string {
-	return fmt.Sprintf("%dF  ターン %d  向き %s  シード %s", g.Depth, g.Turn, directionNames[g.Facing], g.Seed)
+	return fmt.Sprintf("%dF  ターン %d  向き %s  シード %s", g.Depth, g.Turn, directionArrows[g.Facing], g.Seed)
 }

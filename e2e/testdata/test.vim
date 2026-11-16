@@ -74,7 +74,7 @@ function! s:start() abort
     call s:check('tiles of ' . lnum, strchars(getline(lnum)), tiles)
     call s:check('width of ' . lnum, strdisplaywidth(getline(lnum)), tiles * 2)
   endfor
-  call s:check('status', s:status() =~# '^1F  ターン 0  向き 下  シード e2e$', 1)
+  call s:check('status', s:status() =~# '^1F  ターン 0  向き ↓  シード e2e$', 1)
   call s:check('message', getline('$'), '1F に着いた。')
 
   call s:check('cursor', s:cursor_char(), '主')
@@ -97,7 +97,7 @@ function! s:actions() abort
   call s:check('number seed', s:status() =~# 'シード 42$', 1)
 
   call goda_rogue#do('turn', 'upleft')
-  call s:check('turn', s:status() =~# '^1F  ターン 0  向き 左上 ', 1)
+  call s:check('turn', s:status() =~# '^1F  ターン 0  向き ↖ ', 1)
 
   " A move in some direction succeeds: the turn goes on.
   for dir in ['left', 'right', 'up', 'down', 'upleft', 'upright', 'downleft', 'downright']
