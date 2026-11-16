@@ -84,8 +84,11 @@ func TestRender(t *testing.T) {
 	for _, size := range []Size{{80, 24}, {200, 60}, {7, 3}} {
 		s := g.Render(size)
 		// The map is between the top line, and the status line and the
-		// message.
-		maps := s.Lines[1 : len(s.Lines)-2]
+		// messages.
+		if len(s.Lines) != min(max(size.Height-statusLines, 1), MapHeight)+statusLines {
+			t.Errorf("%v: %d lines", size, len(s.Lines))
+		}
+		maps := s.Lines[1 : len(s.Lines)-1-messageLines]
 		wantW := min(max(size.Width/2, 1), MapWidth)
 		wantH := min(max(size.Height-statusLines, 1), MapHeight)
 		if len(maps) != wantH {
@@ -101,7 +104,7 @@ func TestRender(t *testing.T) {
 			t.Errorf("%v: the cursor %v is not on the player", size, c)
 		}
 		for group, spans := range s.Highlights {
-			if group == hlHP || group == hlHPLow || group == hlHPEmpty {
+			if group == hlHP || group == hlHPLow || group == hlHPEmpty || group == hlOldMessage {
 				continue
 			}
 			for _, sp := range spans {
@@ -655,5 +658,90 @@ func TestTopLine(t *testing.T) {
 		if width(hlHPEmpty) != tc.rest {
 			t.Errorf("HP %d: empty %d cells, want %d", tc.hp, width(hlHPEmpty), tc.rest)
 		}
+	}
+}
+
+func TestSpawn(t *testing.T) {
+	g, _ := roomGame(t, 4, 3)
+	g.HP, g.MaxHP = 9999, 9999
+	wait(t, g, spawnTurns-1)
+	if len(g.Monsters) != 0 {
+		t.Fatalf("%d monsters before %d turns", len(g.Monsters), spawnTurns)
+	}
+	wait(t, g, 1)
+	if len(g.Monsters) != 1 {
+		t.Fatalf("%d monsters after %d turns", len(g.Monsters), spawnTurns)
+	}
+	if m := g.Monsters[0]; !m.Spawned || chebyshev(m.Pos, g.Player) <= 4 {
+		t.Errorf("spawned %+v, the player at %v", m, g.Player)
+	}
+}
+
+func TestWind(t *testing.T) {
+	g, r := roomGame(t, 8, 3)
+	g.HP, g.MaxHP = 9999, 9999
+	m := place(g, monsterKinds[0], 1, Point{r.X + 7, r.Y + 2})
+	m.Dozing = true
+
+	g.FloorTurns = windTurns[0] - 1
+	wait(t, g, 1)
+	if g.Wind != 1 || !strings.Contains(g.Message, "風が吹いてきた") {
+		t.Errorf("first wind: %d, %q", g.Wind, g.Message)
+	}
+	if !strings.Contains(g.Status(), fmt.Sprintf("次の風まで %d", windTurns[1]-windTurns[0])) {
+		t.Errorf("status %q", g.Status())
+	}
+
+	g.FloorTurns = windTurns[1] - 1
+	n := len(g.Monsters)
+	wait(t, g, 1)
+	if g.Wind != 2 || len(g.Monsters) != n+1 || m.Rank != 2 {
+		t.Errorf("second wind: %d, %d monsters, rank %d", g.Wind, len(g.Monsters), m.Rank)
+	}
+	hunter := g.Monsters[len(g.Monsters)-1]
+	if !hunter.Hunter || !hunter.Spawned || hunter.Rank != 3 {
+		t.Errorf("the strong monster %+v", hunter)
+	}
+
+	g.FloorTurns = windTurns[2] - 1
+	wait(t, g, 1)
+	if g.Wind != 3 || !strings.Contains(g.Over, "風") {
+		t.Errorf("third wind: %d, %q", g.Wind, g.Over)
+	}
+
+	g.Over = ""
+	g.descend()
+	if g.Wind != 0 || g.FloorTurns != 0 {
+		t.Errorf("a new floor: wind %d, %d turns", g.Wind, g.FloorTurns)
+	}
+}
+
+func TestMessages(t *testing.T) {
+	g, _ := roomGame(t, 4, 3)
+	g.Log, g.actionStart = nil, 0
+	g.beginAction()
+	g.say("一。")
+	g.say("二。")
+	g.beginAction()
+	g.say("三。")
+	s := g.Render(Size{80, 24})
+	got := s.Lines[len(s.Lines)-messageLines:]
+	if !slices.Equal(got, []string{"一。", "二。", "三。"}) {
+		t.Errorf("messages %q", got)
+	}
+	// The first two are of the action before: dimmed.
+	n := len(s.Lines)
+	want := []Span{{n - 2, 1, len("一。") + 1}, {n - 1, 1, len("二。") + 1}}
+	if !slices.Equal(s.Highlights[hlOldMessage], want) {
+		t.Errorf("old messages %v, want %v", s.Highlights[hlOldMessage], want)
+	}
+	if g.Message != "三。" {
+		t.Errorf("message %q", g.Message)
+	}
+	for range maxLog + 10 {
+		g.say("。")
+	}
+	if len(g.Log) != maxLog {
+		t.Errorf("log of %d", len(g.Log))
 	}
 }

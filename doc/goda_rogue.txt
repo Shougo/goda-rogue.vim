@@ -33,6 +33,12 @@ other turn, fast ones twice a turn.  Some monsters doze until the player
 enters or leaves their room, or they are attacked.  Walking and waiting
 restore HP; at 0 HP the run is over.
 
+Lingering on a floor does not pay: now and then a monster appears out of
+sight, and it gives nothing for defeating it.  Then Kron's wind blows:
+the first time as a warning (the status line shows the turns until the
+next one), the second time a strong monster comes for the player and
+every enemy grows one rank stronger, the third time the run is over.
+
 ==============================================================================
 INSTALL                                                    *goda-rogue-install*
 
@@ -66,6 +72,7 @@ There are no default mappings: map the actions in the game buffer. >vim
 	  nnoremap <buffer> . <Cmd>call goda_rogue#do('wait')<CR>
 	  nnoremap <buffer> > <Cmd>call goda_rogue#do('stairs')<CR>
 	  nnoremap <buffer> m <Cmd>call goda_rogue#do('map')<CR>
+	  nnoremap <buffer> M <Cmd>call goda_rogue#do('log')<CR>
 	endfunction
 
 	call goda_rogue#start()
@@ -131,6 +138,10 @@ map							*goda-rogue-map*
 		Show or hide the mini-map (|goda-rogue-mini-map|).  It costs
 		no turn.
 
+log							*goda-rogue-log*
+		Show all the messages in the buffer "goda-rogue://log", in a
+		window under the game.  It costs no turn.
+
 redraw							*goda-rogue-redraw*
 		Show the screen again.  Done for every window that shows the
 		game when it is resized.
@@ -158,6 +169,7 @@ GodaRogueFloorSafe	The floor known to have no trap: where the player
 GodaRogueStairs		The stairs.
 GodaRogueFacing		The tile the player faces: its background, over the
 			highlight of what is there.
+GodaRogueOldMessage	The messages of the actions before the last one.
 GodaRogueHP		The HP bar of the top line (a background): its
 GodaRogueHPLow		filled part, the filled part at a quarter of HP or
 GodaRogueHPEmpty	less, and the rest.
@@ -192,8 +204,9 @@ The background of the tile the player faces (and attacks) is
 The top line shows what matters all the time: the floor, the level, and HP
 with a bar.  Then the window shows the part of the floor around the player
 that fits.  Under the map are the status line (the turn, the direction the
-player faces as an arrow, and the seed) and the messages of the last
-action.
+player faces as an arrow, the seed, and the turns until the next wind
+once it has blown) and the last three messages, those of the actions
+before the last one dimmed (|GodaRogueOldMessage|).
 
 ==============================================================================
 MINI-MAP                                                  *goda-rogue-mini-map*

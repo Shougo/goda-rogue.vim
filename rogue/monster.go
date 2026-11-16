@@ -45,6 +45,12 @@ type Monster struct {
 	// Dozing monsters do nothing until the player enters or leaves their
 	// room, or they are attacked.
 	Dozing bool
+	// Spawned monsters came after the floor began: they give no rewards,
+	// so that lingering to fight them is not worth it.
+	Spawned bool
+	// Hunters always know where the player is (the strong monster of the
+	// second wind).
+	Hunter bool
 
 	// Where it is heading: where it last saw its target, or a tile it
 	// wanders to.
@@ -144,7 +150,7 @@ func (g *Game) act(m *Monster) {
 		}
 	}
 
-	if g.sees(m.Pos, g.Player) {
+	if m.Hunter || g.sees(m.Pos, g.Player) {
 		m.target, m.hasTarget = g.Player, true
 	} else if !m.hasTarget || m.Pos == m.target {
 		// Wander: head to a tile of a random room.
@@ -281,6 +287,17 @@ func (g *Game) hitMonster(a, m *Monster) {
 
 func (g *Game) remove(m *Monster) {
 	g.Monsters = slices.DeleteFunc(g.Monsters, func(x *Monster) bool { return x == m })
+}
+
+// rankUp makes m one rank stronger (up to 4), its HP in proportion.
+func rankUp(m *Monster) {
+	if m.Rank >= len(rankStats)-1 {
+		return
+	}
+	m.Rank++
+	s := rankStats[m.Rank]
+	m.HP = max(m.HP*s.HP/m.MaxHP, 1)
+	m.MaxHP, m.Attack, m.Defense = s.HP, s.Attack, s.Defense
 }
 
 // wake wakes the dozing monsters in the room i.

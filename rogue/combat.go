@@ -63,3 +63,16 @@ const (
 
 // regenTurns is how many turns of walking or waiting restore 1 HP.
 const regenTurns = 2
+
+// The rules of lingering on a floor, until dungeons are data.
+const (
+	// spawnTurns is how often a monster appears, out of the player's
+	// sight; maxMonsters is how many there can be.
+	spawnTurns  = 40
+	maxMonsters = 16
+)
+
+// windTurns are the turns on a floor at which Kron's wind blows: a
+// warning, then a strong monster (and every enemy one rank stronger), then
+// the end of the run.
+var windTurns = [3]int{800, 900, 1000}

@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand/v2"
+	"slices"
 	"sync"
 
 	"github.com/Shougo/goda.vim/sdk"
@@ -81,7 +82,12 @@ func (p *Plugin) Handlers() map[string]sdk.Handler {
 			if err := p.game.Do(action, args); err != nil {
 				return nil, err
 			}
-			return sdk.Generic(p.game.Render(size))
+			screen := p.game.Render(size)
+			if action == "log" {
+				// The whole log, for the Vim script to show in a buffer.
+				screen.Log = slices.Clone(p.game.Log)
+			}
+			return sdk.Generic(screen)
 		},
 	}
 }

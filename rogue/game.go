@@ -29,9 +29,13 @@ type Game struct {
 	Items    []Item
 	// Seen are the tiles the player has seen, Safe those known to have
 	// no trap: walked on (a trap there would have gone off and shown).
-	Seen    []bool
-	Safe    []bool
-	Message string
+	Seen []bool
+	Safe []bool
+	// Message is the messages of the last action, Log all of them (the
+	// last maxLog); the last action's begin at actionStart.
+	Message     string
+	Log         []string
+	actionStart int
 	// ShowMap says whether the mini-map is shown.
 	ShowMap bool
 
@@ -43,6 +47,10 @@ type Game struct {
 	regen int
 	// Over is why the run is over ("" while it goes on).
 	Over string
+	// FloorTurns are the turns on this floor, and Wind how many times
+	// Kron's wind has blown on it.
+	FloorTurns int
+	Wind       int
 
 	// rng is the random source of everything but the layout of the
 	// floors (combat, for now), so that what the player does never
@@ -100,6 +108,7 @@ func (g *Game) descend() {
 	}
 
 	g.Depth++
+	g.FloorTurns, g.Wind = 0, 0
 	rng := floorRNG(g.Seed, g.Depth)
 	g.Level = Generate(rng)
 	g.Seen = make([]bool, len(g.Level.Tiles))
@@ -151,7 +160,7 @@ func (g *Game) descend() {
 	}
 	g.look()
 	g.markSafe(g.Player)
-	g.Message = fmt.Sprintf("%dF に着いた。", g.Depth)
+	g.say(fmt.Sprintf("%dF に着いた。", g.Depth))
 }
 
 // floorRank returns the rank of a monster on the floor depth: 1 on the
@@ -297,16 +306,18 @@ func (g *Game) Do(action string, args []string) error {
 	}
 	if g.Over != "" {
 		switch action {
-		case "redraw":
+		case "redraw", "log":
 		case "map":
 			g.ShowMap = !g.ShowMap
 		default:
-			g.Message = "冒険は終わった。"
+			g.beginAction()
+			g.say("冒険は終わった。")
 		}
 		return nil
 	}
 	switch action {
-	case "redraw":
+	case "redraw", "log":
+		// (The Vim script asks for the log with the screen.)
 	case "map":
 		// Showing the mini-map costs no turn.
 		g.ShowMap = !g.ShowMap
@@ -315,7 +326,7 @@ func (g *Game) Do(action string, args []string) error {
 		if err != nil {
 			return err
 		}
-		g.Message = ""
+		g.beginAction()
 		g.Facing = name
 		if g.step(d) {
 			g.endTurn(true)
@@ -323,6 +334,7 @@ func (g *Game) Do(action string, args []string) error {
 	case "turn":
 		// Facing costs no turn.
 		if len(args) == 0 {
+			g.beginAction()
 			g.faceEnemy()
 			return nil
 		}
@@ -336,20 +348,21 @@ func (g *Game) Do(action string, args []string) error {
 		if err != nil {
 			return err
 		}
-		g.Message = ""
+		g.beginAction()
 		g.Facing = name
 		g.dash(d)
 	case "attack":
-		g.Message = ""
+		g.beginAction()
 		if g.attack() {
 			g.endTurn(false)
 		}
 	case "wait":
-		g.Message = ""
+		g.beginAction()
 		g.endTurn(true)
 	case "stairs":
+		g.beginAction()
 		if g.Player != g.Stairs {
-			g.Message = "ここに階段はない。"
+			g.say("ここに階段はない。")
 			return nil
 		}
 		g.Turn++
@@ -373,11 +386,10 @@ func (g *Game) faceEnemy() {
 		d := Directions[name]
 		if m := g.MonsterAt(g.Player.Add(d)); m != nil && !m.Ally && g.clearFrom(g.Player, d) {
 			g.Facing = name
-			g.Message = ""
 			return
 		}
 	}
-	g.Message = "周りに敵はいない。"
+	g.say("周りに敵はいない。")
 }
 
 // attack attacks the tile the player faces; it says whether it took the
@@ -421,12 +433,76 @@ func (g *Game) endTurn(rest bool) {
 		}
 	}
 	g.monstersAct()
+	if g.Over == "" {
+		g.FloorTurns++
+		g.linger()
+	}
 }
 
-// say adds msg to the message of the action.
+// linger is what lingering on a floor brings: new monsters now and then,
+// and Kron's wind.
+func (g *Game) linger() {
+	if g.FloorTurns%spawnTurns == 0 && len(g.Monsters) < maxMonsters {
+		g.spawn(floorRank(g.rng, g.Depth))
+	}
+	if g.Wind >= len(windTurns) || g.FloorTurns < windTurns[g.Wind] {
+		return
+	}
+	g.Wind++
+	switch g.Wind {
+	case 1:
+		g.say("風が吹いてきた……。")
+	case 2:
+		g.say("強い風が吹いてきた！　何かが近づいてくる。")
+		for _, m := range g.Monsters {
+			if !m.Ally {
+				rankUp(m)
+			}
+		}
+		if m := g.spawn(min(1+(g.Depth-1)/4+2, len(rankStats)-1)); m != nil {
+			m.Hunter = true
+		}
+	case 3:
+		g.Over = "クロンの風に吹き飛ばされた"
+		g.say(g.Over + "。")
+	}
+}
+
+// spawn puts a new monster of rank on a free tile out of the player's
+// sight, and returns it (nil if there is no room).
+func (g *Game) spawn(rank int) *Monster {
+	for range 100 {
+		p := g.wanderTarget()
+		if !g.Level.At(p).Walkable() || g.occupied(p) || g.Visible(p) || chebyshev(p, g.Player) <= 4 {
+			continue
+		}
+		m := newMonster(monsterKinds[g.rng.IntN(len(monsterKinds))], rank)
+		m.Pos = p
+		m.Spawned = true
+		g.Monsters = append(g.Monsters, m)
+		return m
+	}
+	return nil
+}
+
+// beginAction starts the messages of an action.
+func (g *Game) beginAction() {
+	g.Message = ""
+	g.actionStart = len(g.Log)
+}
+
+// say adds msg (a sentence) to the messages of the action, and to the log.
 func (g *Game) say(msg string) {
 	g.Message += msg
+	g.Log = append(g.Log, msg)
+	if n := len(g.Log) - maxLog; n > 0 {
+		g.Log = slices.Delete(g.Log, 0, n)
+		g.actionStart = max(g.actionStart-n, 0)
+	}
 }
+
+// maxLog is how many messages the log keeps.
+const maxLog = 1000
 
 // canStep says whether the player can go from its tile by d: onto a
 // walkable tile, and not diagonally around a corner of rock.
@@ -512,5 +588,9 @@ func (g *Game) visibleEnemies() []*Monster {
 
 // Status is the status line, under the map.
 func (g *Game) Status() string {
-	return fmt.Sprintf("ターン %d  向き %s  シード %s", g.Turn, directionArrows[g.Facing], g.Seed)
+	s := fmt.Sprintf("ターン %d  向き %s  シード %s", g.Turn, directionArrows[g.Facing], g.Seed)
+	if g.Wind > 0 && g.Wind < len(windTurns) {
+		s += fmt.Sprintf("  次の風まで %d", windTurns[g.Wind]-g.FloorTurns)
+	}
+	return s
 }

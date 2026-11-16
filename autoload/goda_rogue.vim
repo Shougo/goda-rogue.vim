@@ -121,6 +121,7 @@ function! s:highlights() abort
   endfor
   " The tile the player faces: a background over the highlight of the tile.
   call s:highlight('GodaRogueFacing', c.facing, '', 'bg')
+  highlight default link GodaRogueOldMessage Comment
   " The HP bar of the top line: spaces with a background.
   call s:highlight('GodaRogueHP', c.hp, '', 'bg')
   call s:highlight('GodaRogueHPLow', c.hplow, '', 'bg')
@@ -191,7 +192,8 @@ endfunction
 " Run the action {action} of the game, with its arguments: >
 "	call goda_rogue#do('move', 'left')
 " Actions: move, dash and turn (with a direction: left, right, up, down,
-" upleft, upright, downleft, downright), attack, wait, stairs, map, redraw.
+" upleft, upright, downleft, downright), attack, wait, stairs, map, log,
+" redraw.
 function! goda_rogue#do(action, ...) abort
   if &filetype !=# 'goda-rogue'
     return
@@ -232,6 +234,34 @@ function! s:draw(screen) abort
   else
     call s:close_map()
   endif
+
+  if has_key(a:screen, 'log')
+    call s:show_log(a:screen.log)
+  endif
+endfunction
+
+" Show {log} (all the messages) in the buffer "goda-rogue://log", in a
+" window under the game, with the cursor on the last message.
+function! s:show_log(log) abort
+  let bufnr = bufadd('goda-rogue://log')
+  call setbufvar(bufnr, '&buftype', 'nofile')
+  call setbufvar(bufnr, '&bufhidden', 'hide')
+  call setbufvar(bufnr, '&swapfile', 0)
+  call setbufvar(bufnr, '&buflisted', 0)
+  call bufload(bufnr)
+  let winids = win_findbuf(bufnr)
+  if empty(winids)
+    execute 'belowright 10split'
+    execute 'buffer' bufnr
+  else
+    call win_gotoid(winids[0])
+  endif
+  setlocal modifiable
+  silent %delete _
+  call setline(1, a:log)
+  setlocal nomodifiable
+  setlocal filetype=goda-rogue-log
+  normal! G
 endfunction
 
 " Set {highlights} ({group: spans}) of the Go side in the buffer {bufnr}.

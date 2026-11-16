@@ -29,6 +29,8 @@ const (
 	// hlFacing is the tile the player faces (and attacks), over its own
 	// highlight.
 	hlFacing = "GodaRogueFacing"
+	// hlOldMessage is a message of an action before the last one.
+	hlOldMessage = "GodaRogueOldMessage"
 	// The HP bar of the top line: its filled part (hlHPLow when HP is
 	// low), and the rest.
 	hlHP      = "GodaRogueHP"
@@ -58,6 +60,8 @@ type Screen struct {
 	Highlights map[string][]Span `json:"highlights"`
 	Cursor     [2]int            `json:"cursor"`
 	Minimap    *Minimap          `json:"minimap,omitempty"`
+	// Log is all the messages, for the "log" action.
+	Log []string `json:"log,omitempty"`
 }
 
 // Minimap is the floor, reduced: one half-width ASCII character a tile.
@@ -68,9 +72,12 @@ type Minimap struct {
 	Highlights map[string][]Span `json:"highlights"`
 }
 
+// messageLines is how many of the last messages are shown.
+const messageLines = 3
+
 // statusLines are the lines around the map: the top line over it, the
-// status line and the message under it.
-const statusLines = 3
+// status line and the messages under it.
+const statusLines = 2 + messageLines
 
 // hpBarWidth is the width of the HP bar, in cells.
 const hpBarWidth = 10
@@ -119,11 +126,30 @@ func (g *Game) Render(size Size) Screen {
 		col := (f.X-x0)*glyphBytes + 1
 		s.Highlights[hlFacing] = []Span{{f.Y - y0 + 2, col, col + glyphBytes}}
 	}
-	s.Lines = append(s.Lines, g.Status(), g.Message)
+	s.Lines = append(s.Lines, g.Status())
+	g.messages(&s)
 	if g.ShowMap {
 		s.Minimap = g.minimap()
 	}
 	return s
+}
+
+// messages adds the last messages to s: always messageLines lines, those
+// of the actions before the last one dimmed.
+func (g *Game) messages(s *Screen) {
+	first := max(len(g.Log)-messageLines, 0)
+	for i := range messageLines {
+		n := first + i
+		if n >= len(g.Log) {
+			s.Lines = append(s.Lines, "")
+			continue
+		}
+		msg := g.Log[n]
+		s.Lines = append(s.Lines, msg)
+		if n < g.actionStart && msg != "" {
+			s.Highlights[hlOldMessage] = append(s.Highlights[hlOldMessage], Span{len(s.Lines), 1, len(msg) + 1})
+		}
+	}
 }
 
 // topLine returns the top line: what matters all the time (the floor, the

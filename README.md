@@ -37,6 +37,7 @@ function s:goda_rogue_settings() abort
   nnoremap <buffer> . <Cmd>call goda_rogue#do('wait')<CR>
   nnoremap <buffer> > <Cmd>call goda_rogue#do('stairs')<CR>
   nnoremap <buffer> m <Cmd>call goda_rogue#do('map')<CR>
+  nnoremap <buffer> M <Cmd>call goda_rogue#do('log')<CR>
 endfunction
 ```
 

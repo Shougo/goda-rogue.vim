@@ -57,8 +57,14 @@ function! s:map_lines() abort
   return empty(popups) ? [] : getbufline(winbufnr(popups[0]), 1, '$')
 endfunction
 
+" Under the map: the status line and three lines of messages.
 function! s:status() abort
-  return getline(line('$') - 1)
+  return getline(line('$') - 3)
+endfunction
+
+" The messages shown (the empty lines left out).
+function! s:messages() abort
+  return filter(getline(line('$') - 2, '$'), {_, l -> l !=# ''})
 endfunction
 
 function! s:start() abort
@@ -68,8 +74,8 @@ function! s:start() abort
 
   let width = winwidth(0) - getwininfo(win_getid())[0].textoff
   let tiles = min([width / 2, 66])
-  let rows = min([winheight(0) - 3, 36])
-  call s:check('lines', line('$'), rows + 3)
+  let rows = min([winheight(0) - 5, 36])
+  call s:check('lines', line('$'), rows + 5)
   call s:check('top line', getline(1), '1F  Lv1  HP  15/ 15           ')
   call s:check('hp bar', s:highlights(1), [[21, 31, 'GodaRogueHP']])
   for lnum in range(2, rows + 1)
@@ -77,7 +83,7 @@ function! s:start() abort
     call s:check('width of ' . lnum, strdisplaywidth(getline(lnum)), tiles * 2)
   endfor
   call s:check('status', s:status() =~# '^ターン 0  向き ↓  シード e2e$', 1)
-  call s:check('message', getline('$'), '1F に着いた。')
+  call s:check('message', s:messages(), ['1F に着いた。'])
 
   call s:check('cursor', s:cursor_char(), '主')
   call s:check('player highlight',
@@ -123,11 +129,21 @@ function! s:actions() abort
   call s:check('safe floor', index(s:all_groups(), 'GodaRogueFloorSafe') >= 0, 1)
 
   call goda_rogue#do('stairs')
-  call s:check('no stairs', getline('$'), 'ここに階段はない。')
+  call s:check('no stairs', s:messages()[-1], 'ここに階段はない。')
 
   call s:check('facing', index(s:all_groups(), 'GodaRogueFacing') >= 0, 1)
   call goda_rogue#do('attack')
-  call s:check('attack', getline('$') =~# '^\%(空振りした。\|仲間は攻撃しない。\|.*のダメージ。\|.*にかわされた。\)', 1)
+  let s:last = s:messages()[-1]
+  call s:check('attack', join(s:messages()) =~# '\%(空振りした。\|仲間は攻撃しない。\|のダメージ。\|にかわされた。\)', 1)
+
+  " The log: all the messages, in a buffer.
+  let game = win_getid()
+  call goda_rogue#do('log')
+  call s:check('log buffer', bufname('%'), 'goda-rogue://log')
+  call s:check('log', index(getline(1, '$'), 'ここに階段はない。') >= 0, 1)
+  call s:check('log last', getline('$'), s:last)
+  close
+  call win_gotoid(game)
 
   " The mini-map: a popup / floating window, toggled.
   let status = s:status()
