@@ -44,6 +44,9 @@ type Item struct {
 	Cracks int
 	// Charges are how many more times a staff can be waved.
 	Charges int
+	// Known says whether the player knows the upgrade value of a weapon
+	// or a shield, the charges of a staff.
+	Known bool
 	// used says whether a bracelet had its effect on this floor.
 	used bool
 }
@@ -68,14 +71,27 @@ func (it *Item) upgradable() bool {
 func (it *Item) Strength() int { return max(it.Def.Strength+it.Upgrade, 0) }
 
 // Label is the item as the inventory shows it: its glyph as an icon, its
-// name, its upgrade value, and whether it is equipped.
-func (it *Item) Label() string {
-	s := it.Glyph + " " + it.Def.Name
-	if it.upgradable() && it.Upgrade != 0 {
-		s += fmt.Sprintf("%+d", it.Upgrade)
+// name ("?" after the name of an unidentified kind), its upgrade value or
+// charges once known, its cracks, and whether it is equipped.
+func (g *Game) Label(it *Item) string {
+	return it.Glyph + " " + g.describe(it)
+}
+
+// describe is the label of it without its icon.
+func (g *Game) describe(it *Item) string {
+	s := g.Name(it)
+	if !g.identified[it.Def.ID] {
+		s += "?"
 	}
-	if it.Def.Category == CategoryStaff {
-		s += fmt.Sprintf("[%d]", it.Charges)
+	switch {
+	case it.upgradable() && it.Known && it.Upgrade != 0:
+		s += fmt.Sprintf("%+d", it.Upgrade)
+	case it.Def.Category == CategoryStaff && g.identified[it.Def.ID]:
+		if it.Known {
+			s += fmt.Sprintf("[%d]", it.Charges)
+		} else {
+			s += "[?]"
+		}
 	}
 	if it.Cracks > 0 {
 		s += fmt.Sprintf(" [ひび%d]", it.Cracks)
@@ -109,16 +125,19 @@ type Prompt struct {
 	Title   string   `json:"title"`
 	Choices []string `json:"choices"`
 
-	// What the choice is for: the inventory, or what to do with the
-	// item at index item.
-	kind string
-	item int
+	// What the choice is for: the inventory, what to do with the item at
+	// index item, or which item to identify (items are the indexes of
+	// the choices in the inventory).
+	kind  string
+	item  int
+	items []int
 }
 
 // The kinds of prompts.
 const (
 	promptInventory = "inventory"
 	promptItem      = "item"
+	promptIdentify  = "identify"
 )
 
 // The commands of an item.
@@ -187,13 +206,13 @@ func (g *Game) pickUp() bool {
 		return true
 	}
 	if len(g.Inventory) >= g.Dungeon.Rules.Capacity {
-		g.say("持ち物がいっぱいで、" + it.Def.Name + "を拾えない。")
+		g.say("持ち物がいっぱいで、" + g.Name(it) + "を拾えない。")
 		return true
 	}
 	g.Items = slices.Delete(g.Items, i, i+1)
 	g.Inventory = append(g.Inventory, it)
 	g.sortInventory()
-	g.say(it.Def.Name + "を拾った。")
+	g.say(g.Name(it) + "を拾った。")
 	return true
 }
 
@@ -205,7 +224,7 @@ func (g *Game) openInventory() {
 	}
 	p := &Prompt{Title: "持ち物", kind: promptInventory}
 	for _, it := range g.Inventory {
-		p.Choices = append(p.Choices, it.Label())
+		p.Choices = append(p.Choices, g.Label(it))
 	}
 	g.Prompt = p
 }
@@ -226,10 +245,15 @@ func (g *Game) choose(arg string) (bool, error) {
 	case promptInventory:
 		it := g.Inventory[n]
 		g.Prompt = &Prompt{
-			Title:   it.Label(),
+			Title:   g.Label(it),
 			Choices: it.commands(),
 			kind:    promptItem, item: n,
 		}
+		return false, nil
+	case promptIdentify:
+		it := g.Inventory[p.items[n]]
+		g.learn(it)
+		g.say(g.describe(it) + "を識別した。")
 		return false, nil
 	case promptItem:
 		switch p.Choices[n] {
@@ -261,7 +285,7 @@ func (g *Game) drop(i int) bool {
 	it.Equipped, it.used = false, false
 	it.Pos = g.Player
 	g.Items = append(g.Items, it)
-	g.say(it.Def.Name + "を置いた。")
+	g.say(g.Name(it) + "を置いた。")
 	return true
 }
 
@@ -281,12 +305,14 @@ func (g *Game) equip(it *Item) {
 		old.Equipped = false
 	}
 	it.Equipped = true
-	g.say(it.Def.Name + "を装備した。")
+	g.say(g.Name(it) + "を装備した。")
+	// Wearing it tells what it is.
+	g.learn(it)
 }
 
 func (g *Game) unequip(it *Item) {
 	it.Equipped = false
-	g.say(it.Def.Name + "を外した。")
+	g.say(g.Name(it) + "を外した。")
 }
 
 // wears says whether the player wears a bracelet with the effect e.
@@ -366,13 +392,13 @@ func (g *Game) wearAndTear() {
 		switch {
 		case it.Cracks >= g.Dungeon.Rules.CrackStages:
 			g.Inventory = slices.DeleteFunc(g.Inventory, func(x *Item) bool { return x == it })
-			g.say(it.Def.Name + "が壊れた。")
+			g.say(g.Name(it) + "が壊れた。")
 		case it.Cracks == 0:
 			it.Cracks++
-			g.say(it.Def.Name + "にひびが入った。")
+			g.say(g.Name(it) + "にひびが入った。")
 		default:
 			it.Cracks++
-			g.say(it.Def.Name + "のひびが広がった。")
+			g.say(g.Name(it) + "のひびが広がった。")
 		}
 	}
 }

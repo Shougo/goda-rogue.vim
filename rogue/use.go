@@ -11,7 +11,7 @@ func (g *Game) useItem(it *Item) {
 	if it.Def.Category != CategoryStaff {
 		g.Inventory = slices.DeleteFunc(g.Inventory, func(x *Item) bool { return x == it })
 	}
-	name := it.Def.Name
+	name := g.Name(it)
 	switch it.Def.Category {
 	case CategoryGrass:
 		g.say(name + "を飲んだ。")
@@ -20,6 +20,8 @@ func (g *Game) useItem(it *Item) {
 	case CategoryStaff:
 		g.say(name + "を振った。")
 		if it.Charges == 0 {
+			// It does not tell what it is, but it is empty.
+			it.Known = true
 			g.say("何も起こらなかった。")
 			return
 		}
@@ -27,6 +29,9 @@ func (g *Game) useItem(it *Item) {
 	case CategoryFood:
 		g.say(name + "を食べた。")
 	}
+
+	// Using it tells what it is.
+	g.identify(it)
 
 	n := it.Def.Strength
 	switch it.Def.Effect {
@@ -51,7 +56,9 @@ func (g *Game) useItem(it *Item) {
 		}
 		g.say("フロアが明るくなった。")
 	case EffectIdentify:
-		g.say("識別するものはなかった。")
+		if !g.askIdentify() {
+			g.say("識別するものはなかった。")
+		}
 	case EffectBlowAway:
 		g.blowAway()
 	case EffectFood:

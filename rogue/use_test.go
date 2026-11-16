@@ -128,8 +128,8 @@ func TestBlowAway(t *testing.T) {
 	if !strings.Contains(g.Message, "何も起こらなかった。") || g.Turn != turn+1 || !slicesContains(g.Inventory, empty) {
 		t.Errorf("message %q, turn %d", g.Message, g.Turn)
 	}
-	if empty.Label() != "杖 吹き飛ばしの杖[0]" {
-		t.Errorf("label %q", empty.Label())
+	if g.Label(empty) != "杖 吹き飛ばしの杖[0]" {
+		t.Errorf("label %q", g.Label(empty))
 	}
 }
 

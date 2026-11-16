@@ -92,7 +92,7 @@ func TestInventorySorted(t *testing.T) {
 	}
 	var got []string
 	for _, it := range g.Inventory {
-		got = append(got, it.Label())
+		got = append(got, g.Label(it))
 	}
 	want := []string{"剣 木刀", "剣 鉄の剣", "盾 木の盾", "草 薬草", "食 おにぎり"}
 	if !slices.Equal(got, want) {
@@ -179,7 +179,7 @@ func TestInventoryPrompt(t *testing.T) {
 // carry gives the player the item id.
 func carry(g *Game, id string, upgrade int) *Item {
 	def := g.Dungeon.Item(id)
-	it := &Item{Def: def, Glyph: def.Glyph, Upgrade: upgrade}
+	it := &Item{Def: def, Glyph: def.Glyph, Upgrade: upgrade, Known: true}
 	g.Inventory = append(g.Inventory, it)
 	g.sortInventory()
 	return it
@@ -221,8 +221,8 @@ func TestEquip(t *testing.T) {
 	if got, want := g.Attack(), bare+9; got != want {
 		t.Errorf("attack %d, want %d", got, want)
 	}
-	if sword.Label() != "剣 鉄の剣+2 [装備]" {
-		t.Errorf("label %q", sword.Label())
+	if g.Label(sword) != "剣 鉄の剣+2 [装備]" {
+		t.Errorf("label %q", g.Label(sword))
 	}
 	command(t, g, shield, commandEquip)
 	if g.Defense() != 3 {
@@ -290,8 +290,8 @@ func TestBracelets(t *testing.T) {
 	if !strings.Contains(g.Status(), fmt.Sprintf("  ちから %d  ", base+3)) {
 		t.Errorf("status %q", g.Status())
 	}
-	if power.Label() != "腕 力の腕輪 [装備]" {
-		t.Errorf("label %q", power.Label())
+	if g.Label(power) != "腕 力の腕輪 [装備]" {
+		t.Errorf("label %q", g.Label(power))
 	}
 
 	// One bracelet at a time.
@@ -427,8 +427,8 @@ func TestCrackLabel(t *testing.T) {
 	g, _ := roomGame(t, 4, 3)
 	b := carry(g, "dougu", 0)
 	b.Cracks, b.Equipped = 2, true
-	if b.Label() != "腕 道具感知の腕輪 [ひび2] [装備]" {
-		t.Errorf("label %q", b.Label())
+	if g.Label(b) != "腕 道具感知の腕輪 [ひび2] [装備]" {
+		t.Errorf("label %q", g.Label(b))
 	}
 	// A bracelet that never cracks.
 	p := carry(g, "chikara", 0)

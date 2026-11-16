@@ -25,6 +25,7 @@ import (
 //	                   an item does, ひび how easily a bracelet cracks, 回数
 //	                   how many times a staff can be waved)
 //	item_table.txt     which items appear on which floors (a table)
+//	fake_names.txt     the names of unidentified items, by kind (a table)
 //	floors.txt         how many monsters and items a floor has (a table)
 //	growth.txt         the growth tables (a table)
 //
@@ -46,8 +47,11 @@ type Dungeon struct {
 	MonsterRows []FloorRow
 	Items       []*ItemDef
 	ItemRows    []FloorRow
-	FloorRows   []FloorCounts
-	Growth      map[string][]GrowthRow
+	// FakeNames are the names of unidentified items, by category; items
+	// of a category without them are identified from the start.
+	FakeNames map[Category][]string
+	FloorRows []FloorCounts
+	Growth    map[string][]GrowthRow
 	// Hash is a hash of all the files: the same seed makes the same
 	// floors only with the same definition.
 	Hash string
@@ -499,6 +503,35 @@ func (l *loader) load() {
 			l.errorf(row.file, row.n, "the ID %q again", it.ID)
 		}
 		d.Items = append(d.Items, it)
+	}
+
+	d.FakeNames = map[Category][]string{}
+	for _, row := range l.table("fake_names.txt", "種類", "名前") {
+		c, name := Category(row.cols["種類"]), row.cols["名前"]
+		switch {
+		case !slices.Contains(categories, c):
+			l.errorf(row.file, row.n, "種類: unknown %q", c)
+		case c == CategoryMoney:
+			l.errorf(row.file, row.n, "種類: money is never unidentified")
+		case slices.ContainsFunc(d.Items, func(it *ItemDef) bool { return it.Name == name }):
+			l.errorf(row.file, row.n, "名前: %q is the name of an item", name)
+		case slices.Contains(d.FakeNames[c], name):
+			l.errorf(row.file, row.n, "名前: %q again", name)
+		default:
+			d.FakeNames[c] = append(d.FakeNames[c], name)
+		}
+	}
+	for _, c := range categories {
+		names := d.FakeNames[c]
+		n := 0
+		for _, it := range d.Items {
+			if it.Category == c {
+				n++
+			}
+		}
+		if len(names) > 0 && len(names) < n {
+			l.errorf("fake_names.txt", 0, "too few names: %d for the %d items of %s", len(names), n, c)
+		}
 	}
 
 	d.MonsterRows = l.appearance("monster_table.txt", func(id string) bool { return d.Monster(id) != nil })

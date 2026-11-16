@@ -1,0 +1,158 @@
+package rogue
+
+import (
+	"fmt"
+	"slices"
+	"strings"
+	"testing"
+)
+
+// unidentified is a game in a room, with the items unidentified as at the
+// start of a run.
+func unidentified(t *testing.T) *Game {
+	t.Helper()
+	g, _ := roomGame(t, 4, 3)
+	g.identified = map[string]bool{}
+	g.nameItems()
+	return g
+}
+
+func TestFakeNames(t *testing.T) {
+	g := NewGame(cave(), "names")
+	d := g.Dungeon
+	used := map[string]bool{}
+	for _, it := range d.Items {
+		item := &Item{Def: it}
+		if len(d.FakeNames[it.Category]) == 0 {
+			if !g.identified[it.ID] {
+				t.Errorf("%s is unidentified", it.ID)
+			}
+			continue
+		}
+		name := g.Name(item)
+		if g.identified[it.ID] || !slices.Contains(d.FakeNames[it.Category], name) {
+			t.Errorf("%s: %q", it.ID, name)
+		}
+		if used[name] {
+			t.Errorf("%q twice", name)
+		}
+		used[name] = true
+	}
+
+	// The same seed names them the same; another one, mostly not.
+	same, other := NewGame(cave(), "names"), NewGame(cave(), "other")
+	differ := 0
+	for _, it := range d.Items {
+		if g.fakeNames[it.ID] != same.fakeNames[it.ID] {
+			t.Errorf("%s: %q, then %q", it.ID, g.fakeNames[it.ID], same.fakeNames[it.ID])
+		}
+		if g.fakeNames[it.ID] != other.fakeNames[it.ID] {
+			differ++
+		}
+	}
+	if differ == 0 {
+		t.Error("another seed gives the same names")
+	}
+	// Names do not change the floors.
+	if !slices.Equal(g.Level.Tiles, same.Level.Tiles) {
+		t.Error("the same seed made other floors")
+	}
+}
+
+func TestUseIdentifies(t *testing.T) {
+	g := unidentified(t)
+	g.HP, g.MaxHP = 10, 100
+	it := carry(g, "yakusou", 0)
+	fake := g.Name(it)
+	if g.Label(it) != "草 "+fake+"?" {
+		t.Errorf("label %q", g.Label(it))
+	}
+	command(t, g, it, commandDrink)
+	want := fake + "を飲んだ。" + fake + "は薬草だった。HPが25回復した。"
+	if g.Message != want {
+		t.Errorf("message %q, want %q", g.Message, want)
+	}
+	// Every 薬草 is known now.
+	if other := carry(g, "yakusou", 0); g.Label(other) != "草 薬草" {
+		t.Errorf("label %q", g.Label(other))
+	}
+}
+
+func TestEquipIdentifies(t *testing.T) {
+	g := unidentified(t)
+	b := carry(g, "kehai", 0)
+	b.Known = false
+	fake := g.Name(b)
+	command(t, g, b, commandEquip)
+	if !strings.Contains(g.Message, fake+"は気配察知の腕輪だった。") {
+		t.Errorf("message %q", g.Message)
+	}
+
+	// The upgrade value of a weapon shows once it is equipped.
+	sword := carry(g, "tetsuken", 2)
+	sword.Known = false
+	if g.Label(sword) != "剣 鉄の剣" {
+		t.Errorf("label %q", g.Label(sword))
+	}
+	command(t, g, sword, commandEquip)
+	if g.Label(sword) != "剣 鉄の剣+2 [装備]" {
+		t.Errorf("label %q", g.Label(sword))
+	}
+}
+
+func TestStaffCharges(t *testing.T) {
+	g := unidentified(t)
+	staff := carry(g, "fukitobashi", 0)
+	staff.Charges, staff.Known = 3, false
+	if l := g.Label(staff); l != "杖 "+g.fakeNames["fukitobashi"]+"?" {
+		t.Errorf("label %q", l)
+	}
+	command(t, g, staff, commandWave)
+	if l := g.Label(staff); l != "杖 吹き飛ばしの杖[?]" {
+		t.Errorf("label %q", l)
+	}
+}
+
+func TestIdentifyScroll(t *testing.T) {
+	g := unidentified(t)
+	grass := carry(g, "otogiri", 0)
+	sword := carry(g, "bokutou", 1)
+	sword.Known = false
+	carry(g, "onigiri", 0) // Known: nothing to identify.
+	scroll := carry(g, "shikibetsu", 0)
+	fake := g.Name(scroll)
+	turn := g.Turn
+	command(t, g, scroll, commandRead)
+	if !strings.Contains(g.Message, fake+"は識別の巻物だった。") || g.Turn != turn+1 {
+		t.Errorf("message %q, turn %d", g.Message, g.Turn)
+	}
+	p := g.Prompt
+	if p == nil || p.Title != "何を識別する？" || len(p.Choices) != 2 {
+		t.Fatalf("prompt %+v", p)
+	}
+	i := slices.Index(p.Choices, g.Label(grass))
+	if err := g.Do("choose", []string{fmt.Sprint(i)}); err != nil {
+		t.Fatal(err)
+	}
+	if g.Name(grass) != "弟切草" || !strings.Contains(g.Message, "は弟切草だった。") || g.Turn != turn+1 {
+		t.Errorf("message %q, turn %d", g.Message, g.Turn)
+	}
+
+	// The sword: its upgrade value.
+	command(t, g, carry(g, "shikibetsu", 0), commandRead)
+	if len(g.Prompt.Choices) != 1 {
+		t.Fatalf("prompt %+v", g.Prompt)
+	}
+	if err := g.Do("choose", []string{"0"}); err != nil {
+		t.Fatal(err)
+	}
+	if g.Message != "木刀+1を識別した。" {
+		t.Errorf("message %q", g.Message)
+	}
+
+	// Nothing left to identify.
+	command(t, g, carry(g, "shikibetsu", 0), commandRead)
+	if g.Prompt != nil || !strings.Contains(g.Message, "識別するものはなかった。") {
+		t.Errorf("prompt %+v, message %q", g.Prompt, g.Message)
+	}
+}

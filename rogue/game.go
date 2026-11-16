@@ -55,6 +55,10 @@ type Game struct {
 	// Lit says whether the floor is lit (a scroll): the player sees it
 	// all.
 	Lit bool
+	// identified are the item kinds (IDs) the player knows; fakeNames the
+	// names of the others, for this run.
+	identified map[string]bool
+	fakeNames  map[string]string
 	// Over is why the run is over ("" while it goes on), and Cleared
 	// whether the player went down the last stairs.
 	Over    string
@@ -95,10 +99,12 @@ func NewGame(d *Dungeon, seed string) *Game {
 	g := &Game{
 		Dungeon: d, Seed: seed, Facing: "down",
 		HP: r.PlayerHP, MaxHP: r.PlayerHP, PlayerLevel: 1, Strength: r.Strength,
-		Fullness: r.Fullness,
-		rng:      rand.New(rand.NewPCG(seedHash(d, seed), math.MaxUint64)),
-		Started:  time.Now(),
+		Fullness:   r.Fullness,
+		rng:        rand.New(rand.NewPCG(seedHash(d, seed), math.MaxUint64)),
+		Started:    time.Now(),
+		identified: map[string]bool{},
 	}
+	g.nameItems()
 	g.descend()
 	return g
 }
@@ -615,7 +621,7 @@ func (g *Game) step(d Point, pick bool) bool {
 	if it, ok := g.ItemAt(to); ok {
 		// Walking onto an item picks it up; a dash only stops on it.
 		if !pick || !g.pickUp() {
-			g.say(it.Def.Name + "が落ちている。")
+			g.say(g.Name(it) + "が落ちている。")
 		}
 	}
 	if to == g.Stairs {

@@ -89,6 +89,15 @@ func TestDungeonErrors(t *testing.T) {
 		{"staff without charges", func(m fstest.MapFS) {
 			m["items.txt"].Data = append(m["items.txt"].Data, "x\t杖\tx\t杖\t0\t-\t0\t-\n"...)
 		}, `回数: a staff needs some`},
+		{"too few fake names", func(m fstest.MapFS) {
+			m["fake_names.txt"].Data = []byte("種類\t名前\n草\t赤い草\n")
+		}, `too few names: 1 for the 3 items of 草`},
+		{"fake name of an item", func(m fstest.MapFS) {
+			m["fake_names.txt"].Data = append(m["fake_names.txt"].Data, "草\t薬草\n"...)
+		}, `"薬草" is the name of an item`},
+		{"fake name of money", func(m fstest.MapFS) {
+			m["fake_names.txt"].Data = append(m["fake_names.txt"].Data, "お金\t小判\n"...)
+		}, `money is never unidentified`},
 		{"cracking grass", func(m fstest.MapFS) {
 			m["items.txt"].Data = append(m["items.txt"].Data, "x\t草\tx\t草\t0\t-\t5\t-\n"...)
 		}, `ひび: only bracelets`},
