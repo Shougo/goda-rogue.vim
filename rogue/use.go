@@ -50,10 +50,7 @@ func (g *Game) useItem(it *Item) {
 		g.Strength += n
 		g.say(fmt.Sprintf("ちからが%d上がった。", n))
 	case EffectLight:
-		g.Lit = true
-		for i := range g.Seen {
-			g.Seen[i] = true
-		}
+		g.light()
 		g.say("フロアが明るくなった。")
 	case EffectIdentify:
 		if !g.askIdentify() {
@@ -158,5 +155,13 @@ func (g *Game) getHungry() {
 		if g.Fullness == h.fullness {
 			g.say(h.msg)
 		}
+	}
+}
+
+// light lights the floor: the player sees all of it.
+func (g *Game) light() {
+	g.Lit, g.Dark = true, false
+	for i := range g.Seen {
+		g.Seen[i] = true
 	}
 }

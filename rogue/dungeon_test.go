@@ -63,7 +63,7 @@ func TestDungeonErrors(t *testing.T) {
 			m["monster_table.txt"].Data = append(m["monster_table.txt"].Data, "1\t3\tnobody\t1\n"...)
 		}, `monster_table.txt:`},
 		{"floor out of range", func(m fstest.MapFS) {
-			m["floors.txt"].Data = append(m["floors.txt"].Data, "1\t31\t5-8\t6-10\n"...)
+			m["floors.txt"].Data = append(m["floors.txt"].Data, "1\t31\t5-8\t6-10\t通常\n"...)
 		}, `floors 1-31 out of 1-30`},
 		{"no monster on a floor", func(m fstest.MapFS) {
 			m["header.txt"].Data = []byte("名前\tx\n階数\t31\n")
@@ -98,6 +98,9 @@ func TestDungeonErrors(t *testing.T) {
 		{"fake name of money", func(m fstest.MapFS) {
 			m["fake_names.txt"].Data = append(m["fake_names.txt"].Data, "お金\t小判\n"...)
 		}, `money is never unidentified`},
+		{"bad brightness", func(m fstest.MapFS) {
+			m["floors.txt"].Data = append(m["floors.txt"].Data, "1\t1\t5-8\t6-10\t真っ暗\n"...)
+		}, `明るさ: want 通常, 明るい or 暗い`},
 		{"cracking grass", func(m fstest.MapFS) {
 			m["items.txt"].Data = append(m["items.txt"].Data, "x\t草\tx\t草\t0\t-\t5\t-\n"...)
 		}, `ひび: only bracelets`},

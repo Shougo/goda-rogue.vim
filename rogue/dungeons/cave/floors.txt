@@ -1,3 +1,5 @@
-# How many monsters and items a floor starts with (min-max).
-開始	終了	敵の数	道具の数
-1	30	5-8	6-10
+# How many monsters and items a floor starts with (min-max), and how
+# much of it the player sees (明るさ): 通常 its room, 明るい all of it,
+# 暗い only around.
+開始	終了	敵の数	道具の数	明るさ
+1	30	5-8	6-10	通常

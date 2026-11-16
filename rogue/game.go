@@ -55,6 +55,8 @@ type Game struct {
 	// Lit says whether the floor is lit (a scroll): the player sees it
 	// all.
 	Lit bool
+	// Dark says whether the floor is dark: the player sees only around.
+	Dark bool
 	// identified are the item kinds (IDs) the player knows; fakeNames the
 	// names of the others, for this run.
 	identified map[string]bool
@@ -134,11 +136,17 @@ func (g *Game) descend() {
 	}
 
 	g.Depth++
-	g.FloorTurns, g.Wind, g.Lit = 0, 0, false
+	g.FloorTurns, g.Wind, g.Lit, g.Dark = 0, 0, false, false
 	rng := g.floorRNG(g.Depth)
 	g.Level = Generate(rng)
 	g.Seen = make([]bool, len(g.Level.Tiles))
 	g.Safe = make([]bool, len(g.Level.Tiles))
+	switch d := g.Dungeon.counts(g.Depth).Brightness; {
+	case d == BrightnessBright:
+		g.light()
+	default:
+		g.Dark = d == BrightnessDark
+	}
 	g.Monsters = nil
 	g.Items = nil
 
@@ -255,7 +263,7 @@ func (g *Game) ItemAt(p Point) (*Item, bool) {
 // its walls, and the tiles around it.
 func (g *Game) look() {
 	l := g.Level
-	if i := l.RoomAt(g.Player); i >= 0 {
+	if i := l.RoomAt(g.Player); i >= 0 && !g.Dark {
 		r := l.Rooms[i]
 		for y := r.Y - 1; y <= r.Y+r.H; y++ {
 			for x := r.X - 1; x <= r.X+r.W; x++ {
@@ -306,8 +314,16 @@ func (g *Game) IsSafe(p Point) bool {
 
 // Visible says whether the player sees what is on p now: in the same room
 // (walls and doorways included), or next to it, or anywhere on a lit
-// floor.
-func (g *Game) Visible(p Point) bool { return g.Lit || g.sees(g.Player, p) }
+// floor; only next to it on a dark one.
+func (g *Game) Visible(p Point) bool {
+	switch {
+	case g.Lit:
+		return true
+	case g.Dark:
+		return chebyshev(g.Player, p) <= 1
+	}
+	return g.sees(g.Player, p)
+}
 
 func chebyshev(a, b Point) int {
 	return max(abs(a.X-b.X), abs(a.Y-b.Y))

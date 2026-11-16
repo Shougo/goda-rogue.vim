@@ -27,7 +27,8 @@ import (
 //	                   arrows there are)
 //	item_table.txt     which items appear on which floors (a table)
 //	fake_names.txt     the names of unidentified items, by kind (a table)
-//	floors.txt         how many monsters and items a floor has (a table)
+//	floors.txt         how many monsters and items a floor has, and its
+//	                   brightness (a table)
 //	growth.txt         the growth tables (a table)
 //
 // In key<TAB>value files, a later line overrides an earlier one. A table
@@ -163,7 +164,21 @@ type FloorCounts struct {
 	First, Last            int
 	MinMonster, MaxMonster int
 	MinItem, MaxItem       int
+	Brightness             Brightness
 }
+
+// Brightness is how much of a floor the player sees.
+type Brightness string
+
+// The brightness of floors.
+const (
+	// BrightnessNormal: the room the player is in, and around it.
+	BrightnessNormal Brightness = "通常"
+	// BrightnessBright: all of the floor, as if lit by a scroll.
+	BrightnessBright Brightness = "明るい"
+	// BrightnessDark: only around the player.
+	BrightnessDark Brightness = "暗い"
+)
 
 // GrowthRow is a level of a growth table: the total EXP for it, and what
 // it adds.
@@ -544,6 +559,15 @@ func (l *loader) load() {
 		c.First, c.Last = l.floors(row)
 		c.MinMonster, c.MaxMonster = l.span(row, "敵の数")
 		c.MinItem, c.MaxItem = l.span(row, "道具の数")
+		c.Brightness = BrightnessNormal
+		if b, ok := row.cols["明るさ"]; ok {
+			c.Brightness = Brightness(b)
+			switch c.Brightness {
+			case BrightnessNormal, BrightnessBright, BrightnessDark:
+			default:
+				l.errorf(row.file, row.n, "明るさ: want 通常, 明るい or 暗い, not %q", b)
+			}
+		}
 		d.FloorRows = append(d.FloorRows, c)
 	}
 

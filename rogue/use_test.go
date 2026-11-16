@@ -191,3 +191,60 @@ func TestHunger(t *testing.T) {
 		t.Errorf("over %q", g.Over)
 	}
 }
+
+// brightGame starts a run in the built-in dungeon with every floor of the
+// brightness b.
+func brightGame(t *testing.T, b Brightness) *Game {
+	t.Helper()
+	d := *cave()
+	d.FloorRows = append([]FloorCounts(nil), d.FloorRows...)
+	for i := range d.FloorRows {
+		d.FloorRows[i].Brightness = b
+	}
+	return NewGame(&d, "bright")
+}
+
+func TestBrightness(t *testing.T) {
+	far := func(g *Game) Point {
+		for i, r := range g.Level.Rooms {
+			if i != g.Level.RoomAt(g.Player) && !r.Dummy {
+				return Point{r.X, r.Y}
+			}
+		}
+		t.Fatal("one room")
+		return Point{}
+	}
+
+	g := brightGame(t, BrightnessBright)
+	if p := far(g); !g.Visible(p) || !g.IsSeen(p) {
+		t.Error("a bright floor is not seen")
+	}
+	g.descend()
+	if !g.Lit {
+		t.Error("the next bright floor is not lit")
+	}
+
+	g = brightGame(t, BrightnessDark)
+	room := g.Level.Rooms[g.Level.RoomAt(g.Player)]
+	inRoom := Point{room.X, room.Y}
+	if inRoom == g.Player {
+		inRoom = Point{room.X + room.W - 1, room.Y + room.H - 1}
+	}
+	if chebyshev(inRoom, g.Player) <= 1 {
+		t.Skip("small room")
+	}
+	if g.Visible(inRoom) || g.IsSeen(inRoom) {
+		t.Errorf("sees %v of its room on a dark floor", inRoom)
+	}
+	if !g.Visible(g.Player.Add(Point{1, 0})) {
+		t.Error("does not see next to it")
+	}
+	// A scroll lights it.
+	for _, it := range g.Dungeon.Items {
+		g.identified[it.ID] = true
+	}
+	use(t, g, "akari")
+	if !g.Visible(inRoom) {
+		t.Error("the scroll does not light a dark floor")
+	}
+}
