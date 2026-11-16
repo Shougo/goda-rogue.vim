@@ -22,7 +22,8 @@ import (
 //	monster_table.txt  which monsters appear on which floors (a table)
 //	items.txt          the items (a table; 種類 is their category, 強さ
 //	                   the strength of a weapon or a shield, 効果 what
-//	                   a bracelet does, ひび how easily it cracks)
+//	                   an item does, ひび how easily a bracelet cracks, 回数
+//	                   how many times a staff can be waved)
 //	item_table.txt     which items appear on which floors (a table)
 //	floors.txt         how many monsters and items a floor has (a table)
 //	growth.txt         the growth tables (a table)
@@ -78,6 +79,9 @@ type Rules struct {
 	CrackStages int
 	// Wear is how easily bracelets crack, a percent of their Crack.
 	Wear int
+	// Fullness is the max fullness; HungerTurns how many turns make the
+	// player 1 hungrier.
+	Fullness, HungerTurns int
 }
 
 // MonsterDef is a kind of monster. Kinds of the same glyph are one family,
@@ -101,27 +105,43 @@ type ItemDef struct {
 	Glyph    string
 	Name     string
 	Category Category
-	// Strength is the attack of a weapon, the defense of a shield, what
-	// the effect of a bracelet adds.
+	// Strength is the attack of a weapon, the defense of a shield, how
+	// much the effect of another item does.
 	Strength int
-	// Effect is what a bracelet does while it is worn ("" for nothing).
+	// Effect is what the item does ("" for nothing): a bracelet while it is
+	// worn, another item when it is used.
 	Effect Effect
 	// Crack is how easily a bracelet cracks, a percent (0 for never).
 	Crack int
+	// Charges are how many times a staff can be waved: from, to.
+	Charges [2]int
 }
 
-// Effect is what a bracelet does while it is worn.
+// Effect is what an item does: a bracelet while it is worn, another item
+// when it is used.
 type Effect string
 
-// The effects of bracelets.
+// The effects.
 const (
 	EffectStrength   Effect = "ちから"
 	EffectRegen      Effect = "回復"
 	EffectSenseEnemy Effect = "気配察知"
 	EffectSenseItem  Effect = "道具感知"
+	EffectHeal       Effect = "HP回復"
+	EffectLight      Effect = "あかり"
+	EffectIdentify   Effect = "識別"
+	EffectBlowAway   Effect = "吹き飛ばし"
+	EffectFood       Effect = "満腹"
 )
 
-var effects = []Effect{EffectStrength, EffectRegen, EffectSenseEnemy, EffectSenseItem}
+// effects are the effects the items of each category can have.
+var effects = map[Category][]Effect{
+	CategoryBracelet: {EffectStrength, EffectRegen, EffectSenseEnemy, EffectSenseItem},
+	CategoryGrass:    {EffectHeal, EffectStrength},
+	CategoryScroll:   {EffectLight, EffectIdentify},
+	CategoryStaff:    {EffectBlowAway},
+	CategoryFood:     {EffectFood},
+}
 
 // FloorRow is a row of an appearance table: id appears on the floors
 // [First, Last], with a weight.
@@ -361,7 +381,7 @@ func (l *loader) load() {
 	rk := l.keys("rules.txt", []string{
 		"最大HP", "ちから", "回復ターン", "湧きターン", "最大モンスター数",
 		"風1", "風2", "風3", "防御K", "主の命中", "敵の命中", "成長", "最初の仲間", "強敵ランク差",
-		"持ち物の数", "ひびの段階", "腕輪の傷みやすさ",
+		"持ち物の数", "ひびの段階", "腕輪の傷みやすさ", "満腹度", "腹減りターン",
 	})
 	r := &d.Rules
 	r.PlayerHP = l.keyInt("rules.txt", rk, "最大HP", 1)
@@ -382,6 +402,8 @@ func (l *loader) load() {
 	r.Capacity = l.keyInt("rules.txt", rk, "持ち物の数", 1)
 	r.CrackStages = l.keyInt("rules.txt", rk, "ひびの段階", 0)
 	r.Wear = l.keyInt("rules.txt", rk, "腕輪の傷みやすさ", 0)
+	r.Fullness = l.keyInt("rules.txt", rk, "満腹度", 1)
+	r.HungerTurns = l.keyInt("rules.txt", rk, "腹減りターン", 1)
 	if ln, ok := rk["成長"]; ok {
 		r.Growth = ln.fields[1]
 	} else {
@@ -451,12 +473,19 @@ func (l *loader) load() {
 			it.Strength = l.int(row, "強さ", 0)
 		}
 		if e, ok := row.cols["効果"]; ok && e != "-" && e != "" {
-			if !slices.Contains(effects, Effect(e)) {
-				l.errorf(row.file, row.n, "効果: unknown %q", e)
-			} else if c != CategoryBracelet {
-				l.errorf(row.file, row.n, "効果: only bracelets have one, not %s", c)
+			if !slices.Contains(effects[c], Effect(e)) {
+				l.errorf(row.file, row.n, "効果: %s has no effect %q, want one of %v", c, e, effects[c])
 			}
 			it.Effect = Effect(e)
+		}
+		if n, ok := row.cols["回数"]; ok && n != "-" && n != "" {
+			if c != CategoryStaff {
+				l.errorf(row.file, row.n, "回数: only staffs have one, not %s", c)
+			}
+			it.Charges[0], it.Charges[1] = l.span(row, "回数")
+		}
+		if c == CategoryStaff && it.Charges[1] == 0 {
+			l.errorf(row.file, row.n, "回数: a staff needs some")
 		}
 		if _, ok := row.cols["ひび"]; ok {
 			it.Crack = l.int(row, "ひび", 0)

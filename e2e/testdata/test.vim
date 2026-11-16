@@ -76,7 +76,7 @@ function! s:start() abort
   let tiles = min([width / 2, 66])
   let rows = min([winheight(0) - 5, 36])
   call s:check('lines', line('$'), rows + 5)
-  call s:check('top line', getline(1), '1F  Lv1  HP  15/ 15             0G')
+  call s:check('top line', getline(1), '1F  Lv1  HP  15/ 15             満腹 100%  0G')
   call s:check('hp bar', s:highlights(1), [[21, 31, 'GodaRogueHP']])
   for lnum in range(2, rows + 1)
     call s:check('tiles of ' . lnum, strchars(getline(lnum)), tiles)

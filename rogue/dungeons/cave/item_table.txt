@@ -11,6 +11,7 @@
 1	30	kiya	3
 1	30	yakusou	6
 1	30	otogiri	3
+1	30	chikarakusa	2
 1	30	shikibetsu	3
 1	30	akari	2
 1	30	fukitobashi	2

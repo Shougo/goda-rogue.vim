@@ -4,6 +4,9 @@
 ちから	8
 # Walking or waiting this many turns restores 1 HP.
 回復ターン	2
+# The max fullness, and how many turns make the player 1 hungrier.
+満腹度	100
+腹減りターン	10
 # Lingering: a monster appears every 湧きターン turns, up to 最大モンスター数.
 湧きターン	40
 最大モンスター数	16

@@ -134,7 +134,7 @@ func TestInventoryPrompt(t *testing.T) {
 		t.Fatalf("item prompt %+v", g.Prompt)
 	}
 	// Under the player, there is nothing (it picked the onigiri up).
-	if err := g.Do("choose", []string{"0"}); err != nil {
+	if err := g.Do("choose", []string{fmt.Sprint(slices.Index(g.Prompt.Choices, commandDrop))}); err != nil {
 		t.Fatal(err)
 	}
 	if g.Prompt != nil || len(g.Inventory) != 1 || g.Turn != turn+1 {
@@ -148,10 +148,11 @@ func TestInventoryPrompt(t *testing.T) {
 	if err := g.Do("inventory", nil); err != nil {
 		t.Fatal(err)
 	}
-	for range 2 {
-		if err := g.Do("choose", []string{"0"}); err != nil {
-			t.Fatal(err)
-		}
+	if err := g.Do("choose", []string{"0"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := g.Do("choose", []string{fmt.Sprint(slices.Index(g.Prompt.Choices, commandDrop))}); err != nil {
+		t.Fatal(err)
 	}
 	if len(g.Inventory) != 1 || g.Message != "ここには置けない。" || g.Turn != turn+1 {
 		t.Errorf("drop on an item: %v, %q, turn %d", g.Inventory, g.Message, g.Turn)

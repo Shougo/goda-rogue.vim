@@ -48,6 +48,13 @@ type Game struct {
 	Strength    int
 	// regen counts the turns toward the next HP restored.
 	regen int
+	// Fullness is how full the player is, up to the rule; hunger counts
+	// the turns toward the next point of it lost.
+	Fullness int
+	hunger   int
+	// Lit says whether the floor is lit (a scroll): the player sees it
+	// all.
+	Lit bool
 	// Over is why the run is over ("" while it goes on), and Cleared
 	// whether the player went down the last stairs.
 	Over    string
@@ -88,8 +95,9 @@ func NewGame(d *Dungeon, seed string) *Game {
 	g := &Game{
 		Dungeon: d, Seed: seed, Facing: "down",
 		HP: r.PlayerHP, MaxHP: r.PlayerHP, PlayerLevel: 1, Strength: r.Strength,
-		rng:     rand.New(rand.NewPCG(seedHash(d, seed), math.MaxUint64)),
-		Started: time.Now(),
+		Fullness: r.Fullness,
+		rng:      rand.New(rand.NewPCG(seedHash(d, seed), math.MaxUint64)),
+		Started:  time.Now(),
 	}
 	g.descend()
 	return g
@@ -120,7 +128,7 @@ func (g *Game) descend() {
 	}
 
 	g.Depth++
-	g.FloorTurns, g.Wind = 0, 0
+	g.FloorTurns, g.Wind, g.Lit = 0, 0, false
 	rng := g.floorRNG(g.Depth)
 	g.Level = Generate(rng)
 	g.Seen = make([]bool, len(g.Level.Tiles))
@@ -161,8 +169,10 @@ func (g *Game) descend() {
 		switch {
 		case def.Category == CategoryMoney:
 			it.Amount = between(rng, 10, 30+g.Depth*10)
-		case it.equipment():
+		case it.upgradable():
 			it.Upgrade = rollUpgrade(rng)
+		case def.Category == CategoryStaff:
+			it.Charges = between(rng, def.Charges[0], def.Charges[1])
 		}
 		g.Items = append(g.Items, it)
 	}
@@ -287,8 +297,9 @@ func (g *Game) IsSafe(p Point) bool {
 }
 
 // Visible says whether the player sees what is on p now: in the same room
-// (walls and doorways included), or next to it.
-func (g *Game) Visible(p Point) bool { return g.sees(g.Player, p) }
+// (walls and doorways included), or next to it, or anywhere on a lit
+// floor.
+func (g *Game) Visible(p Point) bool { return g.Lit || g.sees(g.Player, p) }
 
 func chebyshev(a, b Point) int {
 	return max(abs(a.X-b.X), abs(a.Y-b.Y))
@@ -473,7 +484,7 @@ func (g *Game) attack() bool {
 // actions do not), and then the monsters act.
 func (g *Game) endTurn(rest bool) {
 	g.Turn++
-	if rest && g.HP < g.MaxHP {
+	if rest && g.HP < g.MaxHP && g.Fullness > 0 {
 		g.regen++
 		if g.wears(EffectRegen) {
 			g.regen++
@@ -483,6 +494,10 @@ func (g *Game) endTurn(rest bool) {
 			g.regen = 0
 			g.HP++
 		}
+	}
+	g.getHungry()
+	if g.Over != "" {
+		return
 	}
 	g.monstersAct()
 	g.sense()
@@ -530,7 +545,7 @@ func (g *Game) linger() {
 func (g *Game) spawn(def *MonsterDef) *Monster {
 	for range 100 {
 		p := g.wanderTarget()
-		if !g.Level.At(p).Walkable() || g.occupied(p) || g.Visible(p) || chebyshev(p, g.Player) <= 4 {
+		if !g.Level.At(p).Walkable() || g.occupied(p) || g.sees(g.Player, p) || chebyshev(p, g.Player) <= 4 {
 			continue
 		}
 		m := newMonster(def)

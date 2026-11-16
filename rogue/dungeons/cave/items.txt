@@ -1,30 +1,44 @@
 # The items. 種類 is what the item is, and decides what it can do:
 # 武器 盾 腕輪 矢 草 巻物 杖 壺 食料 お金.
-# 強さ is the strength of a weapon (attack) or a shield (defense).
-# 効果 is what a bracelet does while it is worn (- for nothing):
-#   ちから    adds 強さ to the strength
-#   回復      restores HP twice as fast
-#   気配察知  shows the monsters of the floor
-#   道具感知  shows the items of the floor
+# 強さ is the strength of a weapon (attack) or a shield (defense), and
+# how much the effect of another item does.
+# 効果 is what an item does (- for nothing), by its kind:
+#   腕輪, while it is worn:
+#     ちから    adds 強さ to the strength
+#     回復      restores HP twice as fast (and makes hungry twice as fast)
+#     気配察知  shows the monsters of the floor
+#     道具感知  shows the items of the floor
+#   草, drunk:
+#     HP回復    restores 強さ HP, or raises the max HP if it is full
+#     ちから    adds 強さ to the strength
+#   巻物, read:
+#     あかり    lights the floor: its map, items and monsters
+#     識別      identifies an item (nothing to identify yet)
+#   杖, waved (a magic bolt to the front):
+#     吹き飛ばし  blows the monster it hits 10 tiles away
+#   食料, eaten:
+#     満腹      restores 強さ of fullness
 # ひび is how easily a bracelet cracks (a percent, 0 for never): leaving
 # a floor where it had its effect, it cracks with ひび x (cracks + 1) %
 # (times 腕輪の傷みやすさ in rules.txt), and breaks with too many cracks
 # (ひびの段階 in rules.txt).
-ID	字	名前	種類	強さ	効果	ひび
-bokutou	剣	木刀	武器	3	-	0
-tetsuken	剣	鉄の剣	武器	7	-	0
-kitate	盾	木の盾	盾	3	-	0
-tetsutate	盾	鉄の盾	盾	7	-	0
-chikara	腕	力の腕輪	腕輪	3	ちから	0
-kaifuku	腕	回復の腕輪	腕輪	0	回復	0
-kehai	腕	気配察知の腕輪	腕輪	0	気配察知	15
-dougu	腕	道具感知の腕輪	腕輪	0	道具感知	15
-kiya	矢	木の矢	矢	0	-	0
-yakusou	草	薬草	草	0	-	0
-otogiri	草	弟切草	草	0	-	0
-shikibetsu	巻	識別の巻物	巻物	0	-	0
-akari	巻	あかりの巻物	巻物	0	-	0
-fukitobashi	杖	吹き飛ばしの杖	杖	0	-	0
-hozon	壺	保存の壺	壺	0	-	0
-onigiri	食	おにぎり	食料	0	-	0
-okane	金	お金	お金	0	-	0
+# 回数 is how many times a staff can be waved (min-max; - for others).
+ID	字	名前	種類	強さ	効果	ひび	回数
+bokutou	剣	木刀	武器	3	-	0	-
+tetsuken	剣	鉄の剣	武器	7	-	0	-
+kitate	盾	木の盾	盾	3	-	0	-
+tetsutate	盾	鉄の盾	盾	7	-	0	-
+chikara	腕	力の腕輪	腕輪	3	ちから	0	-
+kaifuku	腕	回復の腕輪	腕輪	0	回復	0	-
+kehai	腕	気配察知の腕輪	腕輪	0	気配察知	15	-
+dougu	腕	道具感知の腕輪	腕輪	0	道具感知	15	-
+kiya	矢	木の矢	矢	0	-	0	-
+yakusou	草	薬草	草	25	HP回復	0	-
+otogiri	草	弟切草	草	100	HP回復	0	-
+chikarakusa	草	ちからの草	草	1	ちから	0	-
+shikibetsu	巻	識別の巻物	巻物	0	識別	0	-
+akari	巻	あかりの巻物	巻物	0	あかり	0	-
+fukitobashi	杖	吹き飛ばしの杖	杖	0	吹き飛ばし	0	4-6
+hozon	壺	保存の壺	壺	0	-	0	-
+onigiri	食	おにぎり	食料	50	満腹	0	-
+okane	金	お金	お金	0	-	0	-

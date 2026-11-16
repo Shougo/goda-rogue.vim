@@ -9,8 +9,8 @@ their rank is their color.
 > player `主`, walls, stairs, enemies and items, moving around,
 > attacking, and a mini-map. Enemies wander, chase and attack the player,
 > who levels up, and can fall; 30 floors to clear. Items can be picked
-> up and dropped, and weapons, shields and bracelets equipped; other items cannot be
-> used yet.
+> up and dropped, weapons, shields and bracelets equipped, and grasses,
+> scrolls, staffs and food used; the player gets hungry.
 
 ## Requirements
 

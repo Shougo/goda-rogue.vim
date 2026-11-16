@@ -211,7 +211,8 @@ func (g *Game) topLine(hl map[string][]Span) string {
 	if filled < hpBarWidth {
 		hl[hlHPEmpty] = append(hl[hlHPEmpty], Span{1, col + filled, col + hpBarWidth})
 	}
-	return head + strings.Repeat(" ", hpBarWidth) + fmt.Sprintf("  %dG", g.Gold)
+	return head + strings.Repeat(" ", hpBarWidth) +
+		fmt.Sprintf("  満腹 %d%%  %dG", g.Fullness*100/g.Dungeon.Rules.Fullness, g.Gold)
 }
 
 // The characters of the mini-map. Walls are left out: the floors show the

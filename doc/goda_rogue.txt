@@ -30,7 +30,13 @@ around and attacks, and the enemies wander, chase and attack the player.
 Going down the stairs of the 30th floor clears the dungeon.  Items can be
 picked up and dropped, and a weapon, a shield and a bracelet equipped
 (weapons add to the attack, shields make the defense, a bracelet has its
-effect while it is worn); other items cannot be used yet.
+effect while it is worn).  Grasses are drunk, scrolls read, staffs waved
+(a magic bolt to the front) and food eaten; arrows and pots cannot be
+used yet.
+
+The player gets hungry: the fullness (満腹, on the top line) goes down a
+point every few turns.  Food restores it.  Starving, the player restores
+no HP and loses a point every turn, until it eats or dies.
 
 Every action that takes a turn (moving, attacking, waiting, a step of a
 dash) is followed by the turn of the monsters.  Slow monsters act every
@@ -164,7 +170,9 @@ pickup							*goda-rogue-pickup*
 
 inventory						*goda-rogue-inventory*
 		Choose an item of the inventory, and then what to do with
-		it (|goda-rogue-prompts|).  The items are sorted by kind,
+		it (|goda-rogue-prompts|): 飲む (a grass), 読む (a scroll),
+		振る (a staff), 食べる (food), 装備する or 外す (a weapon, a
+		shield or a bracelet), 置く (drop it).  The items are sorted by kind,
 		each with the glyph of its kind as an icon.
 
 choose {index}						*goda-rogue-choose*
@@ -249,7 +257,7 @@ The background of the tile the player faces (and attacks) is
 |GodaRogueFacing|.
 
 The top line shows what matters all the time: the floor, the level, HP
-with a bar, and the gold.  Then the window shows the part of the floor
+with a bar, the fullness, and the gold.  Then the window shows the part of the floor
 around the player that fits.  Under the map are the status line (the attack, the
 defense and the strength, the turn, the direction the player faces as an arrow, the seed,
 and the turns until the next wind once it has blown) and the last three messages, those of the actions
@@ -275,7 +283,7 @@ floors once the files change.
 	header.txt		The name (名前), the description (説明) and
 				the number of floors (階数): key<TAB>value.
 	rules.txt		The rules: the player at the start, HP
-				regeneration, spawning, Kron's wind, combat
+				regeneration, fullness, spawning, Kron's wind, combat
 				constants, the growth table of the player,
 				the first ally: key<TAB>value.  A later line
 				overrides an earlier one.
@@ -286,12 +294,18 @@ floors once the files change.
 	items.txt		The items, a table.  種類 is the kind of an
 				item, which decides what it can do: 武器 盾
 				腕輪 矢 草 巻物 杖 壺 食料 お金.  強さ is
-				the strength of a weapon or a shield, 効果
-				what a bracelet does while it is worn (-
-				for nothing): ちから adds 強さ to the
-				strength, 回復 restores HP twice as fast,
-				気配察知 shows the monsters of the floor,
-				道具感知 its items.  ひび is how easily a
+				the strength of a weapon or a shield, and
+				how much the effect of another item does.
+				効果 is what an item does (- for nothing),
+				by its kind (the comments of the built-in
+				items.txt tell what each does):
+				  腕輪: ちから 回復 気配察知 道具感知
+				  草: HP回復 ちから
+				  巻物: あかり 識別
+				  杖: 吹き飛ばし
+				  食料: 満腹
+				回数 is how many times a staff can be waved
+				(min-max; - for other items).  ひび is how easily a
 				bracelet cracks, a percent (0 for never).
 				Leaving a floor where a bracelet had its
 				effect (it showed a monster out of sight,

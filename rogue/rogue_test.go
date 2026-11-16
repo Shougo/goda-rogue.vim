@@ -253,6 +253,7 @@ func TestCorridorsAwayFromWalls(t *testing.T) {
 
 func TestSafe(t *testing.T) {
 	g := NewGame(cave(), "safe")
+	g.Monsters = nil // No ally to step on the start tile.
 	start := g.Player
 	if !g.IsSafe(start) {
 		t.Fatal("the start tile is not safe")

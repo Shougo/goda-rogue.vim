@@ -75,13 +75,22 @@ func TestDungeonErrors(t *testing.T) {
 			m["monsters.txt"].Data = append(m["monsters.txt"].Data, "x1\t鼠\tx\t1\t1\t1\t1\t1\t光速\n"...)
 		}, `速度`},
 		{"unknown effect", func(m fstest.MapFS) {
-			m["items.txt"].Data = append(m["items.txt"].Data, "x\t腕\tx\t腕輪\t0\t飛行\t0\n"...)
-		}, `効果: unknown "飛行"`},
+			m["items.txt"].Data = append(m["items.txt"].Data, "x\t腕\tx\t腕輪\t0\t飛行\t0\t-\n"...)
+		}, `効果: 腕輪 has no effect "飛行"`},
 		{"effect of a grass", func(m fstest.MapFS) {
-			m["items.txt"].Data = append(m["items.txt"].Data, "x\t草\tx\t草\t0\t回復\t0\n"...)
-		}, `効果: only bracelets`},
+			m["items.txt"].Data = append(m["items.txt"].Data, "x\t草\tx\t草\t0\t回復\t0\t-\n"...)
+		}, `効果: 草 has no effect "回復"`},
+		{"charges of a grass", func(m fstest.MapFS) {
+			m["items.txt"].Data = append(m["items.txt"].Data, "x\t草\tx\t草\t0\t-\t0\t3\n"...)
+		}, `回数: only staffs`},
+		{"bad charges", func(m fstest.MapFS) {
+			m["items.txt"].Data = append(m["items.txt"].Data, "x\t杖\tx\t杖\t0\t-\t0\t5-2\n"...)
+		}, `回数: want min-max`},
+		{"staff without charges", func(m fstest.MapFS) {
+			m["items.txt"].Data = append(m["items.txt"].Data, "x\t杖\tx\t杖\t0\t-\t0\t-\n"...)
+		}, `回数: a staff needs some`},
 		{"cracking grass", func(m fstest.MapFS) {
-			m["items.txt"].Data = append(m["items.txt"].Data, "x\t草\tx\t草\t0\t-\t5\n"...)
+			m["items.txt"].Data = append(m["items.txt"].Data, "x\t草\tx\t草\t0\t-\t5\t-\n"...)
 		}, `ひび: only bracelets`},
 		{"missing file", func(m fstest.MapFS) {
 			delete(m, "growth.txt")

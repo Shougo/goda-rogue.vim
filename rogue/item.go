@@ -42,6 +42,8 @@ type Item struct {
 	Equipped bool
 	// Cracks are the cracks of a bracelet.
 	Cracks int
+	// Charges are how many more times a staff can be waved.
+	Charges int
 	// used says whether a bracelet had its effect on this floor.
 	used bool
 }
@@ -71,6 +73,9 @@ func (it *Item) Label() string {
 	s := it.Glyph + " " + it.Def.Name
 	if it.upgradable() && it.Upgrade != 0 {
 		s += fmt.Sprintf("%+d", it.Upgrade)
+	}
+	if it.Def.Category == CategoryStaff {
+		s += fmt.Sprintf("[%d]", it.Charges)
 	}
 	if it.Cracks > 0 {
 		s += fmt.Sprintf(" [ひび%d]", it.Cracks)
@@ -121,11 +126,26 @@ const (
 	commandEquip   = "装備する"
 	commandUnequip = "外す"
 	commandDrop    = "置く"
+	commandDrink   = "飲む"
+	commandRead    = "読む"
+	commandWave    = "振る"
+	commandEat     = "食べる"
 )
+
+// useCommands are the commands that use an item, by its category.
+var useCommands = map[Category]string{
+	CategoryGrass:  commandDrink,
+	CategoryScroll: commandRead,
+	CategoryStaff:  commandWave,
+	CategoryFood:   commandEat,
+}
 
 // commands returns what can be done with it.
 func (it *Item) commands() []string {
 	var cs []string
+	if c, ok := useCommands[it.Def.Category]; ok {
+		cs = append(cs, c)
+	}
 	if it.equipment() {
 		if it.Equipped {
 			cs = append(cs, commandUnequip)
@@ -221,6 +241,9 @@ func (g *Game) choose(arg string) (bool, error) {
 			return true, nil
 		case commandDrop:
 			return g.drop(p.item), nil
+		case commandDrink, commandRead, commandWave, commandEat:
+			g.useItem(g.Inventory[p.item])
+			return true, nil
 		}
 	}
 	return false, nil
