@@ -1,12 +1,18 @@
-# The items (they do nothing yet).
-ID	字	名前
-ken	剣	武器
-tate	盾	盾
-ude	腕	腕輪
-kusa	草	草
-maki	巻	巻物
-tsue	杖	杖
-tsubo	壺	壺
-ya	矢	矢
-kane	金	お金
-shoku	食	食べ物
+# The items. 種類 is what the item is, and decides what it can do:
+# 武器 盾 腕輪 矢 草 巻物 杖 壺 食料 お金.
+# (Only picking up, dropping and money work yet.)
+ID	字	名前	種類
+bokutou	剣	木刀	武器
+tetsuken	剣	鉄の剣	武器
+kitate	盾	木の盾	盾
+tetsutate	盾	鉄の盾	盾
+chikara	腕	力の腕輪	腕輪
+kiya	矢	木の矢	矢
+yakusou	草	薬草	草
+otogiri	草	弟切草	草
+shikibetsu	巻	識別の巻物	巻物
+akari	巻	あかりの巻物	巻物
+fukitobashi	杖	吹き飛ばしの杖	杖
+hozon	壺	保存の壺	壺
+onigiri	食	おにぎり	食料
+okane	金	お金	お金

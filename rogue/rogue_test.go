@@ -818,7 +818,7 @@ func TestClear(t *testing.T) {
 // breaks: no two creatures on one tile, everyone on a walkable tile, HP in
 // bounds, and the run ending only for a reason.
 func TestRandomPlay(t *testing.T) {
-	actions := []string{"move", "move", "move", "dash", "attack", "turn", "wait", "stairs"}
+	actions := []string{"move", "move", "move", "dash", "attack", "turn", "wait", "stairs", "inventory", "pickup", "choose", "cancel"}
 	for seed := range 20 {
 		g := NewGame(cave(), fmt.Sprint("play", seed))
 		rng := rand.New(rand.NewPCG(uint64(seed), 0))
@@ -830,6 +830,12 @@ func TestRandomPlay(t *testing.T) {
 			var args []string
 			if action == "move" || action == "dash" || (action == "turn" && rng.IntN(2) == 0) {
 				args = []string{clockwise[rng.IntN(len(clockwise))]}
+			}
+			if action == "choose" {
+				if g.Prompt == nil {
+					continue
+				}
+				args = []string{fmt.Sprint(rng.IntN(len(g.Prompt.Choices)))}
 			}
 			if action == "stairs" && rng.IntN(4) == 0 {
 				g.Player = g.Stairs

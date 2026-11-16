@@ -20,7 +20,7 @@ import (
 //	rules.txt          the rules of the run (key<TAB>value)
 //	monsters.txt       the monsters (a table)
 //	monster_table.txt  which monsters appear on which floors (a table)
-//	items.txt          the items (a table)
+//	items.txt          the items (a table; 種類 is their category)
 //	item_table.txt     which items appear on which floors (a table)
 //	floors.txt         how many monsters and items a floor has (a table)
 //	growth.txt         the growth tables (a table)
@@ -70,6 +70,8 @@ type Rules struct {
 	// StrongerBy is how many ranks above the floor's the monster of the
 	// second wind is.
 	StrongerBy int
+	// Capacity is how many items the player can carry.
+	Capacity int
 }
 
 // MonsterDef is a kind of monster. Kinds of the same glyph are one family,
@@ -89,9 +91,10 @@ type MonsterDef struct {
 
 // ItemDef is a kind of item.
 type ItemDef struct {
-	ID    string
-	Glyph string
-	Name  string
+	ID       string
+	Glyph    string
+	Name     string
+	Category Category
 }
 
 // FloorRow is a row of an appearance table: id appears on the floors
@@ -332,6 +335,7 @@ func (l *loader) load() {
 	rk := l.keys("rules.txt", []string{
 		"最大HP", "ちから", "回復ターン", "湧きターン", "最大モンスター数",
 		"風1", "風2", "風3", "防御K", "主の命中", "敵の命中", "成長", "最初の仲間", "強敵ランク差",
+		"持ち物の数",
 	})
 	r := &d.Rules
 	r.PlayerHP = l.keyInt("rules.txt", rk, "最大HP", 1)
@@ -349,6 +353,7 @@ func (l *loader) load() {
 	r.PlayerHitRate = l.keyInt("rules.txt", rk, "主の命中", 0)
 	r.MonsterHitRate = l.keyInt("rules.txt", rk, "敵の命中", 0)
 	r.StrongerBy = l.keyInt("rules.txt", rk, "強敵ランク差", 0)
+	r.Capacity = l.keyInt("rules.txt", rk, "持ち物の数", 1)
 	if ln, ok := rk["成長"]; ok {
 		r.Growth = ln.fields[1]
 	} else {
@@ -407,8 +412,13 @@ func (l *loader) load() {
 		l.errorf("rules.txt", rk["最初の仲間"].n, "no monster %q", r.FirstAlly)
 	}
 
-	for _, row := range l.table("items.txt", "ID", "字", "名前") {
+	for _, row := range l.table("items.txt", "ID", "字", "名前", "種類") {
 		it := &ItemDef{ID: row.cols["ID"], Glyph: l.glyph(row, "字"), Name: row.cols["名前"]}
+		c := Category(row.cols["種類"])
+		if !slices.Contains(categories, c) {
+			l.errorf(row.file, row.n, "種類: unknown %q", c)
+		}
+		it.Category = c
 		if d.Item(it.ID) != nil {
 			l.errorf(row.file, row.n, "the ID %q again", it.ID)
 		}

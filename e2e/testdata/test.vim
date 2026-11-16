@@ -76,7 +76,7 @@ function! s:start() abort
   let tiles = min([width / 2, 66])
   let rows = min([winheight(0) - 5, 36])
   call s:check('lines', line('$'), rows + 5)
-  call s:check('top line', getline(1), '1F  Lv1  HP  15/ 15           ')
+  call s:check('top line', getline(1), '1F  Lv1  HP  15/ 15             0G')
   call s:check('hp bar', s:highlights(1), [[21, 31, 'GodaRogueHP']])
   for lnum in range(2, rows + 1)
     call s:check('tiles of ' . lnum, strchars(getline(lnum)), tiles)
@@ -102,6 +102,51 @@ function! s:start() abort
   let first = getline(1, '$')
   call goda_rogue#start(#{seed: 'e2e'})
   call s:check('same seed', getline(1, '$'), first)
+endfunction
+
+" A stand-in for the selection UI: it keeps the prompt and the function to
+" answer it.
+function! s:fake_prompt(prompt, answer) abort
+  let s:asked = a:prompt
+  let s:answer = a:answer
+endfunction
+
+function! s:items() abort
+  call goda_rogue#start(#{seed: 'items'})
+  " Walk until something is picked up.
+  let dirs = ['right', 'down', 'left', 'up', 'downright', 'upleft', 'downleft', 'upright']
+  for n in range(400)
+    call goda_rogue#do('dash', dirs[n % len(dirs)])
+    call goda_rogue#do('pickup')
+    if join(s:messages()) =~# 'を拾った。'
+      break
+    endif
+  endfor
+  call s:check('picked up', join(s:messages()) =~# 'を拾った。', 1)
+
+  let g:goda_rogue#prompt_func = function('s:fake_prompt')
+  let s:asked = {}
+  call goda_rogue#do('inventory')
+  call s:check('inventory title', get(s:asked, 'title', ''), '持ち物')
+  call s:check('inventory icon', get(s:asked, 'choices', [''])[0] =~# '^\S \S', 1)
+  let name = s:asked.choices[0]
+  call s:answer(1)
+  call s:check('item prompt', s:asked.title, name)
+  call s:check('item commands', s:asked.choices, ['置く'])
+  let turn = s:status()
+  call s:answer(0)
+  call s:check('cancel', s:status(), turn)
+  unlet g:goda_rogue#prompt_func
+
+  if !has('nvim')
+    " The popup menu of Vim: its choice is the answer.
+    call goda_rogue#do('inventory')
+    call s:check('popup', len(popup_list()), 1)
+    call popup_close(popup_list()[0], 1)
+    call s:check('popup item', len(popup_list()), 1)
+    call goda_rogue#do('wait')
+    call s:check('popup closed', popup_list(), [])
+  endif
 endfunction
 
 function! s:actions() abort
@@ -176,6 +221,8 @@ function! s:actions() abort
   call goda_rogue#do('fly')
   call s:check('unknown action', getline(1, '$'), before)
   call s:check('error message', execute('messages') =~# 'unknown action "fly"', 1)
+
+  call s:items()
 
   " Elsewhere it does nothing.
   enew

@@ -65,6 +65,8 @@ type Screen struct {
 	Minimap    *Minimap          `json:"minimap,omitempty"`
 	// Log is all the messages, for the "log" action.
 	Log []string `json:"log,omitempty"`
+	// Prompt is a choice to ask the player for.
+	Prompt *Prompt `json:"prompt,omitempty"`
 }
 
 // Minimap is the floor, reduced: one half-width ASCII character a tile.
@@ -101,6 +103,7 @@ func (g *Game) Render(size Size) Screen {
 	if g.ShowMap {
 		s.Minimap = g.minimap()
 	}
+	s.Prompt = g.Prompt
 	return s
 }
 
@@ -208,7 +211,7 @@ func (g *Game) topLine(hl map[string][]Span) string {
 	if filled < hpBarWidth {
 		hl[hlHPEmpty] = append(hl[hlHPEmpty], Span{1, col + filled, col + hpBarWidth})
 	}
-	return head + strings.Repeat(" ", hpBarWidth)
+	return head + strings.Repeat(" ", hpBarWidth) + fmt.Sprintf("  %dG", g.Gold)
 }
 
 // The characters of the mini-map. Walls are left out: the floors show the

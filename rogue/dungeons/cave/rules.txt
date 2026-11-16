@@ -21,3 +21,5 @@
 成長	普通
 # The ally at the start (empty: none).
 最初の仲間	nezumi1
+# How many items the player can carry.
+持ち物の数	20

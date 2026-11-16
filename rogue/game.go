@@ -9,13 +9,6 @@ import (
 	"time"
 )
 
-// Item is an item lying on the floor.
-type Item struct {
-	Def   *ItemDef
-	Pos   Point
-	Glyph string
-}
-
 // Game is one run.
 type Game struct {
 	// Dungeon is what the run is in.
@@ -30,7 +23,13 @@ type Game struct {
 	Facing   string
 	Stairs   Point
 	Monsters []*Monster
-	Items    []Item
+	// Items are the items on the floor, Inventory those the player
+	// carries (sorted), and Gold its money.
+	Items     []*Item
+	Inventory []*Item
+	Gold      int
+	// Prompt is the choice the game waits for, if any.
+	Prompt *Prompt
 	// Seen are the tiles the player has seen, Safe those known to have
 	// no trap: walked on (a trap there would have gone off and shown).
 	Seen []bool
@@ -158,7 +157,11 @@ func (g *Game) descend() {
 	for range between(rng, c.MinItem, c.MaxItem) {
 		pos := g.randomTile(rng, rooms[rng.IntN(len(rooms))])
 		def := d.Item(pick(rng, d.ItemRows, g.Depth))
-		g.Items = append(g.Items, Item{Def: def, Pos: pos, Glyph: def.Glyph})
+		it := &Item{Def: def, Pos: pos, Glyph: def.Glyph}
+		if def.Category == CategoryMoney {
+			it.Amount = between(rng, 10, 30+g.Depth*10)
+		}
+		g.Items = append(g.Items, it)
 	}
 
 	if g.Depth == 1 && d.Rules.FirstAlly != "" {
@@ -193,7 +196,7 @@ func (g *Game) free(p Point) bool {
 	if p == g.Player || p == g.Stairs || g.MonsterAt(p) != nil {
 		return false
 	}
-	return !slices.ContainsFunc(g.Items, func(it Item) bool { return it.Pos == p })
+	return !slices.ContainsFunc(g.Items, func(it *Item) bool { return it.Pos == p })
 }
 
 // freeNeighbor returns a free walkable tile next to p.
@@ -218,13 +221,13 @@ func (g *Game) MonsterAt(p Point) *Monster {
 }
 
 // ItemAt returns the item on p.
-func (g *Game) ItemAt(p Point) (Item, bool) {
+func (g *Game) ItemAt(p Point) (*Item, bool) {
 	for _, it := range g.Items {
 		if it.Pos == p {
 			return it, true
 		}
 	}
-	return Item{}, false
+	return nil, false
 }
 
 // look marks what the player sees as seen: the whole room it is in with
@@ -318,9 +321,40 @@ func (g *Game) Do(action string, args []string) error {
 		}
 		return nil
 	}
+	// Any other action drops the choice the game was waiting for.
+	switch action {
+	case "redraw", "log", "map", "choose", "cancel":
+	default:
+		g.Prompt = nil
+	}
 	switch action {
 	case "redraw", "log":
 		// (The Vim script asks for the log with the screen.)
+	case "inventory":
+		// Looking costs no turn.
+		g.beginAction()
+		g.openInventory()
+	case "choose":
+		if len(args) != 1 {
+			return fmt.Errorf("choose: a choice expected")
+		}
+		g.beginAction()
+		turn, err := g.choose(args[0])
+		if err != nil {
+			return err
+		}
+		if turn {
+			g.endTurn(false)
+		}
+	case "cancel":
+		g.Prompt = nil
+	case "pickup":
+		g.beginAction()
+		if !g.pickUp() {
+			g.say("足元には何もない。")
+			return nil
+		}
+		g.endTurn(false)
 	case "map":
 		// Showing the mini-map costs no turn.
 		g.ShowMap = !g.ShowMap
@@ -331,7 +365,7 @@ func (g *Game) Do(action string, args []string) error {
 		}
 		g.beginAction()
 		g.Facing = name
-		if g.step(d) {
+		if g.step(d, true) {
 			g.endTurn(true)
 		}
 	case "turn":
@@ -529,8 +563,9 @@ func (g *Game) canStep(d Point) bool {
 	return g.Level.At(g.Player.Add(d)).Walkable() && g.clearFrom(g.Player, d)
 }
 
-// step moves the player by d; it says whether it moved.
-func (g *Game) step(d Point) bool {
+// step moves the player by d; it says whether it moved. With pick, it
+// picks up the item it steps on.
+func (g *Game) step(d Point, pick bool) bool {
 	if !g.canStep(d) {
 		return false
 	}
@@ -553,7 +588,10 @@ func (g *Game) step(d Point) bool {
 	g.look()
 	g.markSafe(to)
 	if it, ok := g.ItemAt(to); ok {
-		g.say(it.Glyph + "が落ちている。")
+		// Walking onto an item picks it up; a dash only stops on it.
+		if !pick || !g.pickUp() {
+			g.say(it.Def.Name + "が落ちている。")
+		}
 	}
 	if to == g.Stairs {
 		g.say("階段がある。")
@@ -573,7 +611,7 @@ func (g *Game) dash(d Point) {
 		}
 		seen := g.visibleEnemies()
 		hp := g.HP
-		if !g.step(d) {
+		if !g.step(d, false) {
 			return
 		}
 		g.endTurn(true)

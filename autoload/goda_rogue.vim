@@ -200,8 +200,8 @@ endfunction
 " Run the action {action} of the game, with its arguments: >
 "	call goda_rogue#do('move', 'left')
 " Actions: move, dash and turn (with a direction: left, right, up, down,
-" upleft, upright, downleft, downright), attack, wait, stairs, map, log,
-" redraw.
+" upleft, upright, downleft, downright), attack, wait, stairs, pickup,
+" inventory, choose (an index, from 0), cancel, map, log, redraw.
 function! goda_rogue#do(action, ...) abort
   if &filetype !=# 'goda-rogue'
     return
@@ -246,6 +246,61 @@ function! s:draw(screen) abort
   if has_key(a:screen, 'log')
     call s:show_log(a:screen.log)
   endif
+
+  if has_key(a:screen, 'prompt')
+    call s:ask(a:screen.prompt)
+  else
+    call s:close_prompt()
+  endif
+endfunction
+
+" ---------------------------------------------------------------------------
+" Prompts: the choices the game asks for (which item, what to do with it).
+" They are shown with the editor's selection UI, or by
+" g:goda_rogue#prompt_func; the answer goes back as the action "choose" (the
+" index from 0) or "cancel".
+
+" The popup of the prompt (Vim).
+let s:prompt = -1
+
+function! s:ask(prompt) abort
+  let winid = win_getid()
+  if !empty(get(g:, 'goda_rogue#prompt_func', ''))
+    call call(g:goda_rogue#prompt_func,
+          \ [a:prompt, {idx -> goda_rogue#_answer(winid, idx)}])
+  elseif has('nvim')
+    call luaeval('vim.ui.select(_A[1], {prompt = _A[2]}, function(_, idx)'
+          \ . ' vim.fn["goda_rogue#_answer"](_A[3], idx or 0) end)',
+          \ [a:prompt.choices, a:prompt.title, winid])
+  else
+    call s:close_prompt()
+    let s:prompt = popup_menu(a:prompt.choices, #{
+          \ title: ' ' . a:prompt.title . ' ',
+          \ callback: {_, result -> goda_rogue#_answer(winid, result)},
+          \ })
+  endif
+endfunction
+
+function! s:close_prompt() abort
+  if s:prompt >= 0 && !has('nvim')
+    let id = s:prompt
+    let s:prompt = -1
+    " (Its callback then answers nothing: the prompt is already gone.)
+    call popup_close(id, -2)
+  endif
+endfunction
+
+" Answer the prompt shown in the window {winid} with the choice {idx}, from
+" 1 (0 or less to cancel). Called by the selection UIs.
+function! goda_rogue#_answer(winid, idx) abort
+  if a:idx == -2
+    return
+  endif
+  let s:prompt = -1
+  let cmd = a:idx > 0
+        \ ? printf('call goda_rogue#do("choose", "%d")', a:idx - 1)
+        \ : 'call goda_rogue#do("cancel")'
+  call win_execute(a:winid, cmd)
 endfunction
 
 " Show {log} (all the messages) in the buffer "goda-rogue://log", in a

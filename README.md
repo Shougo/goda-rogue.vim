@@ -8,8 +8,8 @@ their rank is their color.
 > Status: a prototype. It shows the dungeon: floors made from a seed, the
 > player `主`, walls, stairs, enemies and items, moving around,
 > attacking, and a mini-map. Enemies wander, chase and attack the player,
-> who levels up, and can fall; 30 floors to clear. There is no item use
-> yet.
+> who levels up, and can fall; 30 floors to clear. Items can be picked
+> up and dropped, but not used yet.
 
 ## Requirements
 
@@ -37,6 +37,8 @@ function s:goda_rogue_settings() abort
   nnoremap <buffer> t <Cmd>call goda_rogue#do('turn')<CR>
   nnoremap <buffer> . <Cmd>call goda_rogue#do('wait')<CR>
   nnoremap <buffer> > <Cmd>call goda_rogue#do('stairs')<CR>
+  nnoremap <buffer> i <Cmd>call goda_rogue#do('inventory')<CR>
+  nnoremap <buffer> , <Cmd>call goda_rogue#do('pickup')<CR>
   nnoremap <buffer> m <Cmd>call goda_rogue#do('map')<CR>
   nnoremap <buffer> M <Cmd>call goda_rogue#do('log')<CR>
 endfunction
