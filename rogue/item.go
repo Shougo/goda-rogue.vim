@@ -44,6 +44,8 @@ type Item struct {
 	Cracks int
 	// Charges are how many more times a staff can be waved.
 	Charges int
+	// Count is how many arrows it is.
+	Count int
 	// Known says whether the player knows the upgrade value of a weapon
 	// or a shield, the charges of a staff.
 	Known bool
@@ -55,7 +57,7 @@ type Item struct {
 // bracelet.
 func (it *Item) equipment() bool {
 	switch it.Def.Category {
-	case CategoryWeapon, CategoryShield, CategoryBracelet:
+	case CategoryWeapon, CategoryShield, CategoryBracelet, CategoryArrow:
 		return true
 	}
 	return false
@@ -86,6 +88,8 @@ func (g *Game) describe(it *Item) string {
 	switch {
 	case it.upgradable() && it.Known && it.Upgrade != 0:
 		s += fmt.Sprintf("%+d", it.Upgrade)
+	case it.Def.Category == CategoryArrow:
+		s += fmt.Sprintf("[%d]", it.Count)
 	case it.Def.Category == CategoryStaff && g.identified[it.Def.ID]:
 		if it.Known {
 			s += fmt.Sprintf("[%d]", it.Charges)
@@ -149,6 +153,7 @@ const (
 	commandRead    = "読む"
 	commandWave    = "振る"
 	commandEat     = "食べる"
+	commandThrow   = "投げる"
 )
 
 // useCommands are the commands that use an item, by its category.
@@ -172,7 +177,7 @@ func (it *Item) commands() []string {
 			cs = append(cs, commandEquip)
 		}
 	}
-	return append(cs, commandDrop)
+	return append(cs, commandThrow, commandDrop)
 }
 
 // sortInventory sorts the inventory by category, and by the order of the
@@ -204,6 +209,15 @@ func (g *Game) pickUp() bool {
 		g.Items = slices.Delete(g.Items, i, i+1)
 		g.say(fmt.Sprintf("%dG 拾った。", it.Amount))
 		return true
+	}
+	// Arrows join those of their kind.
+	if it.Def.Category == CategoryArrow {
+		if j := slices.IndexFunc(g.Inventory, func(x *Item) bool { return x.Def == it.Def }); j >= 0 {
+			g.Items = slices.Delete(g.Items, i, i+1)
+			g.Inventory[j].Count += it.Count
+			g.say(fmt.Sprintf("%sを%d本拾った。", g.Name(it), it.Count))
+			return true
+		}
 	}
 	if len(g.Inventory) >= g.Dungeon.Rules.Capacity {
 		g.say("持ち物がいっぱいで、" + g.Name(it) + "を拾えない。")
@@ -265,6 +279,9 @@ func (g *Game) choose(arg string) (bool, error) {
 			return true, nil
 		case commandDrop:
 			return g.drop(p.item), nil
+		case commandThrow:
+			g.throwItem(g.Inventory[p.item])
+			return true, nil
 		case commandDrink, commandRead, commandWave, commandEat:
 			g.useItem(g.Inventory[p.item])
 			return true, nil

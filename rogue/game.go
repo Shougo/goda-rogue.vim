@@ -179,6 +179,8 @@ func (g *Game) descend() {
 			it.Upgrade = rollUpgrade(rng)
 		case def.Category == CategoryStaff:
 			it.Charges = between(rng, def.Charges[0], def.Charges[1])
+		case def.Category == CategoryArrow:
+			it.Count = between(rng, def.Charges[0], def.Charges[1])
 		}
 		g.Items = append(g.Items, it)
 	}
@@ -411,6 +413,11 @@ func (g *Game) Do(action string, args []string) error {
 	case "attack":
 		g.beginAction()
 		if g.attack() {
+			g.endTurn(false)
+		}
+	case "shoot":
+		g.beginAction()
+		if g.shoot() {
 			g.endTurn(false)
 		}
 	case "wait":

@@ -31,8 +31,8 @@ Going down the stairs of the 30th floor clears the dungeon.  Items can be
 picked up and dropped, and a weapon, a shield and a bracelet equipped
 (weapons add to the attack, shields make the defense, a bracelet has its
 effect while it is worn).  Grasses are drunk, scrolls read, staffs waved
-(a magic bolt to the front) and food eaten; arrows and pots cannot be
-used yet.
+(a magic bolt to the front) and food eaten, arrows shot, and any item
+thrown; pots cannot be used yet.
 
 Grasses, scrolls, staffs, bracelets and pots are unidentified at first:
 they go by names such as 赤い草 (with a "?" in the inventory), different
@@ -97,6 +97,7 @@ There are no default mappings: map the actions in the game buffer. >vim
 	  nnoremap <buffer> > <Cmd>call goda_rogue#do('stairs')<CR>
 	  nnoremap <buffer> i <Cmd>call goda_rogue#do('inventory')<CR>
 	  nnoremap <buffer> , <Cmd>call goda_rogue#do('pickup')<CR>
+	  nnoremap <buffer> f <Cmd>call goda_rogue#do('shoot')<CR>
 	  nnoremap <buffer> m <Cmd>call goda_rogue#do('map')<CR>
 	  nnoremap <buffer> M <Cmd>call goda_rogue#do('log')<CR>
 	endfunction
@@ -158,6 +159,12 @@ attack							*goda-rogue-attack*
 		when nothing is there, but allies are not attacked.  There is
 		no attack around a corner of a wall.
 
+shoot							*goda-rogue-shoot*
+		Shoot an arrow of those equipped to the front.  It flies up
+		to 10 tiles, until it hits a monster (and is used up) or a
+		wall (and falls there).  It costs a turn; without arrows
+		equipped, nothing happens.
+
 turn [{direction}]					*goda-rogue-turn*
 		Face {direction}.  Without it, face an enemy next to the
 		player that it can attack: again and again, each of them in
@@ -179,7 +186,10 @@ inventory						*goda-rogue-inventory*
 		Choose an item of the inventory, and then what to do with
 		it (|goda-rogue-prompts|): 飲む (a grass), 読む (a scroll),
 		振る (a staff), 食べる (food), 装備する or 外す (a weapon, a
-		shield or a bracelet), 置く (drop it).  The items are sorted by kind,
+		shield, a bracelet or arrows), 投げる (throw it to the front,
+		as an arrow flies: a grass has its effect on the monster it
+		hits, other items hurt it a little and fall by it), 置く
+		(drop it).  The items are sorted by kind,
 		each with the glyph of its kind as an icon.
 
 choose {index}						*goda-rogue-choose*
@@ -311,8 +321,10 @@ floors once the files change.
 				  巻物: あかり 識別
 				  杖: 吹き飛ばし
 				  食料: 満腹
-				回数 is how many times a staff can be waved
-				(min-max; - for other items).  ひび is how easily a
+				The 強さ of arrows is their attack.  回数 is
+				how many times a staff can be waved, how
+				many arrows there are (min-max; - for other
+				items).  ひび is how easily a
 				bracelet cracks, a percent (0 for never).
 				Leaving a floor where a bracelet had its
 				effect (it showed a monster out of sight,

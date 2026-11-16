@@ -82,13 +82,13 @@ func TestDungeonErrors(t *testing.T) {
 		}, `効果: 草 has no effect "回復"`},
 		{"charges of a grass", func(m fstest.MapFS) {
 			m["items.txt"].Data = append(m["items.txt"].Data, "x\t草\tx\t草\t0\t-\t0\t3\n"...)
-		}, `回数: only staffs`},
+		}, `回数: only staffs and arrows`},
 		{"bad charges", func(m fstest.MapFS) {
 			m["items.txt"].Data = append(m["items.txt"].Data, "x\t杖\tx\t杖\t0\t-\t0\t5-2\n"...)
 		}, `回数: want min-max`},
 		{"staff without charges", func(m fstest.MapFS) {
 			m["items.txt"].Data = append(m["items.txt"].Data, "x\t杖\tx\t杖\t0\t-\t0\t-\n"...)
-		}, `回数: a staff needs some`},
+		}, `回数: 杖 needs some`},
 		{"too few fake names", func(m fstest.MapFS) {
 			m["fake_names.txt"].Data = []byte("種類\t名前\n草\t赤い草\n")
 		}, `too few names: 1 for the 3 items of 草`},

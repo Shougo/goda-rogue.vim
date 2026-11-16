@@ -22,7 +22,11 @@
 # a floor where it had its effect, it cracks with ひび x (cracks + 1) %
 # (times 腕輪の傷みやすさ in rules.txt), and breaks with too many cracks
 # (ひびの段階 in rules.txt).
-# 回数 is how many times a staff can be waved (min-max; - for others).
+#   矢: 強さ is the attack of an arrow, shot or thrown
+# 回数 is how many times a staff can be waved, how many arrows there are
+# (min-max; - for others).
+# Any item can be thrown: an arrow hurts the monster it hits, a grass
+# has its effect on it, another item hurts it a little.
 ID	字	名前	種類	強さ	効果	ひび	回数
 bokutou	剣	木刀	武器	3	-	0	-
 tetsuken	剣	鉄の剣	武器	7	-	0	-
@@ -32,7 +36,8 @@ chikara	腕	力の腕輪	腕輪	3	ちから	0	-
 kaifuku	腕	回復の腕輪	腕輪	0	回復	0	-
 kehai	腕	気配察知の腕輪	腕輪	0	気配察知	15	-
 dougu	腕	道具感知の腕輪	腕輪	0	道具感知	15	-
-kiya	矢	木の矢	矢	0	-	0	-
+kiya	矢	木の矢	矢	4	-	0	5-15
+tetsuya	矢	鉄の矢	矢	8	-	0	3-10
 yakusou	草	薬草	草	25	HP回復	0	-
 otogiri	草	弟切草	草	100	HP回復	0	-
 chikarakusa	草	ちからの草	草	1	ちから	0	-

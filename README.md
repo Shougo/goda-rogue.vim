@@ -10,8 +10,8 @@ their rank is their color.
 > attacking, and a mini-map. Enemies wander, chase and attack the player,
 > who levels up, and can fall; 30 floors to clear. Items can be picked
 > up and dropped, weapons, shields and bracelets equipped, and grasses,
-> scrolls, staffs and food used, and identified; the player gets
-> hungry.
+> scrolls, staffs and food used, arrows shot, items thrown and
+> identified; the player gets hungry.
 
 ## Requirements
 
@@ -41,6 +41,7 @@ function s:goda_rogue_settings() abort
   nnoremap <buffer> > <Cmd>call goda_rogue#do('stairs')<CR>
   nnoremap <buffer> i <Cmd>call goda_rogue#do('inventory')<CR>
   nnoremap <buffer> , <Cmd>call goda_rogue#do('pickup')<CR>
+  nnoremap <buffer> f <Cmd>call goda_rogue#do('shoot')<CR>
   nnoremap <buffer> m <Cmd>call goda_rogue#do('map')<CR>
   nnoremap <buffer> M <Cmd>call goda_rogue#do('log')<CR>
 endfunction

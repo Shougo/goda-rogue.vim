@@ -23,7 +23,8 @@ import (
 //	items.txt          the items (a table; 種類 is their category, 強さ
 //	                   the strength of a weapon or a shield, 効果 what
 //	                   an item does, ひび how easily a bracelet cracks, 回数
-//	                   how many times a staff can be waved)
+//	                   how many times a staff can be waved, how many
+//	                   arrows there are)
 //	item_table.txt     which items appear on which floors (a table)
 //	fake_names.txt     the names of unidentified items, by kind (a table)
 //	floors.txt         how many monsters and items a floor has (a table)
@@ -117,7 +118,8 @@ type ItemDef struct {
 	Effect Effect
 	// Crack is how easily a bracelet cracks, a percent (0 for never).
 	Crack int
-	// Charges are how many times a staff can be waved: from, to.
+	// Charges are how many times a staff can be waved, how many arrows
+	// there are: from, to.
 	Charges [2]int
 }
 
@@ -483,13 +485,13 @@ func (l *loader) load() {
 			it.Effect = Effect(e)
 		}
 		if n, ok := row.cols["回数"]; ok && n != "-" && n != "" {
-			if c != CategoryStaff {
-				l.errorf(row.file, row.n, "回数: only staffs have one, not %s", c)
+			if c != CategoryStaff && c != CategoryArrow {
+				l.errorf(row.file, row.n, "回数: only staffs and arrows have one, not %s", c)
 			}
 			it.Charges[0], it.Charges[1] = l.span(row, "回数")
 		}
-		if c == CategoryStaff && it.Charges[1] == 0 {
-			l.errorf(row.file, row.n, "回数: a staff needs some")
+		if (c == CategoryStaff || c == CategoryArrow) && it.Charges[1] == 0 {
+			l.errorf(row.file, row.n, "回数: %s needs some", c)
 		}
 		if _, ok := row.cols["ひび"]; ok {
 			it.Crack = l.int(row, "ひび", 0)
