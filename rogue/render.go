@@ -1,6 +1,7 @@
 package rogue
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -28,6 +29,11 @@ const (
 	// hlFacing is the tile the player faces (and attacks), over its own
 	// highlight.
 	hlFacing = "GodaRogueFacing"
+	// The HP bar of the top line: its filled part (hlHPLow when HP is
+	// low), and the rest.
+	hlHP      = "GodaRogueHP"
+	hlHPLow   = "GodaRogueHPLow"
+	hlHPEmpty = "GodaRogueHPEmpty"
 )
 
 // Size is the size of the window in cells.
@@ -62,11 +68,16 @@ type Minimap struct {
 	Highlights map[string][]Span `json:"highlights"`
 }
 
-// statusLines are the lines under the map: the status and the message.
-const statusLines = 2
+// statusLines are the lines around the map: the top line over it, the
+// status line and the message under it.
+const statusLines = 3
 
-// Render returns the screen for a window of size: the part of the floor
-// around the player that fits, then the status line and the message.
+// hpBarWidth is the width of the HP bar, in cells.
+const hpBarWidth = 10
+
+// Render returns the screen for a window of size: the top line, the part
+// of the floor around the player that fits, then the status line and the
+// message.
 func (g *Game) Render(size Size) Screen {
 	l := g.Level
 	viewW := max(size.Width/2, 1)
@@ -75,9 +86,10 @@ func (g *Game) Render(size Size) Screen {
 	y0, h := window(g.Player.Y, l.H, viewH)
 
 	s := Screen{Highlights: map[string][]Span{}}
+	s.Lines = append(s.Lines, g.topLine(s.Highlights))
 	for row := range h {
 		var b strings.Builder
-		lnum := row + 1
+		lnum := row + 2
 		var last *Span
 		lastGroup := ""
 		for col := range w {
@@ -105,13 +117,36 @@ func (g *Game) Render(size Size) Screen {
 	}
 	if f := g.Player.Add(Directions[g.Facing]); f.X >= x0 && f.X < x0+w && f.Y >= y0 && f.Y < y0+h {
 		col := (f.X-x0)*glyphBytes + 1
-		s.Highlights[hlFacing] = []Span{{f.Y - y0 + 1, col, col + glyphBytes}}
+		s.Highlights[hlFacing] = []Span{{f.Y - y0 + 2, col, col + glyphBytes}}
 	}
 	s.Lines = append(s.Lines, g.Status(), g.Message)
 	if g.ShowMap {
 		s.Minimap = g.minimap()
 	}
 	return s
+}
+
+// topLine returns the top line: what matters all the time (the floor, the
+// level, HP with its bar). The bar is spaces with a background, so that it
+// needs no characters of ambiguous width; its spans go to hl.
+func (g *Game) topLine(hl map[string][]Span) string {
+	head := fmt.Sprintf("%dF  Lv%d  HP %3d/%3d ", g.Depth, g.PlayerLevel, g.HP, g.MaxHP)
+	filled := 0
+	if g.HP > 0 {
+		filled = max((g.HP*hpBarWidth+g.MaxHP-1)/g.MaxHP, 1)
+	}
+	group := hlHP
+	if g.HP*4 <= g.MaxHP {
+		group = hlHPLow
+	}
+	col := len(head) + 1
+	if filled > 0 {
+		hl[group] = append(hl[group], Span{1, col, col + filled})
+	}
+	if filled < hpBarWidth {
+		hl[hlHPEmpty] = append(hl[hlHPEmpty], Span{1, col + filled, col + hpBarWidth})
+	}
+	return head + strings.Repeat(" ", hpBarWidth)
 }
 
 // The characters of the mini-map. Walls are left out: the floors show the

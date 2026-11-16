@@ -93,6 +93,8 @@ let s:colors = #{
       \   wall: ['73', '#5fafaf'], floor: ['240', '#585858'],
       \   safe: ['180', '#d7af87'], stairs: ['220', '#ffd700'],
       \   facing: ['238', '#444444'],
+      \   hp: ['34', '#00af00'], hplow: ['160', '#d70000'],
+      \   hpempty: ['238', '#444444'],
       \   ranks: [['77', '#5fd75f'], ['69', '#5f87ff'],
       \           ['170', '#d75fd7'], ['203', '#ff5f5f']],
       \ },
@@ -100,6 +102,8 @@ let s:colors = #{
       \   wall: ['30', '#008787'], floor: ['250', '#bcbcbc'],
       \   safe: ['130', '#af5f00'], stairs: ['136', '#af8700'],
       \   facing: ['253', '#dadada'],
+      \   hp: ['71', '#5faf5f'], hplow: ['160', '#d70000'],
+      \   hpempty: ['252', '#d0d0d0'],
       \   ranks: [['28', '#008700'], ['25', '#005faf'],
       \           ['90', '#870087'], ['160', '#d70000']],
       \ },
@@ -117,6 +121,10 @@ function! s:highlights() abort
   endfor
   " The tile the player faces: a background over the highlight of the tile.
   call s:highlight('GodaRogueFacing', c.facing, '', 'bg')
+  " The HP bar of the top line: spaces with a background.
+  call s:highlight('GodaRogueHP', c.hp, '', 'bg')
+  call s:highlight('GodaRogueHPLow', c.hplow, '', 'bg')
+  call s:highlight('GodaRogueHPEmpty', c.hpempty, '', 'bg')
   highlight default GodaRoguePlayer term=bold cterm=bold gui=bold
   for i in range(len(c.ranks))
     call s:highlight('GodaRogueRank' . (i + 1), c.ranks[i], '')

@@ -24,7 +24,14 @@ and their rank is their color.  The game is Go, in a binary built from this
 plugin, and Vim talks to it through goda.vim.
 
 It is a prototype: it shows the dungeon and a mini-map, the player moves
-around and attacks.  The enemies do not act yet.
+around and attacks, and the enemies wander, chase and attack the player.
+There are no levels or item use yet.
+
+Every action that takes a turn (moving, attacking, waiting, a step of a
+dash) is followed by the turn of the monsters.  Slow monsters act every
+other turn, fast ones twice a turn.  Some monsters doze until the player
+enters or leaves their room, or they are attacked.  Walking and waiting
+restore HP; at 0 HP the run is over.
 
 ==============================================================================
 INSTALL                                                    *goda-rogue-install*
@@ -114,7 +121,7 @@ turn [{direction}]					*goda-rogue-turn*
 		turn, clockwise.  It costs no turn.
 
 wait							*goda-rogue-wait*
-		Let a turn pass.
+		Let a turn pass (and restore HP).
 
 stairs							*goda-rogue-stairs*
 		Go down the stairs the player stands on.  An ally next to
@@ -151,6 +158,9 @@ GodaRogueFloorSafe	The floor known to have no trap: where the player
 GodaRogueStairs		The stairs.
 GodaRogueFacing		The tile the player faces: its background, over the
 			highlight of what is there.
+GodaRogueHP		The HP bar of the top line (a background): its
+GodaRogueHPLow		filled part, the filled part at a quarter of HP or
+GodaRogueHPEmpty	less, and the rest.
 GodaRogueRank1		Enemies of rank 1 to 4: green, blue, purple, red.
 ...
 GodaRogueRank4
@@ -179,9 +189,11 @@ Every tile is one full-width character, two cells wide:
 The background of the tile the player faces (and attacks) is
 |GodaRogueFacing|.
 
-The window shows the part of the floor around the player that fits.  Under
-the map are the status line (the floor, the turn, the direction the player
-faces as an arrow, and the seed) and the last message.
+The top line shows what matters all the time: the floor, the level, and HP
+with a bar.  Then the window shows the part of the floor around the player
+that fits.  Under the map are the status line (the turn, the direction the
+player faces as an arrow, and the seed) and the messages of the last
+action.
 
 ==============================================================================
 MINI-MAP                                                  *goda-rogue-mini-map*

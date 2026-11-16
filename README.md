@@ -7,7 +7,8 @@ their rank is their color.
 
 > Status: a prototype. It shows the dungeon: floors made from a seed, the
 > player `主`, walls, stairs, enemies and items, moving around,
-> attacking, and a mini-map. Enemies do not act yet.
+> attacking, and a mini-map. Enemies wander, chase and attack the player,
+> who has HP and can fall. There are no levels or item use yet.
 
 ## Requirements
 

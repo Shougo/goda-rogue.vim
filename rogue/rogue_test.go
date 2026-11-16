@@ -83,7 +83,9 @@ func TestRender(t *testing.T) {
 	g := NewGame("render")
 	for _, size := range []Size{{80, 24}, {200, 60}, {7, 3}} {
 		s := g.Render(size)
-		maps := s.Lines[:len(s.Lines)-statusLines]
+		// The map is between the top line, and the status line and the
+		// message.
+		maps := s.Lines[1 : len(s.Lines)-2]
 		wantW := min(max(size.Width/2, 1), MapWidth)
 		wantH := min(max(size.Height-statusLines, 1), MapHeight)
 		if len(maps) != wantH {
@@ -95,12 +97,15 @@ func TestRender(t *testing.T) {
 			}
 		}
 		c := s.Cursor
-		if c[0] < 1 || c[0] > len(maps) || !strings.HasPrefix(maps[c[0]-1][c[1]-1:], glyphPlayer) {
+		if c[0] < 2 || c[0] > len(maps)+1 || !strings.HasPrefix(maps[c[0]-2][c[1]-1:], glyphPlayer) {
 			t.Errorf("%v: the cursor %v is not on the player", size, c)
 		}
 		for group, spans := range s.Highlights {
+			if group == hlHP || group == hlHPLow || group == hlHPEmpty {
+				continue
+			}
 			for _, sp := range spans {
-				line := maps[sp.Line-1]
+				line := maps[sp.Line-2]
 				if sp.Col < 1 || sp.End > len(line)+1 || (sp.Col-1)%glyphBytes != 0 || (sp.End-sp.Col)%glyphBytes != 0 {
 					t.Errorf("%v: %s span %v off the glyphs", size, group, sp)
 				}
@@ -291,6 +296,8 @@ func TestAttack(t *testing.T) {
 	g.Monsters = nil
 	g.Items = nil
 	right := g.Player.Add(Point{1, 0})
+	// The enemy strikes back; this test is about attacking.
+	g.HP, g.MaxHP = 9999, 9999
 
 	if err := g.Do("turn", []string{"right"}); err != nil {
 		t.Fatal(err)
@@ -307,11 +314,11 @@ func TestAttack(t *testing.T) {
 	if err := g.Do("attack", nil); err != nil {
 		t.Fatal(err)
 	}
-	if g.Turn != 1 || ally.HP != rankHP[ally.Rank] {
+	if g.Turn != 1 || ally.HP != ally.MaxHP {
 		t.Errorf("attacked the ally: turn %d, HP %d", g.Turn, ally.HP)
 	}
 
-	m := newMonster("鼠", "鼠", 4)
+	m := newMonster(monsterKinds[0], 4)
 	m.Pos = right
 	g.Monsters = []*Monster{m}
 	// Moving toward it only faces it.
@@ -319,7 +326,7 @@ func TestAttack(t *testing.T) {
 	if err := g.Do("move", []string{"right"}); err != nil {
 		t.Fatal(err)
 	}
-	if g.Player == right || g.Facing != "right" || m.HP != rankHP[4] {
+	if g.Player == right || g.Facing != "right" || m.HP != m.MaxHP {
 		t.Errorf("moved into the enemy: %v, facing %s, HP %d", g.Player, g.Facing, m.HP)
 	}
 	for n := 0; len(g.Monsters) > 0; n++ {
@@ -330,7 +337,7 @@ func TestAttack(t *testing.T) {
 		if err := g.Do("attack", nil); err != nil {
 			t.Fatal(err)
 		}
-		if m.HP > hp || (m.HP == hp && !strings.HasSuffix(g.Message, "にかわされた。")) {
+		if m.HP > hp || (m.HP == hp && !strings.Contains(g.Message, "にかわされた。")) {
 			t.Fatalf("HP %d -> %d: %q", hp, m.HP, g.Message)
 		}
 	}
@@ -361,7 +368,7 @@ func TestFacingHighlight(t *testing.T) {
 		s := g.Render(Size{200, 60})
 		f := g.Player.Add(d)
 		spans := s.Highlights[hlFacing]
-		want := []Span{{f.Y + 1, f.X*glyphBytes + 1, f.X*glyphBytes + 1 + glyphBytes}}
+		want := []Span{{f.Y + 2, f.X*glyphBytes + 1, f.X*glyphBytes + 1 + glyphBytes}}
 		if !slices.Equal(spans, want) {
 			t.Errorf("%s: %v, want %v", dir, spans, want)
 		}
@@ -448,11 +455,11 @@ func TestFaceEnemy(t *testing.T) {
 	}
 
 	for _, d := range []Point{{-1, 0}, {1, 0}} {
-		m := newMonster("鼠", "鼠", 1)
+		m := newMonster(monsterKinds[0], 1)
 		m.Pos = g.Player.Add(d)
 		g.Monsters = append(g.Monsters, m)
 	}
-	ally := newMonster("狼", "狼", 1)
+	ally := newMonster(monsterKinds[2], 1)
 	ally.Ally = true
 	ally.Pos = g.Player.Add(Point{0, 1})
 	g.Monsters = append(g.Monsters, ally)
@@ -469,5 +476,184 @@ func TestFaceEnemy(t *testing.T) {
 	}
 	if g.Turn != 0 {
 		t.Errorf("turn %d", g.Turn)
+	}
+}
+
+// roomGame returns a game whose player stands at the top left corner of a
+// room at least w x h large, with nothing else on the floor.
+func roomGame(t *testing.T, w, h int) (*Game, Room) {
+	t.Helper()
+	g := find(t, func(g *Game) bool {
+		r := g.Level.Rooms[g.Level.RoomAt(g.Player)]
+		return r.W >= w && r.H >= h
+	})
+	r := g.Level.Rooms[g.Level.RoomAt(g.Player)]
+	g.Player = Point{r.X, r.Y}
+	g.Monsters, g.Items = nil, nil
+	g.Stairs = Point{-1, -1}
+	return g, r
+}
+
+func place(g *Game, k monsterKind, rank int, p Point) *Monster {
+	m := newMonster(k, rank)
+	m.Pos = p
+	g.Monsters = append(g.Monsters, m)
+	return m
+}
+
+func wait(t *testing.T, g *Game, n int) {
+	t.Helper()
+	for range n {
+		if err := g.Do("wait", nil); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+func TestMonsterChases(t *testing.T) {
+	for _, tc := range []struct {
+		kind  monsterKind
+		turns int
+		steps int
+	}{
+		{monsterKinds[0], 1, 1}, // normal
+		{monsterKinds[2], 1, 2}, // double speed
+		{monsterKinds[3], 2, 1}, // slow
+	} {
+		g, r := roomGame(t, 8, 3)
+		m := place(g, tc.kind, 1, Point{r.X + 7, r.Y})
+		before := chebyshev(m.Pos, g.Player)
+		wait(t, g, tc.turns)
+		if got := chebyshev(m.Pos, g.Player); got != before-tc.steps {
+			t.Errorf("%s: distance %d -> %d in %d turns, want -%d", tc.kind.Name, before, got, tc.turns, tc.steps)
+		}
+	}
+}
+
+func TestMonsterAttacks(t *testing.T) {
+	g, r := roomGame(t, 4, 3)
+	g.HP, g.MaxHP = 9999, 9999
+	place(g, monsterKinds[0], 1, Point{r.X + 1, r.Y})
+	wait(t, g, 20)
+	if g.HP >= 9999-20/regenTurns {
+		t.Errorf("HP %d: the monster next to the player never hit it", g.HP)
+	}
+}
+
+func TestPlayerDies(t *testing.T) {
+	g, r := roomGame(t, 4, 3)
+	g.HP = 1
+	g.MaxHP = 1
+	place(g, monsterKinds[0], 4, Point{r.X + 1, r.Y})
+	for n := 0; g.Over == ""; n++ {
+		if n > 100 {
+			t.Fatal("the player never dies")
+		}
+		wait(t, g, 1)
+	}
+	if g.HP != 0 || !strings.Contains(g.Over, "鼠") {
+		t.Errorf("HP %d, over: %q", g.HP, g.Over)
+	}
+	pos, turn := g.Player, g.Turn
+	if err := g.Do("move", []string{"down"}); err != nil {
+		t.Fatal(err)
+	}
+	if g.Player != pos || g.Turn != turn || g.Message != "冒険は終わった。" {
+		t.Errorf("moved after the end: %v, turn %d, %q", g.Player, g.Turn, g.Message)
+	}
+}
+
+func TestDozing(t *testing.T) {
+	// A room with a doorway on its left wall, and the player on it.
+	g := find(t, func(g *Game) bool {
+		for _, r := range g.Level.Rooms {
+			if !r.Dummy && r.W >= 5 && g.Level.At(Point{r.X - 1, r.Y}) == TileCorridor {
+				return true
+			}
+		}
+		return false
+	})
+	var r Room
+	for _, room := range g.Level.Rooms {
+		if !room.Dummy && room.W >= 5 && g.Level.At(Point{room.X - 1, room.Y}) == TileCorridor {
+			r = room
+			break
+		}
+	}
+	g.Monsters, g.Items = nil, nil
+	g.Stairs = Point{-1, -1}
+	g.HP, g.MaxHP = 9999, 9999
+	g.Player = Point{r.X - 1, r.Y}
+	m := place(g, monsterKinds[0], 1, Point{r.X + r.W - 1, r.Y + r.H - 1})
+	m.Dozing = true
+	pos := m.Pos
+	wait(t, g, 3)
+	if m.Pos != pos || !m.Dozing {
+		t.Fatalf("a dozing monster moved: %v", m.Pos)
+	}
+	if err := g.Do("move", []string{"right"}); err != nil {
+		t.Fatal(err)
+	}
+	if m.Dozing {
+		t.Error("entering the room did not wake it")
+	}
+}
+
+func TestAlly(t *testing.T) {
+	g, r := roomGame(t, 8, 3)
+	g.HP, g.MaxHP = 9999, 9999
+	ally := place(g, monsterKinds[0], 1, Point{r.X + 5, r.Y})
+	ally.Ally = true
+	wait(t, g, 1)
+	if d := chebyshev(ally.Pos, g.Player); d != 4 {
+		t.Errorf("ally at %d, want 4: it follows the player", d)
+	}
+
+	// An enemy next to the ally, not to the player: they fight.
+	ally.Pos = Point{r.X + 3, r.Y + 2}
+	ally.HP, ally.MaxHP = 9999, 9999
+	enemy := place(g, monsterKinds[0], 1, Point{r.X + 4, r.Y + 2})
+	for n := 0; slices.Contains(g.Monsters, enemy); n++ {
+		if n > 100 {
+			t.Fatal("the ally never defeats the enemy")
+		}
+		// (The ally does not come closer: it stays to fight.)
+		wait(t, g, 1)
+	}
+}
+
+func TestTopLine(t *testing.T) {
+	g := NewGame("top")
+	for _, tc := range []struct {
+		hp           int
+		group        string
+		filled, rest int
+	}{
+		{15, hlHP, hpBarWidth, 0},
+		{8, hlHP, 6, 4},
+		{3, hlHPLow, 2, 8},
+		{0, "", 0, hpBarWidth},
+	} {
+		g.HP, g.MaxHP = tc.hp, 15
+		s := g.Render(Size{80, 24})
+		top := s.Lines[0]
+		if !strings.HasPrefix(top, fmt.Sprintf("1F  Lv1  HP %3d/ 15 ", tc.hp)) {
+			t.Errorf("top line %q", top)
+		}
+		width := func(group string) int {
+			n := 0
+			for _, sp := range s.Highlights[group] {
+				if sp.Line == 1 {
+					n += sp.End - sp.Col
+				}
+			}
+			return n
+		}
+		if tc.group != "" && width(tc.group) != tc.filled {
+			t.Errorf("HP %d: %s %d cells, want %d", tc.hp, tc.group, width(tc.group), tc.filled)
+		}
+		if width(hlHPEmpty) != tc.rest {
+			t.Errorf("HP %d: empty %d cells, want %d", tc.hp, width(hlHPEmpty), tc.rest)
+		}
 	}
 }

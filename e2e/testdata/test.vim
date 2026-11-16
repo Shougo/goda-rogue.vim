@@ -68,13 +68,15 @@ function! s:start() abort
 
   let width = winwidth(0) - getwininfo(win_getid())[0].textoff
   let tiles = min([width / 2, 66])
-  let rows = min([winheight(0) - 2, 36])
-  call s:check('lines', line('$'), rows + 2)
-  for lnum in range(1, rows)
+  let rows = min([winheight(0) - 3, 36])
+  call s:check('lines', line('$'), rows + 3)
+  call s:check('top line', getline(1), '1F  Lv1  HP  15/ 15           ')
+  call s:check('hp bar', s:highlights(1), [[21, 31, 'GodaRogueHP']])
+  for lnum in range(2, rows + 1)
     call s:check('tiles of ' . lnum, strchars(getline(lnum)), tiles)
     call s:check('width of ' . lnum, strdisplaywidth(getline(lnum)), tiles * 2)
   endfor
-  call s:check('status', s:status() =~# '^1F  ターン 0  向き ↓  シード e2e$', 1)
+  call s:check('status', s:status() =~# '^ターン 0  向き ↓  シード e2e$', 1)
   call s:check('message', getline('$'), '1F に着いた。')
 
   call s:check('cursor', s:cursor_char(), '主')
@@ -97,9 +99,9 @@ function! s:actions() abort
   call s:check('number seed', s:status() =~# 'シード 42$', 1)
 
   call goda_rogue#do('turn')
-  call s:check('turn to an enemy', s:status() =~# '^1F  ターン 0 ', 1)
+  call s:check('turn to an enemy', s:status() =~# '^ターン 0 ', 1)
   call goda_rogue#do('turn', 'upleft')
-  call s:check('turn', s:status() =~# '^1F  ターン 0  向き ↖ ', 1)
+  call s:check('turn', s:status() =~# '^ターン 0  向き ↖ ', 1)
 
   " A move in some direction succeeds: the turn goes on.
   for dir in ['left', 'right', 'up', 'down', 'upleft', 'upright', 'downleft', 'downright']
@@ -108,8 +110,16 @@ function! s:actions() abort
       break
     endif
   endfor
-  call s:check('move', s:status() =~# '^1F  ターン 1 ', 1)
+  call s:check('move', s:status() =~# '^ターン 1 ', 1)
   call s:check('cursor after move', s:cursor_char(), '主')
+  " Walked tiles show as safe (the ally following the player may stand on
+  " the first one).
+  for dir in ['left', 'right', 'up', 'down', 'left', 'right', 'up', 'down']
+    if index(s:all_groups(), 'GodaRogueFloorSafe') >= 0
+      break
+    endif
+    call goda_rogue#do('move', dir)
+  endfor
   call s:check('safe floor', index(s:all_groups(), 'GodaRogueFloorSafe') >= 0, 1)
 
   call goda_rogue#do('stairs')
