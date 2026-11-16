@@ -122,6 +122,7 @@ function! s:highlights() abort
   " The tile the player faces: a background over the highlight of the tile.
   call s:highlight('GodaRogueFacing', c.facing, '', 'bg')
   highlight default link GodaRogueOldMessage Comment
+  highlight default link GodaRogueTitle Title
   " The HP bar of the top line: spaces with a background.
   call s:highlight('GodaRogueHP', c.hp, '', 'bg')
   call s:highlight('GodaRogueHPLow', c.hplow, '', 'bg')

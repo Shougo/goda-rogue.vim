@@ -3,6 +3,7 @@ package rogue
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 
 // The glyphs of the map. All of them are full-width (East Asian Width F or
@@ -36,6 +37,8 @@ const (
 	hlHP      = "GodaRogueHP"
 	hlHPLow   = "GodaRogueHPLow"
 	hlHPEmpty = "GodaRogueHPEmpty"
+	// hlTitle is the title of the result screen.
+	hlTitle = "GodaRogueTitle"
 )
 
 // Size is the size of the window in cells.
@@ -86,6 +89,9 @@ const hpBarWidth = 10
 // of the floor around the player that fits, then the status line and the
 // message.
 func (g *Game) Render(size Size) Screen {
+	if g.Over != "" {
+		return g.result()
+	}
 	l := g.Level
 	viewW := max(size.Width/2, 1)
 	viewH := max(size.Height-statusLines, 1)
@@ -128,6 +134,36 @@ func (g *Game) Render(size Size) Screen {
 	}
 	s.Lines = append(s.Lines, g.Status())
 	g.messages(&s)
+	if g.ShowMap {
+		s.Minimap = g.minimap()
+	}
+	return s
+}
+
+// result returns the screen of the end of a run: its result.
+func (g *Game) result() Screen {
+	s := Screen{Highlights: map[string][]Span{}, Cursor: [2]int{1, 1}}
+	title := "冒険の結果"
+	if g.Cleared {
+		title = "踏破！"
+	}
+	d := g.Ended.Sub(g.Started).Truncate(time.Second)
+	s.Lines = []string{
+		g.topLine(s.Highlights),
+		"",
+		"  " + title,
+		"",
+		"  結果      " + g.Over,
+		fmt.Sprintf("  到達      %dF", g.Depth),
+		fmt.Sprintf("  レベル    Lv%d", g.PlayerLevel),
+		fmt.Sprintf("  倒した敵  %d", g.Kills),
+		fmt.Sprintf("  ターン    %d", g.Turn),
+		fmt.Sprintf("  時間      %d:%02d:%02d", int(d.Hours()), int(d.Minutes())%60, int(d.Seconds())%60),
+		"  シード    " + g.Seed,
+		"",
+		"  新しい冒険は goda_rogue#start() で。",
+	}
+	s.Highlights[hlTitle] = []Span{{3, 3, 3 + len(title)}}
 	if g.ShowMap {
 		s.Minimap = g.minimap()
 	}

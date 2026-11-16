@@ -6,6 +6,7 @@ import (
 	"math"
 	"math/rand/v2"
 	"slices"
+	"time"
 )
 
 // Item is an item lying on the floor.
@@ -45,8 +46,15 @@ type Game struct {
 	Strength    int
 	// regen counts the turns toward the next HP restored.
 	regen int
-	// Over is why the run is over ("" while it goes on).
-	Over string
+	// Over is why the run is over ("" while it goes on), and Cleared
+	// whether the player went down the last stairs.
+	Over    string
+	Cleared bool
+	EXP     int
+	// Kills are the enemies the player and its allies defeated.
+	Kills int
+	// Started and Ended are when the run began and ended (play time).
+	Started, Ended time.Time
 	// FloorTurns are the turns on this floor, and Wind how many times
 	// Kron's wind has blown on it.
 	FloorTurns int
@@ -80,7 +88,8 @@ func NewGame(seed string) *Game {
 	g := &Game{
 		Seed: seed, Facing: "down",
 		HP: playerHP, MaxHP: playerHP, PlayerLevel: 1, Strength: playerStrength,
-		rng: rand.New(rand.NewPCG(seedHash(seed), math.MaxUint64)),
+		rng:     rand.New(rand.NewPCG(seedHash(seed), math.MaxUint64)),
+		Started: time.Now(),
 	}
 	g.descend()
 	return g
@@ -366,6 +375,10 @@ func (g *Game) Do(action string, args []string) error {
 			return nil
 		}
 		g.Turn++
+		if g.Depth >= finalFloor {
+			g.end(fmt.Sprintf("%dF を踏破した", g.Depth), true)
+			return nil
+		}
 		g.descend()
 	default:
 		return fmt.Errorf("unknown action %q", action)
@@ -417,6 +430,7 @@ func (g *Game) attack() bool {
 	if m.HP <= 0 {
 		g.remove(m)
 		g.say(m.Name + "を倒した。")
+		g.defeated(m)
 	}
 	return true
 }
@@ -463,8 +477,7 @@ func (g *Game) linger() {
 			m.Hunter = true
 		}
 	case 3:
-		g.Over = "クロンの風に吹き飛ばされた"
-		g.say(g.Over + "。")
+		g.end("クロンの風に吹き飛ばされた", false)
 	}
 }
 
@@ -483,6 +496,12 @@ func (g *Game) spawn(rank int) *Monster {
 		return m
 	}
 	return nil
+}
+
+// end ends the run, for why.
+func (g *Game) end(why string, cleared bool) {
+	g.Over, g.Cleared, g.Ended = why, cleared, time.Now()
+	g.say(why + "。")
 }
 
 // beginAction starts the messages of an action.

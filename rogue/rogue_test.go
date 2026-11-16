@@ -2,6 +2,7 @@ package rogue
 
 import (
 	"fmt"
+	"math/rand/v2"
 	"slices"
 	"strings"
 	"testing"
@@ -344,7 +345,7 @@ func TestAttack(t *testing.T) {
 			t.Fatalf("HP %d -> %d: %q", hp, m.HP, g.Message)
 		}
 	}
-	if !strings.HasSuffix(g.Message, "鼠を倒した。") {
+	if !strings.Contains(g.Message, "鼠を倒した。") {
 		t.Errorf("message %q", g.Message)
 	}
 }
@@ -743,5 +744,111 @@ func TestMessages(t *testing.T) {
 	}
 	if len(g.Log) != maxLog {
 		t.Errorf("log of %d", len(g.Log))
+	}
+}
+
+func TestLevelUp(t *testing.T) {
+	g, r := roomGame(t, 6, 3)
+	g.HP, g.MaxHP = 9999, 9999
+	ally := place(g, monsterKinds[0], 1, Point{r.X, r.Y + 1})
+	ally.Ally = true
+	g.Facing = "right"
+
+	// A spawned monster gives nothing.
+	m := place(g, monsterKinds[0], 1, Point{r.X + 1, r.Y})
+	m.Spawned, m.HP = true, 1
+	g.rng = rand.New(rand.NewPCG(1, 1))
+	for slices.Contains(g.Monsters, m) {
+		if err := g.Do("attack", nil); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if g.EXP != 0 || g.Kills != 1 {
+		t.Errorf("a spawned monster gave %d EXP (%d kills)", g.EXP, g.Kills)
+	}
+
+	// The player and the ally get the whole EXP each, and level up.
+	m = place(g, monsterKinds[0], 1, Point{r.X + 1, r.Y})
+	m.HP, m.EXP = 1, levelEXP[1]
+	for slices.Contains(g.Monsters, m) {
+		if err := g.Do("attack", nil); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if g.PlayerLevel != 3 || g.MaxHP != 9999+2*levelHP || !strings.Contains(g.Message, "主はレベル3に上がった。") {
+		t.Errorf("player: Lv%d, max HP %d, %q", g.PlayerLevel, g.MaxHP, g.Message)
+	}
+	if ally.Level != 3 || ally.Gained != levelEXP[1] || ally.Attack != rankStats[1].Attack+2*allyLevelAtk {
+		t.Errorf("ally: Lv%d, EXP %d, attack %d", ally.Level, ally.Gained, ally.Attack)
+	}
+	if got := playerAttack(3, playerStrength); got <= playerAttack(1, playerStrength) {
+		t.Errorf("attack at Lv3 %d", got)
+	}
+}
+
+func TestRankUpKeepsEXP(t *testing.T) {
+	m := newMonster(monsterKinds[0], 1)
+	rankUp(m)
+	if m.Rank != 2 || m.EXP != rankEXP[1] || m.Attack != rankStats[2].Attack {
+		t.Errorf("%+v", m)
+	}
+}
+
+func TestClear(t *testing.T) {
+	g := NewGame("clear")
+	for g.Depth < finalFloor {
+		g.descend()
+	}
+	g.Player = g.Stairs
+	if err := g.Do("stairs", nil); err != nil {
+		t.Fatal(err)
+	}
+	if !g.Cleared || !strings.Contains(g.Over, "踏破") {
+		t.Fatalf("cleared %v, %q", g.Cleared, g.Over)
+	}
+	s := g.Render(Size{80, 24})
+	if !slices.Contains(s.Lines, "  踏破！") || !slices.Contains(s.Lines, fmt.Sprintf("  到達      %dF", finalFloor)) {
+		t.Errorf("result %q", s.Lines)
+	}
+}
+
+// TestRandomPlay plays runs with random actions, and checks that nothing
+// breaks: no two creatures on one tile, everyone on a walkable tile, HP in
+// bounds, and the run ending only for a reason.
+func TestRandomPlay(t *testing.T) {
+	actions := []string{"move", "move", "move", "dash", "attack", "turn", "wait", "stairs"}
+	for seed := range 20 {
+		g := NewGame(fmt.Sprint("play", seed))
+		rng := rand.New(rand.NewPCG(uint64(seed), 0))
+		for range 3000 {
+			if g.Over != "" {
+				break
+			}
+			action := actions[rng.IntN(len(actions))]
+			var args []string
+			if action == "move" || action == "dash" || (action == "turn" && rng.IntN(2) == 0) {
+				args = []string{clockwise[rng.IntN(len(clockwise))]}
+			}
+			if action == "stairs" && rng.IntN(4) == 0 {
+				g.Player = g.Stairs
+			}
+			if err := g.Do(action, args); err != nil {
+				t.Fatal(err)
+			}
+			tiles := map[Point]bool{g.Player: true}
+			for _, m := range g.Monsters {
+				if tiles[m.Pos] || !g.Level.At(m.Pos).Walkable() {
+					t.Fatalf("seed %d: %s on %v", seed, m.Name, m.Pos)
+				}
+				tiles[m.Pos] = true
+				if m.HP <= 0 || m.HP > m.MaxHP {
+					t.Fatalf("seed %d: %s HP %d/%d", seed, m.Name, m.HP, m.MaxHP)
+				}
+			}
+			if g.HP < 0 || g.HP > g.MaxHP || (g.HP == 0) != (g.Over != "" && !g.Cleared && !strings.Contains(g.Over, "風")) {
+				t.Fatalf("seed %d: HP %d/%d, over %q", seed, g.HP, g.MaxHP, g.Over)
+			}
+		}
+		_ = g.Render(Size{80, 24})
 	}
 }

@@ -25,13 +25,19 @@ plugin, and Vim talks to it through goda.vim.
 
 It is a prototype: it shows the dungeon and a mini-map, the player moves
 around and attacks, and the enemies wander, chase and attack the player.
-There are no levels or item use yet.
+Going down the stairs of the 30th floor clears the dungeon.  There is no
+item use yet.
 
 Every action that takes a turn (moving, attacking, waiting, a step of a
 dash) is followed by the turn of the monsters.  Slow monsters act every
 other turn, fast ones twice a turn.  Some monsters doze until the player
 enters or leaves their room, or they are attacked.  Walking and waiting
 restore HP; at 0 HP the run is over.
+
+Defeating an enemy gives its EXP to the player and to every ally, whole:
+they level up on the same table.  At the end of a run, the result screen
+shows how it ended, the floor, the level, the enemies defeated, the
+turns, the play time and the seed.
 
 Lingering on a floor does not pay: now and then a monster appears out of
 sight, and it gives nothing for defeating it.  Then Kron's wind blows:
@@ -170,6 +176,7 @@ GodaRogueStairs		The stairs.
 GodaRogueFacing		The tile the player faces: its background, over the
 			highlight of what is there.
 GodaRogueOldMessage	The messages of the actions before the last one.
+GodaRogueTitle		The title of the result screen.
 GodaRogueHP		The HP bar of the top line (a background): its
 GodaRogueHPLow		filled part, the filled part at a quarter of HP or
 GodaRogueHPEmpty	less, and the rest.

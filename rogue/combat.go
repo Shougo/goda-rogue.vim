@@ -61,6 +61,31 @@ const (
 	playerStrength = 8
 )
 
+// rankEXP is the EXP a monster gives by its rank (the rank it had when the
+// floor began: growing stronger by lingering does not raise it).
+var rankEXP = [...]int{0, 3, 10, 30, 90}
+
+// levelEXP are the total EXP for each level from 2: the growth table
+// "normal", shared by the player and its allies until growth tables are
+// data.
+var levelEXP = []int{
+	10, 30, 60, 100, 150, 230, 350, 500, 700, 950,
+	1200, 1500, 1800, 2300, 3000, 4000, 6000, 9000, 15000, 22500,
+	35000, 50000, 70000, 100000, 140000, 190000, 250000, 330000, 430000,
+}
+
+// What a level up adds.
+const (
+	levelHP      = 5
+	allyLevelHP  = 4
+	allyLevelAtk = 1
+	allyLevelDef = 1
+)
+
+// finalFloor is the last floor: going down its stairs clears the dungeon,
+// until dungeons are data.
+const finalFloor = 30
+
 // regenTurns is how many turns of walking or waiting restore 1 HP.
 const regenTurns = 2
 

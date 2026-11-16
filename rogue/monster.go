@@ -51,6 +51,11 @@ type Monster struct {
 	// Hunters always know where the player is (the strong monster of the
 	// second wind).
 	Hunter bool
+	// EXP is what defeating it gives. An ally has Gained EXP, and its
+	// Level from them.
+	EXP    int
+	Gained int
+	Level  int
 
 	// Where it is heading: where it last saw its target, or a tile it
 	// wanders to.
@@ -76,6 +81,7 @@ func newMonster(k monsterKind, rank int) *Monster {
 	return &Monster{
 		Glyph: k.Glyph, Name: k.Name, Rank: rank, Speed: k.Speed,
 		HP: s.HP, MaxHP: s.HP, Attack: s.Attack, Defense: s.Defense,
+		EXP: rankEXP[rank], Level: 1,
 	}
 }
 
@@ -257,8 +263,7 @@ func (g *Game) hitPlayer(m *Monster) {
 	g.say(fmt.Sprintf("%sの攻撃。%dのダメージ。", m.Name, n))
 	if g.HP <= 0 {
 		g.HP = 0
-		g.Over = m.Name + "に倒された"
-		g.say(g.Over + "。")
+		g.end(m.Name+"に倒された", false)
 	}
 }
 
@@ -281,6 +286,39 @@ func (g *Game) hitMonster(a, m *Monster) {
 		g.remove(m)
 		if shown {
 			g.say(m.Name + "は倒れた。")
+		}
+		if a.Ally {
+			g.defeated(m)
+		}
+	}
+}
+
+// defeated is an enemy defeated by the player or an ally: its EXP goes,
+// whole, to the player and to every ally. Spawned monsters give nothing.
+func (g *Game) defeated(m *Monster) {
+	g.Kills++
+	if m.Spawned || m.EXP == 0 {
+		return
+	}
+	g.EXP += m.EXP
+	for g.PlayerLevel-1 < len(levelEXP) && g.EXP >= levelEXP[g.PlayerLevel-1] {
+		g.PlayerLevel++
+		g.MaxHP += levelHP
+		g.HP += levelHP
+		g.say(fmt.Sprintf("主はレベル%dに上がった。", g.PlayerLevel))
+	}
+	for _, a := range g.Monsters {
+		if !a.Ally {
+			continue
+		}
+		a.Gained += m.EXP
+		for a.Level-1 < len(levelEXP) && a.Gained >= levelEXP[a.Level-1] {
+			a.Level++
+			a.MaxHP += allyLevelHP
+			a.HP += allyLevelHP
+			a.Attack += allyLevelAtk
+			a.Defense += allyLevelDef
+			g.say(fmt.Sprintf("%sはレベル%dに上がった。", a.Name, a.Level))
 		}
 	}
 }
