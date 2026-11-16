@@ -27,7 +27,9 @@ import (
 //	                   arrows there are)
 //	item_table.txt     which items appear on which floors (a table)
 //	fake_names.txt     the names of unidentified items, by kind (a table)
-//	floors.txt         how many monsters and items a floor has, and its
+//	traps.txt          the traps (a table)
+//	trap_table.txt     which traps appear on which floors (a table)
+//	floors.txt         how many monsters, items and traps a floor has, and its
 //	                   brightness (a table)
 //	growth.txt         the growth tables (a table)
 //
@@ -49,6 +51,8 @@ type Dungeon struct {
 	MonsterRows []FloorRow
 	Items       []*ItemDef
 	ItemRows    []FloorRow
+	Traps       []*TrapDef
+	TrapRows    []FloorRow
 	// FakeNames are the names of unidentified items, by category; items
 	// of a category without them are identified from the start.
 	FakeNames map[Category][]string
@@ -85,6 +89,9 @@ type Rules struct {
 	CrackStages int
 	// Wear is how easily bracelets crack, a percent of their Crack.
 	Wear int
+	// FoundTrapsSafe says whether a trap the player has found never goes
+	// off.
+	FoundTrapsSafe bool
 	// Fullness is the max fullness; HungerTurns how many turns make the
 	// player 1 hungrier.
 	Fullness, HungerTurns int
@@ -164,6 +171,7 @@ type FloorCounts struct {
 	First, Last            int
 	MinMonster, MaxMonster int
 	MinItem, MaxItem       int
+	MinTrap, MaxTrap       int
 	Brightness             Brightness
 }
 
@@ -402,7 +410,7 @@ func (l *loader) load() {
 	rk := l.keys("rules.txt", []string{
 		"最大HP", "ちから", "回復ターン", "湧きターン", "最大モンスター数",
 		"風1", "風2", "風3", "防御K", "主の命中", "敵の命中", "成長", "最初の仲間", "強敵ランク差",
-		"持ち物の数", "ひびの段階", "腕輪の傷みやすさ", "満腹度", "腹減りターン",
+		"持ち物の数", "ひびの段階", "腕輪の傷みやすさ", "満腹度", "腹減りターン", "見つけた罠",
 	})
 	r := &d.Rules
 	r.PlayerHP = l.keyInt("rules.txt", rk, "最大HP", 1)
@@ -424,6 +432,17 @@ func (l *loader) load() {
 	r.CrackStages = l.keyInt("rules.txt", rk, "ひびの段階", 0)
 	r.Wear = l.keyInt("rules.txt", rk, "腕輪の傷みやすさ", 0)
 	r.Fullness = l.keyInt("rules.txt", rk, "満腹度", 1)
+	if ln, ok := rk["見つけた罠"]; !ok {
+		l.errorf("rules.txt", 0, "no %q", "見つけた罠")
+	} else {
+		switch ln.fields[1] {
+		case "安全":
+			r.FoundTrapsSafe = true
+		case "発動":
+		default:
+			l.errorf("rules.txt", ln.n, "見つけた罠: want 安全 or 発動, not %q", ln.fields[1])
+		}
+	}
 	r.HungerTurns = l.keyInt("rules.txt", rk, "腹減りターン", 1)
 	if ln, ok := rk["成長"]; ok {
 		r.Growth = ln.fields[1]
@@ -554,11 +573,27 @@ func (l *loader) load() {
 	d.MonsterRows = l.appearance("monster_table.txt", func(id string) bool { return d.Monster(id) != nil })
 	d.ItemRows = l.appearance("item_table.txt", func(id string) bool { return d.Item(id) != nil })
 
+	for _, row := range l.table("traps.txt", "ID", "名前", "効果", "強さ") {
+		t := &TrapDef{ID: row.cols["ID"], Name: row.cols["名前"], Effect: TrapEffect(row.cols["効果"])}
+		if !slices.Contains(trapEffects, t.Effect) {
+			l.errorf(row.file, row.n, "効果: unknown %q", t.Effect)
+		}
+		t.Strength = l.int(row, "強さ", 0)
+		if d.Trap(t.ID) != nil {
+			l.errorf(row.file, row.n, "the ID %q again", t.ID)
+		}
+		d.Traps = append(d.Traps, t)
+	}
+	d.TrapRows = l.appearance("trap_table.txt", func(id string) bool { return d.Trap(id) != nil })
+
 	for _, row := range l.table("floors.txt", "開始", "終了", "敵の数", "道具の数") {
 		c := FloorCounts{}
 		c.First, c.Last = l.floors(row)
 		c.MinMonster, c.MaxMonster = l.span(row, "敵の数")
 		c.MinItem, c.MaxItem = l.span(row, "道具の数")
+		if _, ok := row.cols["罠の数"]; ok {
+			c.MinTrap, c.MaxTrap = l.span(row, "罠の数")
+		}
 		c.Brightness = BrightnessNormal
 		if b, ok := row.cols["明るさ"]; ok {
 			c.Brightness = Brightness(b)
@@ -578,6 +613,9 @@ func (l *loader) load() {
 		}
 		if !slices.ContainsFunc(d.ItemRows, func(r FloorRow) bool { return r.First <= f && f <= r.Last }) {
 			l.errorf("item_table.txt", 0, "no item on %dF", f)
+		}
+		if d.counts(f).MaxTrap > 0 && !slices.ContainsFunc(d.TrapRows, func(r FloorRow) bool { return r.First <= f && f <= r.Last }) {
+			l.errorf("trap_table.txt", 0, "no trap on %dF", f)
 		}
 		if !slices.ContainsFunc(d.FloorRows, func(r FloorCounts) bool { return r.First <= f && f <= r.Last }) {
 			l.errorf("floors.txt", 0, "no counts for %dF", f)
@@ -677,6 +715,16 @@ func (d *Dungeon) ofRank(rank int) []*MonsterDef {
 		}
 		if len(ms) > 0 {
 			return ms
+		}
+	}
+	return nil
+}
+
+// Trap returns the trap id, or nil.
+func (d *Dungeon) Trap(id string) *TrapDef {
+	for _, t := range d.Traps {
+		if t.ID == id {
+			return t
 		}
 	}
 	return nil

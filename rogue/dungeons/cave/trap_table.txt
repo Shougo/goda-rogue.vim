@@ -1,0 +1,10 @@
+# Which traps appear on which floors, by weight (頻度).
+開始	終了	ID	頻度
+1	30	otoshiana	3
+3	30	jirai	2
+1	30	torabasami	3
+1	30	dokuya	3
+1	30	suimin	2
+1	30	warp	3
+1	30	harahe	2
+5	30	sabi	2

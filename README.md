@@ -11,7 +11,8 @@ their rank is their color.
 > who levels up, and can fall; 30 floors to clear. Items can be picked
 > up and dropped, weapons, shields and bracelets equipped, and grasses,
 > scrolls, staffs and food used, arrows shot, items thrown and
-> identified; the player gets hungry.
+> identified; the player gets hungry, and finds traps by swinging at
+> nothing.
 
 ## Requirements
 

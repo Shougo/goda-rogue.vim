@@ -300,6 +300,9 @@ func (g *Game) miniGlyph(p Point) (byte, string) {
 	if p == g.Stairs {
 		return miniStairs, hlStairs
 	}
+	if g.foundTrapAt(p) != nil {
+		return miniTrap, hlTrap
+	}
 	if g.Level.At(p).Walkable() {
 		if g.IsSafe(p) {
 			return miniFloor, hlSafe
@@ -338,6 +341,9 @@ func (g *Game) glyph(p Point) (string, string) {
 	}
 	if p == g.Stairs {
 		return glyphStairs, hlStairs
+	}
+	if g.foundTrapAt(p) != nil {
+		return glyphTrap, hlTrap
 	}
 	if g.Level.At(p).Walkable() {
 		if g.IsSafe(p) {

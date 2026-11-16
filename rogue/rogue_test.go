@@ -494,7 +494,7 @@ func roomGame(t *testing.T, w, h int) (*Game, Room) {
 	})
 	r := g.Level.Rooms[g.Level.RoomAt(g.Player)]
 	g.Player = Point{r.X, r.Y}
-	g.Monsters, g.Items = nil, nil
+	g.Monsters, g.Items, g.Traps = nil, nil, nil
 	g.Stairs = Point{-1, -1}
 	// Every item is identified (identify_test.go tests identifying).
 	for _, it := range g.Dungeon.Items {

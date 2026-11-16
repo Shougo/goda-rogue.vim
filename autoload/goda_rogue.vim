@@ -92,6 +92,7 @@ let s:colors = #{
       \ dark: #{
       \   wall: ['73', '#5fafaf'], floor: ['240', '#585858'],
       \   safe: ['180', '#d7af87'], stairs: ['220', '#ffd700'],
+      \   trap: ['208', '#ff8700'],
       \   facing: ['238', '#444444'],
       \   hp: ['34', '#00af00'], hplow: ['160', '#d70000'],
       \   hpempty: ['238', '#444444'],
@@ -101,6 +102,7 @@ let s:colors = #{
       \ light: #{
       \   wall: ['30', '#008787'], floor: ['250', '#bcbcbc'],
       \   safe: ['130', '#af5f00'], stairs: ['136', '#af8700'],
+      \   trap: ['166', '#d75f00'],
       \   facing: ['253', '#dadada'],
       \   hp: ['71', '#5faf5f'], hplow: ['160', '#d70000'],
       \   hpempty: ['252', '#d0d0d0'],
@@ -116,6 +118,7 @@ function! s:highlights() abort
         \ ['GodaRogueFloor', c.floor, ''],
         \ ['GodaRogueFloorSafe', c.safe, ''],
         \ ['GodaRogueStairs', c.stairs, 'bold'],
+        \ ['GodaRogueTrap', c.trap, 'bold'],
         \ ]
     call s:highlight(group, color, attr)
   endfor

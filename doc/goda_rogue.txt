@@ -41,6 +41,16 @@ scroll of identification tells it too, and also the upgrade value of a
 weapon or a shield (shown once it is equipped too) and the charges of a
 staff.
 
+						*goda-rogue-traps*
+Traps are hidden on the floors.  A swing at nothing (|goda-rogue-attack|)
+finds a trap in front of the player, or shows the tile as safe, as
+walking on it does; stepping on a hidden trap sets it off: a pit (down to
+the next floor), a landmine (half the HP), a snare (no moving for some
+turns), a poison arrow (damage, and the strength down), sleeping gas,
+warping, hunger, rust (the upgrade values of the weapon and the shield
+down).  A trap the player has found shows as 罠, a dash stops before it,
+and by the rule of the built-in dungeon it never goes off.
+
 The player gets hungry: the fullness (満腹, on the top line) goes down a
 point every few turns.  Food restores it.  Starving, the player restores
 no HP and loses a point every turn, until it eats or dies.
@@ -157,7 +167,9 @@ dash {direction}					*goda-rogue-dash*
 attack							*goda-rogue-attack*
 		Attack the tile the player faces.  It costs a turn, even
 		when nothing is there, but allies are not attacked.  There is
-		no attack around a corner of a wall.
+		no attack around a corner of a wall.  A swing at nothing
+		checks the tile: it finds a trap there, or shows the tile
+		as safe (|goda-rogue-traps|).
 
 shoot							*goda-rogue-shoot*
 		Shoot an arrow of those equipped to the front.  It flies up
@@ -238,6 +250,7 @@ GodaRogueFloor		The floor of rooms and corridors.
 GodaRogueFloorSafe	The floor known to have no trap: where the player
 			has walked.
 GodaRogueStairs		The stairs.
+GodaRogueTrap		A trap the player has found.
 GodaRogueFacing		The tile the player faces: its background, over the
 			highlight of what is there.
 GodaRogueOldMessage	The messages of the actions before the last one.
@@ -265,6 +278,7 @@ Every tile is one full-width character, two cells wide:
 		(|GodaRogueFloorSafe|) where the player has walked, which
 		is known to have no trap
 	段	the stairs
+	罠	a trap the player has found (|GodaRogueTrap|)
 	剣 盾 腕 草 巻 杖 壺 矢 金 食
 		items
 	鼠 蛇 狼 骸 霊 鬼 竜 盗
@@ -302,7 +316,9 @@ floors once the files change.
 	rules.txt		The rules: the player at the start, HP
 				regeneration, fullness, spawning, Kron's wind, combat
 				constants, the growth table of the player,
-				the first ally: key<TAB>value.  A later line
+				the first ally, whether a trap the player
+				has found goes off (見つけた罠: 安全 or 発動):
+				key<TAB>value.  A later line
 				overrides an earlier one.
 	monsters.txt		The monsters, a table.  A family is a glyph
 				(字), a kind of it a rank (ランク, 1 to 4).
@@ -342,8 +358,13 @@ floors once the files change.
 				names are unidentified at first, each with
 				one of the names, chosen by the seed; a kind
 				needs a name for each of its items.
-	floors.txt		How many monsters and items a floor starts
-				with (min-max), and how much of it the
+	traps.txt		The traps, a table: 効果 is what a trap does
+				(the comments of the built-in traps.txt tell
+				what each does), 強さ how much.
+	trap_table.txt		Which traps appear on which floors, a table.
+	floors.txt		How many monsters, items and traps (罠の数,
+				optional) a floor starts with (min-max), and
+				how much of it the
 				player sees (明るさ, optional): 通常 the room
 				it is in and around it, 明るい all of the
 				floor (as a scroll of light does), 暗い only

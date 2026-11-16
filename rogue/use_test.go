@@ -144,6 +144,8 @@ func slicesContains(items []*Item, it *Item) bool {
 
 func TestHunger(t *testing.T) {
 	g, _ := roomGame(t, 4, 3)
+	// No monster comes to bother the player.
+	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.SpawnTurns = 1 << 30 })
 	r := g.Dungeon.Rules
 	if g.Fullness != r.Fullness {
 		t.Fatalf("fullness %d at the start", g.Fullness)

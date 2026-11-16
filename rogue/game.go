@@ -57,6 +57,12 @@ type Game struct {
 	Lit bool
 	// Dark says whether the floor is dark: the player sees only around.
 	Dark bool
+	// Traps are the traps of the floor.
+	Traps []*Trap
+	// Stuck is how many more turns the player is caught in a snare;
+	// sprung says whether a trap went off on the last step.
+	Stuck  int
+	sprung bool
 	// identified are the item kinds (IDs) the player knows; fakeNames the
 	// names of the others, for this run.
 	identified map[string]bool
@@ -149,6 +155,8 @@ func (g *Game) descend() {
 	}
 	g.Monsters = nil
 	g.Items = nil
+	g.Traps = nil
+	g.Stuck = 0
 
 	var rooms []int
 	for i, r := range g.Level.Rooms {
@@ -192,6 +200,7 @@ func (g *Game) descend() {
 		}
 		g.Items = append(g.Items, it)
 	}
+	g.placeTraps(rng, rooms)
 
 	if g.Depth == 1 && d.Rules.FirstAlly != "" {
 		ally = newMonster(d.Monster(d.Rules.FirstAlly))
@@ -403,6 +412,10 @@ func (g *Game) Do(action string, args []string) error {
 		}
 		g.beginAction()
 		g.Facing = name
+		if g.Stuck > 0 && g.canStep(d) {
+			g.struggle()
+			return nil
+		}
 		if g.step(d, true) {
 			g.endTurn(true)
 		}
@@ -489,6 +502,9 @@ func (g *Game) attack() bool {
 	// No attack around a corner of rock.
 	if m == nil || !g.clearFrom(g.Player, d) {
 		g.say("空振りした。")
+		if m == nil && g.clearFrom(g.Player, d) {
+			g.check(g.Player.Add(d))
+		}
 		return true
 	}
 	m.Dozing = false
@@ -640,7 +656,15 @@ func (g *Game) step(d Point, pick bool) bool {
 		g.wake(room)
 	}
 	g.look()
-	g.markSafe(to)
+	if t := g.TrapAt(to); t != nil {
+		depth := g.Depth
+		if g.stepOn(t) && (g.Over != "" || g.Depth != depth || g.Player != to) {
+			// It fell, went down, or was sent away.
+			return true
+		}
+	} else {
+		g.markSafe(to)
+	}
 	if it, ok := g.ItemAt(to); ok {
 		// Walking onto an item picks it up; a dash only stops on it.
 		if !pick || !g.pickUp() {
@@ -663,13 +687,22 @@ func (g *Game) dash(d Point) {
 		if ahead != nil && ahead.Ally {
 			return
 		}
+		// A dash stops before a trap the player knows.
+		if g.foundTrapAt(g.Player.Add(d)) != nil {
+			return
+		}
+		if g.Stuck > 0 {
+			g.struggle()
+			return
+		}
 		seen := g.visibleEnemies()
 		hp := g.HP
+		g.sprung = false
 		if !g.step(d, false) {
 			return
 		}
 		g.endTurn(true)
-		if g.Over != "" || g.HP < hp {
+		if g.Over != "" || g.HP < hp || g.sprung {
 			return
 		}
 		if _, ok := g.ItemAt(g.Player); ok || g.Player == g.Stairs {
@@ -705,4 +738,16 @@ func (g *Game) Status() string {
 		s += fmt.Sprintf("  次の風まで %d", w[g.Wind]-g.FloorTurns)
 	}
 	return s
+}
+
+// struggle is a turn caught in a snare: the player tries to move, and
+// cannot.
+func (g *Game) struggle() {
+	g.Stuck--
+	if g.Stuck == 0 {
+		g.say("トラばさみから抜け出した。")
+	} else {
+		g.say("トラばさみにかかっていて動けない。")
+	}
+	g.endTurn(true)
 }
