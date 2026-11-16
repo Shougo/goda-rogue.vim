@@ -29,8 +29,9 @@ import (
 //	fake_names.txt     the names of unidentified items, by kind (a table)
 //	traps.txt          the traps (a table)
 //	trap_table.txt     which traps appear on which floors (a table)
-//	floors.txt         how many monsters, items and traps a floor has, and its
-//	                   brightness (a table)
+//	floors.txt         how many monsters, items and traps a floor has, its
+//	                   brightness, the chances of a big room, a maze and
+//	                   a monster house (a table)
 //	growth.txt         the growth tables (a table)
 //
 // In key<TAB>value files, a later line overrides an earlier one. A table
@@ -172,7 +173,10 @@ type FloorCounts struct {
 	MinMonster, MaxMonster int
 	MinItem, MaxItem       int
 	MinTrap, MaxTrap       int
-	Brightness             Brightness
+	// BigRoom and Maze are the chances (percent) of a floor of one big
+	// room, of a maze; House the chance of a monster house.
+	BigRoom, Maze, House int
+	Brightness           Brightness
 }
 
 // Brightness is how much of a floor the player sees.
@@ -593,6 +597,20 @@ func (l *loader) load() {
 		c.MinItem, c.MaxItem = l.span(row, "道具の数")
 		if _, ok := row.cols["罠の数"]; ok {
 			c.MinTrap, c.MaxTrap = l.span(row, "罠の数")
+		}
+		percent := func(col string) int {
+			if _, ok := row.cols[col]; !ok {
+				return 0
+			}
+			n := l.int(row, col, 0)
+			if n > 100 {
+				l.errorf(row.file, row.n, "%s: %d above 100", col, n)
+			}
+			return n
+		}
+		c.BigRoom, c.Maze, c.House = percent("大部屋"), percent("迷路"), percent("モンスターハウス")
+		if c.BigRoom+c.Maze > 100 {
+			l.errorf(row.file, row.n, "大部屋 and 迷路: %d%% together", c.BigRoom+c.Maze)
 		}
 		c.Brightness = BrightnessNormal
 		if b, ok := row.cols["明るさ"]; ok {

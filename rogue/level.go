@@ -2,6 +2,7 @@ package rogue
 
 import (
 	"math/rand/v2"
+	"slices"
 )
 
 // The size of a floor in tiles, and its 3x3 sections, each holding a room
@@ -59,6 +60,9 @@ type Level struct {
 	W, H  int
 	Tiles []Tile
 	Rooms []Room
+	// Maze says whether it is a maze: things lie anywhere in it, not only
+	// in its rooms.
+	Maze bool
 }
 
 // At returns the tile at p; outside the floor, rock.
@@ -229,4 +233,86 @@ func sign(n int) int {
 		return -1
 	}
 	return 0
+}
+
+// GenerateBigRoom makes a floor of one big room.
+func GenerateBigRoom() *Level {
+	l := &Level{W: MapWidth, H: MapHeight, Tiles: make([]Tile, MapWidth*MapHeight)}
+	r := Room{X: 3, Y: 3, W: MapWidth - 6, H: MapHeight - 6}
+	l.Rooms = append(l.Rooms, r)
+	for y := r.Y; y < r.Y+r.H; y++ {
+		for x := r.X; x < r.X+r.W; x++ {
+			l.set(Point{x, y}, TileRoom)
+		}
+	}
+	return l
+}
+
+// mazeRooms is how many small rooms a maze has, where things are put.
+const mazeRooms = 6
+
+// GenerateMaze makes a floor of a maze of corridors, with a few loops, and
+// mazeRooms small rooms (3x3) in it.
+func GenerateMaze(rng *rand.Rand) *Level {
+	l := &Level{W: MapWidth, H: MapHeight, Tiles: make([]Tile, MapWidth*MapHeight), Maze: true}
+	// The cells of the maze are on odd tiles, from 1 to the last odd tile
+	// that leaves rock at the edges.
+	cols, rows := (MapWidth-2)/2, (MapHeight-2)/2
+	cell := func(cx, cy int) Point { return Point{1 + 2*cx, 1 + 2*cy} }
+	visited := make([]bool, cols*rows)
+	var stack [][2]int
+	start := [2]int{rng.IntN(cols), rng.IntN(rows)}
+	visited[start[1]*cols+start[0]] = true
+	l.set(cell(start[0], start[1]), TileCorridor)
+	stack = append(stack, start)
+	steps := [][2]int{{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
+	for len(stack) > 0 {
+		c := stack[len(stack)-1]
+		var next [][2]int
+		for _, s := range steps {
+			n := [2]int{c[0] + s[0], c[1] + s[1]}
+			if n[0] >= 0 && n[0] < cols && n[1] >= 0 && n[1] < rows && !visited[n[1]*cols+n[0]] {
+				next = append(next, n)
+			}
+		}
+		if len(next) == 0 {
+			stack = stack[:len(stack)-1]
+			continue
+		}
+		n := next[rng.IntN(len(next))]
+		visited[n[1]*cols+n[0]] = true
+		a, b := cell(c[0], c[1]), cell(n[0], n[1])
+		l.set(Point{(a.X + b.X) / 2, (a.Y + b.Y) / 2}, TileCorridor)
+		l.set(b, TileCorridor)
+		stack = append(stack, n)
+	}
+	// A few loops: walls between two cells broken.
+	for range cols * rows / 10 {
+		c := cell(rng.IntN(cols-1), rng.IntN(rows-1))
+		if rng.IntN(2) == 0 {
+			l.set(c.Add(Point{1, 0}), TileCorridor)
+		} else {
+			l.set(c.Add(Point{0, 1}), TileCorridor)
+		}
+	}
+	// Small rooms, around cells apart from each other.
+	for range 1000 {
+		if len(l.Rooms) == mazeRooms {
+			break
+		}
+		c := cell(1+rng.IntN(cols-2), 1+rng.IntN(rows-2))
+		r := Room{X: c.X - 1, Y: c.Y - 1, W: 3, H: 3}
+		if slices.ContainsFunc(l.Rooms, func(o Room) bool {
+			return abs(o.X-r.X) < 6 && abs(o.Y-r.Y) < 6
+		}) {
+			continue
+		}
+		l.Rooms = append(l.Rooms, r)
+		for y := r.Y; y < r.Y+r.H; y++ {
+			for x := r.X; x < r.X+r.W; x++ {
+				l.set(Point{x, y}, TileRoom)
+			}
+		}
+	}
+	return l
 }

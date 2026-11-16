@@ -41,6 +41,13 @@ scroll of identification tells it too, and also the upgrade value of a
 weapon or a shield (shown once it is equipped too) and the charges of a
 staff.
 
+						*goda-rogue-floors*
+Some floors are special: one big room; a maze of corridors, with things
+anywhere in it; and a monster house, a room full of sleeping monsters
+and items, who all wake up when the player comes in.  In a big room, the
+house is the whole floor: its monsters wake up one by one, and when the
+player comes near.
+
 						*goda-rogue-traps*
 Traps are hidden on the floors.  A swing at nothing (|goda-rogue-attack|)
 finds a trap in front of the player, or shows the tile as safe, as
@@ -363,12 +370,15 @@ floors once the files change.
 				what each does), 強さ how much.
 	trap_table.txt		Which traps appear on which floors, a table.
 	floors.txt		How many monsters, items and traps (罠の数,
-				optional) a floor starts with (min-max), and
-				how much of it the
-				player sees (明るさ, optional): 通常 the room
-				it is in and around it, 明るい all of the
-				floor (as a scroll of light does), 暗い only
-				around it, a table.
+				optional) a floor starts with (min-max), how
+				much of it the player sees (明るさ,
+				optional): 通常 the room it is in and around
+				it, 明るい all of the floor (as a scroll of
+				light does), 暗い only around it; and the
+				chances (percent, optional) of a floor of
+				one big room (大部屋), of a maze (迷路), and
+				of a monster house (モンスターハウス), a
+				table.
 	growth.txt		The growth tables: the total EXP for each
 				level from 2, and the HP, attack and defense
 				a level adds, a table.

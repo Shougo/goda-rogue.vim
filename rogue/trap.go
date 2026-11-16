@@ -68,7 +68,7 @@ func (g *Game) placeTraps(rng *rand.Rand, rooms []int) {
 	d := g.Dungeon
 	c := d.counts(g.Depth)
 	for range between(rng, c.MinTrap, c.MaxTrap) {
-		p := g.randomTile(rng, rooms[rng.IntN(len(rooms))])
+		p := g.spot(rng, rooms)
 		def := d.Trap(pick(rng, d.TrapRows, g.Depth))
 		if !g.free(p) || g.TrapAt(p) != nil || def.Effect == TrapPit && g.Depth >= d.Floors {
 			continue

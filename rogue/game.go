@@ -59,6 +59,10 @@ type Game struct {
 	Dark bool
 	// Traps are the traps of the floor.
 	Traps []*Trap
+	// House is the room of the monster house of the floor (-1 for none);
+	// houseFound says whether the player has entered it.
+	House      int
+	houseFound bool
 	// Stuck is how many more turns the player is caught in a snare;
 	// sprung says whether a trap went off on the last step.
 	Stuck  int
@@ -144,7 +148,22 @@ func (g *Game) descend() {
 	g.Depth++
 	g.FloorTurns, g.Wind, g.Lit, g.Dark = 0, 0, false, false
 	rng := g.floorRNG(g.Depth)
-	g.Level = Generate(rng)
+	c := g.Dungeon.counts(g.Depth)
+	switch n := c.BigRoom + c.Maze; {
+	case n == 0:
+		// No roll: the floors stay as they were without these.
+		g.Level = Generate(rng)
+	default:
+		switch roll := rng.IntN(100); {
+		case roll < c.BigRoom:
+			g.Level = GenerateBigRoom()
+		case roll < n:
+			g.Level = GenerateMaze(rng)
+		default:
+			g.Level = Generate(rng)
+		}
+	}
+	g.House, g.houseFound = -1, false
 	g.Seen = make([]bool, len(g.Level.Tiles))
 	g.Safe = make([]bool, len(g.Level.Tiles))
 	switch d := g.Dungeon.counts(g.Depth).Brightness; {
@@ -175,9 +194,8 @@ func (g *Game) descend() {
 	g.Stairs = g.randomTile(rng, stairsRoom)
 
 	d := g.Dungeon
-	c := d.counts(g.Depth)
 	for range between(rng, c.MinMonster, c.MaxMonster) {
-		pos := g.randomTile(rng, rooms[rng.IntN(len(rooms))])
+		pos := g.spot(rng, rooms)
 		m := newMonster(d.Monster(pick(rng, d.MonsterRows, g.Depth)))
 		m.Pos = pos
 		// A third of them doze, but never in the player's room.
@@ -185,20 +203,11 @@ func (g *Game) descend() {
 		g.Monsters = append(g.Monsters, m)
 	}
 	for range between(rng, c.MinItem, c.MaxItem) {
-		pos := g.randomTile(rng, rooms[rng.IntN(len(rooms))])
-		def := d.Item(pick(rng, d.ItemRows, g.Depth))
-		it := &Item{Def: def, Pos: pos, Glyph: def.Glyph}
-		switch {
-		case def.Category == CategoryMoney:
-			it.Amount = between(rng, 10, 30+g.Depth*10)
-		case it.upgradable():
-			it.Upgrade = rollUpgrade(rng)
-		case def.Category == CategoryStaff:
-			it.Charges = between(rng, def.Charges[0], def.Charges[1])
-		case def.Category == CategoryArrow:
-			it.Count = between(rng, def.Charges[0], def.Charges[1])
-		}
-		g.Items = append(g.Items, it)
+		pos := g.spot(rng, rooms)
+		g.Items = append(g.Items, g.newItem(rng, pos))
+	}
+	if c.House > 0 && rng.IntN(100) < c.House {
+		g.fillHouse(rng, rooms, start)
 	}
 	g.placeTraps(rng, rooms)
 
@@ -215,6 +224,7 @@ func (g *Game) descend() {
 	g.look()
 	g.markSafe(g.Player)
 	g.say(fmt.Sprintf("%dF に着いた。", g.Depth))
+	g.enterHouse()
 }
 
 // randomTile returns a free tile of the room i.
@@ -654,6 +664,7 @@ func (g *Game) step(d Point, pick bool) bool {
 	if room := g.Level.RoomAt(to); room != from {
 		g.wake(from)
 		g.wake(room)
+		g.enterHouse()
 	}
 	g.look()
 	if t := g.TrapAt(to); t != nil {

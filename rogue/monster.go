@@ -50,6 +50,8 @@ type Monster struct {
 	// Spawned monsters came after the floor began: they give no rewards,
 	// so that lingering to fight them is not worth it.
 	Spawned bool
+	// House says whether it was put in a monster house.
+	House bool
 	// Hunters always know where the player is (the strong monster of the
 	// second wind).
 	Hunter bool
@@ -123,6 +125,7 @@ func (g *Game) monstersAct() {
 // is heading.
 func (g *Game) act(m *Monster) {
 	if m.Dozing {
+		g.stir(m)
 		return
 	}
 	if m.Ally {
