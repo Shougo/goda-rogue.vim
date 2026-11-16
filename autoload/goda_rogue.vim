@@ -272,8 +272,14 @@ function! s:ask(prompt) abort
     call call(g:goda_rogue#prompt_func,
           \ [a:prompt, {idx -> goda_rogue#_answer(winid, idx)}])
   elseif has('nvim')
-    call luaeval('vim.ui.select(_A[1], {prompt = _A[2]}, function(_, idx)'
-          \ . ' vim.fn["goda_rogue#_answer"](_A[3], idx or 0) end)',
+    " Ask once the current action is over: an answer comes inside
+    " win_execute(), where the default vim.ui.select() (inputlist()) does
+    " not wait for one.  Clear what an earlier selection left on the
+    " command line first.
+    call luaeval('vim.schedule(function()'
+          \ . ' vim.cmd("redraw")'
+          \ . ' vim.ui.select(_A[1], {prompt = _A[2]}, function(_, idx)'
+          \ . ' vim.fn["goda_rogue#_answer"](_A[3], idx or 0) end) end)',
           \ [a:prompt.choices, a:prompt.title, winid])
   else
     call s:close_prompt()
