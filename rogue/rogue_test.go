@@ -428,3 +428,46 @@ func TestMinimap(t *testing.T) {
 		t.Error("the mini-map is still shown")
 	}
 }
+
+func TestFaceEnemy(t *testing.T) {
+	g := find(t, func(g *Game) bool {
+		for _, d := range []Point{{0, -1}, {1, 0}, {0, 1}, {-1, 0}} {
+			if !g.Level.At(g.Player.Add(d)).Walkable() {
+				return false
+			}
+		}
+		return true
+	})
+	g.Monsters = nil
+	g.Facing = "up"
+	if err := g.Do("turn", nil); err != nil {
+		t.Fatal(err)
+	}
+	if g.Facing != "up" || g.Message != "周りに敵はいない。" {
+		t.Errorf("no enemy: facing %s, %q", g.Facing, g.Message)
+	}
+
+	for _, d := range []Point{{-1, 0}, {1, 0}} {
+		m := newMonster("鼠", "鼠", 1)
+		m.Pos = g.Player.Add(d)
+		g.Monsters = append(g.Monsters, m)
+	}
+	ally := newMonster("狼", "狼", 1)
+	ally.Ally = true
+	ally.Pos = g.Player.Add(Point{0, 1})
+	g.Monsters = append(g.Monsters, ally)
+
+	// Clockwise from up: right, then left (not the ally below), and
+	// right again. No turn passes.
+	for _, want := range []string{"right", "left", "right"} {
+		if err := g.Do("turn", nil); err != nil {
+			t.Fatal(err)
+		}
+		if g.Facing != want {
+			t.Errorf("facing %s, want %s", g.Facing, want)
+		}
+	}
+	if g.Turn != 0 {
+		t.Errorf("turn %d", g.Turn)
+	}
+}

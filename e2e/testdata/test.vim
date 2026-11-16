@@ -96,6 +96,8 @@ function! s:actions() abort
   call goda_rogue#start(#{seed: 42})
   call s:check('number seed', s:status() =~# 'シード 42$', 1)
 
+  call goda_rogue#do('turn')
+  call s:check('turn to an enemy', s:status() =~# '^1F  ターン 0 ', 1)
   call goda_rogue#do('turn', 'upleft')
   call s:check('turn', s:status() =~# '^1F  ターン 0  向き ↖ ', 1)
 

@@ -316,6 +316,10 @@ func (g *Game) Do(action string, args []string) error {
 		g.step(d)
 	case "turn":
 		// Facing costs no turn.
+		if len(args) == 0 {
+			g.faceEnemy()
+			return nil
+		}
 		name, _, err := dir()
 		if err != nil {
 			return err
@@ -346,6 +350,26 @@ func (g *Game) Do(action string, args []string) error {
 		return fmt.Errorf("unknown action %q", action)
 	}
 	return nil
+}
+
+// clockwise are the directions clockwise from up.
+var clockwise = []string{"up", "upright", "right", "downright", "down", "downleft", "left", "upleft"}
+
+// faceEnemy faces the next enemy next to the player that it can attack,
+// clockwise from the direction it faces: again and again, it faces each of
+// them in turn.
+func (g *Game) faceEnemy() {
+	i := slices.Index(clockwise, g.Facing)
+	for n := 1; n <= len(clockwise); n++ {
+		name := clockwise[(i+n)%len(clockwise)]
+		d := Directions[name]
+		if m := g.MonsterAt(g.Player.Add(d)); m != nil && !m.Ally && g.clear(d) {
+			g.Facing = name
+			g.Message = ""
+			return
+		}
+	}
+	g.Message = "周りに敵はいない。"
 }
 
 // attack attacks the tile the player faces. It costs a turn, even when it

@@ -55,6 +55,7 @@ There are no default mappings: map the actions in the game buffer. >vim
 	          \ $'<Cmd>call goda_rogue#do("dash", "{dir}")<CR>'
 	  endfor
 	  nnoremap <buffer> <Space> <Cmd>call goda_rogue#do('attack')<CR>
+	  nnoremap <buffer> t <Cmd>call goda_rogue#do('turn')<CR>
 	  nnoremap <buffer> . <Cmd>call goda_rogue#do('wait')<CR>
 	  nnoremap <buffer> > <Cmd>call goda_rogue#do('stairs')<CR>
 	  nnoremap <buffer> m <Cmd>call goda_rogue#do('map')<CR>
@@ -107,8 +108,10 @@ attack							*goda-rogue-attack*
 		when nothing is there, but allies are not attacked.  There is
 		no attack around a corner of a wall.
 
-turn {direction}					*goda-rogue-turn*
-		Face {direction}.  It costs no turn.
+turn [{direction}]					*goda-rogue-turn*
+		Face {direction}.  Without it, face an enemy next to the
+		player that it can attack: again and again, each of them in
+		turn, clockwise.  It costs no turn.
 
 wait							*goda-rogue-wait*
 		Let a turn pass.
