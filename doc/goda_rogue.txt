@@ -56,6 +56,18 @@ and items, who all wake up when the player comes in.  In a big room, the
 house is the whole floor: its monsters wake up one by one, and when the
 player comes near.
 
+						*goda-rogue-shops*
+Some floors have a shop: a room of items for sale, with their prices,
+and shopkeepers (商, in the color of their rank, reversed) by its doors.
+Picking an item up puts it on the bill: a shopkeeper then stands in its
+door, and walking into one asks to pay.  An item put down in the shop
+can be sold for half its price.  Leaving the shop without paying (by
+another door, a warp, a pit) is stealing: the shopkeepers get angry, and
+guards come after the thief.  The stronger the shopkeepers (their rank,
+their number), the harder it is; deep shops sell rarer items.  Attacking
+a shopkeeper makes them angry too; with no shopkeeper left, the items are
+anyone's.
+
 						*goda-rogue-traps*
 Traps are hidden on the floors.  A swing at nothing (|goda-rogue-attack|)
 finds a trap in front of the player, or shows the tile as safe, as
@@ -288,6 +300,9 @@ GodaRogueRank4
 GodaRogueAlly1		Allies: the color of their rank, underlined.
 ...
 GodaRogueAlly4
+GodaRogueKeeper1	Shopkeepers: the color of their rank, reversed.
+...
+GodaRogueKeeper4
 
 Items are not highlighted.
 
@@ -349,6 +364,10 @@ floors once the files change.
 				overrides an earlier one.
 	monsters.txt		The monsters, a table.  A family is a glyph
 				(字), a kind of it a rank (ランク, 1 to 4).
+				種別 is - for monsters of the floors, 店主
+				for shopkeepers, 番犬 for the guards after
+				a thief: these never appear by themselves,
+				nor rank up.
 	monster_table.txt	Which monsters appear on which floors (開始
 				to 終了), by weight (頻度), a table.
 	items.txt		The items, a table.  種類 is the kind of an
@@ -382,7 +401,8 @@ floors once the files change.
 				as easily), and one crack
 				more than ひびの段階 (rules.txt) breaks it.
 				The cracks are shown in the inventory
-				([ひび1]).
+				([ひび1]).  値段 is the price in shops (of
+				one arrow); a shop buys for half of it.
 	item_table.txt		Which items appear on which floors, a table.
 	seals.txt		The seals of weapons and shields, a table:
 				印 is the kanji of a seal, 効果 what it does
@@ -397,6 +417,14 @@ floors once the files change.
 				(the comments of the built-in traps.txt tell
 				what each does), 強さ how much.
 	trap_table.txt		Which traps appear on which floors, a table.
+	shops.txt		The shops, a table: 品 the kinds of items
+				it sells (- for any), 店主 the shopkeeper
+				and 店主の数 how many, 番犬 the guard after
+				a thief and 番犬の数 how many.
+	shop_table.txt		Which shops appear on which floors, a table.
+	shop_item_table.txt	Which items the shops sell on which floors,
+				a table: 店 is a shop, or - for any shop
+				that sells the kind of the item.
 	floors.txt		How many monsters, items and traps (罠の数,
 				optional) a floor starts with (min-max), how
 				much of it the player sees (明るさ,
@@ -404,9 +432,9 @@ floors once the files change.
 				it, 明るい all of the floor (as a scroll of
 				light does), 暗い only around it; and the
 				chances (percent, optional) of a floor of
-				one big room (大部屋), of a maze (迷路), and
-				of a monster house (モンスターハウス), a
-				table.
+				one big room (大部屋), of a maze (迷路), of
+				a monster house (モンスターハウス), and of a
+				shop (店), a table.
 	growth.txt		The growth tables: the total EXP for each
 				level from 2, and the HP, attack and defense
 				a level adds, a table.

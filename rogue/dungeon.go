@@ -30,6 +30,10 @@ import (
 //	item_table.txt     which items appear on which floors (a table)
 //	seals.txt          the seals of weapons and shields (a table)
 //	fake_names.txt     the names of unidentified items, by kind (a table)
+//	shops.txt          the shops (a table)
+//	shop_table.txt     which shops appear on which floors (a table)
+//	shop_item_table.txt  which items the shops sell on which floors (a
+//	                   table)
 //	traps.txt          the traps (a table)
 //	trap_table.txt     which traps appear on which floors (a table)
 //	floors.txt         how many monsters, items and traps a floor has, its
@@ -58,6 +62,10 @@ type Dungeon struct {
 	Traps       []*TrapDef
 	TrapRows    []FloorRow
 	Seals       []*SealDef
+	Shops       []*ShopDef
+	ShopRows    []FloorRow
+	// ShopItemRows are what the shops sell on which floors.
+	ShopItemRows []ShopItemRow
 	// FakeNames are the names of unidentified items, by category; items
 	// of a category without them are identified from the start.
 	FakeNames map[Category][]string
@@ -115,7 +123,15 @@ type MonsterDef struct {
 	EXP     int
 	Speed   Speed
 	Growth  string
+	// Kind is "" for monsters of the floors, KindKeeper or KindGuard.
+	Kind string
 }
+
+// The kinds of monsters that are not of the floors (monsters.txt 種別).
+const (
+	KindKeeper = "店主"
+	KindGuard  = "番犬"
+)
 
 // ItemDef is a kind of item.
 type ItemDef struct {
@@ -131,6 +147,8 @@ type ItemDef struct {
 	Effect Effect
 	// Crack is how easily a bracelet cracks, a percent (0 for never).
 	Crack int
+	// Price is the price in shops (of one arrow).
+	Price int
 	// Seal is the seal a weapon or a shield is born with ("" for none),
 	// Slots how many seals it can have.
 	Seal  string
@@ -187,7 +205,9 @@ type FloorCounts struct {
 	// BigRoom and Maze are the chances (percent) of a floor of one big
 	// room, of a maze; House the chance of a monster house.
 	BigRoom, Maze, House int
-	Brightness           Brightness
+	// Shop is the chance (percent) of a shop.
+	Shop       int
+	Brightness Brightness
 }
 
 // Brightness is how much of a floor the player sees.
@@ -502,6 +522,13 @@ func (l *loader) load() {
 			l.errorf(row.file, row.n, "速度: want 鈍足, 通常 or 倍速, not %q", row.cols["速度"])
 		}
 		m.Speed = s
+		switch k := row.cols["種別"]; k {
+		case "", "-":
+		case KindKeeper, KindGuard:
+			m.Kind = k
+		default:
+			l.errorf(row.file, row.n, "種別: want -, 店主 or 番犬, not %q", k)
+		}
 		if m.Growth == "" {
 			m.Growth = r.Growth
 		} else if _, ok := d.Growth[m.Growth]; !ok {
@@ -563,6 +590,9 @@ func (l *loader) load() {
 		if _, ok := row.cols["印数"]; ok {
 			it.Slots = l.int(row, "印数", 0)
 		}
+		if _, ok := row.cols["値段"]; ok {
+			it.Price = l.int(row, "値段", 0)
+		}
 		if (it.Seal != "" || it.Slots > 0) && c != CategoryWeapon && c != CategoryShield {
 			l.errorf(row.file, row.n, "印: only weapons and shields have seals, not %s", c)
 		}
@@ -615,7 +645,8 @@ func (l *loader) load() {
 		}
 	}
 
-	d.MonsterRows = l.appearance("monster_table.txt", func(id string) bool { return d.Monster(id) != nil })
+	// Shopkeepers and guards are not monsters of the floors.
+	d.MonsterRows = l.appearance("monster_table.txt", func(id string) bool { m := d.Monster(id); return m != nil && m.Kind == "" })
 	d.ItemRows = l.appearance("item_table.txt", func(id string) bool { return d.Item(id) != nil })
 
 	for _, row := range l.table("traps.txt", "ID", "名前", "効果", "強さ") {
@@ -630,6 +661,51 @@ func (l *loader) load() {
 		d.Traps = append(d.Traps, t)
 	}
 	d.TrapRows = l.appearance("trap_table.txt", func(id string) bool { return d.Trap(id) != nil })
+
+	for _, row := range l.table("shops.txt", "ID", "名前", "品", "店主", "店主の数", "番犬", "番犬の数") {
+		sh := &ShopDef{ID: row.cols["ID"], Name: row.cols["名前"]}
+		if goods := row.cols["品"]; goods != "-" && goods != "" {
+			for _, c := range strings.Split(goods, ",") {
+				c := Category(strings.TrimSpace(c))
+				if !slices.Contains(categories, c) || c == CategoryMoney {
+					l.errorf(row.file, row.n, "品: no kind %q to sell", c)
+				}
+				sh.Goods = append(sh.Goods, c)
+			}
+		}
+		if sh.Keeper = d.Monster(row.cols["店主"]); sh.Keeper == nil || sh.Keeper.Kind != KindKeeper {
+			l.errorf(row.file, row.n, "店主: no shopkeeper %q (種別 店主 in monsters.txt)", row.cols["店主"])
+		}
+		sh.Keepers[0], sh.Keepers[1] = l.span(row, "店主の数")
+		if sh.Keepers[0] < 1 {
+			l.errorf(row.file, row.n, "店主の数: at least 1")
+		}
+		if id := row.cols["番犬"]; id != "-" && id != "" {
+			if sh.Guard = d.Monster(id); sh.Guard == nil || sh.Guard.Kind != KindGuard {
+				l.errorf(row.file, row.n, "番犬: no guard %q (種別 番犬 in monsters.txt)", id)
+			}
+		}
+		sh.Guards[0], sh.Guards[1] = l.span(row, "番犬の数")
+		if d.Shop(sh.ID) != nil {
+			l.errorf(row.file, row.n, "the ID %q again", sh.ID)
+		}
+		d.Shops = append(d.Shops, sh)
+	}
+	d.ShopRows = l.appearance("shop_table.txt", func(id string) bool { return d.Shop(id) != nil })
+	for _, row := range l.table("shop_item_table.txt", "開始", "終了", "店", "ID", "頻度") {
+		r := ShopItemRow{Shop: row.cols["店"]}
+		r.First, r.Last = l.floors(row)
+		r.ID, r.Weight = row.cols["ID"], l.int(row, "頻度", 1)
+		if it := d.Item(r.ID); it == nil || it.Category == CategoryMoney {
+			l.errorf(row.file, row.n, "ID: no item %q to sell", r.ID)
+		}
+		if r.Shop == "-" {
+			r.Shop = ""
+		} else if d.Shop(r.Shop) == nil {
+			l.errorf(row.file, row.n, "店: no shop %q", r.Shop)
+		}
+		d.ShopItemRows = append(d.ShopItemRows, r)
+	}
 
 	for _, row := range l.table("floors.txt", "開始", "終了", "敵の数", "道具の数") {
 		c := FloorCounts{}
@@ -650,6 +726,7 @@ func (l *loader) load() {
 			return n
 		}
 		c.BigRoom, c.Maze, c.House = percent("大部屋"), percent("迷路"), percent("モンスターハウス")
+		c.Shop = percent("店")
 		if c.BigRoom+c.Maze > 100 {
 			l.errorf(row.file, row.n, "大部屋 and 迷路: %d%% together", c.BigRoom+c.Maze)
 		}
@@ -672,6 +749,9 @@ func (l *loader) load() {
 		}
 		if !slices.ContainsFunc(d.ItemRows, func(r FloorRow) bool { return r.First <= f && f <= r.Last }) {
 			l.errorf("item_table.txt", 0, "no item on %dF", f)
+		}
+		if d.counts(f).Shop > 0 && !slices.ContainsFunc(d.ShopRows, func(r FloorRow) bool { return r.First <= f && f <= r.Last }) {
+			l.errorf("shop_table.txt", 0, "no shop on %dF", f)
 		}
 		if d.counts(f).MaxTrap > 0 && !slices.ContainsFunc(d.TrapRows, func(r FloorRow) bool { return r.First <= f && f <= r.Last }) {
 			l.errorf("trap_table.txt", 0, "no trap on %dF", f)
@@ -768,7 +848,7 @@ func (d *Dungeon) ofRank(rank int) []*MonsterDef {
 	for ; rank > 0; rank-- {
 		var ms []*MonsterDef
 		for _, m := range d.Monsters {
-			if m.Rank == rank {
+			if m.Rank == rank && m.Kind == "" {
 				ms = append(ms, m)
 			}
 		}
@@ -797,4 +877,21 @@ func (d *Dungeon) Seal(glyph string) *SealDef {
 		}
 	}
 	return nil
+}
+
+// Shop returns the shop id, or nil.
+func (d *Dungeon) Shop(id string) *ShopDef {
+	for _, s := range d.Shops {
+		if s.ID == id {
+			return s
+		}
+	}
+	return nil
+}
+
+// ShopItemRow is an item a shop sells on the floors [First, Last]: Shop is
+// the shop, or "" for any that sells its kind.
+type ShopItemRow struct {
+	FloorRow
+	Shop string
 }

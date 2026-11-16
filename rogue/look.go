@@ -88,6 +88,10 @@ func (g *Game) lookAt(n int) {
 	switch {
 	case m.Ally:
 		msg += fmt.Sprintf("  仲間 Lv%d  HP %d/%d", m.Level, m.HP, m.MaxHP)
+	case m.Keeper && !m.Angry:
+		msg += "  店主"
+	case m.Angry:
+		msg += "  怒っている"
 	case m.Dozing:
 		msg += "  眠っている"
 	}

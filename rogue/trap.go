@@ -70,7 +70,7 @@ func (g *Game) placeTraps(rng *rand.Rand, rooms []int) {
 	for range between(rng, c.MinTrap, c.MaxTrap) {
 		p := g.spot(rng, rooms)
 		def := d.Trap(pick(rng, d.TrapRows, g.Depth))
-		if !g.free(p) || g.TrapAt(p) != nil || def.Effect == TrapPit && g.Depth >= d.Floors {
+		if !g.free(p) || g.TrapAt(p) != nil || g.inShop(p) || def.Effect == TrapPit && g.Depth >= d.Floors {
 			continue
 		}
 		g.Traps = append(g.Traps, &Trap{Def: def, Pos: p})
@@ -137,8 +137,12 @@ func (g *Game) stepOn(t *Trap) bool {
 		}
 		g.say("目が覚めた。")
 	case TrapWarp:
+		wasInShop := g.inShop(g.Player)
 		g.warp()
 		g.say("どこかへ飛ばされた。")
+		if wasInShop && !g.inShop(g.Player) && g.debt() > 0 {
+			g.steal()
+		}
 	case TrapHunger:
 		g.Fullness = max(g.Fullness-n, 0)
 		g.say("お腹が減った。")

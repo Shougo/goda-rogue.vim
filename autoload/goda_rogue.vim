@@ -134,6 +134,7 @@ function! s:highlights() abort
   for i in range(len(c.ranks))
     call s:highlight('GodaRogueRank' . (i + 1), c.ranks[i], '')
     call s:highlight('GodaRogueAlly' . (i + 1), c.ranks[i], 'underline')
+    call s:highlight('GodaRogueKeeper' . (i + 1), c.ranks[i], 'reverse')
   endfor
 endfunction
 

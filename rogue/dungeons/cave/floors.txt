@@ -2,7 +2,7 @@
 # much of it the player sees (明るさ): 通常 its room, 明るい all of it,
 # 暗い only around; and the chances (percent) of a floor of one big room
 # (大部屋), of a maze (迷路), and of a monster house (モンスターハウス: in
-# a room, or in the big room).
-開始	終了	敵の数	道具の数	罠の数	明るさ	大部屋	迷路	モンスターハウス
-1	2	5-8	6-10	2-5	通常	0	0	0
-3	30	5-8	6-10	2-5	通常	5	5	8
+# a room, or in the big room), and of a shop (店).
+開始	終了	敵の数	道具の数	罠の数	明るさ	大部屋	迷路	モンスターハウス	店
+1	2	5-8	6-10	2-5	通常	0	0	0	10
+3	30	5-8	6-10	2-5	通常	5	5	8	12

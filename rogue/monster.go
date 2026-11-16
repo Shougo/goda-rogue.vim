@@ -52,6 +52,11 @@ type Monster struct {
 	Spawned bool
 	// House says whether it was put in a monster house.
 	House bool
+	// Keeper says whether it is a shopkeeper, Angry whether it fights the
+	// player (a thief); home is its place in the shop, door the door it
+	// guards.
+	Keeper, Angry bool
+	home, door    Point
 	// Hunters always know where the player is (the strong monster of the
 	// second wind).
 	Hunter bool
@@ -124,6 +129,10 @@ func (g *Game) monstersAct() {
 // act is one action of m: attack a foe next to it, or step toward where it
 // is heading.
 func (g *Game) act(m *Monster) {
+	if m.Keeper && !m.Angry {
+		g.actKeeper(m)
+		return
+	}
 	if m.Dozing {
 		g.stir(m)
 		return
@@ -163,7 +172,7 @@ func (g *Game) act(m *Monster) {
 // the player.
 func (g *Game) actAlly(m *Monster) {
 	for _, d := range around {
-		if f := g.MonsterAt(m.Pos.Add(d)); f != nil && !f.Ally && g.clearFrom(m.Pos, d) {
+		if f := g.MonsterAt(m.Pos.Add(d)); f != nil && f.hostile() && g.clearFrom(m.Pos, d) {
 			g.hitMonster(m, f)
 			return
 		}
@@ -352,4 +361,10 @@ func (g *Game) wake(i int) {
 
 func (g *Game) remove(m *Monster) {
 	g.Monsters = slices.DeleteFunc(g.Monsters, func(x *Monster) bool { return x == m })
+	if m.Keeper && g.Shop != nil {
+		g.Shop.Keepers = slices.DeleteFunc(g.Shop.Keepers, func(x *Monster) bool { return x == m })
+		if len(g.Shop.Keepers) == 0 {
+			g.closeShop()
+		}
+	}
 }

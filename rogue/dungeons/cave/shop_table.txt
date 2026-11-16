@@ -1,0 +1,6 @@
+# Which shops appear on which floors, by weight (頻度).
+開始	終了	ID	頻度
+1	30	yorozu	6
+2	30	kusa	2
+4	30	bugu	2
+10	30	ude	1

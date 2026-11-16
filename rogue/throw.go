@@ -99,6 +99,7 @@ func (g *Game) hitBy(it *Item, m *Monster) bool {
 
 // hurt gives m n damage from the player.
 func (g *Game) hurt(m *Monster, n int) {
+	g.provoke(m)
 	m.HP -= n
 	g.say(fmt.Sprintf("%sに%dのダメージ。", m.Name, n))
 	if m.HP <= 0 {

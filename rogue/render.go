@@ -26,6 +26,9 @@ const (
 	hlStairs = "GodaRogueStairs"
 	hlRank   = "GodaRogueRank"
 	hlAlly   = "GodaRogueAlly"
+	// hlKeeper is a shopkeeper (not angry): the color of its rank,
+	// reversed.
+	hlKeeper = "GodaRogueKeeper"
 	// hlFacing is the tile the player faces (and attacks), over its own
 	// highlight.
 	hlFacing = "GodaRogueFacing"
@@ -291,6 +294,9 @@ func (g *Game) miniGlyph(p Point) (byte, string) {
 		if m.Ally {
 			return miniMonster, hlAlly + string(rune('0'+m.Rank))
 		}
+		if m.Keeper && !m.Angry {
+			return miniMonster, hlKeeper + string(rune('0'+m.Rank))
+		}
 		return miniMonster, hlRank + string(rune('0'+m.Rank))
 	}
 	if _, ok := g.ItemAt(p); ok {
@@ -332,6 +338,9 @@ func (g *Game) glyph(p Point) (string, string) {
 	if m := g.MonsterAt(p); m != nil && (m.Ally || g.Visible(p) || g.wears(EffectSenseEnemy)) {
 		if m.Ally {
 			return m.Glyph, hlAlly + string(rune('0'+m.Rank))
+		}
+		if m.Keeper && !m.Angry {
+			return m.Glyph, hlKeeper + string(rune('0'+m.Rank))
 		}
 		return m.Glyph, hlRank + string(rune('0'+m.Rank))
 	}

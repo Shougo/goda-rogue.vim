@@ -4,7 +4,11 @@ import "math/rand/v2"
 
 // newItem makes an item of the floor on p, from its item table.
 func (g *Game) newItem(rng *rand.Rand, pos Point) *Item {
-	def := g.Dungeon.Item(pick(rng, g.Dungeon.ItemRows, g.Depth))
+	return g.newItemOf(rng, g.Dungeon.Item(pick(rng, g.Dungeon.ItemRows, g.Depth)), pos)
+}
+
+// newItemOf makes an item of the kind def on p.
+func (g *Game) newItemOf(rng *rand.Rand, def *ItemDef, pos Point) *Item {
 	it := &Item{Def: def, Pos: pos, Glyph: def.Glyph}
 	switch {
 	case def.Category == CategoryMoney:

@@ -84,6 +84,10 @@ type Game struct {
 	Started, Ended time.Time
 	// Steps are the steps the player has taken.
 	Steps int
+	// Shop is the shop of the floor (nil for none); selling the item the
+	// shopkeeper offers to buy.
+	Shop    *Shop
+	selling *Item
 	// FloorTurns are the turns on this floor, and Wind how many times
 	// Kron's wind has blown on it.
 	FloorTurns int
@@ -142,6 +146,10 @@ func seedHash(d *Dungeon, seed string) uint64 {
 
 // descend makes the next floor. An ally next to the player comes along.
 func (g *Game) descend() {
+	if g.Shop != nil && g.debt() > 0 {
+		// Leaving the floor with what it owes (a pit).
+		g.steal()
+	}
 	var ally *Monster
 	for _, m := range g.Monsters {
 		if m.Ally && chebyshev(m.Pos, g.Player) <= 1 {
@@ -168,6 +176,7 @@ func (g *Game) descend() {
 		}
 	}
 	g.House, g.houseFound = -1, false
+	g.Shop, g.selling = nil, nil
 	g.Seen = make([]bool, len(g.Level.Tiles))
 	g.Safe = make([]bool, len(g.Level.Tiles))
 	switch d := g.Dungeon.counts(g.Depth).Brightness; {
@@ -212,6 +221,9 @@ func (g *Game) descend() {
 	}
 	if c.House > 0 && rng.IntN(100) < c.House {
 		g.fillHouse(rng, rooms, start)
+	}
+	if c.Shop > 0 && rng.IntN(100) < c.Shop {
+		g.openShop(rng, rooms, start)
 	}
 	g.placeTraps(rng, rooms)
 
@@ -500,7 +512,7 @@ func (g *Game) faceEnemy() {
 	for n := 1; n <= len(clockwise); n++ {
 		name := clockwise[(i+n)%len(clockwise)]
 		d := Directions[name]
-		if m := g.MonsterAt(g.Player.Add(d)); m != nil && !m.Ally && g.clearFrom(g.Player, d) {
+		if m := g.MonsterAt(g.Player.Add(d)); m != nil && m.hostile() && g.clearFrom(g.Player, d) {
 			g.Facing = name
 			return
 		}
@@ -526,6 +538,7 @@ func (g *Game) attack() bool {
 		return true
 	}
 	m.Dozing = false
+	g.provoke(m)
 	r := g.Dungeon.Rules
 	if !g.sealed(SealSure) && !hits(g.rng, r.PlayerHitRate) {
 		g.say(m.Name + "にかわされた。")
@@ -596,7 +609,7 @@ func (g *Game) linger() {
 	case 2:
 		g.say("強い風が吹いてきた！　何かが近づいてくる。")
 		for _, m := range g.Monsters {
-			if !m.Ally {
+			if !m.Ally && m.Def.Kind == "" {
 				g.rankUp(m)
 			}
 		}
@@ -667,6 +680,10 @@ func (g *Game) step(d Point, pick bool) bool {
 	}
 	to := g.Player.Add(d)
 	if m := g.MonsterAt(to); m != nil {
+		if m.Keeper && !m.Angry {
+			g.talkTo(m)
+			return false
+		}
 		if !m.Ally {
 			g.say(m.Name + "がいる。")
 			return false
@@ -676,12 +693,14 @@ func (g *Game) step(d Point, pick bool) bool {
 	}
 	// Entering or leaving a room wakes the monsters dozing in it.
 	from := g.Level.RoomAt(g.Player)
+	wasInShop := g.inShop(g.Player)
 	g.Player = to
 	g.Steps++
 	if room := g.Level.RoomAt(to); room != from {
 		g.wake(from)
 		g.wake(room)
 		g.enterHouse()
+		g.enterShop(wasInShop)
 	}
 	g.look()
 	if t := g.TrapAt(to); t != nil {
@@ -751,7 +770,7 @@ func (g *Game) dash(d Point) {
 func (g *Game) visibleEnemies() []*Monster {
 	var ms []*Monster
 	for _, m := range g.Monsters {
-		if !m.Ally && g.Visible(m.Pos) {
+		if m.hostile() && g.Visible(m.Pos) {
 			ms = append(ms, m)
 		}
 	}

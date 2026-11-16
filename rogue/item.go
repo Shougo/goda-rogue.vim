@@ -46,6 +46,9 @@ type Item struct {
 	Charges int
 	// Count is how many arrows it is.
 	Count int
+	// ForSale says whether it belongs to the shop: lying there, or
+	// carried and not paid for.
+	ForSale bool
 	// Seals are the seals of a weapon or a shield (their glyphs).
 	Seals []string
 	// Contents are the items in a pot; Charges is how many it holds.
@@ -111,6 +114,9 @@ func (g *Game) describe(it *Item) string {
 	}
 	if it.Equipped {
 		s += " [装備]"
+	}
+	if it.ForSale {
+		s += fmt.Sprintf(" %dG", price(it))
 	}
 	return s
 }
@@ -224,7 +230,7 @@ func (g *Game) pickUp() bool {
 	}
 	// Arrows join those of their kind.
 	if it.Def.Category == CategoryArrow {
-		if j := slices.IndexFunc(g.Inventory, func(x *Item) bool { return x.Def == it.Def }); j >= 0 {
+		if j := slices.IndexFunc(g.Inventory, func(x *Item) bool { return x.Def == it.Def && x.ForSale == it.ForSale }); j >= 0 {
 			g.Items = slices.Delete(g.Items, i, i+1)
 			g.Inventory[j].Count += it.Count
 			g.say(fmt.Sprintf("%sを%d本拾った。", g.Name(it), it.Count))
@@ -239,6 +245,9 @@ func (g *Game) pickUp() bool {
 	g.Inventory = append(g.Inventory, it)
 	g.sortInventory()
 	g.say(g.Name(it) + "を拾った。")
+	if it.ForSale {
+		g.say(fmt.Sprintf("店主「%dG です。」", price(it)))
+	}
 	return true
 }
 
@@ -289,7 +298,24 @@ func (g *Game) choose(arg string) (bool, error) {
 		g.learn(it)
 		g.say(g.describe(it) + "を識別した。")
 		return false, nil
+	case promptPay:
+		if n == 0 {
+			g.pay()
+		}
+		return false, nil
+	case promptSell:
+		if n == 0 {
+			g.sell()
+		}
+		g.selling = nil
+		return false, nil
 	case promptItem:
+		it := g.Inventory[p.item]
+		switch c := p.Choices[n]; {
+		case it.ForSale && c != commandDrop && c != commandEquip && c != commandUnequip:
+			g.say("店主「お代を払ってからにしてください。」")
+			return false, nil
+		}
 		switch p.Choices[n] {
 		case commandEquip:
 			g.equip(g.Inventory[p.item])
@@ -333,6 +359,9 @@ func (g *Game) drop(i int) bool {
 	it.Pos = g.Player
 	g.Items = append(g.Items, it)
 	g.say(g.Name(it) + "を置いた。")
+	if g.inShop(g.Player) {
+		g.offer(it)
+	}
 	return true
 }
 
@@ -410,7 +439,7 @@ func (g *Game) use(e Effect) {
 // show what the player would not see.
 func (g *Game) sense() {
 	for _, m := range g.Monsters {
-		if !m.Ally && !g.Visible(m.Pos) {
+		if m.hostile() && !g.Visible(m.Pos) {
 			g.use(EffectSenseEnemy)
 			break
 		}

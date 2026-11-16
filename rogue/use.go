@@ -99,6 +99,7 @@ func (g *Game) blowAway() {
 		return
 	}
 	m.Dozing = false
+	g.provoke(m)
 	d := Directions[g.Facing]
 	g.say(m.Name + "を吹き飛ばした。")
 	for range blowAwayTiles {
