@@ -1,0 +1,160 @@
+*goda_rogue.txt*	A mystery-dungeon roguelike on goda.vim
+
+Author: Shougo <Shougo.Matsu at gmail.com>
+License: MIT license
+
+CONTENTS                                                  *goda-rogue-contents*
+
+Introduction		|goda-rogue-introduction|
+Install			|goda-rogue-install|
+Examples		|goda-rogue-examples|
+Functions		|goda-rogue-functions|
+Actions			|goda-rogue-actions|
+Variables		|goda-rogue-variables|
+Highlights		|goda-rogue-highlights|
+Screen			|goda-rogue-screen|
+
+==============================================================================
+INTRODUCTION                                          *goda-rogue-introduction*
+
+goda-rogue.vim is a mystery-dungeon roguelike in Vim and Neovim.  It looks
+like rogue: the map is drawn with full-width characters, enemies are kanji,
+and their rank is their color.  The game is Go, in a binary built from this
+plugin, and Vim talks to it through goda.vim.
+
+It is a prototype: it shows the dungeon, and the player moves around.  There
+is no combat yet, and the enemies do not move.
+
+==============================================================================
+INSTALL                                                    *goda-rogue-install*
+
+It needs Vim 9.1 or Neovim 0.11, Go 1.26 and goda.vim:
+
+https://github.com/Shougo/goda.vim
+
+The binary is built on the first start, into a cache directory: "goda-rogue"
+under |stdpath()| "cache" in Neovim, $XDG_CACHE_HOME/vim or ~/.cache/vim in
+Vim.  Build it again with |goda_rogue#build()|.
+
+==============================================================================
+EXAMPLES                                                  *goda-rogue-examples*
+
+There are no default mappings: map the actions in the game buffer. >vim
+
+	autocmd FileType goda-rogue call s:goda_rogue_settings()
+	function s:goda_rogue_settings() abort
+	  const dirs = #{h: 'left', j: 'down', k: 'up', l: 'right',
+	        \ y: 'upleft', u: 'upright', b: 'downleft', n: 'downright'}
+	  for [key, dir] in items(dirs)
+	    execute $'nnoremap <buffer> {key}'
+	          \ $'<Cmd>call goda_rogue#do("move", "{dir}")<CR>'
+	    execute $'nnoremap <buffer> g{key}'
+	          \ $'<Cmd>call goda_rogue#do("turn", "{dir}")<CR>'
+	    execute $'nnoremap <buffer> {key->toupper()}'
+	          \ $'<Cmd>call goda_rogue#do("dash", "{dir}")<CR>'
+	  endfor
+	  nnoremap <buffer> . <Cmd>call goda_rogue#do('wait')<CR>
+	  nnoremap <buffer> > <Cmd>call goda_rogue#do('stairs')<CR>
+	endfunction
+
+	call goda_rogue#start()
+<
+==============================================================================
+FUNCTIONS                                                *goda-rogue-functions*
+
+                                                        *goda_rogue#start()*
+goda_rogue#start([{options}])
+		Start a new game in the current window, in the buffer
+		"goda-rogue://game" (filetype "goda-rogue").
+		{options} is a |Dictionary|:
+		  seed	A string or a number.  The same seed makes the
+			same floors, whatever the player does on them.
+			Default: a random one, shown in the status line.
+
+                                                           *goda_rogue#do()*
+goda_rogue#do({action} [, {arg}...])
+		Run the action {action} of the game (see
+		|goda-rogue-actions|) and show the screen after it.  It does
+		nothing outside the game buffer.  An error is printed.
+
+                                                        *goda_rogue#build()*
+goda_rogue#build()
+		Build the binary again, after an update of this plugin.  The
+		running one is stopped; the next action starts the new one.
+
+==============================================================================
+ACTIONS                                                    *goda-rogue-actions*
+
+The directions are "left", "right", "up", "down", "upleft", "upright",
+"downleft" and "downright".
+
+move {direction}					*goda-rogue-move*
+		Face {direction} and step there.  Diagonal steps around a
+		corner of a wall are not possible.  Stepping onto an ally
+		changes places with it.
+
+dash {direction}					*goda-rogue-dash*
+		Step to {direction} until something stops the player: a
+		wall, a monster, an item or the stairs under it, or entering
+		or leaving a room.
+
+turn {direction}					*goda-rogue-turn*
+		Face {direction}.  It costs no turn.
+
+wait							*goda-rogue-wait*
+		Let a turn pass.
+
+stairs							*goda-rogue-stairs*
+		Go down the stairs the player stands on.  An ally next to
+		the player comes along.
+
+redraw							*goda-rogue-redraw*
+		Show the screen again.  Done for every window that shows the
+		game when it is resized.
+
+==============================================================================
+VARIABLES                                                *goda-rogue-variables*
+
+                                                     *g:goda_rogue#binary*
+g:goda_rogue#binary
+		The binary to start, instead of the one built in the cache
+		directory.  It is not built then: build it yourself.
+
+==============================================================================
+HIGHLIGHTS                                              *goda-rogue-highlights*
+
+They are defined with "default": define them yourself to change them.
+
+GodaRoguePlayer		The player.
+GodaRogueWall		Walls.
+GodaRogueFloor		The floor of rooms and corridors.
+GodaRogueStairs		The stairs.
+GodaRogueRank1		Enemies of rank 1 to 4: green, blue, purple, red.
+...
+GodaRogueRank4
+GodaRogueAlly1		Allies: the color of their rank, underlined.
+...
+GodaRogueAlly4
+
+Items are not highlighted.
+
+==============================================================================
+SCREEN                                                      *goda-rogue-screen*
+
+Every tile is one full-width character, two cells wide:
+
+	主	the player
+	＃	a wall
+	．	the floor of a room or a corridor
+	段	the stairs
+	剣 盾 腕 草 巻 杖 壺 矢 金 食
+		items
+	鼠 蛇 狼 骸 霊 鬼 竜 盗
+		enemies (their color is their rank)
+
+The window shows the part of the floor around the player that fits.  Under
+the map are the status line (the floor, the turn, the direction the player
+faces and the seed) and the last message.
+
+==============================================================================
+vim:tw=78:ts=8:noet:ft=help:norl:
