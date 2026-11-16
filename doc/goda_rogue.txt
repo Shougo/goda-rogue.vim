@@ -123,11 +123,15 @@ g:goda_rogue#binary
 ==============================================================================
 HIGHLIGHTS                                              *goda-rogue-highlights*
 
-They are defined with "default": define them yourself to change them.
+Define them yourself to change them.  By default, each is linked to the
+group of the same name with "Default" appended (GodaRogueWallDefault, ...),
+whose colors follow 'background'.
 
 GodaRoguePlayer		The player.
 GodaRogueWall		Walls.
 GodaRogueFloor		The floor of rooms and corridors.
+GodaRogueFloorSafe	The floor known to have no trap: where the player
+			has walked.
 GodaRogueStairs		The stairs.
 GodaRogueRank1		Enemies of rank 1 to 4: green, blue, purple, red.
 ...
@@ -145,7 +149,9 @@ Every tile is one full-width character, two cells wide:
 
 	主	the player
 	＃	a wall
-	．	the floor of a room or a corridor
+	．	the floor of a room or a corridor; in another color
+		(|GodaRogueFloorSafe|) where the player has walked, which
+		is known to have no trap
 	段	the stairs
 	剣 盾 腕 草 巻 杖 壺 矢 金 食
 		items

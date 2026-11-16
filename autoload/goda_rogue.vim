@@ -77,20 +77,50 @@ call goda#register('rogue', function('s:start'), s:register_opts())
 
 " ---------------------------------------------------------------------------
 " Highlights: the groups of the Go side. Ranks are colors, and an ally is
-" its rank's color, underlined.
+" its rank's color, underlined. The default colors depend on 'background'.
+
+" [cterm, gui] colors for a dark and a light background.
+let s:colors = #{
+      \ dark: #{
+      \   wall: ['73', '#5fafaf'], floor: ['240', '#585858'],
+      \   safe: ['180', '#d7af87'], stairs: ['220', '#ffd700'],
+      \   ranks: [['77', '#5fd75f'], ['69', '#5f87ff'],
+      \           ['170', '#d75fd7'], ['203', '#ff5f5f']],
+      \ },
+      \ light: #{
+      \   wall: ['30', '#008787'], floor: ['250', '#bcbcbc'],
+      \   safe: ['130', '#af5f00'], stairs: ['136', '#af8700'],
+      \   ranks: [['28', '#008700'], ['25', '#005faf'],
+      \           ['90', '#870087'], ['160', '#d70000']],
+      \ },
+      \ }
 
 function! s:highlights() abort
-  highlight default link GodaRogueWall Comment
-  highlight default link GodaRogueFloor NonText
-  highlight default link GodaRogueStairs Title
-  highlight default GodaRoguePlayer term=bold cterm=bold gui=bold
-  let colors = [['10', '#5fd75f'], ['12', '#5f87ff'], ['13', '#d75fd7'], ['9', '#ff5f5f']]
-  for i in range(len(colors))
-    let [cterm, gui] = colors[i]
-    execute printf('highlight default GodaRogueRank%d ctermfg=%s guifg=%s', i + 1, cterm, gui)
-    execute printf('highlight default GodaRogueAlly%d ctermfg=%s guifg=%s'
-          \ . ' term=underline cterm=underline gui=underline', i + 1, cterm, gui)
+  let c = s:colors[&background ==# 'light' ? 'light' : 'dark']
+  for [group, color, attr] in [
+        \ ['GodaRogueWall', c.wall, ''],
+        \ ['GodaRogueFloor', c.floor, ''],
+        \ ['GodaRogueFloorSafe', c.safe, ''],
+        \ ['GodaRogueStairs', c.stairs, 'bold'],
+        \ ]
+    call s:highlight(group, color, attr)
   endfor
+  highlight default GodaRoguePlayer term=bold cterm=bold gui=bold
+  for i in range(len(c.ranks))
+    call s:highlight('GodaRogueRank' . (i + 1), c.ranks[i], '')
+    call s:highlight('GodaRogueAlly' . (i + 1), c.ranks[i], 'underline')
+  endfor
+endfunction
+
+" Set the color of {group} by {group}Default: it follows 'background', and
+" {group} itself is left to the user.
+function! s:highlight(group, color, attr) abort
+  let attr = empty(a:attr) ? ''
+        \ : printf(' term=%s cterm=%s gui=%s', a:attr, a:attr, a:attr)
+  execute 'highlight clear' a:group . 'Default'
+  execute printf('highlight %sDefault ctermfg=%s guifg=%s%s',
+        \ a:group, a:color[0], a:color[1], attr)
+  execute printf('highlight default link %s %sDefault', a:group, a:group)
 endfunction
 
 call s:highlights()
@@ -98,6 +128,7 @@ call s:highlights()
 augroup goda-rogue
   autocmd!
   autocmd ColorScheme * call s:highlights()
+  autocmd OptionSet background call s:highlights()
   autocmd VimResized,WinResized * call s:redraw_all()
 augroup END
 

@@ -7,8 +7,8 @@ import (
 // The size of a floor in tiles, and its 3x3 sections, each holding a room
 // or a dummy (a corridor junction), as in rogue and Shiren.
 const (
-	MapWidth  = 63
-	MapHeight = 33
+	MapWidth  = 66
+	MapHeight = 36
 	gridCols  = 3
 	gridRows  = 3
 	secWidth  = MapWidth / gridCols
@@ -96,10 +96,11 @@ func Generate(rng *rand.Rand) *Level {
 
 	for i := range gridCols * gridRows {
 		ox, oy := i%gridCols*secWidth, i/gridCols*secHeight
-		// The interior keeps two tiles from the edges of its section: its
-		// wall, and room for a corridor between it and its neighbor's.
-		minX, maxX := ox+2, ox+secWidth-3
-		minY, maxY := oy+2, oy+secHeight-3
+		// The interior keeps three tiles from the edges of its section:
+		// its wall, and room for a corridor that turns one tile away from
+		// the walls (see connect).
+		minX, maxX := ox+3, ox+secWidth-4
+		minY, maxY := oy+3, oy+secHeight-4
 		if dummies[i] {
 			p := Point{between(rng, minX, maxX), between(rng, minY, maxY)}
 			l.Rooms = append(l.Rooms, Room{X: p.X, Y: p.Y, W: 1, H: 1, Dummy: true})
@@ -170,18 +171,20 @@ func connections(rng *rand.Rand) [][2]int {
 }
 
 // connect digs a corridor from the section a to b (right of or below it).
+// It leaves a door straight, and turns at least two tiles away from it, so
+// that it never runs along a wall: rooms do not look merged.
 func (l *Level) connect(rng *rand.Rand, a, b int) {
 	ra, rb := l.Rooms[a], l.Rooms[b]
 	if b == a+1 {
 		p, q := door(rng, ra, Point{1, 0}), door(rng, rb, Point{-1, 0})
-		mid := between(rng, p.X+1, q.X-1)
+		mid := between(rng, p.X+2, q.X-2)
 		l.dig(p, Point{mid, p.Y})
 		l.dig(Point{mid, p.Y}, Point{mid, q.Y})
 		l.dig(Point{mid, q.Y}, q)
 		return
 	}
 	p, q := door(rng, ra, Point{0, 1}), door(rng, rb, Point{0, -1})
-	mid := between(rng, p.Y+1, q.Y-1)
+	mid := between(rng, p.Y+2, q.Y-2)
 	l.dig(p, Point{p.X, mid})
 	l.dig(Point{p.X, mid}, Point{q.X, mid})
 	l.dig(Point{q.X, mid}, q)

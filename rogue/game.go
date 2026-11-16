@@ -36,8 +36,11 @@ type Game struct {
 	Stairs   Point
 	Monsters []*Monster
 	Items    []Item
-	Seen     []bool
-	Message  string
+	// Seen are the tiles the player has seen, Safe those known to have
+	// no trap: walked on (a trap there would have gone off and shown).
+	Seen    []bool
+	Safe    []bool
+	Message string
 }
 
 // The kinds of monsters and items of the prototype.
@@ -89,6 +92,7 @@ func (g *Game) descend() {
 	rng := floorRNG(g.Seed, g.Depth)
 	g.Level = Generate(rng)
 	g.Seen = make([]bool, len(g.Level.Tiles))
+	g.Safe = make([]bool, len(g.Level.Tiles))
 	g.Monsters = nil
 	g.Items = nil
 
@@ -130,6 +134,7 @@ func (g *Game) descend() {
 		}
 	}
 	g.look()
+	g.markSafe(g.Player)
 	g.Message = fmt.Sprintf("%dF に着いた。", g.Depth)
 }
 
@@ -204,17 +209,37 @@ func (g *Game) look() {
 }
 
 func (g *Game) markSeen(p Point) {
-	if p.X >= 0 && p.Y >= 0 && p.X < g.Level.W && p.Y < g.Level.H {
-		g.Seen[p.Y*g.Level.W+p.X] = true
+	if i, ok := g.index(p); ok {
+		g.Seen[i] = true
 	}
+}
+
+func (g *Game) markSafe(p Point) {
+	if i, ok := g.index(p); ok {
+		g.Safe[i] = true
+	}
+}
+
+// index returns the index of p in Level.Tiles, Seen and Safe.
+func (g *Game) index(p Point) (int, bool) {
+	if p.X < 0 || p.Y < 0 || p.X >= g.Level.W || p.Y >= g.Level.H {
+		return 0, false
+	}
+	return p.Y*g.Level.W + p.X, true
 }
 
 // IsSeen says whether the player has seen p.
 func (g *Game) IsSeen(p Point) bool {
-	if p.X < 0 || p.Y < 0 || p.X >= g.Level.W || p.Y >= g.Level.H {
-		return false
-	}
-	return g.Seen[p.Y*g.Level.W+p.X]
+	i, ok := g.index(p)
+	return ok && g.Seen[i]
+}
+
+// IsSafe says whether p is known to have no trap. The prototype has no
+// traps yet; checking for traps will mark tiles safe too, and a trap set
+// later on a tile will unmark it.
+func (g *Game) IsSafe(p Point) bool {
+	i, ok := g.index(p)
+	return ok && g.Safe[i]
 }
 
 // Visible says whether the player sees what is on p now: in the same room
@@ -322,6 +347,7 @@ func (g *Game) step(d Point) bool {
 	g.Player = to
 	g.Turn++
 	g.look()
+	g.markSafe(to)
 	if it, ok := g.ItemAt(to); ok {
 		g.Message = it.Glyph + "が落ちている。"
 	}

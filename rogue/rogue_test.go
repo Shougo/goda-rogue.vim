@@ -213,3 +213,69 @@ func TestDash(t *testing.T) {
 		t.Errorf("dash stopped at %v in the room %+v", g.Player, r)
 	}
 }
+
+// TestCorridorsAwayFromWalls: next to the wall of a room, a corridor is
+// only right outside a doorway, so rooms do not look merged.
+func TestCorridorsAwayFromWalls(t *testing.T) {
+	for seed := range 200 {
+		l := NewGame(fmt.Sprint(seed)).Level
+		for _, r := range l.Rooms {
+			if r.Dummy {
+				continue
+			}
+			// The tiles one outside the wall ring.
+			for y := r.Y - 2; y <= r.Y+r.H+1; y++ {
+				for x := r.X - 2; x <= r.X+r.W+1; x++ {
+					p := Point{x, y}
+					if r.Around(p) || l.At(p) != TileCorridor {
+						continue
+					}
+					// The wall tile next to it, toward the room.
+					w := Point{min(max(x, r.X-1), r.X+r.W), min(max(y, r.Y-1), r.Y+r.H)}
+					corner := (x < r.X-1 || x > r.X+r.W) && (y < r.Y-1 || y > r.Y+r.H)
+					if corner || l.At(w) != TileCorridor {
+						t.Fatalf("seed %d: corridor %v along the wall of %+v", seed, p, r)
+					}
+				}
+			}
+		}
+	}
+}
+
+func TestSafe(t *testing.T) {
+	g := NewGame("safe")
+	start := g.Player
+	if !g.IsSafe(start) {
+		t.Fatal("the start tile is not safe")
+	}
+	for _, d := range []string{"left", "right", "up", "down", "upleft", "upright", "downleft", "downright"} {
+		if err := g.Do("move", []string{d}); err != nil {
+			t.Fatal(err)
+		}
+		if g.Player != start {
+			break
+		}
+	}
+	if g.Player == start {
+		t.Skip("could not move")
+	}
+	if !g.IsSafe(g.Player) || !g.IsSafe(start) {
+		t.Error("walked tiles are not safe")
+	}
+	n := 0
+	for _, s := range g.Safe {
+		if s {
+			n++
+		}
+	}
+	if n != 2 {
+		t.Errorf("%d safe tiles, want 2", n)
+	}
+	if _, group := g.glyph(start); group != hlSafe {
+		t.Errorf("the start tile shows as %s", group)
+	}
+	g.descend()
+	if n := len(slices.DeleteFunc(slices.Clone(g.Safe), func(s bool) bool { return !s })); n != 1 {
+		t.Errorf("%d safe tiles on a new floor, want 1", n)
+	}
+}

@@ -53,8 +53,8 @@ function! s:start() abort
   call s:check('modifiable', &modifiable, 0)
 
   let width = winwidth(0) - getwininfo(win_getid())[0].textoff
-  let tiles = min([width / 2, 63])
-  let rows = min([winheight(0) - 2, 33])
+  let tiles = min([width / 2, 66])
+  let rows = min([winheight(0) - 2, 36])
   call s:check('lines', line('$'), rows + 2)
   for lnum in range(1, rows)
     call s:check('tiles of ' . lnum, strchars(getline(lnum)), tiles)
@@ -94,6 +94,7 @@ function! s:actions() abort
   endfor
   call s:check('move', s:status() =~# '^1F  ターン 1 ', 1)
   call s:check('cursor after move', s:cursor_char(), '主')
+  call s:check('safe floor', index(s:all_groups(), 'GodaRogueFloorSafe') >= 0, 1)
 
   call goda_rogue#do('stairs')
   call s:check('no stairs', getline('$'), 'ここに階段はない。')

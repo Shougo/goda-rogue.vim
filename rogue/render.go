@@ -20,6 +20,8 @@ const (
 	hlPlayer = "GodaRoguePlayer"
 	hlWall   = "GodaRogueWall"
 	hlFloor  = "GodaRogueFloor"
+	// hlSafe is the floor known to have no trap.
+	hlSafe   = "GodaRogueFloorSafe"
 	hlStairs = "GodaRogueStairs"
 	hlRank   = "GodaRogueRank"
 	hlAlly   = "GodaRogueAlly"
@@ -123,6 +125,9 @@ func (g *Game) glyph(p Point) (string, string) {
 		return glyphStairs, hlStairs
 	}
 	if g.Level.At(p).Walkable() {
+		if g.IsSafe(p) {
+			return glyphFloor, hlSafe
+		}
 		return glyphFloor, hlFloor
 	}
 	return glyphWall, hlWall
