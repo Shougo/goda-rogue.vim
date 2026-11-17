@@ -94,7 +94,7 @@ func TestInventorySorted(t *testing.T) {
 	for _, it := range g.Inventory {
 		got = append(got, g.Label(it))
 	}
-	want := []string{"剣 木刀", "剣 鉄の剣", "盾 木の盾", "草 薬草", "食 おにぎり"}
+	want := []string{"剣 木刀?", "剣 鉄の剣?", "盾 木の盾?", "草 薬草", "食 おにぎり"}
 	if !slices.Equal(got, want) {
 		t.Errorf("inventory %q, want %q", got, want)
 	}

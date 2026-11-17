@@ -46,8 +46,8 @@ Grasses, scrolls, staffs, bracelets and pots are unidentified at first:
 they go by names such as 赤い草 (with a "?" in the inventory), different
 in each run.  Using one, or wearing a bracelet, tells what its kind is; a
 scroll of identification tells it too, and also the upgrade value of a
-weapon or a shield (shown once it is equipped too) and the charges of a
-staff.
+weapon or a shield (shown once it is equipped too; until then the
+weapon or the shield has a "?": 木刀?) and the charges of a staff.
 
 						*goda-rogue-floors*
 Some floors are special: one big room; a maze of corridors, with things

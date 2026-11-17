@@ -104,7 +104,11 @@ func (g *Game) describe(it *Item) string {
 	}
 	switch {
 	case it.upgradable():
-		if it.Known && it.Upgrade != 0 {
+		switch {
+		case !it.Known && g.identified[it.Def.ID]:
+			// Not equipped nor identified yet: "木刀?", as a bracelet.
+			s += "?"
+		case it.Known && it.Upgrade != 0:
 			s += fmt.Sprintf("%+d", it.Upgrade)
 		}
 		s += sealsLabel(it)

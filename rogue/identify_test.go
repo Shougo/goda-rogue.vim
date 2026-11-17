@@ -91,7 +91,7 @@ func TestEquipIdentifies(t *testing.T) {
 	// The upgrade value of a weapon shows once it is equipped.
 	sword := carry(g, "tetsuken", 2)
 	sword.Known = false
-	if g.Label(sword) != "剣 鉄の剣" {
+	if g.Label(sword) != "剣 鉄の剣?" {
 		t.Errorf("label %q", g.Label(sword))
 	}
 	command(t, g, sword, commandEquip)
