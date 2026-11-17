@@ -258,6 +258,7 @@ func (g *Game) pickUp() bool {
 	g.Inventory = append(g.Inventory, it)
 	g.sortInventory()
 	g.say(g.Name(it) + "を拾った。")
+	g.event("pickup %s", it.Def.ID)
 	if it.ForSale {
 		g.say(fmt.Sprintf("店主「%dG です。」", price(it)))
 	}

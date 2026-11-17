@@ -28,7 +28,8 @@ their rank is their color.
 > identified; the player gets hungry, and finds traps by swinging at
 > nothing. Pots keep and merge items; weapons and shields have seals.
 > Some floors are a big room, a maze, or have a monster house or a shop
-> (buy, sell, or steal).
+> (buy, sell, or steal). A run can be suspended and resumed, and watched
+> again as a replay.
 
 ## Requirements
 
@@ -62,16 +63,19 @@ function s:goda_rogue_settings() abort
   nnoremap <buffer> x <Cmd>call goda_rogue#do('look')<CR>
   nnoremap <buffer> m <Cmd>call goda_rogue#do('map')<CR>
   nnoremap <buffer> M <Cmd>call goda_rogue#do('log')<CR>
+  nnoremap <buffer> S <Cmd>call goda_rogue#suspend()<CR>
 endfunction
 ```
 
 Then:
 
 ```vim
-" Choose a dungeon, and start.
+" Choose a dungeon, and start (or resume a suspended run).
 call goda_rogue#start()
 " The same seed makes the same floors.
 call goda_rogue#start(#{dungeon: 'cave', seed: 'vim'})
+" Keep the replay of the last run, and watch it.
+call goda_rogue#replay(goda_rogue#save_replay())
 ```
 
 The binary is built on the first start (it takes a while), into a cache

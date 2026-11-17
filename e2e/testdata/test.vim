@@ -11,6 +11,8 @@ let s:result = $GODA_ROGUE_RESULT
 execute 'set runtimepath^=' . fnameescape($GODA_VIM_DIR)
 execute 'set runtimepath^=' . fnameescape($GODA_ROGUE_DIR)
 let g:goda_rogue#binary = $GODA_ROGUE_BINARY
+" The replays go to a temporary directory.
+let g:goda_rogue#data_dir = tempname()
 
 function! s:check(name, got, want) abort
   if a:got !=# a:want
@@ -243,9 +245,57 @@ function! s:actions() abort
   call s:check('other buffer', getline(1, '$'), [''])
 endfunction
 
+" The replay file: suspend, resume, save and watch.
+function! s:replays() abort
+  call goda_rogue#start(#{dungeon: 'cave', seed: 'replay'})
+  for dir in ['right', 'left', 'down', 'up']
+    call goda_rogue#do('move', dir)
+  endfor
+  call goda_rogue#do('wait')
+  let status = s:timeless(s:status())
+  let file = goda_rogue#last_replay()
+  call s:check('replay file', get(readfile(file), 0, ''), '# goda-rogue replay')
+
+  call goda_rogue#do('suspend')
+  call s:check('suspended', getline(2), '  冒険を中断した。')
+  call goda_rogue#do('wait')
+  call s:check('no game after suspending', execute('messages') =~# 'no game', 1)
+
+  " Starting again offers to resume it.
+  let g:goda_rogue#prompt_func = function('s:fake_prompt')
+  let s:asked = {}
+  call goda_rogue#start()
+  call s:check('resume prompt', get(s:asked, 'title', '') =~# '^中断した冒険があります（はじまりの洞窟 1F', 1)
+  call s:check('resume choices', get(s:asked, 'choices', []), ['再開する', '捨てて新しく始める'])
+  call s:answer(1)
+  unlet g:goda_rogue#prompt_func
+  call s:check('resumed', s:messages()[-1], '冒険を再開した。')
+  call s:check('resumed status', s:timeless(s:status()), status)
+
+  let saved = goda_rogue#save_replay('e2e')
+  call s:check('saved', fnamemodify(saved, ':t'), 'e2e.replay')
+  call s:check('saved file', readfile(saved), readfile(file))
+
+  " Watched: it plays by itself; paused and stepped to its end here.
+  call goda_rogue#replay(saved)
+  call goda_rogue#replay_pause()
+  call s:check('watch', getline('$') =~# '^リプレイ  0/\d\+$', 1)
+  call goda_rogue#replay_step(-1)
+  call s:check('watched', getline('$') =~# '^リプレイ  \(\d\+\)/\1$', 1)
+  call s:check('watched status', s:timeless(getline(line('$') - 4)), status)
+  call goda_rogue#do('wait')
+  call s:check('no action while watching', execute('messages') =~# 'a replay is being watched', 1)
+endfunction
+
+" The status line {status} without its play time.
+function! s:timeless(status) abort
+  return substitute(a:status, '時間 \S\+', '', '')
+endfunction
+
 try
   call s:start()
   call s:actions()
+  call s:replays()
 catch
   call add(s:errors, v:throwpoint . ': ' . v:exception)
 endtry

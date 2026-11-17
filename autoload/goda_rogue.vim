@@ -6,7 +6,7 @@
 
 " The version of this Vim script that the binary goes with (ScriptVersion of
 " its Go side): goda.vim refuses a binary of another one, and builds it again.
-let s:version = #{version: 1, module: 'github.com/Shougo/goda-rogue.vim'}
+let s:version = #{version: 2, module: 'github.com/Shougo/goda-rogue.vim'}
 
 " The repository: the Go module of the binary.
 let s:root = expand('<sfile>:p:h:h', 1)
@@ -36,6 +36,33 @@ function! s:cache_dir() abort
     let base = expand('~/.cache/vim', 1)
   endif
   return base . '/goda-rogue'
+endfunction
+
+" The runs are kept in a data directory: the replay file of the last run
+" (also the suspended run), and the replays saved by goda_rogue#save_replay().
+function! s:data_dir() abort
+  if exists('g:goda_rogue#data_dir')
+    return expand(g:goda_rogue#data_dir, 1)
+  endif
+  if has('nvim')
+    let base = stdpath('data')
+  elseif !empty($XDG_DATA_HOME)
+    let base = $XDG_DATA_HOME . '/vim'
+  elseif has('win32') && !empty($LOCALAPPDATA)
+    let base = $LOCALAPPDATA . '/vim'
+  else
+    let base = expand('~/.local/share/vim', 1)
+  endif
+  return base . '/goda-rogue'
+endfunction
+
+" The replay file of the last run.
+function! goda_rogue#last_replay() abort
+  return s:data_dir() . '/last.replay'
+endfunction
+
+function! s:replay_dir() abort
+  return s:data_dir() . '/replays'
 endfunction
 
 function! s:default_bin() abort
@@ -171,16 +198,49 @@ endfunction
 "		which one, with the selection UI.
 "   seed	The same seed makes the same floors (a string or a number).
 "		Default: a random one.
+" A suspended run is offered to be resumed first.
 function! goda_rogue#start(options = {}) abort
   let options = copy(a:options)
   if type(get(options, 'seed', '')) == v:t_number
     let options.seed = string(options.seed)
   endif
+  try
+    let last = goda#request('rogue', 'last', goda_rogue#last_replay())
+  catch
+    call s:print_error(v:exception)
+    return
+  endtry
+  if last.state ==# 'suspended'
+    call s:select(printf('中断した冒険があります（%s %dF  %dターン  %s）',
+          \ last.name, last.depth, last.turn, last.time),
+          \ ['再開する', '捨てて新しく始める'],
+          \ {idx -> idx == 1 ? s:resume()
+          \       : idx == 2 ? s:choose_dungeon(options) : 0})
+    return
+  elseif last.state ==# 'broken'
+    " Another version, say: it can still be saved, to watch it with the
+    " version that played it.
+    call s:select('再開できない冒険があります（' . last.error . '）',
+          \ ['リプレイを保存して新しく始める', '捨てて新しく始める'],
+          \ {idx -> idx == 1 ? s:save_and_choose(options)
+          \       : idx == 2 ? s:choose_dungeon(options) : 0})
+    return
+  endif
+  call s:choose_dungeon(options)
+endfunction
+
+function! s:save_and_choose(options) abort
+  if !empty(goda_rogue#save_replay())
+    call s:choose_dungeon(a:options)
+  endif
+endfunction
+
+function! s:choose_dungeon(options) abort
+  let options = a:options
   if has_key(options, 'dungeon')
     call s:start_game(options)
     return
   endif
-  " Choose the dungeon.
   try
     let dungeons = goda_rogue#dungeons()
   catch
@@ -193,8 +253,9 @@ function! goda_rogue#start(options = {}) abort
         \ {idx -> idx > 0 ? s:start_game(extend(options, #{dungeon: dungeons[idx - 1].id})) : 0})
 endfunction
 
-function! s:start_game(options) abort
-  let options = a:options
+" Show the game buffer in the current window.
+function! s:open_buffer() abort
+  call s:stop_watching()
   let bufnr = bufadd('goda-rogue://game')
   call setbufvar(bufnr, '&buftype', 'nofile')
   call setbufvar(bufnr, '&bufhidden', 'hide')
@@ -206,13 +267,6 @@ function! s:start_game(options) abort
   setlocal nocursorline nocursorcolumn signcolumn=no foldcolumn=0 colorcolumn=
   setlocal nomodifiable
   setlocal filetype=goda-rogue
-  try
-    let screen = goda#request('rogue', 'start', options, s:size())
-  catch
-    call s:print_error(v:exception)
-    return
-  endtry
-  call s:draw(screen)
 
   " The mini-map goes with the game buffer.
   autocmd! goda-rogue * <buffer>
@@ -220,13 +274,165 @@ function! s:start_game(options) abort
   autocmd goda-rogue BufEnter <buffer> call goda_rogue#do('redraw')
 endfunction
 
+function! s:start_game(options) abort
+  call s:open_buffer()
+  try
+    let screen = goda#request('rogue', 'start',
+          \ extend(copy(a:options), #{replay: goda_rogue#last_replay()}), s:size())
+  catch
+    call s:print_error(v:exception)
+    return
+  endtry
+  call s:draw(screen)
+endfunction
+
+function! s:resume() abort
+  call s:open_buffer()
+  try
+    let screen = goda#request('rogue', 'resume', goda_rogue#last_replay(), s:size())
+  catch
+    call s:print_error(v:exception)
+    return
+  endtry
+  call s:draw(screen)
+endfunction
+
+" Suspend the run: it is kept in its replay file, and goda_rogue#start()
+" offers to resume it.  The same as goda_rogue#do('suspend').
+function! goda_rogue#suspend() abort
+  if &filetype !=# 'goda-rogue'
+    return
+  endif
+  try
+    call goda#request('rogue', 'do', 'suspend', [], s:size())
+  catch
+    call s:print_error(v:exception)
+    return
+  endtry
+  call s:close_prompt()
+  call s:close_map()
+  setlocal modifiable
+  silent %delete _
+  call setline(1, ['', '  冒険を中断した。', '',
+        \ '  goda_rogue#start() で再開できる。'])
+  setlocal nomodifiable
+endfunction
+
+" Save the replay of the last run as {name} (default: the date and time)
+" in the directory of the replays, and return its path ('' if it could not
+" be saved).
+function! goda_rogue#save_replay(name = '') abort
+  let src = goda_rogue#last_replay()
+  if !filereadable(src)
+    call s:print_error('no replay: play a run first')
+    return ''
+  endif
+  let name = empty(a:name) ? strftime('%Y%m%d-%H%M%S') : a:name
+  if name !~# '\.replay$'
+    let name .= '.replay'
+  endif
+  call mkdir(s:replay_dir(), 'p')
+  let dst = s:replay_dir() . '/' . name
+  if writefile(readfile(src, 'b'), dst, 'b') != 0
+    call s:print_error('could not write ' . dst)
+    return ''
+  endif
+  echomsg '[goda-rogue] the replay is saved: ' . dst
+  return dst
+endfunction
+
+" Watch the replay {file} (default: the last run) in the current window: it
+" plays by itself, an action every g:goda_rogue#replay_interval
+" milliseconds; goda_rogue#replay_pause() pauses it or plays it again, and
+" goda_rogue#replay_step() steps it an action.
+function! goda_rogue#replay(file = '') abort
+  let file = empty(a:file) ? goda_rogue#last_replay() : expand(a:file, 1)
+  call s:open_buffer()
+  try
+    let screen = goda#request('rogue', 'watch', fnamemodify(file, ':p'), s:size())
+  catch
+    call s:print_error(v:exception)
+    return
+  endtry
+  call s:draw(screen)
+  let s:watching = #{bufnr: bufnr('%'), done: v:false}
+  autocmd goda-rogue BufLeave <buffer> call s:stop_watching()
+  call s:play_replay()
+endfunction
+
+" The replay being watched: its buffer, whether it is over, and its timer.
+let s:watching = {}
+let s:replay_timer = -1
+
+function! s:play_replay() abort
+  call timer_stop(s:replay_timer)
+  let s:replay_timer = timer_start(get(g:, 'goda_rogue#replay_interval', 300),
+        \ {-> s:replay_tick()}, #{repeat: -1})
+endfunction
+
+function! s:replay_tick() abort
+  if empty(s:watching) || s:watching.done
+    call timer_stop(s:replay_timer)
+    return
+  endif
+  call goda_rogue#replay_step()
+endfunction
+
+" Pause the replay being watched, or play it again.
+function! goda_rogue#replay_pause() abort
+  if empty(s:watching)
+    return
+  endif
+  if empty(timer_info(s:replay_timer))
+    call s:play_replay()
+  else
+    call timer_stop(s:replay_timer)
+    let s:replay_timer = -1
+  endif
+endfunction
+
+" Step the replay being watched {n} actions (-1: to its end).
+function! goda_rogue#replay_step(n = 1) abort
+  if empty(s:watching) || s:watching.done
+    return
+  endif
+  let winids = win_findbuf(s:watching.bufnr)
+  if empty(winids)
+    return
+  endif
+  call win_execute(winids[0], 'call s:step(' . a:n . ')')
+endfunction
+
+function! s:step(n) abort
+  try
+    let r = goda#request('rogue', 'step', a:n, s:size())
+  catch
+    call s:stop_watching()
+    call s:print_error(v:exception)
+    return
+  endtry
+  let s:watching.done = r.done
+  call s:draw(r.screen)
+endfunction
+
+function! s:stop_watching() abort
+  call timer_stop(s:replay_timer)
+  let s:replay_timer = -1
+  let s:watching = {}
+endfunction
+
 " Run the action {action} of the game, with its arguments: >
 "	call goda_rogue#do('move', 'left')
 " Actions: move, dash and turn (with a direction: left, right, up, down,
 " upleft, upright, downleft, downright), attack, shoot, wait, stairs, pickup,
-" inventory, choose (an index, from 0), cancel, look, map, log, redraw.
+" inventory, choose (an index, from 0), cancel, look, map, log, redraw,
+" suspend.
 function! goda_rogue#do(action, ...) abort
   if &filetype !=# 'goda-rogue'
+    return
+  endif
+  if a:action ==# 'suspend'
+    call goda_rogue#suspend()
     return
   endif
   try

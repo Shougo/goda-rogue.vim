@@ -11,6 +11,7 @@ func (g *Game) useItem(it *Item) {
 		g.discard(it)
 	}
 	name := g.Name(it)
+	g.event("use %s", it.Def.ID)
 	switch it.Def.Category {
 	case CategoryGrass:
 		g.say(name + "を飲んだ。")

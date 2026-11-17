@@ -80,8 +80,13 @@ type Game struct {
 	EXP     int
 	// Kills are the enemies the player and its allies defeated.
 	Kills int
-	// Started and Ended are when the run began and ended (play time).
+	// Started and Ended are when the run began (or was resumed) and
+	// ended; Played is the play time before Started (a resumed run).
 	Started, Ended time.Time
+	Played         time.Duration
+	// events are what happened in the run, for its replay file (see
+	// event).
+	events []string
 	// Steps are the steps the player has taken.
 	Steps int
 	// Shop is the shop of the floor (nil for none); selling the item the
@@ -158,6 +163,7 @@ func (g *Game) descend() {
 	}
 
 	g.Depth++
+	g.event("floor %d", g.Depth)
 	g.FloorTurns, g.Wind, g.Lit, g.Dark = 0, 0, false, false
 	rng := g.floorRNG(g.Depth)
 	c := g.Dungeon.counts(g.Depth)
@@ -645,6 +651,22 @@ func (g *Game) spawn(def *MonsterDef) *Monster {
 func (g *Game) end(why string, cleared bool) {
 	g.Over, g.Cleared, g.Ended = why, cleared, time.Now()
 	g.say(why + "。")
+	g.event("end %v %s", cleared, why)
+}
+
+// event notes what happened, for the replay file: a line of words, the
+// turn first. The events are written as comments, for the analysis of
+// replays without replaying them, and to check that a replay replays the
+// same (see Replay).
+func (g *Game) event(format string, args ...any) {
+	g.events = append(g.events, fmt.Sprintf("%d ", g.Turn)+fmt.Sprintf(format, args...))
+}
+
+// takeEvents returns the events since the last call, and forgets them.
+func (g *Game) takeEvents() []string {
+	e := g.events
+	g.events = nil
+	return e
 }
 
 // beginAction starts the messages of an action.
@@ -807,7 +829,7 @@ func (g *Game) PlayTime() time.Duration {
 	if end.IsZero() {
 		end = time.Now()
 	}
-	return end.Sub(g.Started)
+	return g.Played + end.Sub(g.Started)
 }
 
 // playTime formats d as h:mm:ss.

@@ -262,6 +262,7 @@ func (g *Game) hitPlayer(m *Monster) {
 	n := damage(g.rng, m.Attack, g.Defense(), r.DefenseK)
 	g.HP -= n
 	g.say(fmt.Sprintf("%sの攻撃。%dのダメージ。", m.Name, n))
+	g.event("hurt %d %s", n, m.Def.ID)
 	if g.HP <= 0 {
 		g.HP = 0
 		g.end(m.Name+"に倒された", false)
@@ -304,6 +305,7 @@ func (g *Game) hitMonster(a, m *Monster) {
 // whole, to the player and to every ally. Spawned monsters give nothing.
 func (g *Game) defeated(m *Monster) {
 	g.Kills++
+	g.event("kill %s", m.Def.ID)
 	if m.Spawned || m.EXP == 0 {
 		return
 	}
@@ -314,6 +316,7 @@ func (g *Game) defeated(m *Monster) {
 		g.PlayerLevel++
 		g.MaxHP += gr.HP
 		g.HP += gr.HP
+		g.event("level %d", g.PlayerLevel)
 		g.say(fmt.Sprintf("主はレベル%dに上がった。", g.PlayerLevel))
 	}
 	for _, a := range g.Monsters {

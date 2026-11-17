@@ -16,6 +16,7 @@ Screen			|goda-rogue-screen|
 Prompts			|goda-rogue-prompts|
 Dungeons		|goda-rogue-dungeons|
 Mini-map		|goda-rogue-mini-map|
+Replays			|goda-rogue-replays|
 
 ==============================================================================
 INTRODUCTION                                          *goda-rogue-introduction*
@@ -140,6 +141,7 @@ There are no default mappings: map the actions in the game buffer. >vim
 	  nnoremap <buffer> x <Cmd>call goda_rogue#do('look')<CR>
 	  nnoremap <buffer> m <Cmd>call goda_rogue#do('map')<CR>
 	  nnoremap <buffer> M <Cmd>call goda_rogue#do('log')<CR>
+	  nnoremap <buffer> S <Cmd>call goda_rogue#suspend()<CR>
 	endfunction
 
 	call goda_rogue#start()
@@ -161,6 +163,9 @@ goda_rogue#start([{options}])
 				dungeon, whatever the player does on
 				them.  Default: a random one, shown in
 				the status line.
+		A suspended run (|goda-rogue-replays|) is offered to be
+		resumed first.  Called while a run is played, it starts
+		another one: suspend it first to keep it.
 
                                                      *goda_rogue#dungeons()*
 goda_rogue#dungeons()
@@ -172,6 +177,39 @@ goda_rogue#do({action} [, {arg}...])
 		Run the action {action} of the game (see
 		|goda-rogue-actions|) and show the screen after it.  It does
 		nothing outside the game buffer.  An error is printed.
+
+                                                      *goda_rogue#suspend()*
+goda_rogue#suspend()
+		Suspend the run: it is kept, and |goda_rogue#start()| offers
+		to resume it, even in another session of the editor.  The
+		same as the action "suspend".
+
+                                                  *goda_rogue#save_replay()*
+goda_rogue#save_replay([{name}])
+		Save the replay of the last run as {name} (".replay" is
+		added; default: the date and time) in the directory
+		"replays" of |g:goda_rogue#data_dir|, and return its path.
+
+                                                       *goda_rogue#replay()*
+goda_rogue#replay([{file}])
+		Watch the replay {file} (default: the last run) in the
+		game buffer: it plays by itself, an action every
+		|g:goda_rogue#replay_interval| milliseconds, with how far it
+		is under the screen.  The actions of the game do nothing
+		meanwhile, but "map" and "log".
+
+                                                 *goda_rogue#replay_pause()*
+goda_rogue#replay_pause()
+		Pause the replay being watched, or play it again.
+
+                                                  *goda_rogue#replay_step()*
+goda_rogue#replay_step([{n}])
+		Step the replay being watched {n} actions (default 1; -1:
+		to its end).
+
+                                                  *goda_rogue#last_replay()*
+goda_rogue#last_replay()
+		The path of the replay file of the last run.
 
                                                         *goda_rogue#build()*
 goda_rogue#build()
@@ -269,6 +307,9 @@ redraw							*goda-rogue-redraw*
 		Show the screen again.  Done for every window that shows the
 		game when it is resized.
 
+suspend							*goda-rogue-suspend*
+		Suspend the run (|goda_rogue#suspend()|).
+
 ==============================================================================
 VARIABLES                                                *goda-rogue-variables*
 
@@ -276,6 +317,19 @@ VARIABLES                                                *goda-rogue-variables*
 g:goda_rogue#binary
 		The binary to start, instead of the one built in the cache
 		directory.  It is not built then: build it yourself.
+
+                                                   *g:goda_rogue#data_dir*
+g:goda_rogue#data_dir
+		The directory of the replay file of the last run
+		("last.replay") and of the saved replays ("replays").
+		Default: "goda-rogue" in |stdpath()| "data" (Neovim), or in
+		$XDG_DATA_HOME/vim, $LOCALAPPDATA/vim (Windows) or
+		~/.local/share/vim (Vim).
+
+                                             *g:goda_rogue#replay_interval*
+g:goda_rogue#replay_interval
+		The milliseconds between two actions of a replay watched
+		(|goda_rogue#replay()|).  Default: 300.
 
                                                 *g:goda_rogue#prompt_func*
 g:goda_rogue#prompt_func
@@ -475,6 +529,33 @@ while the game buffer is not shown.
 	*	an item
 	o	a monster the player sees (the color of its rank) or an
 		ally (underlined)
+
+==============================================================================
+REPLAYS                                                    *goda-rogue-replays*
+
+A run is all in its replay file: the dungeon, the seed, and every action of
+the player with its play time, written as the run goes (a crash of the
+editor loses nothing).  Replaying the actions makes the same run, since all
+the randomness comes from the seed.
+
+The same file is the suspended run: |goda_rogue#start()| offers to resume
+the last run when it is not over, whether it was suspended or the editor
+was left without suspending.  It is resumed by replaying it, and the play
+time goes on from where it was.  A new run replaces it.
+
+A replay is checked as it is replayed: after each action, the file has what
+happened in it (lines "# turn event": floors, damage, kills, levels, items
+picked up, used or identified, the end), and replaying must make the same.
+Another version of the game, or of the data of the dungeon, may not: such a
+run cannot be resumed nor watched with it.  |goda_rogue#start()| offers to
+save it with |goda_rogue#save_replay()|, to watch it with the version that
+played it.
+
+At the end of a run, the result screen has it in a line, to share (the
+dungeon, the floor and how it ended, the time, the turns and the seed).
+Save the replay with |goda_rogue#save_replay()| to keep it, to share it, or
+to attach it to a bug report: it reproduces the run.  A replay holds no
+personal data.
 
 ==============================================================================
 vim:tw=78:ts=8:noet:ft=help:norl:

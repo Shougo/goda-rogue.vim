@@ -171,6 +171,7 @@ func (g *Game) stepOn(t *Trap) bool {
 func (g *Game) trapDamage(n int, why string) bool {
 	g.HP -= n
 	g.say(fmt.Sprintf("%dのダメージ。", n))
+	g.event("hurt %d %s", n, why)
 	if g.HP <= 0 {
 		g.HP = 0
 		g.end(why+"で倒れた", false)

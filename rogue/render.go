@@ -170,9 +170,19 @@ func (g *Game) result(s *Screen) {
 		"  時間      "+playTime(g.PlayTime()),
 		"  シード    "+g.Seed,
 		"",
+		"  "+g.Summary(),
+		"",
 		"  新しい冒険は goda_rogue#start() で。",
+		"  リプレイの保存は goda_rogue#save_replay() で。",
 		"",
 	)
+}
+
+// Summary is the result of the run in a line, to share: the dungeon, the
+// floor and how it ended, the play time, the turns and the seed.
+func (g *Game) Summary() string {
+	return fmt.Sprintf("%s %dF %s  %s  %dターン  シード %s",
+		g.Dungeon.Name, g.Depth, g.Over, playTime(g.PlayTime()), g.Turn, g.Seed)
 }
 
 // messages adds the last messages to s: always messageLines lines, those

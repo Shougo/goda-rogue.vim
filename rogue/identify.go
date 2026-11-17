@@ -44,6 +44,7 @@ func (g *Game) identify(it *Item) {
 	}
 	fake := g.Name(it)
 	g.identified[it.Def.ID] = true
+	g.event("identify %s", it.Def.ID)
 	g.say(fake + "は" + it.Def.Name + "だった。")
 }
 
