@@ -227,3 +227,32 @@ func TestAttackKeeper(t *testing.T) {
 		t.Error("goods still for sale")
 	}
 }
+
+// TestShopEntrance checks that the shopkeepers stand beside the ways in,
+// never on them: the player can always walk in.
+func TestShopEntrance(t *testing.T) {
+	d := *cave()
+	d.FloorRows = append([]FloorCounts(nil), d.FloorRows...)
+	for i := range d.FloorRows {
+		d.FloorRows[i].Shop = 100
+	}
+	shops := 0
+	for seed := range 300 {
+		g := NewGame(&d, "entrance"+itoa(seed))
+		if g.Shop == nil {
+			continue
+		}
+		shops++
+		for _, k := range g.Shop.Keepers {
+			if g.isEntry(g.Shop.Room, k.Pos) {
+				t.Errorf("seed %d: shopkeeper on the way in at %v", seed, k.Pos)
+			}
+			if chebyshev(g.entry(g.Shop.Room, k.door), k.Pos) != 1 {
+				t.Errorf("seed %d: shopkeeper at %v, not beside its door %v", seed, k.Pos, k.door)
+			}
+		}
+	}
+	if shops < 50 {
+		t.Fatalf("only %d shops", shops)
+	}
+}

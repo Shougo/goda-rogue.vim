@@ -91,12 +91,9 @@ func (g *Game) openShop(rng *rand.Rand, rooms []int, start int) {
 	doors := g.doors(room)
 	for i := range between(rng, def.Keepers[0], def.Keepers[1]) {
 		door := doors[i%len(doors)]
-		home := Point{min(max(door.X, r.X), r.X+r.W-1), min(max(door.Y, r.Y), r.Y+r.H-1)}
-		if !g.free(home) {
-			var ok bool
-			if home, ok = g.freeNeighbor(home); !ok || !r.Contains(home) {
-				continue
-			}
+		home, ok := g.keeperHome(room, door)
+		if !ok {
+			continue
 		}
 		m := newMonster(def.Keeper)
 		m.Pos, m.Keeper, m.home, m.door = home, true, home, door
@@ -117,6 +114,39 @@ func (g *Game) openShop(rng *rand.Rand, rooms []int, start int) {
 			g.Items = append(g.Items, it)
 		}
 	}
+}
+
+// entry returns the tile of the room i the door leads to.
+func (g *Game) entry(i int, door Point) Point {
+	r := g.Level.Rooms[i]
+	return Point{min(max(door.X, r.X), r.X+r.W-1), min(max(door.Y, r.Y), r.Y+r.H-1)}
+}
+
+// keeperHome returns the place of a shopkeeper of the room i by the door:
+// beside the tile the door leads to, along the wall, so that the way in
+// stays open (as in Shiren); it says whether there is one.
+func (g *Game) keeperHome(i int, door Point) (Point, bool) {
+	r := g.Level.Rooms[i]
+	e := g.entry(i, door)
+	// Along the wall first, then the other tiles around the entry.
+	side := []Point{{0, -1}, {0, 1}}
+	if door.Y < r.Y || door.Y >= r.Y+r.H {
+		side = []Point{{-1, 0}, {1, 0}}
+	}
+	around := append(side, Point{-1, -1}, Point{1, -1}, Point{-1, 1}, Point{1, 1},
+		Point{0, -1}, Point{0, 1}, Point{-1, 0}, Point{1, 0})
+	for _, d := range around {
+		p := e.Add(d)
+		if r.Contains(p) && g.free(p) && !g.isEntry(i, p) {
+			return p, true
+		}
+	}
+	return Point{}, false
+}
+
+// isEntry says whether p is a tile a door of the room i leads to.
+func (g *Game) isEntry(i int, p Point) bool {
+	return slices.ContainsFunc(g.doors(i), func(d Point) bool { return g.entry(i, d) == p })
 }
 
 // goodsRows are the rows of the shop item table of the floor for the shop
