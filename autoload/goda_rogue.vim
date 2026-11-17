@@ -301,13 +301,27 @@ function! s:select(title, choices, callback) abort
           \ [#{title: a:title, choices: a:choices}, {idx -> s:selected(idx)}])
   elseif has('nvim')
     " Ask once the current action is over: an answer comes inside
-    " win_execute(), where the default vim.ui.select() (inputlist()) does
-    " not wait for one.  Clear what an earlier selection left on the
-    " command line first.
+    " win_execute(), where inputlist() does not wait for one.  Clear what an
+    " earlier selection left on the command line first.  The default
+    " vim.ui.select() is replaced by an inputlist() with the numbers aligned
+    " (the items are aligned in columns); one set by a plugin is used.
     call luaeval('vim.schedule(function()'
           \ . ' vim.cmd("redraw")'
-          \ . ' vim.ui.select(_A[1], {prompt = _A[2]}, function(_, idx)'
-          \ . ' vim.fn["goda_rogue#_selected"](idx or 0) end) end)',
+          \ . ' local done = vim.fn["goda_rogue#_selected"]'
+          \ . ' local src = debug.getinfo(vim.ui.select, "S").source'
+          \ . ' if not src:find("vim[/\\]ui%.lua$") then'
+          \ . '  vim.ui.select(_A[1], {prompt = _A[2]},'
+          \ . '   function(_, idx) done(idx or 0) end)'
+          \ . '  return'
+          \ . ' end'
+          \ . ' local lines = {_A[2]}'
+          \ . ' local format = "%" .. #tostring(#_A[1]) .. "d: %s"'
+          \ . ' for i, c in ipairs(_A[1]) do'
+          \ . '  lines[#lines + 1] = format:format(i, c)'
+          \ . ' end'
+          \ . ' local idx = vim.fn.inputlist(lines)'
+          \ . ' done((idx >= 1 and idx <= #_A[1]) and idx or 0)'
+          \ . ' end)',
           \ [a:choices, a:title])
   else
     call s:close_prompt()

@@ -39,7 +39,7 @@ func (g *Game) askPutIn(i int) bool {
 	p := &Prompt{Title: g.Name(pot) + "に入れる", kind: promptPutIn, item: i}
 	for j, it := range g.Inventory {
 		if it.Def.Category != CategoryPot {
-			p.Choices = append(p.Choices, g.Label(it))
+			p.Choices = append(p.Choices, g.Entry(it))
 			p.items = append(p.items, j)
 		}
 	}
@@ -103,7 +103,7 @@ func (g *Game) askTakeOut(i int) bool {
 	}
 	p := &Prompt{Title: g.Name(pot) + "から出す", kind: promptTakeOut, item: i}
 	for _, it := range pot.Contents {
-		p.Choices = append(p.Choices, g.Label(it))
+		p.Choices = append(p.Choices, g.Entry(it))
 	}
 	g.Prompt = p
 	return false

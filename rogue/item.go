@@ -86,6 +86,16 @@ func (g *Game) Label(it *Item) string {
 	return it.Glyph + " " + g.describe(it)
 }
 
+// Entry is the line of it in a list of items: its icon, a column that marks
+// equipped items with E, and its description, so the names line up.
+func (g *Game) Entry(it *Item) string {
+	mark := " "
+	if it.Equipped {
+		mark = "E"
+	}
+	return it.Glyph + " " + mark + " " + g.describe(it)
+}
+
 // describe is the label of it without its icon.
 func (g *Game) describe(it *Item) string {
 	s := g.Name(it)
@@ -111,9 +121,6 @@ func (g *Game) describe(it *Item) string {
 	}
 	if it.Cracks > 0 {
 		s += fmt.Sprintf(" [ひび%d]", it.Cracks)
-	}
-	if it.Equipped {
-		s += " [装備]"
 	}
 	if it.ForSale {
 		s += fmt.Sprintf(" %dG", price(it))
@@ -259,7 +266,7 @@ func (g *Game) openInventory() {
 	}
 	p := &Prompt{Title: "持ち物", kind: promptInventory}
 	for _, it := range g.Inventory {
-		p.Choices = append(p.Choices, g.Label(it))
+		p.Choices = append(p.Choices, g.Entry(it))
 	}
 	g.Prompt = p
 }

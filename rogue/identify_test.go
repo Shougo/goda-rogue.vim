@@ -95,8 +95,8 @@ func TestEquipIdentifies(t *testing.T) {
 		t.Errorf("label %q", g.Label(sword))
 	}
 	command(t, g, sword, commandEquip)
-	if g.Label(sword) != "剣 鉄の剣+2 [装備]" {
-		t.Errorf("label %q", g.Label(sword))
+	if g.Entry(sword) != "剣 E 鉄の剣+2" {
+		t.Errorf("entry %q", g.Entry(sword))
 	}
 }
 
@@ -130,7 +130,7 @@ func TestIdentifyScroll(t *testing.T) {
 	if p == nil || p.Title != "何を識別する？" || len(p.Choices) != 2 {
 		t.Fatalf("prompt %+v", p)
 	}
-	i := slices.Index(p.Choices, g.Label(grass))
+	i := slices.Index(p.Choices, g.Entry(grass))
 	if err := g.Do("choose", []string{fmt.Sprint(i)}); err != nil {
 		t.Fatal(err)
 	}

@@ -341,8 +341,14 @@ PROMPTS                                                    *goda-rogue-prompts*
 
 When the game asks for a choice (which item, what to do with it), it is
 shown with the editor's selection UI: |popup_menu()| in Vim,
-vim.ui.select() in Neovim (and whatever replaces it there).  Set
-|g:goda_rogue#prompt_func| to show it another way.
+|inputlist()| in Neovim, or vim.ui.select() once a plugin replaces it
+there.  Set |g:goda_rogue#prompt_func| to show it another way.
+
+Lists of items show the icon, "E" for the equipped ones, and the name, in
+columns: >
+	 4: 剣 E 会心剣【会】
+	 5: 盾   木の盾
+<
 
 ==============================================================================
 DUNGEONS                                                  *goda-rogue-dungeons*

@@ -121,7 +121,7 @@ func TestInventoryPrompt(t *testing.T) {
 		t.Fatal(err)
 	}
 	s := g.Render(Size{80, 24})
-	if s.Prompt == nil || s.Prompt.Title != "持ち物" || !slices.Equal(s.Prompt.Choices, []string{"草 薬草", "食 おにぎり"}) {
+	if s.Prompt == nil || s.Prompt.Title != "持ち物" || !slices.Equal(s.Prompt.Choices, []string{"草   薬草", "食   おにぎり"}) {
 		t.Fatalf("prompt %+v", s.Prompt)
 	}
 	if err := g.Do("choose", []string{"9"}); err == nil {
@@ -221,8 +221,8 @@ func TestEquip(t *testing.T) {
 	if got, want := g.Attack(), bare+9; got != want {
 		t.Errorf("attack %d, want %d", got, want)
 	}
-	if g.Label(sword) != "剣 鉄の剣+2 [装備]" {
-		t.Errorf("label %q", g.Label(sword))
+	if g.Entry(sword) != "剣 E 鉄の剣+2" {
+		t.Errorf("entry %q", g.Entry(sword))
 	}
 	command(t, g, shield, commandEquip)
 	if g.Defense() != 3 {
@@ -290,8 +290,8 @@ func TestBracelets(t *testing.T) {
 	if !strings.Contains(g.Status(), fmt.Sprintf("  ちから %d  ", base+3)) {
 		t.Errorf("status %q", g.Status())
 	}
-	if g.Label(power) != "腕 力の腕輪 [装備]" {
-		t.Errorf("label %q", g.Label(power))
+	if g.Entry(power) != "腕 E 力の腕輪" {
+		t.Errorf("entry %q", g.Entry(power))
 	}
 
 	// One bracelet at a time.
@@ -427,8 +427,11 @@ func TestCrackLabel(t *testing.T) {
 	g, _ := roomGame(t, 4, 3)
 	b := carry(g, "dougu", 0)
 	b.Cracks, b.Equipped = 2, true
-	if g.Label(b) != "腕 道具感知の腕輪 [ひび2] [装備]" {
+	if g.Label(b) != "腕 道具感知の腕輪 [ひび2]" {
 		t.Errorf("label %q", g.Label(b))
+	}
+	if g.Entry(b) != "腕 E 道具感知の腕輪 [ひび2]" {
+		t.Errorf("entry %q", g.Entry(b))
 	}
 	// A bracelet that never cracks.
 	p := carry(g, "chikara", 0)

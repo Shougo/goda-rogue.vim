@@ -67,7 +67,7 @@ func (g *Game) askIdentify() bool {
 	p := &Prompt{Title: "何を識別する？", kind: promptIdentify}
 	for i, it := range g.Inventory {
 		if g.unknown(it) {
-			p.Choices = append(p.Choices, g.Label(it))
+			p.Choices = append(p.Choices, g.Entry(it))
 			p.items = append(p.items, i)
 		}
 	}

@@ -14,7 +14,7 @@ func pot(g *Game, id string, n int) *Item {
 	return p
 }
 
-// choose chooses the choice c of the prompt.
+// chooseLabel chooses the choice c of the prompt.
 func chooseLabel(t *testing.T, g *Game, c string) {
 	t.Helper()
 	if g.Prompt == nil {
@@ -38,7 +38,7 @@ func TestKeepingPot(t *testing.T) {
 	}
 	command(t, g, p, commandPutIn)
 	turn := g.Turn
-	chooseLabel(t, g, g.Label(grass))
+	chooseLabel(t, g, g.Entry(grass))
 	if !slices.Equal(p.Contents, []*Item{grass}) || slices.Contains(g.Inventory, grass) || g.Turn != turn+1 {
 		t.Fatalf("contents %v, turn %d", p.Contents, g.Turn)
 	}
@@ -46,7 +46,7 @@ func TestKeepingPot(t *testing.T) {
 		t.Errorf("label %q, message %q", g.Label(p), g.Message)
 	}
 	command(t, g, p, commandTakeOut)
-	chooseLabel(t, g, "草 薬草")
+	chooseLabel(t, g, "草   薬草")
 	if len(p.Contents) != 0 || !slices.Contains(g.Inventory, grass) {
 		t.Errorf("contents %v", p.Contents)
 	}
@@ -69,7 +69,7 @@ func TestSynthesis(t *testing.T) {
 	put := func(it *Item) {
 		t.Helper()
 		command(t, g, p, commandPutIn)
-		chooseLabel(t, g, g.Label(it))
+		chooseLabel(t, g, g.Entry(it))
 	}
 	put(base)
 	if base.Equipped {
@@ -109,10 +109,10 @@ func TestMendBracelet(t *testing.T) {
 	b := carry(g, "kehai", 0)
 	b.Cracks = 2
 	command(t, g, p, commandPutIn)
-	chooseLabel(t, g, g.Label(b))
+	chooseLabel(t, g, g.Entry(b))
 	other := carry(g, "kehai", 0)
 	command(t, g, p, commandPutIn)
-	chooseLabel(t, g, g.Label(other))
+	chooseLabel(t, g, g.Entry(other))
 	if b.Cracks != 0 || len(p.Contents) != 1 || !strings.Contains(g.Message, "ひびが直った") {
 		t.Errorf("cracks %d, contents %d, message %q", b.Cracks, len(p.Contents), g.Message)
 	}

@@ -140,8 +140,9 @@ function! s:items() abort
   let s:asked = {}
   call goda_rogue#do('inventory')
   call s:check('inventory title', get(s:asked, 'title', ''), '持ち物')
-  call s:check('inventory icon', get(s:asked, 'choices', [''])[0] =~# '^\S \S', 1)
-  let name = s:asked.choices[0]
+  " An icon, a column marking the equipped items, and the name.
+  call s:check('inventory icon', get(s:asked, 'choices', [''])[0] =~# '^\S [ E] \S', 1)
+  let name = substitute(s:asked.choices[0], '^\(\S\) [ E] ', '\1 ', '')
   call s:answer(1)
   call s:check('item prompt', s:asked.title, name)
   call s:check('item commands', s:asked.choices[-1], '置く')
