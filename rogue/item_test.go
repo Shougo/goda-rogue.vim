@@ -524,7 +524,7 @@ func TestFoot(t *testing.T) {
 	if err := g.Do("choose", []string{"0"}); err != nil {
 		t.Fatal(err)
 	}
-	if !slices.Equal(g.Prompt.Choices, []string{commandPickUp, commandDrink, commandThrow}) {
+	if !slices.Equal(g.Prompt.Choices, []string{commandPickUp, commandDrink, commandThrow, commandInfo}) {
 		t.Fatalf("choices %q", g.Prompt.Choices)
 	}
 
@@ -546,7 +546,7 @@ func TestFoot(t *testing.T) {
 		t.Fatalf("choices %q", g.Prompt.Choices)
 	}
 	chooseLabel(t, g, g.Prompt.Choices[1])
-	if !slices.Equal(g.Prompt.Choices, []string{commandPickUp, commandThrow}) {
+	if !slices.Equal(g.Prompt.Choices, []string{commandPickUp, commandThrow, commandInfo}) {
 		t.Fatalf("choices %q", g.Prompt.Choices)
 	}
 	chooseLabel(t, g, commandPickUp)

@@ -132,7 +132,7 @@ func inPotCommands(pot, it *Item) []string {
 		}
 		cs = append(cs, commandThrow)
 	}
-	return append(cs, commandTakeOut)
+	return append(cs, commandTakeOut, commandInfo)
 }
 
 // askInPot asks what to do with the item at index n in the pot at index i
@@ -152,6 +152,10 @@ func (g *Game) askInPot(i, n int) {
 func (g *Game) doInPot(i, n int, c string) bool {
 	pot := g.Inventory[i]
 	it := pot.Contents[n]
+	if c == commandInfo {
+		g.showInfo(it)
+		return false
+	}
 	if pot.ForSale && c != commandTakeOut {
 		g.say("店主「お代を払ってからにしてください。」")
 		return false

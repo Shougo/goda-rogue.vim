@@ -47,7 +47,7 @@ func TestKeepingPot(t *testing.T) {
 	}
 	command(t, g, p, commandLook)
 	chooseLabel(t, g, "草   薬草")
-	if !slices.Equal(g.Prompt.Choices, []string{commandDrink, commandThrow, commandTakeOut}) {
+	if !slices.Equal(g.Prompt.Choices, []string{commandDrink, commandThrow, commandTakeOut, commandInfo}) {
 		t.Fatalf("choices %q", g.Prompt.Choices)
 	}
 	chooseLabel(t, g, commandTakeOut)
@@ -143,7 +143,7 @@ func TestSynthesis(t *testing.T) {
 	// Nothing comes out of it, nor is used in it.
 	command(t, g, p, commandLook)
 	chooseLabel(t, g, g.Entry(base))
-	if !slices.Equal(g.Prompt.Choices, []string{commandTakeOut}) {
+	if !slices.Equal(g.Prompt.Choices, []string{commandTakeOut, commandInfo}) {
 		t.Fatalf("choices %q", g.Prompt.Choices)
 	}
 	chooseLabel(t, g, commandTakeOut)

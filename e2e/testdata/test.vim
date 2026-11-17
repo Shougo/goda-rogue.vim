@@ -145,7 +145,7 @@ function! s:items() abort
   let name = substitute(s:asked.choices[0], '^\(\S\) [ E] ', '\1 ', '')
   call s:answer(1)
   call s:check('item prompt', s:asked.title, name)
-  call s:check('item commands', s:asked.choices[-1], '置く')
+  call s:check('item commands', s:asked.choices[-2:], ['置く', '説明'])
   let turn = s:status()
   call s:answer(0)
   call s:check('cancel', s:status(), turn)

@@ -1,0 +1,133 @@
+package rogue
+
+import (
+	"fmt"
+	"strings"
+)
+
+// commandInfo shows what an item is and does; it costs no turn.
+const commandInfo = "説明"
+
+// promptInfo shows the description of an item: any answer closes it.
+const promptInfo = "info"
+
+// effectTexts say what each effect does, by the category of the item
+// ("%d" is its strength).
+var effectTexts = map[Effect]string{
+	EffectStrength:   "ちからが %d 上がる。",
+	EffectRegen:      "HP の回復が 2 倍速くなる（お腹も 2 倍速く減る）。",
+	EffectSenseEnemy: "フロアの敵の居場所が分かる。",
+	EffectSenseItem:  "フロアの道具の場所が分かる。",
+	EffectHeal:       "HP が %d 回復する。HP が満タンなら最大 HP が上がる。",
+	EffectLight:      "フロア全体が明るくなり、地形と道具と敵が見える。",
+	EffectIdentify:   "持ち物を 1 つ識別する。",
+	EffectBlowAway:   "魔法弾が当たった敵を 10 マス吹き飛ばす。",
+	EffectFood:       "満腹度が %d 回復する。",
+	EffectKeep:       "入れた道具をしまっておける。「見る」で中の道具を使える。",
+	EffectSynthesis: "武器と盾は、先に入れた同じ種類のものに印と修正値が合成される。" +
+		"同じ腕輪を入れるとひびが直る。中のものは出せない。",
+}
+
+// sealTexts say what each seal does ("%d" is its strength).
+var sealTexts = map[SealEffect]string{
+	SealAttack:   "攻撃力 +%d。",
+	SealDefense:  "防御力 +%d。",
+	SealCrit:     "%d%% の確率で会心の一撃（2 倍のダメージ）。",
+	SealSure:     "攻撃が必ず当たる。",
+	SealCounter:  "%d%% の確率で受けたダメージを相手に返す。",
+	SealNoRust:   "武器と盾がサビない。",
+	SealNoHunger: "お腹が減る速さが半分になる。",
+}
+
+// usePrefixes say when the effect of an item of each category happens.
+var usePrefixes = map[Category]string{
+	CategoryBracelet: "装備している間、",
+	CategoryGrass:    "飲むと、",
+	CategoryScroll:   "読むと、",
+	CategoryStaff:    "振ると、",
+	CategoryFood:     "食べると、",
+}
+
+// effectText says what the effect of def does.
+func effectText(def *ItemDef) string {
+	t, ok := effectTexts[def.Effect]
+	if !ok {
+		return "特に効果はない。"
+	}
+	if def.Category == CategoryPot {
+		return t
+	}
+	return usePrefixes[def.Category] + withStrength(t, def.Strength)
+}
+
+// withStrength puts n in t, if it has a place for it.
+func withStrength(t string, n int) string {
+	if strings.Contains(t, "%d") {
+		return fmt.Sprintf(t, n)
+	}
+	return t
+}
+
+// info returns the lines that describe it: what it is, its numbers, and
+// what it does, as far as the player knows.
+func (g *Game) info(it *Item) []string {
+	def := it.Def
+	lines := []string{fmt.Sprintf("%s（%s）", g.describe(it), def.Category)}
+	if !g.identified[def.ID] {
+		return append(lines, "正体はまだ分からない。使うか識別すると分かる。")
+	}
+	switch def.Category {
+	case CategoryWeapon, CategoryShield:
+		what := "攻撃力"
+		if def.Category == CategoryShield {
+			what = "防御力"
+		}
+		if it.Known {
+			lines = append(lines, fmt.Sprintf("%s %d（基本 %d、修正値 %+d）", what, it.Strength(), def.Strength, it.Upgrade))
+		} else {
+			lines = append(lines, fmt.Sprintf("%s %d+?（修正値は装備するか識別すると分かる）", what, def.Strength))
+		}
+		lines = append(lines, fmt.Sprintf("印 %d/%d", len(it.Seals), def.Slots))
+		for _, s := range it.Seals {
+			sd := g.Dungeon.Seal(s)
+			if sd == nil {
+				continue
+			}
+			lines = append(lines, fmt.Sprintf("【%s】%s：%s", s, sd.Name, withStrength(sealTexts[sd.Effect], sd.Strength)))
+		}
+	case CategoryArrow:
+		lines = append(lines, fmt.Sprintf("攻撃力 %d。%d 本。装備すると撃てる。", def.Strength, it.Count))
+	case CategoryBracelet:
+		lines = append(lines, effectText(def))
+		switch {
+		case def.Crack == 0:
+			lines = append(lines, "ひびは入らない。")
+		default:
+			lines = append(lines, fmt.Sprintf("ひび %d/%d（効果を発揮したフロアを出るとき、ひびが入ることがある）", it.Cracks, g.Dungeon.Rules.CrackStages))
+		}
+	case CategoryStaff:
+		lines = append(lines, effectText(def))
+		if it.Known {
+			lines = append(lines, fmt.Sprintf("残り %d 回。", it.Charges))
+		} else {
+			lines = append(lines, "残りの回数は分からない。")
+		}
+	case CategoryPot:
+		lines = append(lines, effectText(def))
+		if it.Known {
+			lines = append(lines, fmt.Sprintf("あと %d 個入る（%d 個入っている）。", it.Charges-len(it.Contents), len(it.Contents)))
+		}
+	default:
+		lines = append(lines, effectText(def))
+	}
+	if it.ForSale {
+		lines = append(lines, fmt.Sprintf("値段 %dG（店の商品）", price(it)))
+	}
+	return lines
+}
+
+// showInfo shows the description of it.
+func (g *Game) showInfo(it *Item) {
+	lines := g.info(it)
+	g.Prompt = &Prompt{Title: commandInfo, Choices: lines, kind: promptInfo}
+}

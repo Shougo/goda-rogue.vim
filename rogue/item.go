@@ -204,7 +204,7 @@ func (it *Item) commands() []string {
 			cs = append(cs, commandEquip)
 		}
 	}
-	return append(cs, commandThrow, commandDrop)
+	return append(cs, commandThrow, commandDrop, commandInfo)
 }
 
 // sortInventory sorts the inventory by category, and by the order of the
@@ -312,7 +312,7 @@ func (it *Item) footCommands() []string {
 	if c, ok := useCommands[it.Def.Category]; ok {
 		cs = append(cs, c)
 	}
-	return append(cs, commandThrow)
+	return append(cs, commandThrow, commandInfo)
 }
 
 // choose answers the prompt with the choice n; it says whether the turn
@@ -348,6 +348,8 @@ func (g *Game) choose(arg string) (bool, error) {
 		return false, nil
 	case promptFoot:
 		return g.doAtFoot(p.Choices[n]), nil
+	case promptInfo:
+		return false, nil
 	case promptLook:
 		g.lookAt(n)
 		return false, nil
@@ -397,6 +399,9 @@ func (g *Game) choose(arg string) (bool, error) {
 		case commandLook:
 			g.lookIn(p.item)
 			return false, nil
+		case commandInfo:
+			g.showInfo(it)
+			return false, nil
 		case commandThrow:
 			g.throwItem(g.Inventory[p.item])
 			return true, nil
@@ -415,8 +420,12 @@ func (g *Game) doAtFoot(c string) bool {
 	if it == nil {
 		return false
 	}
-	if c == commandPickUp {
+	switch c {
+	case commandPickUp:
 		return g.pickUp()
+	case commandInfo:
+		g.showInfo(it)
+		return false
 	}
 	if it.ForSale {
 		g.say("店主「お代を払ってからにしてください。」")

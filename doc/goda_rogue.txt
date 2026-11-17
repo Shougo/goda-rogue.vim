@@ -231,7 +231,8 @@ inventory						*goda-rogue-inventory*
 		as an arrow flies: a grass has its effect on the monster it
 		hits, other items hurt it a little and fall by it), 見る
 		or 入れる (see what is in a pot, put an item in it), 置く
-		(drop it).  The items are sorted by kind, each with the
+		(drop it), 説明 (what it is and does: the attack of a
+		weapon, its seals, the effect of a grass; no turn).  The items are sorted by kind, each with the
 		glyph of its kind as an icon; a pot shows the icons of what
 		is in it (保存の壺[1]【草草巻】).
 		The item under the player comes last, marked [足元]: it can
