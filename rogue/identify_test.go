@@ -150,6 +150,20 @@ func TestIdentifyScroll(t *testing.T) {
 		t.Errorf("message %q", g.Message)
 	}
 
+	// An item under the player too.
+	foot := putAtFoot(g, "chikarakusa")
+	command(t, g, carry(g, "shikibetsu", 0), commandRead)
+	if !slices.Equal(g.Prompt.Choices, []string{g.Entry(foot) + " [足元]"}) {
+		t.Fatalf("choices %q", g.Prompt.Choices)
+	}
+	if err := g.Do("choose", []string{"0"}); err != nil {
+		t.Fatal(err)
+	}
+	if g.unknown(foot) {
+		t.Error("the item under the player is still unknown")
+	}
+	g.discard(foot)
+
 	// Nothing left to identify.
 	command(t, g, carry(g, "shikibetsu", 0), commandRead)
 	if g.Prompt != nil || !strings.Contains(g.Message, "識別するものはなかった。") {

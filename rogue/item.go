@@ -164,6 +164,7 @@ const (
 	promptInventory = "inventory"
 	promptItem      = "item"
 	promptIdentify  = "identify"
+	promptFoot      = "foot"
 )
 
 // The commands of an item.
@@ -176,6 +177,7 @@ const (
 	commandWave    = "振る"
 	commandEat     = "食べる"
 	commandThrow   = "投げる"
+	commandPickUp  = "拾う"
 )
 
 // useCommands are the commands that use an item, by its category.
@@ -258,17 +260,59 @@ func (g *Game) pickUp() bool {
 	return true
 }
 
-// openInventory asks which item.
+// foot is the item under the player, to choose from the inventory as in
+// Shiren, or nil (money is picked up as soon as walked on).
+func (g *Game) foot() *Item {
+	it, ok := g.ItemAt(g.Player)
+	if !ok || it.Def.Category == CategoryMoney {
+		return nil
+	}
+	return it
+}
+
+// footIndex stands for the item under the player in the items of a prompt.
+const footIndex = -1
+
+// item returns the item at index i of the inventory, or the item under
+// the player for footIndex.
+func (g *Game) item(i int) *Item {
+	if i == footIndex {
+		return g.foot()
+	}
+	return g.Inventory[i]
+}
+
+// footEntry is the line of the item under the player in a list of items.
+func (g *Game) footEntry(it *Item) string { return g.Entry(it) + " [足元]" }
+
+// openInventory asks which item: one carried, or the one under the
+// player, last.
 func (g *Game) openInventory() {
-	if len(g.Inventory) == 0 {
+	foot := g.foot()
+	if len(g.Inventory) == 0 && foot == nil {
 		g.say("何も持っていない。")
 		return
 	}
 	p := &Prompt{Title: "持ち物", kind: promptInventory}
-	for _, it := range g.Inventory {
+	for i, it := range g.Inventory {
 		p.Choices = append(p.Choices, g.Entry(it))
+		p.items = append(p.items, i)
+	}
+	if foot != nil {
+		p.Choices = append(p.Choices, g.footEntry(foot))
+		p.items = append(p.items, footIndex)
 	}
 	g.Prompt = p
+}
+
+// footCommands returns what can be done with the item under the player:
+// pick it up, use it where it is, throw it.
+func (it *Item) footCommands() []string {
+	cs := []string{commandPickUp}
+	if c, ok := useCommands[it.Def.Category]; ok {
+		cs = append(cs, c)
+	}
+	return append(cs, commandThrow)
 }
 
 // choose answers the prompt with the choice n; it says whether the turn
@@ -285,13 +329,25 @@ func (g *Game) choose(arg string) (bool, error) {
 	g.Prompt = nil
 	switch p.kind {
 	case promptInventory:
-		it := g.Inventory[n]
+		i := p.items[n]
+		if i == footIndex {
+			it := g.foot()
+			g.Prompt = &Prompt{
+				Title:   g.Label(it) + " [足元]",
+				Choices: it.footCommands(),
+				kind:    promptFoot,
+			}
+			return false, nil
+		}
+		it := g.Inventory[i]
 		g.Prompt = &Prompt{
 			Title:   g.Label(it),
 			Choices: it.commands(),
-			kind:    promptItem, item: n,
+			kind:    promptItem, item: i,
 		}
 		return false, nil
+	case promptFoot:
+		return g.doAtFoot(p.Choices[n]), nil
 	case promptLook:
 		g.lookAt(n)
 		return false, nil
@@ -304,7 +360,7 @@ func (g *Game) choose(arg string) (bool, error) {
 	case promptInPot:
 		return g.doInPot(p.item, p.items[0], p.Choices[n]), nil
 	case promptIdentify:
-		it := g.Inventory[p.items[n]]
+		it := g.item(p.items[n])
 		g.learn(it)
 		g.say(g.describe(it) + "を識別した。")
 		return false, nil
@@ -350,6 +406,31 @@ func (g *Game) choose(arg string) (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+// doAtFoot does the command c with the item under the player; it says
+// whether the turn passes.
+func (g *Game) doAtFoot(c string) bool {
+	it := g.foot()
+	if it == nil {
+		return false
+	}
+	if c == commandPickUp {
+		return g.pickUp()
+	}
+	if it.ForSale {
+		g.say("店主「お代を払ってからにしてください。」")
+		return false
+	}
+	switch c {
+	case commandThrow:
+		g.throwItem(it)
+	case commandDrink, commandRead, commandWave, commandEat:
+		g.useItem(it)
+	default:
+		return false
+	}
+	return true
 }
 
 // drop puts the item at index i of the inventory under the player; it

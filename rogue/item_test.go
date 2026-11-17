@@ -501,3 +501,56 @@ func TestWear(t *testing.T) {
 		}
 	}
 }
+
+// putAtFoot puts the item id under the player.
+func putAtFoot(g *Game, id string) *Item {
+	def := g.Dungeon.Item(id)
+	it := &Item{Def: def, Glyph: def.Glyph, Pos: g.Player, Known: true}
+	g.Items = append(g.Items, it)
+	return it
+}
+
+// TestFoot chooses the item under the player from the inventory.
+func TestFoot(t *testing.T) {
+	g, _ := roomGame(t, 4, 3)
+	g.Monsters = nil
+	putAtFoot(g, "yakusou")
+	if err := g.Do("inventory", nil); err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(g.Prompt.Choices, []string{"草   薬草 [足元]"}) {
+		t.Fatalf("choices %q", g.Prompt.Choices)
+	}
+	if err := g.Do("choose", []string{"0"}); err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(g.Prompt.Choices, []string{commandPickUp, commandDrink, commandThrow}) {
+		t.Fatalf("choices %q", g.Prompt.Choices)
+	}
+
+	// Drunk where it lies.
+	g.HP = 1
+	turn := g.Turn
+	chooseLabel(t, g, commandDrink)
+	if g.HP == 1 || len(g.Items) != 0 || g.Turn != turn+1 {
+		t.Errorf("HP %d, items %v, turn %d", g.HP, g.Items, g.Turn)
+	}
+
+	// Picked up, after what is carried.
+	carry(g, "onigiri", 0)
+	sword := putAtFoot(g, "bokutou")
+	if err := g.Do("inventory", nil); err != nil {
+		t.Fatal(err)
+	}
+	if len(g.Prompt.Choices) != 2 || g.Prompt.Choices[1] != g.Entry(sword)+" [足元]" {
+		t.Fatalf("choices %q", g.Prompt.Choices)
+	}
+	chooseLabel(t, g, g.Prompt.Choices[1])
+	if !slices.Equal(g.Prompt.Choices, []string{commandPickUp, commandThrow}) {
+		t.Fatalf("choices %q", g.Prompt.Choices)
+	}
+	chooseLabel(t, g, commandPickUp)
+	if !slices.Contains(g.Inventory, sword) || len(g.Items) != 0 {
+		t.Errorf("inventory %v, items %v", g.Inventory, g.Items)
+	}
+}

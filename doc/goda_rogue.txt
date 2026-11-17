@@ -234,6 +234,9 @@ inventory						*goda-rogue-inventory*
 		(drop it).  The items are sorted by kind, each with the
 		glyph of its kind as an icon; a pot shows the icons of what
 		is in it (保存の壺[1]【草草巻】).
+		The item under the player comes last, marked [足元]: it can
+		be picked up (拾う), used or thrown where it lies.  A scroll
+		of identification can identify it too.
 		見る lists the items in a pot: one of them can be taken out
 		(出す), and in a pot of keeping (保存の壺) also used or
 		thrown where it is.  A pot of synthesis (合成の壺) gives

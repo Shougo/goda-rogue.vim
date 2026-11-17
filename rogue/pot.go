@@ -188,10 +188,11 @@ func (g *Game) takeOut(pot *Item, n int) bool {
 	return true
 }
 
-// discard takes it away from where the player keeps it: the inventory, or
-// a pot in it (an item used or thrown).
+// discard takes it away from where the player has it: the inventory, a
+// pot in it, or under its feet (an item used or thrown).
 func (g *Game) discard(it *Item) {
 	g.Inventory = slices.DeleteFunc(g.Inventory, func(x *Item) bool { return x == it })
+	g.Items = slices.DeleteFunc(g.Items, func(x *Item) bool { return x == it })
 	for _, pot := range g.Inventory {
 		pot.Contents = slices.DeleteFunc(pot.Contents, func(x *Item) bool { return x == it })
 	}
