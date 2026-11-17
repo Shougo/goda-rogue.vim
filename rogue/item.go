@@ -324,12 +324,13 @@ func (g *Game) choose(arg string) (bool, error) {
 			return false, nil
 		}
 		switch p.Choices[n] {
+		// Arrows are equipped and taken off without a turn, as in Shiren.
 		case commandEquip:
-			g.equip(g.Inventory[p.item])
-			return true, nil
+			g.equip(it)
+			return it.Def.Category != CategoryArrow, nil
 		case commandUnequip:
-			g.unequip(g.Inventory[p.item])
-			return true, nil
+			g.unequip(it)
+			return it.Def.Category != CategoryArrow, nil
 		case commandDrop:
 			return g.drop(p.item), nil
 		case commandPutIn:

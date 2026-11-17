@@ -28,13 +28,17 @@ func TestShoot(t *testing.T) {
 	if g.Label(a) != "矢 木の矢[3]" {
 		t.Errorf("label %q", g.Label(a))
 	}
+	// Equipping arrows takes no turn.
 	command(t, g, a, commandEquip)
+	if !a.Equipped || g.Turn != 0 {
+		t.Fatalf("equipped %v, turn %d", a.Equipped, g.Turn)
+	}
 	m := place(g, kind("nezumi4"), Point{r.X + 3, r.Y})
 	m.HP = 999
 	if err := g.Do("shoot", nil); err != nil {
 		t.Fatal(err)
 	}
-	if a.Count != 2 || m.HP == 999 || g.Turn != 2 {
+	if a.Count != 2 || m.HP == 999 || g.Turn != 1 {
 		t.Errorf("count %d, HP %d, turn %d", a.Count, m.HP, g.Turn)
 	}
 	if !strings.HasPrefix(g.Message, "木の矢を撃った。鉄鼠に") {
