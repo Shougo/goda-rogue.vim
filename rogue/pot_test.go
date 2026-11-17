@@ -42,19 +42,63 @@ func TestKeepingPot(t *testing.T) {
 	if !slices.Equal(p.Contents, []*Item{grass}) || slices.Contains(g.Inventory, grass) || g.Turn != turn+1 {
 		t.Fatalf("contents %v, turn %d", p.Contents, g.Turn)
 	}
-	if g.Label(p) != "壺 保存の壺[1]" || g.Message != "薬草を保存の壺に入れた。" {
+	if g.Label(p) != "壺 保存の壺[1]【草】" || g.Message != "薬草を保存の壺に入れた。" {
 		t.Errorf("label %q, message %q", g.Label(p), g.Message)
 	}
-	command(t, g, p, commandTakeOut)
+	command(t, g, p, commandLook)
 	chooseLabel(t, g, "草   薬草")
-	if len(p.Contents) != 0 || !slices.Contains(g.Inventory, grass) {
-		t.Errorf("contents %v", p.Contents)
+	if !slices.Equal(g.Prompt.Choices, []string{commandDrink, commandThrow, commandTakeOut}) {
+		t.Fatalf("choices %q", g.Prompt.Choices)
+	}
+	chooseLabel(t, g, commandTakeOut)
+	if len(p.Contents) != 0 || !slices.Contains(g.Inventory, grass) || g.Label(p) != "壺 保存の壺[2]" {
+		t.Errorf("contents %v, label %q", p.Contents, g.Label(p))
 	}
 
 	// Full.
 	p.Contents = []*Item{carry(g, "onigiri", 0), carry(g, "onigiri", 0)}
 	command(t, g, p, commandPutIn)
 	if g.Prompt != nil || g.Message != "保存の壺はいっぱいだ。" {
+		t.Errorf("prompt %+v, message %q", g.Prompt, g.Message)
+	}
+}
+
+// TestUseInPot uses items kept in a pot of keeping where they are.
+func TestUseInPot(t *testing.T) {
+	g, _ := roomGame(t, 4, 3)
+	p := pot(g, "hozon", 3)
+	grass := carry(g, "yakusou", 0)
+	food := carry(g, "onigiri", 0)
+	g.discard(grass)
+	g.discard(food)
+	p.Contents = []*Item{grass, food}
+	g.HP = 1
+
+	turn := g.Turn
+	command(t, g, p, commandLook)
+	if g.Prompt.Title != "保存の壺の中" {
+		t.Errorf("title %q", g.Prompt.Title)
+	}
+	chooseLabel(t, g, g.Entry(grass))
+	chooseLabel(t, g, commandDrink)
+	if g.HP == 1 || !slices.Equal(p.Contents, []*Item{food}) || g.Turn != turn+1 {
+		t.Errorf("HP %d, contents %v, turn %d", g.HP, p.Contents, g.Turn)
+	}
+	if g.Label(p) != "壺 保存の壺[2]【食】" {
+		t.Errorf("label %q", g.Label(p))
+	}
+
+	// Thrown from the pot.
+	command(t, g, p, commandLook)
+	chooseLabel(t, g, g.Entry(food))
+	chooseLabel(t, g, commandThrow)
+	if len(p.Contents) != 0 || len(g.Items) != 1 {
+		t.Errorf("contents %v, items %v", p.Contents, g.Items)
+	}
+
+	// Nothing in it.
+	command(t, g, p, commandLook)
+	if g.Prompt != nil || g.Message != "保存の壺には何も入っていない。" {
 		t.Errorf("prompt %+v, message %q", g.Prompt, g.Message)
 	}
 }
@@ -96,8 +140,13 @@ func TestSynthesis(t *testing.T) {
 		t.Errorf("label %q", g.describe(base))
 	}
 
-	// Nothing comes out of it.
-	command(t, g, p, commandTakeOut)
+	// Nothing comes out of it, nor is used in it.
+	command(t, g, p, commandLook)
+	chooseLabel(t, g, g.Entry(base))
+	if !slices.Equal(g.Prompt.Choices, []string{commandTakeOut}) {
+		t.Fatalf("choices %q", g.Prompt.Choices)
+	}
+	chooseLabel(t, g, commandTakeOut)
 	if g.Prompt != nil || !strings.Contains(g.Message, "からは出せない。") {
 		t.Errorf("message %q", g.Message)
 	}

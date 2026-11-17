@@ -2,14 +2,13 @@ package rogue
 
 import (
 	"fmt"
-	"slices"
 )
 
 // useItem uses it: drinks a grass, reads a scroll, waves a staff, eats
 // food. All but a staff are used up.
 func (g *Game) useItem(it *Item) {
 	if it.Def.Category != CategoryStaff {
-		g.Inventory = slices.DeleteFunc(g.Inventory, func(x *Item) bool { return x == it })
+		g.discard(it)
 	}
 	name := g.Name(it)
 	switch it.Def.Category {

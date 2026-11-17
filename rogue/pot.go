@@ -5,27 +5,40 @@ import (
 	"slices"
 )
 
-// The commands of a pot.
+// The commands of a pot, and of an item in it.
 const (
+	commandLook    = "見る"
 	commandPutIn   = "入れる"
 	commandTakeOut = "出す"
 )
 
-// The prompts of a pot: the item to put in it, to take out of it.
+// The prompts of a pot: the item to put in it, an item in it, what to do
+// with that item.
 const (
-	promptPutIn   = "put in"
-	promptTakeOut = "take out"
+	promptPutIn = "put in"
+	promptPot   = "pot"
+	promptInPot = "in pot"
 )
 
-// potLabel shows how many more items it holds, once known: "[2]".
+// potLabel shows how many more items it holds, once known, and the icons
+// of what is in it: "[2]【草巻】".
 func (g *Game) potLabel(it *Item) string {
-	if !g.identified[it.Def.ID] {
-		return ""
+	s := ""
+	switch {
+	case !g.identified[it.Def.ID]:
+	case !it.Known:
+		s = "[?]"
+	default:
+		s = fmt.Sprintf("[%d]", it.Charges-len(it.Contents))
 	}
-	if !it.Known {
-		return "[?]"
+	if len(it.Contents) > 0 {
+		s += "【"
+		for _, c := range it.Contents {
+			s += c.Glyph
+		}
+		s += "】"
 	}
-	return fmt.Sprintf("[%d]", it.Charges-len(it.Contents))
+	return s
 }
 
 // askPutIn asks which item to put in the pot it (at index i).
@@ -94,18 +107,70 @@ func (g *Game) merge(base, it *Item) bool {
 	return false
 }
 
-// askTakeOut asks which item to take out of the pot it (at index i).
-func (g *Game) askTakeOut(i int) bool {
+// lookIn shows what is in the pot it (at index i), to choose one.
+func (g *Game) lookIn(i int) {
 	pot := g.Inventory[i]
 	if len(pot.Contents) == 0 {
 		g.say(g.Name(pot) + "には何も入っていない。")
-		return false
+		return
 	}
-	p := &Prompt{Title: g.Name(pot) + "から出す", kind: promptTakeOut, item: i}
+	p := &Prompt{Title: g.Name(pot) + "の中", kind: promptPot, item: i}
 	for _, it := range pot.Contents {
 		p.Choices = append(p.Choices, g.Entry(it))
 	}
 	g.Prompt = p
+}
+
+// inPotCommands returns what can be done with an item in pot: in a pot of
+// keeping, it is used (or thrown) where it is; from any pot, it can be
+// taken out.
+func inPotCommands(pot, it *Item) []string {
+	var cs []string
+	if pot.Def.Effect == EffectKeep {
+		if c, ok := useCommands[it.Def.Category]; ok {
+			cs = append(cs, c)
+		}
+		cs = append(cs, commandThrow)
+	}
+	return append(cs, commandTakeOut)
+}
+
+// askInPot asks what to do with the item at index n in the pot at index i
+// of the inventory.
+func (g *Game) askInPot(i, n int) {
+	pot := g.Inventory[i]
+	it := pot.Contents[n]
+	g.Prompt = &Prompt{
+		Title:   g.Label(it),
+		Choices: inPotCommands(pot, it),
+		kind:    promptInPot, item: i, items: []int{n},
+	}
+}
+
+// doInPot does the command c with the item at index n in the pot at index
+// i; it says whether the turn passes.
+func (g *Game) doInPot(i, n int, c string) bool {
+	pot := g.Inventory[i]
+	it := pot.Contents[n]
+	if pot.ForSale && c != commandTakeOut {
+		g.say("店主「お代を払ってからにしてください。」")
+		return false
+	}
+	switch c {
+	case commandTakeOut:
+		if pot.Def.Effect == EffectSynthesis {
+			g.learn(pot)
+			g.say(g.Name(pot) + "からは出せない。")
+			return true
+		}
+		return g.takeOut(pot, n)
+	case commandThrow:
+		g.throwItem(it)
+		return true
+	case commandDrink, commandRead, commandWave, commandEat:
+		g.useItem(it)
+		return true
+	}
 	return false
 }
 
@@ -121,6 +186,15 @@ func (g *Game) takeOut(pot *Item, n int) bool {
 	g.sortInventory()
 	g.say(g.Name(it) + "を" + g.Name(pot) + "から出した。")
 	return true
+}
+
+// discard takes it away from where the player keeps it: the inventory, or
+// a pot in it (an item used or thrown).
+func (g *Game) discard(it *Item) {
+	g.Inventory = slices.DeleteFunc(g.Inventory, func(x *Item) bool { return x == it })
+	for _, pot := range g.Inventory {
+		pot.Contents = slices.DeleteFunc(pot.Contents, func(x *Item) bool { return x == it })
+	}
 }
 
 // smash breaks a thrown pot on p: what was in it falls around.

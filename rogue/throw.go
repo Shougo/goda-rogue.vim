@@ -2,7 +2,6 @@ package rogue
 
 import (
 	"fmt"
-	"slices"
 )
 
 // throwRange is how far a thrown item flies.
@@ -30,7 +29,7 @@ func (g *Game) throwItem(it *Item) {
 		thrown = &Item{Def: it.Def, Glyph: it.Glyph, Count: 1}
 		g.say(g.Name(it) + "を撃った。")
 	} else {
-		g.Inventory = slices.DeleteFunc(g.Inventory, func(x *Item) bool { return x == it })
+		g.discard(it)
 		it.Equipped, it.used = false, false
 		if it.Def.Category == CategoryArrow {
 			g.say(g.Name(it) + "を撃った。")

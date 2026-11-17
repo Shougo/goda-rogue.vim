@@ -193,7 +193,7 @@ func (it *Item) commands() []string {
 		cs = append(cs, c)
 	}
 	if it.Def.Category == CategoryPot {
-		cs = append(cs, commandPutIn, commandTakeOut)
+		cs = append(cs, commandLook, commandPutIn)
 	}
 	if it.equipment() {
 		if it.Equipped {
@@ -298,8 +298,11 @@ func (g *Game) choose(arg string) (bool, error) {
 	case promptPutIn:
 		g.putIn(g.Inventory[p.item], g.Inventory[p.items[n]])
 		return true, nil
-	case promptTakeOut:
-		return g.takeOut(g.Inventory[p.item], n), nil
+	case promptPot:
+		g.askInPot(p.item, n)
+		return false, nil
+	case promptInPot:
+		return g.doInPot(p.item, p.items[0], p.Choices[n]), nil
 	case promptIdentify:
 		it := g.Inventory[p.items[n]]
 		g.learn(it)
@@ -335,14 +338,9 @@ func (g *Game) choose(arg string) (bool, error) {
 			return g.drop(p.item), nil
 		case commandPutIn:
 			return g.askPutIn(p.item), nil
-		case commandTakeOut:
-			pot := g.Inventory[p.item]
-			if pot.Def.Effect == EffectSynthesis {
-				g.learn(pot)
-				g.say(g.Name(pot) + "からは出せない。")
-				return true, nil
-			}
-			return g.askTakeOut(p.item), nil
+		case commandLook:
+			g.lookIn(p.item)
+			return false, nil
 		case commandThrow:
 			g.throwItem(g.Inventory[p.item])
 			return true, nil

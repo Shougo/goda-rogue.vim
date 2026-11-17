@@ -229,10 +229,15 @@ inventory						*goda-rogue-inventory*
 		振る (a staff), 食べる (food), 装備する or 外す (a weapon, a
 		shield, a bracelet or arrows), 投げる (throw it to the front,
 		as an arrow flies: a grass has its effect on the monster it
-		hits, other items hurt it a little and fall by it), 入れる
-		or 出す (put an item in a pot, take one out), 置く (drop
-		it).  The items are sorted by kind,
-		each with the glyph of its kind as an icon.
+		hits, other items hurt it a little and fall by it), 見る
+		or 入れる (see what is in a pot, put an item in it), 置く
+		(drop it).  The items are sorted by kind, each with the
+		glyph of its kind as an icon; a pot shows the icons of what
+		is in it (保存の壺[1]【草草巻】).
+		見る lists the items in a pot: one of them can be taken out
+		(出す), and in a pot of keeping (保存の壺) also used or
+		thrown where it is.  A pot of synthesis (合成の壺) gives
+		nothing back.
 
 choose {index}						*goda-rogue-choose*
 cancel							*goda-rogue-cancel*
