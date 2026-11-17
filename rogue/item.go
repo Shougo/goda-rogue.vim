@@ -482,8 +482,11 @@ func (g *Game) equip(it *Item) {
 	}
 	it.Equipped = true
 	g.say(g.Name(it) + "を装備した。")
-	// Wearing it tells what it is.
-	g.learn(it)
+	// Wearing a weapon or a shield tells its upgrade value; a bracelet
+	// tells what it is only when its effect shows (use).
+	if it.Def.Category != CategoryBracelet {
+		g.learn(it)
+	}
 }
 
 func (g *Game) unequip(it *Item) {
@@ -528,10 +531,12 @@ func (g *Game) Defense() int {
 }
 
 // use notes that the bracelet with the effect e, if the player wears it,
-// had its effect.
+// had its effect: that tells what it is.
 func (g *Game) use(e Effect) {
 	if b := g.equipped(CategoryBracelet); b != nil && b.Def.Effect == e {
 		b.used = true
+		// Its effect showing tells what it is.
+		g.identify(b)
 	}
 }
 

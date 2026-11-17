@@ -83,9 +83,22 @@ func TestEquipIdentifies(t *testing.T) {
 	b := carry(g, "kehai", 0)
 	b.Known = false
 	fake := g.Name(b)
+	// Equipping a bracelet does not tell what it is: its effect showing
+	// does.
 	command(t, g, b, commandEquip)
-	if !strings.Contains(g.Message, fake+"は気配察知の腕輪だった。") {
-		t.Errorf("message %q", g.Message)
+	if !g.unknown(b) || strings.Contains(g.Message, "だった。") {
+		t.Fatalf("identified when equipped: %q", g.Message)
+	}
+	here := g.Level.RoomAt(g.Player)
+	for i, r := range g.Level.Rooms {
+		if i != here {
+			place(g, kind("nezumi1"), Point{r.X, r.Y})
+			break
+		}
+	}
+	wait(t, g, 1)
+	if g.unknown(b) || !strings.Contains(strings.Join(g.Log, ""), fake+"は気配察知の腕輪だった。") {
+		t.Errorf("not identified by its effect: %q", g.Message)
 	}
 
 	// The upgrade value of a weapon shows once it is equipped.
