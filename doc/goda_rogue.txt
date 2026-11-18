@@ -68,8 +68,9 @@ can be sold for half its price.  Leaving the shop without paying (by
 another door, a warp, a pit) is stealing: the shopkeepers get angry, and
 guards come after the thief.  The stronger the shopkeepers (their rank,
 their number), the harder it is; deep shops sell rarer items.  Attacking
-a shopkeeper makes them angry too; with no shopkeeper left, the items are
-anyone's.
+a shopkeeper makes them angry too.  Angry shopkeepers sell no more, and
+with none left either: the items are anyone's.  Items not paid for cannot
+be put in a pot.
 
                                                             *goda-rogue-traps*
 Traps are hidden on the floors.  A swing at nothing (|goda-rogue-attack|)

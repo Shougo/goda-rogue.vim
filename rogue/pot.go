@@ -50,8 +50,10 @@ func (g *Game) askPutIn(i int) bool {
 		return false
 	}
 	p := &Prompt{Title: g.Name(pot) + "に入れる", kind: promptPutIn, item: i}
+	// Not the goods not paid for: in the pot, they would be the
+	// player's.
 	for j, it := range g.Inventory {
-		if it.Def.Category != CategoryPot {
+		if it.Def.Category != CategoryPot && !it.ForSale {
 			p.Choices = append(p.Choices, g.Entry(it))
 			p.items = append(p.items, j)
 		}

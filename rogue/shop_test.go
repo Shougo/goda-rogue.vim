@@ -169,6 +169,33 @@ func TestSell(t *testing.T) {
 	}
 }
 
+// TestNoGoodsInPot: the goods not paid for cannot be put in a pot, out of
+// the debt.
+func TestNoGoodsInPot(t *testing.T) {
+	g := shopGame(t, "yorozu")
+	pot := g.newItemOf(g.rng, g.Dungeon.Item("hozon"), g.Player)
+	g.Inventory = append(g.Inventory, pot)
+	it := pickUpGoods(t, g)
+	command(t, g, pot, commandPutIn)
+	if g.Prompt != nil && slices.Contains(g.Prompt.Choices, g.Entry(it)) {
+		t.Errorf("%q in %q", g.Entry(it), g.Prompt.Choices)
+	}
+	if g.debt() != price(it) {
+		t.Errorf("debt %d", g.debt())
+	}
+}
+
+// TestProvokeFreesGoods: angry shopkeepers sell no more; the player owes
+// them nothing.
+func TestProvokeFreesGoods(t *testing.T) {
+	g := shopGame(t, "yorozu")
+	pickUpGoods(t, g)
+	g.provoke(g.Shop.Keepers[0])
+	if g.debt() != 0 || len(forSale(g)) != 0 {
+		t.Errorf("debt %d, %d for sale", g.debt(), len(forSale(g)))
+	}
+}
+
 func TestSteal(t *testing.T) {
 	g := shopGame(t, "yorozu")
 	it := pickUpGoods(t, g)

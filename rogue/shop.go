@@ -247,13 +247,8 @@ func (g *Game) sell() {
 // steal is the player leaving the shop with what it owes: the items are
 // its, and the shopkeepers and their guards come after it.
 func (g *Game) steal() {
-	for _, it := range g.Inventory {
-		it.ForSale = false
-	}
 	g.say(sayThief)
-	for _, m := range g.Shop.Keepers {
-		m.Angry, m.Hunter, m.Dozing = true, true, false
-	}
+	g.anger()
 	def := g.Shop.Def
 	if def.Guard == nil {
 		return
@@ -306,12 +301,21 @@ func (g *Game) provoke(m *Monster) {
 		return
 	}
 	g.say("店主を怒らせてしまった！")
+	g.anger()
+}
+
+// anger makes the shopkeepers angry: they come after the player, and the
+// shop sells no more (what it sold is anyone's), so that the player owes
+// nothing to them.
+func (g *Game) anger() {
 	for _, k := range g.Shop.Keepers {
 		k.Angry, k.Hunter, k.Dozing = true, true, false
 	}
+	g.closeShop()
 }
 
-// closeShop is the shop without shopkeepers: what it sold is anyone's.
+// closeShop is the shop without shopkeepers, or with them angry: what it
+// sold is anyone's.
 func (g *Game) closeShop() {
 	for _, it := range g.Items {
 		it.ForSale = false
