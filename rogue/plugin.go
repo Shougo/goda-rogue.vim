@@ -69,6 +69,9 @@ type StartOptions struct {
 	Replay string `json:"replay"`
 	// Debug enables the debug mode (debug.go).
 	Debug bool `json:"debug"`
+	// Keep is how many replays of the runs before are kept, when the
+	// replay file is made anew (keepReplay); 0 for none.
+	Keep int `json:"keep"`
 }
 
 // LastRun says what the replay file of the last run holds.
@@ -250,6 +253,9 @@ func (p *Plugin) Handlers() map[string]sdk.Handler {
 			g := NewGame(d, opts.Seed)
 			g.DebugMode = opts.Debug
 			if opts.Replay != "" {
+				if err := keepReplay(opts.Replay, opts.Keep); err != nil {
+					return nil, fmt.Errorf("keep the last replay: %w", err)
+				}
 				rec, err := NewRecorder(opts.Replay, g)
 				if err != nil {
 					return nil, fmt.Errorf("replay: %w", err)

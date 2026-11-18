@@ -39,7 +39,8 @@ function! s:cache_dir() abort
 endfunction
 
 " The runs are kept in a data directory: the replay file of the last run
-" (also the suspended run), and the replays saved by goda_rogue#save_replay().
+" (also the suspended run), the replays saved by goda_rogue#save_replay(),
+" and those of the runs before (replays/auto).
 function! s:data_dir() abort
   if exists('g:goda_rogue#data_dir')
     return expand(g:goda_rogue#data_dir, 1)
@@ -277,7 +278,8 @@ endfunction
 
 function! s:start_game(options) abort
   call s:open_buffer()
-  let options = extend(copy(a:options), #{replay: goda_rogue#last_replay()})
+  let options = extend(copy(a:options), #{replay: goda_rogue#last_replay(),
+        \ keep: get(g:, 'goda_rogue#kept_replays', 50)})
   " (A boolean for the Go side, whatever was given: 1, v:true, ...)
   let options.debug = get(options, 'debug', get(g:, 'goda_rogue#debug', v:false))
         \ ? v:true : v:false

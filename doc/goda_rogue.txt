@@ -368,11 +368,23 @@ g:goda_rogue#debug
                                                        *g:goda_rogue#data_dir*
 g:goda_rogue#data_dir
 		The directory of the replay file of the last run
-		("last.replay"), of the saved replays ("replays") and of
-		the records (|goda_rogue#records()|, "records.tsv").
+		("last.replay"), of the saved replays ("replays"), of the
+		replays of the runs before ("replays/auto",
+		|g:goda_rogue#kept_replays|) and of the records
+		(|goda_rogue#records()|, "records.tsv").
 		Default: "goda-rogue" in |stdpath()| "data" (Neovim), or in
 		$XDG_DATA_HOME/vim, $LOCALAPPDATA/vim (Windows) or
 		~/.local/share/vim (Vim).
+
+                                                 *g:goda_rogue#kept_replays*
+g:goda_rogue#kept_replays
+		How many replays of the runs before are kept.  When a new
+		run replaces the replay file of the last run, that one is
+		moved to "replays/auto" in |g:goda_rogue#data_dir|, named
+		by when the run began ("20261118-162100-cave.replay"),
+		whatever ended it: the end of the run, a suspended run
+		not resumed, a bug, the editor killed.  The oldest are
+		removed past this number; 0 keeps none.  Default: 50.
 
                                                 *g:goda_rogue#replay_interval*
 g:goda_rogue#replay_interval
@@ -623,7 +635,9 @@ At the end of a run, the result screen has it in a line, to share (the
 dungeon, the floor and how it ended, the time, the turns and the seed).
 Save the replay with |goda_rogue#save_replay()| to keep it, to share it, or
 to attach it to a bug report: it reproduces the run.  A replay holds no
-personal data.
+personal data.  The last runs are kept by themselves too, for a while: when
+a run went wrong, its replay is in "replays/auto"
+(|g:goda_rogue#kept_replays|).
 
 ==============================================================================
 vim:tw=78:ts=8:noet:ft=help:norl:

@@ -288,6 +288,14 @@ function! s:replays() abort
   call s:check('watched status', s:timeless(getline(line('$') - 4)), status)
   call goda_rogue#do('wait')
   call s:check('no action while watching', execute('messages') =~# 'a replay is being watched', 1)
+
+  " A new run keeps the replay of the one before, not over here.
+  let g:goda_rogue#prompt_func = function('s:fake_prompt')
+  call goda_rogue#start(#{dungeon: 'cave', seed: 'replay2'})
+  call s:answer(2)
+  unlet g:goda_rogue#prompt_func
+  let auto = glob(g:goda_rogue#data_dir . '/replays/auto/*-cave*.replay', 1, 1)
+  call s:check('kept replay', len(filter(auto, {_, f -> readfile(f) == readfile(saved)})), 1)
 endfunction
 
 " The debug mode: off by default, on with g:goda_rogue#debug.
