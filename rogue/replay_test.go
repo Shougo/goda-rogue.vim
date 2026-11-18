@@ -1,6 +1,7 @@
 package rogue
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/rand/v2"
@@ -266,6 +267,24 @@ func TestLastRun(t *testing.T) {
 	q.rec.Close()
 	if got := lastRun(path); got.State != "broken" || !strings.Contains(got.Error, "does not replay the same") {
 		t.Errorf("changed by hand: %+v", got)
+	}
+}
+
+// TestLastRunTurnZero: a run left at turn 0 (only actions that cost no
+// turn) can be resumed, and the Vim script gets its turn, 0.
+func TestLastRunTurnZero(t *testing.T) {
+	p, path := recordedGame(t, t.TempDir(), "zero")
+	if err := p.do("turn", []string{"left"}); err != nil {
+		t.Fatal(err)
+	}
+	p.rec.Close()
+	got := lastRun(path)
+	b, err := json.Marshal(got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.State != "suspended" || !strings.Contains(string(b), `"turn":0`) {
+		t.Errorf("%s", b)
 	}
 }
 

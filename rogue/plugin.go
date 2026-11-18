@@ -80,13 +80,15 @@ type LastRun struct {
 	// "suspended" (it can be resumed: suspended, or left without
 	// suspending), "over" or "broken" (it cannot be resumed: Error says
 	// why).
-	State   string `json:"state"`
-	Error   string `json:"error,omitempty"`
-	Dungeon string `json:"dungeon,omitempty"`
-	Name    string `json:"name,omitempty"`
-	Depth   int    `json:"depth,omitempty"`
-	Turn    int    `json:"turn,omitempty"`
-	Time    string `json:"time,omitempty"`
+	State string `json:"state"`
+	Error string `json:"error,omitempty"`
+	// (Not omitted when zero: a run left at turn 0 has turn 0, which
+	// the Vim script shows.)
+	Dungeon string `json:"dungeon"`
+	Name    string `json:"name"`
+	Depth   int    `json:"depth"`
+	Turn    int    `json:"turn"`
+	Time    string `json:"time"`
 }
 
 // lastRun reads the replay file path.
