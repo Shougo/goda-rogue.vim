@@ -345,6 +345,29 @@ function! goda_rogue#save_replay(name = '') abort
   return dst
 endfunction
 
+" Show the records of the finished runs (番付) in the buffer
+" "goda-rogue://records": the best run of each dungeon, then every run.
+function! goda_rogue#records() abort
+  try
+    let lines = goda#request('rogue', 'records', s:data_dir() . '/records.tsv')
+  catch
+    call s:print_error(v:exception)
+    return
+  endtry
+  let bufnr = bufadd('goda-rogue://records')
+  call setbufvar(bufnr, '&buftype', 'nofile')
+  call setbufvar(bufnr, '&bufhidden', 'hide')
+  call setbufvar(bufnr, '&swapfile', 0)
+  call setbufvar(bufnr, '&buflisted', 0)
+  call bufload(bufnr)
+  execute 'buffer' bufnr
+  setlocal modifiable
+  silent %delete _
+  call setline(1, lines)
+  setlocal nomodifiable nowrap
+  setlocal filetype=goda-rogue-records
+endfunction
+
 " Watch the replay {file} (default: the last run) in the current window: it
 " plays by itself, an action every g:goda_rogue#replay_interval
 " milliseconds; goda_rogue#replay_pause() pauses it or plays it again, and

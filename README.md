@@ -76,6 +76,8 @@ call goda_rogue#start()
 call goda_rogue#start(#{dungeon: 'cave', seed: 'vim'})
 " Keep the replay of the last run, and watch it.
 call goda_rogue#replay(goda_rogue#save_replay())
+" The records of the finished runs, the best first.
+call goda_rogue#records()
 ```
 
 The binary is built on the first start (it takes a while), into a cache

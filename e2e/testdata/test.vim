@@ -310,6 +310,15 @@ function! s:debug() abort
   unlet g:goda_rogue#debug
 endfunction
 
+" The records of the finished runs.
+function! s:records() abort
+  call goda_rogue#records()
+  call s:check('records buffer', bufname('%'), 'goda-rogue://records')
+  " (The runs before ended: they are there.)
+  call s:check('records', getline(1), '自己ベスト')
+  call s:check('all records', search('^すべての記録（\d\+回', 'n') > 0, 1)
+endfunction
+
 " The status line {status} without its play time.
 function! s:timeless(status) abort
   return substitute(a:status, '時間 \S\+', '', '')
@@ -318,6 +327,7 @@ endfunction
 try
   call s:start()
   call s:actions()
+  call s:records()
   call s:replays()
   call s:debug()
 catch

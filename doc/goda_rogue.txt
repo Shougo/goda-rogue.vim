@@ -212,7 +212,19 @@ goda_rogue#replay_step([{n}])
 		Step the replay being watched {n} actions (default 1; -1:
 		to its end).
 
-                                                    *goda_rogue#last_replay()*
+                                                        *goda_rogue#records()*
+goda_rogue#records()
+		Show the records of the finished runs (番付) in the buffer
+		"goda-rogue://records": the best run of each dungeon (a
+		clear before a fall, the fastest clear, the deepest fall;
+		runs that used the debug mode never count), then every run,
+		the newest first.  Each run that ends adds its line to
+		"records.tsv" in |g:goda_rogue#data_dir| (tab-separated:
+		date, dungeon, seed, floor, cleared, result, turns, play
+		time in milliseconds, debug).  Records are only a record:
+		nothing of them goes into a run.
+
+                                                  *goda_rogue#last_replay()*
 goda_rogue#last_replay()
 		The path of the replay file of the last run.
 
@@ -355,7 +367,8 @@ g:goda_rogue#debug
                                                        *g:goda_rogue#data_dir*
 g:goda_rogue#data_dir
 		The directory of the replay file of the last run
-		("last.replay") and of the saved replays ("replays").
+		("last.replay"), of the saved replays ("replays") and of
+		the records (|goda_rogue#records()|, "records.tsv").
 		Default: "goda-rogue" in |stdpath()| "data" (Neovim), or in
 		$XDG_DATA_HOME/vim, $LOCALAPPDATA/vim (Windows) or
 		~/.local/share/vim (Vim).

@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"math/rand/v2"
 	"os"
+	"path/filepath"
 	"slices"
 	"sync"
 	"time"
@@ -160,6 +161,13 @@ func (p *Plugin) do(action string, args []string) (err error) {
 	if err := p.rec.Action(g.PlayTime(), action, args, events); err != nil {
 		return fmt.Errorf("replay %s: %w", p.rec.Path, err)
 	}
+	if g.Over != "" {
+		// The run has just ended: its record.
+		path := filepath.Join(filepath.Dir(p.rec.Path), recordsFile)
+		if err := appendRecord(path, recordOf(g)); err != nil {
+			return fmt.Errorf("records %s: %w", path, err)
+		}
+	}
 	return nil
 }
 
@@ -217,6 +225,7 @@ func (p *Plugin) watchScreen(size Size) Screen {
 //	return the Screen.
 //	step(n, size): watch n more actions of the replay (-1: to its end),
 //	and return {screen, done}.
+//	records(path): the lines that show the records of the file path.
 func (p *Plugin) Handlers() map[string]sdk.Handler {
 	return map[string]sdk.Handler{
 		"start": func(ctx context.Context, h sdk.Host, params []any) (any, error) {
@@ -372,6 +381,23 @@ func (p *Plugin) Handlers() map[string]sdk.Handler {
 			p.stop()
 			p.game, p.watching = g, &watch{replay: rp}
 			return sdk.Generic(p.watchScreen(size))
+		},
+		"records": func(ctx context.Context, h sdk.Host, params []any) (any, error) {
+			var path string
+			if err := sdk.DecodeArgs(params, &path); err != nil {
+				return nil, err
+			}
+			rs, err := readRecords(path)
+			if err != nil {
+				return nil, err
+			}
+			names := map[string]string{}
+			for _, id := range BuiltinDungeons() {
+				if d, err := LoadBuiltin(id); err == nil {
+					names[id] = d.Name
+				}
+			}
+			return sdk.Generic(recordLines(rs, names))
 		},
 		"step": func(ctx context.Context, h sdk.Host, params []any) (any, error) {
 			var n int
