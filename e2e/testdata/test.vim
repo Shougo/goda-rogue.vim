@@ -45,18 +45,41 @@ function! s:cursor_char() abort
   return strcharpart(getline('.')[col('.') - 1 :], 0, 1)
 endfunction
 
-" The lines of the mini-map window, or [] when there is none.
-function! s:map_lines() abort
+" The lines of the window beside the game whose title matches {pattern}, or
+" [] when there is none.
+function! s:float_lines(pattern) abort
+  return get(s:floats(a:pattern), 0, #{lines: []}).lines
+endfunction
+
+" The windows beside the game whose titles match {pattern}: their titles and
+" lines.
+function! s:floats(pattern) abort
+  let floats = []
   if has('nvim')
     for winid in nvim_list_wins()
-      if nvim_win_get_config(winid).relative !=# ''
-        return getbufline(winbufnr(winid), 1, '$')
+      let config = nvim_win_get_config(winid)
+      if config.relative !=# ''
+        let title = join(map(copy(get(config, 'title', [])), 'v:val[0]'), '')
+        call add(floats, #{title: title, lines: getbufline(winbufnr(winid), 1, '$')})
       endif
     endfor
-    return []
+  else
+    for winid in popup_list()
+      call add(floats, #{title: get(popup_getoptions(winid), 'title', ''),
+            \ lines: getbufline(winbufnr(winid), 1, '$')})
+    endfor
   endif
-  let popups = popup_list()
-  return empty(popups) ? [] : getbufline(winbufnr(popups[0]), 1, '$')
+  return filter(floats, {_, f -> f.title =~# a:pattern})
+endfunction
+
+" The lines of the mini-map window, or [] when there is none.
+function! s:map_lines() abort
+  return s:float_lines('^ map $')
+endfunction
+
+" The lines of the window of the items, or [] when there is none.
+function! s:item_lines() abort
+  return s:float_lines('^ 持ち物')
 endfunction
 
 " Under the map: the status line and three lines of messages.
@@ -233,6 +256,23 @@ function! s:actions() abort
   execute 'buffer' game
   call s:check('map back', len(s:map_lines()) > 0, 1)
   call goda_rogue#do('map')
+
+  " The items carried: a window too, toggled, beside the mini-map.
+  let status = s:status()
+  call goda_rogue#do('items')
+  call s:check('items cost no turn', s:status(), status)
+  call s:check('items title', get(s:floats('^ 持ち物'), 0, #{title: ''}).title =~# '^ 持ち物 \d\+/20 $', 1)
+  call s:check('items lines', len(s:item_lines()) > 0, 1)
+  call goda_rogue#do('map')
+  call s:check('items and map', [len(s:item_lines()) > 0, len(s:map_lines()) > 0], [1, 1])
+  call goda_rogue#do('map')
+  let game = bufnr('%')
+  enew
+  call s:check('items closed elsewhere', s:item_lines(), [])
+  execute 'buffer' game
+  call s:check('items back', len(s:item_lines()) > 0, 1)
+  call goda_rogue#do('items')
+  call s:check('items closed', s:item_lines(), [])
 
   " An error is printed, not thrown, and the screen stays.
   let before = getline(1, '$')

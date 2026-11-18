@@ -601,3 +601,48 @@ func TestSwap(t *testing.T) {
 		t.Errorf("under the player %v", it)
 	}
 }
+
+// TestItemList: the action "items" shows the items carried beside the map,
+// and hides them, for no turn; the item under the player is in the list,
+// and the list stays through the actions.
+func TestItemList(t *testing.T) {
+	g, _ := roomGame(t, 4, 3)
+	g.Monsters = nil
+	g.Inventory = nil
+	size := Size{80, 24}
+	if s := g.Render(size); s.Items != nil {
+		t.Fatalf("shown: %+v", s.Items)
+	}
+	turn := g.Turn
+	if err := g.Do("items", nil); err != nil {
+		t.Fatal(err)
+	}
+	capacity := g.Dungeon.Rules.Capacity
+	s := g.Render(size)
+	if g.Turn != turn || s.Items == nil || s.Items.Title != fmt.Sprintf("持ち物 0/%d", capacity) ||
+		!slices.Equal(s.Items.Lines, []string{"何も持っていない"}) {
+		t.Fatalf("turn %d, %+v", g.Turn, s.Items)
+	}
+
+	putAtFoot(g, "yakusou")
+	g.Inventory = append(g.Inventory, g.newItemOf(g.rng, g.Dungeon.Item("bokutou"), g.Player))
+	if err := g.Do("wait", nil); err != nil {
+		t.Fatal(err)
+	}
+	s = g.Render(size)
+	want := []string{g.Entry(g.Inventory[0]), "草   薬草 [足元]"}
+	if s.Items == nil || s.Items.Title != fmt.Sprintf("持ち物 1/%d", capacity) || !slices.Equal(s.Items.Lines, want) {
+		t.Fatalf("%+v, want %q", s.Items, want)
+	}
+	// Not recorded in a replay, as the mini-map.
+	if recorded("items") {
+		t.Error("recorded")
+	}
+
+	if err := g.Do("items", nil); err != nil {
+		t.Fatal(err)
+	}
+	if s := g.Render(size); s.Items != nil {
+		t.Errorf("not hidden: %+v", s.Items)
+	}
+}

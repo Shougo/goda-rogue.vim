@@ -62,6 +62,7 @@ function s:goda_rogue_settings() abort
   nnoremap <buffer> f <Cmd>call goda_rogue#do('shoot')<CR>
   nnoremap <buffer> x <Cmd>call goda_rogue#do('look')<CR>
   nnoremap <buffer> m <Cmd>call goda_rogue#do('map')<CR>
+  nnoremap <buffer> I <Cmd>call goda_rogue#do('items')<CR>
   nnoremap <buffer> M <Cmd>call goda_rogue#do('log')<CR>
   nnoremap <buffer> S <Cmd>call goda_rogue#suspend()<CR>
 endfunction

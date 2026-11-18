@@ -16,10 +16,11 @@ let s:ns = has('nvim') ? nvim_create_namespace('goda-rogue') : 0
 " Highlights over the others (the background of the tile the player faces).
 let s:over = #{GodaRogueFacing: 1}
 
-" The window of the mini-map (a popup in Vim, a floating window in Neovim),
-" and its buffer in Neovim.
-let s:map = -1
-let s:map_buf = -1
+" The windows beside the game (a popup in Vim, a floating window in Neovim):
+" the mini-map ("map") and the items carried ("items"), by name, and their
+" buffers in Neovim.
+let s:floats = {}
+let s:float_bufs = {}
 
 " ---------------------------------------------------------------------------
 " Setup
@@ -272,7 +273,7 @@ function! s:open_buffer() abort
 
   " The mini-map goes with the game buffer.
   autocmd! goda-rogue * <buffer>
-  autocmd goda-rogue BufLeave <buffer> call s:close_map()
+  autocmd goda-rogue BufLeave <buffer> call s:close_floats()
   autocmd goda-rogue BufEnter <buffer> call goda_rogue#do('redraw')
 endfunction
 
@@ -316,7 +317,7 @@ function! goda_rogue#suspend() abort
     return
   endtry
   call s:close_prompt()
-  call s:close_map()
+  call s:close_floats()
   setlocal modifiable
   silent %delete _
   call setline(1, ['', '  冒険を中断した。', '',
@@ -454,7 +455,7 @@ endfunction
 "	call goda_rogue#do('move', 'left')
 " Actions: move, dash and turn (with a direction: left, right, up, down,
 " upleft, upright, downleft, downright), attack, shoot, wait, stairs, pickup,
-" inventory, choose (an index, from 0), cancel, look, map, log, redraw,
+" inventory, choose (an index, from 0), cancel, look, map, items, log, redraw,
 " suspend, debug.
 function! goda_rogue#do(action, ...) abort
   if &filetype !=# 'goda-rogue'
@@ -495,11 +496,7 @@ function! s:draw(screen) abort
   call s:highlight_buffer(bufnr('%'), a:screen.highlights)
   call cursor(a:screen.cursor[0], a:screen.cursor[1])
 
-  if has_key(a:screen, 'minimap')
-    call s:draw_map(a:screen.minimap)
-  else
-    call s:close_map()
-  endif
+  call s:draw_floats(a:screen)
 
   if has_key(a:screen, 'log')
     call s:show_log(a:screen.log)
@@ -646,63 +643,106 @@ function! s:highlight_buffer(bufnr, highlights) abort
   endfor
 endfunction
 
-" Show {minimap} in the corner of the current window (the game's) away from
-" the player (the cursor), to cover as little around it as possible.
-function! s:draw_map(minimap) abort
-  let lines = a:minimap.lines
+" Show the mini-map and the items of {screen} in corners of the current
+" window (the game's) away from the player (the cursor), to cover as little
+" around it as possible: on the side away from it, the mini-map in the corner
+" away from it, the items in the other one (or in that one, alone).
+function! s:draw_floats(screen) abort
   let info = getwininfo(win_getid())[0]
   let right = wincol() <= info.width / 2
   let bottom = winline() <= info.height / 2
+  if has_key(a:screen, 'minimap')
+    call s:draw_float('map', a:screen.minimap.lines, ' map ',
+          \ a:screen.minimap.highlights, bottom, right)
+  else
+    call s:close_float('map')
+  endif
+  if has_key(a:screen, 'items')
+    let items = a:screen.items
+    call s:draw_float('items', items.lines, ' ' . items.title . ' ', {},
+          \ has_key(a:screen, 'minimap') ? !bottom : bottom, right)
+  else
+    call s:close_float('items')
+  endif
+endfunction
+
+" The lines of the screen over the map (the top line) and under it (the
+" status line and the messages), which the windows beside the game leave
+" uncovered.
+let s:over_map = 1
+let s:under_map = 4
+
+" Show the window {name} with {lines}, {title} and {highlights} in a corner
+" of the map in the current window.
+function! s:draw_float(name, lines, title, highlights, bottom, right) abort
+  let winid = get(s:floats, a:name, -1)
+  let info = getwininfo(win_getid())[0]
+  " (The rows of the top and the bottom of the map, from 0.)
+  let top = s:over_map
+  let bottom = max([info.height - s:under_map, top + 1])
   if has('nvim')
-    if s:map_buf < 0 || !nvim_buf_is_valid(s:map_buf)
-      let s:map_buf = nvim_create_buf(v:false, v:true)
+    let buf = get(s:float_bufs, a:name, -1)
+    if buf < 0 || !nvim_buf_is_valid(buf)
+      let buf = nvim_create_buf(v:false, v:true)
+      let s:float_bufs[a:name] = buf
     endif
-    call nvim_buf_set_lines(s:map_buf, 0, -1, v:true, lines)
+    call nvim_buf_set_lines(buf, 0, -1, v:true, a:lines)
     " (Placed again every time: the window may have been resized.)
     let config = #{
           \ relative: 'win', win: win_getid(),
-          \ anchor: (bottom ? 'S' : 'N') . (right ? 'E' : 'W'),
-          \ row: bottom ? info.height : 0, col: right ? info.width : 0,
-          \ width: strwidth(lines[0]), height: len(lines),
-          \ border: 'single', title: ' map ',
+          \ anchor: (a:bottom ? 'S' : 'N') . (a:right ? 'E' : 'W'),
+          \ row: a:bottom ? bottom : top, col: a:right ? info.width : 0,
+          \ width: max(map(copy(a:lines), 'strwidth(v:val)') + [strwidth(a:title)]),
+          \ height: len(a:lines),
+          \ border: 'single', title: a:title,
           \ }
-    if s:map < 0 || !nvim_win_is_valid(s:map)
-      let s:map = nvim_open_win(s:map_buf, v:false, extend(config,
-            \ #{style: 'minimal', focusable: v:false, zindex: 50}))
+    if winid < 0 || !nvim_win_is_valid(winid)
+      " (noautocmd: opening it leaves the game buffer for a moment, and
+      " leaving it closes the windows.)
+      let s:floats[a:name] = nvim_open_win(buf, v:false, extend(config,
+            \ #{style: 'minimal', focusable: v:false, zindex: 50, noautocmd: v:true}))
     else
-      call nvim_win_set_config(s:map, config)
+      call nvim_win_set_config(winid, config)
     endif
-    call s:highlight_buffer(s:map_buf, a:minimap.highlights)
+    call s:highlight_buffer(buf, a:highlights)
     return
   endif
   let pos = #{
-        \ line: bottom ? info.winrow + info.height - 1 : info.winrow,
-        \ col: right ? info.wincol + info.width - 1 : info.wincol,
-        \ pos: (bottom ? 'bot' : 'top') . (right ? 'right' : 'left'),
+        \ line: a:bottom ? info.winrow + bottom - 1 : info.winrow + top,
+        \ col: a:right ? info.wincol + info.width - 1 : info.wincol,
+        \ pos: (a:bottom ? 'bot' : 'top') . (a:right ? 'right' : 'left'),
         \ }
-  if s:map < 0 || empty(popup_getpos(s:map))
-    let s:map = popup_create(lines, extend(#{
-          \ border: [], title: ' map ', highlight: 'Normal', zindex: 50,
+  if winid < 0 || empty(popup_getpos(winid))
+    let winid = popup_create(a:lines, extend(#{
+          \ border: [], title: a:title, highlight: 'Normal', zindex: 50,
           \ }, pos))
+    let s:floats[a:name] = winid
   else
-    call popup_settext(s:map, lines)
-    call popup_move(s:map, pos)
+    call popup_settext(winid, a:lines)
+    call popup_setoptions(winid, #{title: a:title})
+    call popup_move(winid, pos)
   endif
-  call s:highlight_buffer(winbufnr(s:map), a:minimap.highlights)
+  call s:highlight_buffer(winbufnr(winid), a:highlights)
 endfunction
 
-function! s:close_map() abort
-  if s:map < 0
+function! s:close_float(name) abort
+  if !has_key(s:floats, a:name)
     return
   endif
+  let winid = remove(s:floats, a:name)
   if has('nvim')
-    if nvim_win_is_valid(s:map)
-      call nvim_win_close(s:map, v:true)
+    if nvim_win_is_valid(winid)
+      call nvim_win_close(winid, v:true)
     endif
   else
-    call popup_close(s:map)
+    call popup_close(winid)
   endif
-  let s:map = -1
+endfunction
+
+function! s:close_floats() abort
+  for name in keys(s:floats)
+    call s:close_float(name)
+  endfor
 endfunction
 
 " Draw the game again in every window that shows it, for its new size.

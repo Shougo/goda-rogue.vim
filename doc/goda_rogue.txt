@@ -16,6 +16,7 @@ Screen			|goda-rogue-screen|
 Prompts			|goda-rogue-prompts|
 Dungeons		|goda-rogue-dungeons|
 Mini-map		|goda-rogue-mini-map|
+Item list		|goda-rogue-item-list|
 Replays			|goda-rogue-replays|
 
 ==============================================================================
@@ -143,6 +144,7 @@ There are no default mappings: map the actions in the game buffer. >vim
 	  nnoremap <buffer> f <Cmd>call goda_rogue#do('shoot')<CR>
 	  nnoremap <buffer> x <Cmd>call goda_rogue#do('look')<CR>
 	  nnoremap <buffer> m <Cmd>call goda_rogue#do('map')<CR>
+	  nnoremap <buffer> I <Cmd>call goda_rogue#do('items')<CR>
 	  nnoremap <buffer> M <Cmd>call goda_rogue#do('log')<CR>
 	  nnoremap <buffer> S <Cmd>call goda_rogue#suspend()<CR>
 	endfunction
@@ -323,6 +325,10 @@ look                                                         *goda-rogue-look*
 map                                                           *goda-rogue-map*
 		Show or hide the mini-map (|goda-rogue-mini-map|).  It costs
 		no turn.
+
+items                                                       *goda-rogue-items*
+		Show or hide the items carried (|goda-rogue-item-list|), to
+		keep them in sight.  It costs no turn.
 
 log                                                           *goda-rogue-log*
 		Show all the messages in the buffer "goda-rogue://log", in a
@@ -609,6 +615,23 @@ while the game buffer is not shown.
 	*	an item
 	o	a monster the player sees (the color of its rank) or an
 		ally (underlined)
+
+The windows beside the game leave the top line, the status line and the
+messages uncovered.
+
+==============================================================================
+ITEM LIST                                               *goda-rogue-item-list*
+
+The items carried, as the inventory lists them (|goda-rogue-inventory|), in
+a popup window (Vim) or a floating window (Neovim) beside the game: shown or
+hidden by the action "items", and kept up to date as the game goes, so that
+the inventory need not be opened to see them.  Its title is how many items
+are carried, of how many ("持ち物 3/20").  The item under the player comes
+last, marked [足元], and the found trap there.
+
+It goes to the side of the game window away from the player: in the corner
+away from it, or in the other one with the mini-map shown.  It is hidden
+while the game buffer is not shown.
 
 ==============================================================================
 REPLAYS                                                   *goda-rogue-replays*

@@ -292,12 +292,15 @@ func (p *Plugin) Handlers() map[string]sdk.Handler {
 			}
 			if p.watching != nil {
 				switch action {
-				case "redraw", "map", "log":
+				case "redraw", "map", "items", "log":
 				default:
 					return nil, fmt.Errorf("a replay is being watched: start a game with goda_rogue#start()")
 				}
-				if action == "map" {
+				switch action {
+				case "map":
 					p.game.ShowMap = !p.game.ShowMap
+				case "items":
+					p.game.ShowItems = !p.game.ShowItems
 				}
 				screen := p.watchScreen(size)
 				if action == "log" {

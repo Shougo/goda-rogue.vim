@@ -82,7 +82,7 @@ type ReplayAction struct {
 // the game (looking and choosing too), not those that only show it.
 func recorded(action string) bool {
 	switch action {
-	case "redraw", "log", "map":
+	case "redraw", "log", "map", "items":
 		return false
 	}
 	return true

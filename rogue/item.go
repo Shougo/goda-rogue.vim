@@ -300,25 +300,41 @@ func (g *Game) footEntry(it *Item) string { return g.Entry(it) + " [足元]" }
 // openInventory asks which item: one carried, or the one under the
 // player, last (and the trap the player stands on, if found).
 func (g *Game) openInventory() {
-	foot := g.foot()
-	if len(g.Inventory) == 0 && foot == nil && g.foundTrapAt(g.Player) == nil {
+	choices, items := g.inventory()
+	if len(choices) == 0 {
 		g.say("何も持っていない。")
 		return
 	}
-	p := &Prompt{Title: "持ち物", kind: promptInventory}
+	g.Prompt = &Prompt{Title: "持ち物", Choices: choices, kind: promptInventory, items: items}
+}
+
+// inventory returns the entries of the inventory, and the indexes of
+// their items: those carried, then the item under the player and the
+// found trap there.
+func (g *Game) inventory() (entries []string, items []int) {
 	for i, it := range g.Inventory {
-		p.Choices = append(p.Choices, g.Entry(it))
-		p.items = append(p.items, i)
+		entries = append(entries, g.Entry(it))
+		items = append(items, i)
 	}
-	if foot != nil {
-		p.Choices = append(p.Choices, g.footEntry(foot))
-		p.items = append(p.items, footIndex)
+	if foot := g.foot(); foot != nil {
+		entries = append(entries, g.footEntry(foot))
+		items = append(items, footIndex)
 	}
 	if t := g.foundTrapAt(g.Player); t != nil {
-		p.Choices = append(p.Choices, glyphTrap+" "+t.Def.Name+" [足元]")
-		p.items = append(p.items, footTrapIndex)
+		entries = append(entries, glyphTrap+" "+t.Def.Name+" [足元]")
+		items = append(items, footTrapIndex)
 	}
-	g.Prompt = p
+	return entries, items
+}
+
+// itemList is the list of the items shown beside the map.
+func (g *Game) itemList() *ItemList {
+	l := &ItemList{Title: fmt.Sprintf("持ち物 %d/%d", len(g.Inventory), g.Dungeon.Rules.Capacity)}
+	l.Lines, _ = g.inventory()
+	if len(l.Lines) == 0 {
+		l.Lines = []string{"何も持っていない"}
+	}
+	return l
 }
 
 // footCommands returns what can be done with the item under the player:

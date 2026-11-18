@@ -37,13 +37,14 @@ func TestGolden(t *testing.T) {
 		// play is how many random actions are done; deep goes down that
 		// many floors first.
 		play, deep int
-		// minimap shows the mini-map; end ends the run, if the player
-		// has not fallen (it can, but for invincible).
-		minimap, end, invincible bool
+		// minimap shows the mini-map, items the items carried; end
+		// ends the run, if the player has not fallen (it can, but for
+		// invincible).
+		minimap, items, end, invincible bool
 	}{
 		{name: "start", size: Size{80, 24}},
 		{name: "small", size: Size{40, 12}},
-		{name: "play", size: Size{80, 24}, play: 300, minimap: true, invincible: true},
+		{name: "play", size: Size{80, 24}, play: 300, minimap: true, items: true, invincible: true},
 		{name: "deep", size: Size{100, 30}, play: 200, deep: 9, invincible: true},
 		{name: "result", size: Size{80, 40}, play: 300, end: true},
 	} {
@@ -66,7 +67,7 @@ func TestGolden(t *testing.T) {
 				}
 			}
 			g.Prompt = nil
-			g.ShowMap = c.minimap
+			g.ShowMap, g.ShowItems = c.minimap, c.items
 			if c.end && g.Over == "" {
 				g.end("テストを終えた", false)
 			}
@@ -79,7 +80,7 @@ func TestGolden(t *testing.T) {
 }
 
 // screenText is the screen as text: its lines, then where the cursor is,
-// the highlights and the mini-map. The lines end with "|", for the spaces
+// the highlights, the mini-map and the items. The lines end with "|", for the spaces
 // at their ends.
 func screenText(s Screen) string {
 	var b strings.Builder
@@ -94,6 +95,12 @@ func screenText(s Screen) string {
 			b.WriteString(l + "|\n")
 		}
 		highlights(&b, m.Highlights)
+	}
+	if l := s.Items; l != nil {
+		fmt.Fprintf(&b, "--- items %s\n", l.Title)
+		for _, line := range l.Lines {
+			b.WriteString(line + "|\n")
+		}
 	}
 	return b.String()
 }

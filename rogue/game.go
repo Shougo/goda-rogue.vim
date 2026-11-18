@@ -39,8 +39,9 @@ type Game struct {
 	Message     string
 	Log         []string
 	actionStart int
-	// ShowMap says whether the mini-map is shown.
-	ShowMap bool
+	// ShowMap says whether the mini-map is shown; ShowItems the list of
+	// the items carried.
+	ShowMap, ShowItems bool
 
 	// The player.
 	HP, MaxHP   int
@@ -428,6 +429,8 @@ func (g *Game) Do(action string, args []string) error {
 		case "redraw", "log":
 		case "map":
 			g.ShowMap = !g.ShowMap
+		case "items":
+			g.ShowItems = !g.ShowItems
 		default:
 			g.beginAction()
 			g.say("冒険は終わった。")
@@ -436,7 +439,7 @@ func (g *Game) Do(action string, args []string) error {
 	}
 	// Any other action drops the choice the game was waiting for.
 	switch action {
-	case "redraw", "log", "map", "choose", "cancel":
+	case "redraw", "log", "map", "items", "choose", "cancel":
 	default:
 		g.Prompt = nil
 	}
@@ -471,6 +474,9 @@ func (g *Game) Do(action string, args []string) error {
 	case "map":
 		// Showing the mini-map costs no turn.
 		g.ShowMap = !g.ShowMap
+	case "items":
+		// Nor showing the items.
+		g.ShowItems = !g.ShowItems
 	case "look":
 		// Looking costs no turn.
 		g.beginAction()

@@ -59,12 +59,13 @@ type Span struct {
 
 // Screen is what the Vim script shows: the lines of the buffer, the parts
 // of them to highlight by group, and where the cursor goes (the player).
-// With the mini-map shown, Minimap is it.
+// With the mini-map shown, Minimap is it; with the items shown, Items.
 type Screen struct {
 	Lines      []string          `json:"lines"`
 	Highlights map[string][]Span `json:"highlights"`
 	Cursor     [2]int            `json:"cursor"`
 	Minimap    *Minimap          `json:"minimap,omitempty"`
+	Items      *ItemList         `json:"items,omitempty"`
 	// Log is all the messages, for the "log" action.
 	Log []string `json:"log,omitempty"`
 	// Prompt is a choice to ask the player for.
@@ -77,6 +78,14 @@ type Screen struct {
 type Minimap struct {
 	Lines      []string          `json:"lines"`
 	Highlights map[string][]Span `json:"highlights"`
+}
+
+// ItemList is the items carried, as the inventory lists them (the item and
+// the found trap under the player last), to keep them in sight.
+type ItemList struct {
+	// Title is how many items are carried, of how many.
+	Title string   `json:"title"`
+	Lines []string `json:"lines"`
 }
 
 // messageLines is how many of the last messages are shown.
@@ -104,6 +113,9 @@ func (g *Game) Render(size Size) Screen {
 	g.messages(&s)
 	if g.ShowMap {
 		s.Minimap = g.minimap()
+	}
+	if g.ShowItems {
+		s.Items = g.itemList()
 	}
 	s.Prompt = g.Prompt
 	return s
