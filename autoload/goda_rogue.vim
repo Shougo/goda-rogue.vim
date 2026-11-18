@@ -198,6 +198,7 @@ endfunction
 "		which one, with the selection UI.
 "   seed	The same seed makes the same floors (a string or a number).
 "		Default: a random one.
+"   debug	Enables the debug mode.  Default: g:goda_rogue#debug.
 " A suspended run is offered to be resumed first.
 function! goda_rogue#start(options = {}) abort
   let options = copy(a:options)
@@ -276,9 +277,12 @@ endfunction
 
 function! s:start_game(options) abort
   call s:open_buffer()
+  let options = extend(copy(a:options), #{replay: goda_rogue#last_replay()})
+  " (A boolean for the Go side, whatever was given: 1, v:true, ...)
+  let options.debug = get(options, 'debug', get(g:, 'goda_rogue#debug', v:false))
+        \ ? v:true : v:false
   try
-    let screen = goda#request('rogue', 'start',
-          \ extend(copy(a:options), #{replay: goda_rogue#last_replay()}), s:size())
+    let screen = goda#request('rogue', 'start', options, s:size())
   catch
     call s:print_error(v:exception)
     return
@@ -426,7 +430,7 @@ endfunction
 " Actions: move, dash and turn (with a direction: left, right, up, down,
 " upleft, upright, downleft, downright), attack, shoot, wait, stairs, pickup,
 " inventory, choose (an index, from 0), cancel, look, map, log, redraw,
-" suspend.
+" suspend, debug.
 function! goda_rogue#do(action, ...) abort
   if &filetype !=# 'goda-rogue'
     return

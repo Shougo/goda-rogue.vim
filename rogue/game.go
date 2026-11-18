@@ -87,6 +87,12 @@ type Game struct {
 	// events are what happened in the run, for its replay file (see
 	// event).
 	events []string
+	// DebugMode says whether the run may use the debug mode (debug.go),
+	// Debugged whether it did, and Invincible whether the player cannot
+	// fall (a debug command).
+	DebugMode  bool
+	Debugged   bool
+	Invincible bool
 	// Steps are the steps the player has taken.
 	Steps int
 	// Shop is the shop of the floor (nil for none); selling the item the
@@ -488,6 +494,10 @@ func (g *Game) Do(action string, args []string) error {
 	case "wait":
 		g.beginAction()
 		g.endTurn(true)
+	case "debug":
+		// The debug mode costs no turn.
+		g.beginAction()
+		return g.debug(args)
 	case "stairs":
 		g.beginAction()
 		if g.Player != g.Stairs {
@@ -649,6 +659,9 @@ func (g *Game) spawn(def *MonsterDef) *Monster {
 
 // end ends the run, for why.
 func (g *Game) end(why string, cleared bool) {
+	if !cleared && g.spared() {
+		return
+	}
 	g.Over, g.Cleared, g.Ended = why, cleared, time.Now()
 	g.say(why + "。")
 	g.event("end %v %s", cleared, why)
@@ -806,6 +819,9 @@ func (g *Game) Status() string {
 		playTime(g.PlayTime()), directionArrows[g.Facing], g.Seed)
 	if w := g.Dungeon.Rules.WindTurns; g.Wind > 0 && g.Wind < len(w) {
 		s += fmt.Sprintf("  次の風まで %d", w[g.Wind]-g.FloorTurns)
+	}
+	if g.Debugged {
+		s += "  デバッグ"
 	}
 	return s
 }

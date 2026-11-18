@@ -107,6 +107,9 @@ func TestDungeonErrors(t *testing.T) {
 		{"no trap on a floor", func(m fstest.MapFS) {
 			m["trap_table.txt"].Data = []byte("開始\t終了\tID\t頻度\n2\t30\tjirai\t1\n")
 		}, `no trap on 1F`},
+		{"bad debug rule", func(m fstest.MapFS) {
+			m["rules.txt"].Data = append(m["rules.txt"].Data, "デバッグ\tはい\n"...)
+		}, `デバッグ: want 可 or 不可`},
 		{"bad found trap rule", func(m fstest.MapFS) {
 			m["rules.txt"].Data = append(m["rules.txt"].Data, "見つけた罠\t危険\n"...)
 		}, `見つけた罠: want 安全 or 発動`},

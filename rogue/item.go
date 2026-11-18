@@ -355,6 +355,8 @@ func (g *Game) choose(arg string) (bool, error) {
 		return g.doAtFoot(p.Choices[n]), nil
 	case promptInfo:
 		return false, nil
+	case promptDebug, promptDebugFloor, promptDebugItem, promptDebugMonster:
+		return false, g.chooseDebug(p, n)
 	case promptLook:
 		g.lookAt(n)
 		return false, nil

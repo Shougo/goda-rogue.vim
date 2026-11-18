@@ -28,6 +28,7 @@ import (
 //	seed	12345
 //	started	2026-11-18T08:30:00+09:00
 //	revision	abcdef0
+//	debug	1
 //	---
 //	# 0 floor 1
 //	1520	move	right
@@ -35,6 +36,7 @@ import (
 //	# 12 hurt 3 nezumi1
 //	9000	suspend
 //
+// debug is there when the run may use the debug mode (debug.go).
 // An action is its play time in milliseconds, its name and its arguments,
 // separated by tabs. "suspend" marks where the run was suspended. The
 // lines "# turn event ..." after an action are what happened in it
@@ -57,6 +59,8 @@ type Replay struct {
 	// binary that played it, if known: both only for information.
 	Started  time.Time
 	Revision string
+	// Debug says whether the run could use the debug mode.
+	Debug bool
 	// Events are those before the first action (the first floor).
 	Events  []string
 	Actions []ReplayAction
@@ -147,6 +151,8 @@ func ParseReplay(r io.Reader) (*Replay, error) {
 					rp.Started, _ = time.Parse(time.RFC3339, value)
 				case "revision":
 					rp.Revision = value
+				case "debug":
+					rp.Debug = value == "1"
 				}
 			}
 			continue
@@ -216,6 +222,7 @@ func (rp *Replay) NewReplayGame(d *Dungeon) (*Game, error) {
 			ErrReplayMismatch, d.ID, d.Hash, rp.Hash)
 	}
 	g := NewGame(d, rp.Seed)
+	g.DebugMode = rp.Debug
 	if err := checkEvents(0, rp.Events, g.takeEvents()); err != nil {
 		return nil, err
 	}
@@ -287,6 +294,9 @@ func NewRecorder(path string, g *Game) (*Recorder, error) {
 	fmt.Fprintf(&b, "started\t%s\n", g.Started.Format(time.RFC3339))
 	if rev := revision(); rev != "" {
 		fmt.Fprintf(&b, "revision\t%s\n", rev)
+	}
+	if g.DebugMode {
+		b.WriteString("debug\t1\n")
 	}
 	b.WriteString("---\n")
 	writeEvents(&b, g.takeEvents())

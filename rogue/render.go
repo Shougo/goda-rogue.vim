@@ -181,7 +181,11 @@ func (g *Game) result(s *Screen) {
 // Summary is the result of the run in a line, to share: the dungeon, the
 // floor and how it ended, the play time, the turns and the seed.
 func (g *Game) Summary() string {
-	return fmt.Sprintf("%s %dF %s  %s  %dターン  シード %s",
+	debug := ""
+	if g.Debugged {
+		debug = "[デバッグ] "
+	}
+	return debug + fmt.Sprintf("%s %dF %s  %s  %dターン  シード %s",
 		g.Dungeon.Name, g.Depth, g.Over, playTime(g.PlayTime()), g.Turn, g.Seed)
 }
 

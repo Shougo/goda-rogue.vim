@@ -102,6 +102,9 @@ type Rules struct {
 	CrackStages int
 	// Wear is how easily bracelets crack, a percent of their Crack.
 	Wear int
+	// Debug says whether runs in the dungeon may use the debug mode
+	// (debug.go): for the makers of edit dungeons.
+	Debug bool
 	// FoundTrapsSafe says whether a trap the player has found never goes
 	// off.
 	FoundTrapsSafe bool
@@ -445,7 +448,7 @@ func (l *loader) load() {
 	rk := l.keys("rules.txt", []string{
 		"最大HP", "ちから", "回復ターン", "湧きターン", "最大モンスター数",
 		"風1", "風2", "風3", "防御K", "主の命中", "敵の命中", "成長", "最初の仲間", "強敵ランク差",
-		"持ち物の数", "ひびの段階", "腕輪の傷みやすさ", "満腹度", "腹減りターン", "見つけた罠",
+		"持ち物の数", "ひびの段階", "腕輪の傷みやすさ", "満腹度", "腹減りターン", "見つけた罠", "デバッグ",
 	})
 	r := &d.Rules
 	r.PlayerHP = l.keyInt("rules.txt", rk, "最大HP", 1)
@@ -486,6 +489,16 @@ func (l *loader) load() {
 	}
 	if ln, ok := rk["最初の仲間"]; ok {
 		r.FirstAlly = ln.fields[1]
+	}
+	// Optional: most dungeons have no debug mode.
+	if ln, ok := rk["デバッグ"]; ok {
+		switch ln.fields[1] {
+		case "可":
+			r.Debug = true
+		case "不可":
+		default:
+			l.errorf("rules.txt", ln.n, "デバッグ: want 可 or 不可, not %q", ln.fields[1])
+		}
 	}
 
 	for _, row := range l.table("growth.txt", "名前", "レベル", "経験値", "HP", "攻撃", "防御") {

@@ -287,6 +287,29 @@ function! s:replays() abort
   call s:check('no action while watching', execute('messages') =~# 'a replay is being watched', 1)
 endfunction
 
+" The debug mode: off by default, on with g:goda_rogue#debug.
+function! s:debug() abort
+  " (No suspended run to offer to resume.)
+  call delete(goda_rogue#last_replay())
+  call goda_rogue#start(#{dungeon: 'cave', seed: 'debug'})
+  call goda_rogue#do('debug', 'gold')
+  call s:check('debug disabled', execute('messages') =~# 'debug: not enabled', 1)
+
+  let g:goda_rogue#debug = 1
+  call goda_rogue#start(#{dungeon: 'cave', seed: 'debug'})
+  call goda_rogue#do('debug', 'floor', '4')
+  call s:check('debug floor', getline(1) =~# '^4F ', 1)
+  call s:check('debug status', s:status() =~# '  デバッグ$', 1)
+  let g:goda_rogue#prompt_func = function('s:fake_prompt')
+  let s:asked = {}
+  call goda_rogue#do('debug')
+  call s:check('debug menu', get(s:asked, 'title', ''), 'デバッグ')
+  call s:answer(index(s:asked.choices, '1000G 得る') + 1)
+  call s:check('debug gold', getline(1) =~# '1000G$', 1)
+  unlet g:goda_rogue#prompt_func
+  unlet g:goda_rogue#debug
+endfunction
+
 " The status line {status} without its play time.
 function! s:timeless(status) abort
   return substitute(a:status, '時間 \S\+', '', '')
@@ -296,6 +319,7 @@ try
   call s:start()
   call s:actions()
   call s:replays()
+  call s:debug()
 catch
   call add(s:errors, v:throwpoint . ': ' . v:exception)
 endtry

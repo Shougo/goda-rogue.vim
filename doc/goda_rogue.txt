@@ -163,6 +163,9 @@ goda_rogue#start([{options}])
 				dungeon, whatever the player does on
 				them.  Default: a random one, shown in
 				the status line.
+		  debug		|v:true| enables the debug mode
+				(|goda-rogue-debug|).  Default:
+				|g:goda_rogue#debug|.
 		A suspended run (|goda-rogue-replays|) is offered to be
 		resumed first.  Called while a run is played, it starts
 		another one: suspend it first to keep it.
@@ -311,6 +314,23 @@ redraw                                                     *goda-rogue-redraw*
 suspend                                                   *goda-rogue-suspend*
 		Suspend the run (|goda_rogue#suspend()|).
 
+debug [{command} [{arg}]]                                   *goda-rogue-debug*
+		The debug mode, to test the game or a dungeon quickly: it
+		works only when the run was started with it
+		(|g:goda_rogue#debug|) or the dungeon allows it (デバッグ
+		in rules.txt, |goda-rogue-dungeons|).  Without {command}, it
+		asks which, with the selection UI.  {command}:
+		  floor {n}	Go to the floor {n}.
+		  item {id}	Give an item (its ID in items.txt).
+		  monster {id}	Put a monster near the player.
+		  reveal	Show the whole floor.
+		  identify	Identify every item.
+		  invincible	The player cannot fall (again: it can).
+		  gold		Give 1000G.
+		It costs no turn.  A run that used it is marked "デバッグ"
+		on its status line, its result and its summary, and its
+		replay replays the debug actions too.
+
 ==============================================================================
 VARIABLES                                               *goda-rogue-variables*
 
@@ -318,6 +338,11 @@ VARIABLES                                               *goda-rogue-variables*
 g:goda_rogue#binary
 		The binary to start, instead of the one built in the cache
 		directory.  It is not built then: build it yourself.
+
+                                                          *g:goda_rogue#debug*
+g:goda_rogue#debug
+		|v:true| enables the debug mode (|goda-rogue-debug|) in the
+		runs started from now on.  Default: |v:false|.
 
                                                        *g:goda_rogue#data_dir*
 g:goda_rogue#data_dir
@@ -432,7 +457,10 @@ floors once the files change.
 				combat constants, the growth table of the
 				player, the first ally, whether a trap the
 				player has found goes off (見つけた罠: 安全 or
-				発動): key<TAB>value.  A later line
+				発動), and, optional, whether runs may use
+				the debug mode (デバッグ: 可 or 不可, the
+				default; |goda-rogue-debug|), for the makers
+				of a dungeon: key<TAB>value.  A later line
 				overrides an earlier one.
 	monsters.txt		The monsters, a table.  A family is a glyph
 				(字), a kind of it a rank (ランク, 1 to 4).

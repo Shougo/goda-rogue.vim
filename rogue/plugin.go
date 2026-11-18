@@ -66,6 +66,8 @@ type StartOptions struct {
 	// Replay is the path of the replay file to write the run to (made
 	// anew); empty for none.
 	Replay string `json:"replay"`
+	// Debug enables the debug mode (debug.go).
+	Debug bool `json:"debug"`
 }
 
 // LastRun says what the replay file of the last run holds.
@@ -237,6 +239,7 @@ func (p *Plugin) Handlers() map[string]sdk.Handler {
 			}
 			p.stop()
 			g := NewGame(d, opts.Seed)
+			g.DebugMode = opts.Debug
 			if opts.Replay != "" {
 				rec, err := NewRecorder(opts.Replay, g)
 				if err != nil {
