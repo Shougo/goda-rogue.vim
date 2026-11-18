@@ -107,6 +107,9 @@ func TestStartKeeps(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "last.replay")
 	p := New()
+	// The run started last keeps its replay file open: MS-Windows cannot
+	// remove the temporary directory with it.
+	t.Cleanup(p.stop)
 	start := p.Handlers()["start"]
 	opts := map[string]any{"dungeon": "cave", "seed": "keep", "replay": path, "keep": 5}
 	size := map[string]any{"width": 80, "height": 24}

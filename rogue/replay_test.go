@@ -68,7 +68,16 @@ func recordedGame(t *testing.T, dir, seed string) (*Plugin, string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return &Plugin{game: g, rec: rec}, path
+	p := &Plugin{game: g, rec: rec}
+	// Closed at the end in any case: MS-Windows cannot remove the
+	// temporary directory with a file open in it. (Closing again only
+	// errs.)
+	t.Cleanup(func() {
+		if p.rec != nil {
+			p.rec.Close()
+		}
+	})
+	return p, path
 }
 
 // play does n random actions (fewer if the run ends), and returns them.
