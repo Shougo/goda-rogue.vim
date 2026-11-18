@@ -282,7 +282,9 @@ inventory                                               *goda-rogue-inventory*
 		icon; a pot shows the icons of what is in it (保存の壺[1]【草
 		草巻】).
 		The item under the player comes last, marked [足元]: it can
-		be picked up (拾う), used or thrown where it lies.  A scroll
+		be picked up (拾う), swapped with an item carried (交換:
+		one turn, also offered on the items carried; not in a
+		shop), used or thrown where it lies.  A scroll
 		of identification can identify it too.  A found trap under
 		the player is listed too: 踏む sets it off on purpose.
 		見る lists the items in a pot: one of them can be taken out

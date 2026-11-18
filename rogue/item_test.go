@@ -546,11 +546,58 @@ func TestFoot(t *testing.T) {
 		t.Fatalf("choices %q", g.Prompt.Choices)
 	}
 	chooseLabel(t, g, g.Prompt.Choices[1])
-	if !slices.Equal(g.Prompt.Choices, []string{commandPickUp, commandThrow, commandInfo}) {
+	if !slices.Equal(g.Prompt.Choices, []string{commandPickUp, commandSwap, commandThrow, commandInfo}) {
 		t.Fatalf("choices %q", g.Prompt.Choices)
 	}
 	chooseLabel(t, g, commandPickUp)
 	if !slices.Contains(g.Inventory, sword) || len(g.Items) != 0 {
 		t.Errorf("inventory %v, items %v", g.Inventory, g.Items)
+	}
+}
+
+// TestSwap swaps a carried item with the one under the player.
+func TestSwap(t *testing.T) {
+	g, _ := roomGame(t, 4, 3)
+	g.Monsters = nil
+	sword := carry(g, "bokutou", 1)
+	command(t, g, sword, commandEquip)
+	grass := carry(g, "yakusou", 0)
+	katana := putAtFoot(g, "katana")
+
+	// From the carried item.
+	turn := g.Turn
+	if err := g.Do("inventory", nil); err != nil {
+		t.Fatal(err)
+	}
+	chooseLabel(t, g, g.Entry(sword))
+	if c := g.Prompt.Choices; c[len(c)-2] != commandSwap {
+		t.Fatalf("choices %q", c)
+	}
+	chooseLabel(t, g, commandSwap)
+	if slices.Contains(g.Inventory, sword) || !slices.Contains(g.Inventory, katana) || g.Turn != turn+1 {
+		t.Fatalf("inventory %v, turn %d", g.Inventory, g.Turn)
+	}
+	if it, _ := g.ItemAt(g.Player); it != sword || sword.Equipped {
+		t.Errorf("under the player %v, equipped %v", it, sword.Equipped)
+	}
+	if !strings.Contains(g.Message, "を置いて、") {
+		t.Errorf("message %q", g.Message)
+	}
+
+	// From the item under the player: which one to put down.
+	if err := g.Do("inventory", nil); err != nil {
+		t.Fatal(err)
+	}
+	chooseLabel(t, g, g.footEntry(sword))
+	chooseLabel(t, g, commandSwap)
+	if g.Prompt == nil || g.Prompt.Title != "どれと交換する？" {
+		t.Fatalf("prompt %+v", g.Prompt)
+	}
+	chooseLabel(t, g, g.Entry(grass))
+	if !slices.Contains(g.Inventory, sword) || slices.Contains(g.Inventory, grass) {
+		t.Errorf("inventory %v", g.Inventory)
+	}
+	if it, _ := g.ItemAt(g.Player); it != grass {
+		t.Errorf("under the player %v", it)
 	}
 }

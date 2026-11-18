@@ -1,6 +1,7 @@
 package rogue
 
 import (
+	"slices"
 	"strings"
 	"testing"
 )
@@ -254,5 +255,17 @@ func TestShopEntrance(t *testing.T) {
 	}
 	if shops < 50 {
 		t.Fatalf("only %d shops", shops)
+	}
+}
+
+// TestNoSwapInShop: in a shop, putting down and picking up are selling
+// and buying, so no swap.
+func TestNoSwapInShop(t *testing.T) {
+	g := shopGame(t, "yorozu")
+	goods := g.Items[slices.IndexFunc(g.Items, func(it *Item) bool { return it.ForSale })]
+	g.Player = goods.Pos
+	carry(g, "yakusou", 0)
+	if slices.Contains(g.footCommands(goods), commandSwap) || slices.Contains(g.itemCommands(g.Inventory[0]), commandSwap) {
+		t.Errorf("swap offered in a shop: %q %q", g.footCommands(goods), g.itemCommands(g.Inventory[0]))
 	}
 }

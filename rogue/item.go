@@ -170,6 +170,7 @@ const (
 	promptIdentify  = "identify"
 	promptFoot      = "foot"
 	promptFootTrap  = "foot trap"
+	promptSwap      = "swap"
 )
 
 // The commands of an item.
@@ -183,6 +184,7 @@ const (
 	commandEat     = "食べる"
 	commandThrow   = "投げる"
 	commandPickUp  = "拾う"
+	commandSwap    = "交換"
 )
 
 // useCommands are the commands that use an item, by its category.
@@ -320,13 +322,63 @@ func (g *Game) openInventory() {
 }
 
 // footCommands returns what can be done with the item under the player:
-// pick it up, use it where it is, throw it.
-func (it *Item) footCommands() []string {
+// pick it up, swap it with one carried, use it where it is, throw it.
+func (g *Game) footCommands(it *Item) []string {
 	cs := []string{commandPickUp}
+	if g.canSwap() && len(g.Inventory) > 0 {
+		cs = append(cs, commandSwap)
+	}
 	if c, ok := useCommands[it.Def.Category]; ok {
 		cs = append(cs, c)
 	}
 	return append(cs, commandThrow, commandInfo)
+}
+
+// itemCommands returns what can be done with it, carried: with an item
+// under the player, swapping them too.
+func (g *Game) itemCommands(it *Item) []string {
+	cs := it.commands()
+	if g.canSwap() && g.foot() != nil {
+		// Before 説明, the last.
+		cs = slices.Insert(cs, len(cs)-1, commandSwap)
+	}
+	return cs
+}
+
+// canSwap says whether the player can swap an item it carries with the
+// one under it: not in a shop, where putting down and picking up are
+// selling and buying.
+func (g *Game) canSwap() bool { return !g.inShop(g.Player) }
+
+// swap puts it (carried) down where the player stands, and picks up the
+// item that was there, in one turn (as in Shiren).
+func (g *Game) swap(it *Item) bool {
+	foot := g.foot()
+	if foot == nil || !g.canSwap() {
+		return false
+	}
+	if it.Equipped {
+		g.unequip(it)
+	}
+	it.used = false
+	g.Inventory = slices.DeleteFunc(g.Inventory, func(x *Item) bool { return x == it })
+	g.Items = slices.DeleteFunc(g.Items, func(x *Item) bool { return x == foot })
+	it.Pos = g.Player
+	g.Items = append(g.Items, it)
+	g.Inventory = append(g.Inventory, foot)
+	g.sortInventory()
+	g.say(g.Name(it) + "を置いて、" + g.Name(foot) + "を拾った。")
+	g.event("pickup %s", foot.Def.ID)
+	return true
+}
+
+// askSwap asks which carried item to swap with the one under the player.
+func (g *Game) askSwap() {
+	p := &Prompt{Title: "どれと交換する？", kind: promptSwap}
+	for _, it := range g.Inventory {
+		p.Choices = append(p.Choices, g.Entry(it))
+	}
+	g.Prompt = p
 }
 
 // choose answers the prompt with the choice n; it says whether the turn
@@ -357,7 +409,7 @@ func (g *Game) choose(arg string) (bool, error) {
 			it := g.foot()
 			g.Prompt = &Prompt{
 				Title:   g.Label(it) + " [足元]",
-				Choices: it.footCommands(),
+				Choices: g.footCommands(it),
 				kind:    promptFoot,
 			}
 			return false, nil
@@ -365,12 +417,14 @@ func (g *Game) choose(arg string) (bool, error) {
 		it := g.Inventory[i]
 		g.Prompt = &Prompt{
 			Title:   g.Label(it),
-			Choices: it.commands(),
+			Choices: g.itemCommands(it),
 			kind:    promptItem, item: i,
 		}
 		return false, nil
 	case promptFoot:
 		return g.doAtFoot(p.Choices[n]), nil
+	case promptSwap:
+		return g.swap(g.Inventory[n]), nil
 	case promptFootTrap:
 		// Stepped on on purpose: it goes off even when found traps are
 		// safe.
@@ -426,6 +480,8 @@ func (g *Game) choose(arg string) (bool, error) {
 			return it.Def.Category != CategoryArrow, nil
 		case commandDrop:
 			return g.drop(p.item), nil
+		case commandSwap:
+			return g.swap(it), nil
 		case commandPutIn:
 			return g.askPutIn(p.item), nil
 		case commandLook:
@@ -455,6 +511,9 @@ func (g *Game) doAtFoot(c string) bool {
 	switch c {
 	case commandPickUp:
 		return g.pickUp()
+	case commandSwap:
+		g.askSwap()
+		return false
 	case commandInfo:
 		g.showInfo(it)
 		return false
