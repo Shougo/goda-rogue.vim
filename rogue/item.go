@@ -169,6 +169,7 @@ const (
 	promptItem      = "item"
 	promptIdentify  = "identify"
 	promptFoot      = "foot"
+	promptFootTrap  = "foot trap"
 )
 
 // The commands of an item.
@@ -275,8 +276,12 @@ func (g *Game) foot() *Item {
 	return it
 }
 
-// footIndex stands for the item under the player in the items of a prompt.
-const footIndex = -1
+// footIndex and footTrapIndex stand for the item and the found trap under
+// the player in the items of a prompt.
+const (
+	footIndex     = -1
+	footTrapIndex = -2
+)
 
 // item returns the item at index i of the inventory, or the item under
 // the player for footIndex.
@@ -291,10 +296,10 @@ func (g *Game) item(i int) *Item {
 func (g *Game) footEntry(it *Item) string { return g.Entry(it) + " [足元]" }
 
 // openInventory asks which item: one carried, or the one under the
-// player, last.
+// player, last (and the trap the player stands on, if found).
 func (g *Game) openInventory() {
 	foot := g.foot()
-	if len(g.Inventory) == 0 && foot == nil {
+	if len(g.Inventory) == 0 && foot == nil && g.foundTrapAt(g.Player) == nil {
 		g.say("何も持っていない。")
 		return
 	}
@@ -306,6 +311,10 @@ func (g *Game) openInventory() {
 	if foot != nil {
 		p.Choices = append(p.Choices, g.footEntry(foot))
 		p.items = append(p.items, footIndex)
+	}
+	if t := g.foundTrapAt(g.Player); t != nil {
+		p.Choices = append(p.Choices, glyphTrap+" "+t.Def.Name+" [足元]")
+		p.items = append(p.items, footTrapIndex)
 	}
 	g.Prompt = p
 }
@@ -335,6 +344,15 @@ func (g *Game) choose(arg string) (bool, error) {
 	switch p.kind {
 	case promptInventory:
 		i := p.items[n]
+		if i == footTrapIndex {
+			t := g.foundTrapAt(g.Player)
+			g.Prompt = &Prompt{
+				Title:   t.Def.Name + " [足元]",
+				Choices: []string{commandStep},
+				kind:    promptFootTrap,
+			}
+			return false, nil
+		}
 		if i == footIndex {
 			it := g.foot()
 			g.Prompt = &Prompt{
@@ -353,6 +371,13 @@ func (g *Game) choose(arg string) (bool, error) {
 		return false, nil
 	case promptFoot:
 		return g.doAtFoot(p.Choices[n]), nil
+	case promptFootTrap:
+		// Stepped on on purpose: it goes off even when found traps are
+		// safe.
+		if t := g.foundTrapAt(g.Player); t != nil {
+			g.spring(t, true)
+		}
+		return true, nil
 	case promptInfo:
 		return false, nil
 	case promptDebug, promptDebugFloor, promptDebugItem, promptDebugMonster:

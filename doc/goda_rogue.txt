@@ -79,7 +79,9 @@ the next floor), a landmine (half the HP), a snare (no moving for some
 turns), a poison arrow (damage, and the strength down), sleeping gas,
 warping, hunger, rust (the upgrade values of the weapon and the shield
 down).  A trap the player has found shows as 罠, a dash stops before it,
-and by the rule of the built-in dungeon it never goes off.
+and by the rule of the built-in dungeon it never goes off by itself:
+standing on it, the inventory lists it (marked [足元]), to step on it on
+purpose (踏む).  |goda-rogue-look| tells its kind and what it does.
 
 The player gets hungry: the fullness (満腹, on the top line) goes down a
 point every few turns.  Food restores it.  Starving, the player restores
@@ -281,7 +283,8 @@ inventory                                               *goda-rogue-inventory*
 		草巻】).
 		The item under the player comes last, marked [足元]: it can
 		be picked up (拾う), used or thrown where it lies.  A scroll
-		of identification can identify it too.
+		of identification can identify it too.  A found trap under
+		the player is listed too: 踏む sets it off on purpose.
 		見る lists the items in a pot: one of them can be taken out
 		(出す), and in a pot of keeping (保存の壺) also used or
 		thrown where it is.  A pot of synthesis (合成の壺) gives
@@ -294,10 +297,11 @@ cancel                                                     *goda-rogue-cancel*
 		action drops the prompt.
 
 look                                                         *goda-rogue-look*
-		Choose one of the monsters and items the player sees, the
-		nearest first, with where it is ("右5 上2"), to read about
-		it: the rank and the speed of a monster, whether it is
-		asleep, the level and HP of an ally.  It costs no turn.
+		Choose one of the monsters, items and found traps the
+		player sees, the nearest first, with where it is ("右5
+		上2"), to read about it: the rank and the speed of a
+		monster, whether it is asleep, the level and HP of an ally;
+		the kind of a trap and what it does.  It costs no turn.
 
 map                                                           *goda-rogue-map*
 		Show or hide the mini-map (|goda-rogue-mini-map|).  It costs

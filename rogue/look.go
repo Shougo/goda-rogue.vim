@@ -16,6 +16,7 @@ type sight struct {
 	pos     Point
 	monster *Monster
 	item    *Item
+	trap    *Trap
 }
 
 // lookAround asks which of the monsters and items the player sees to look
@@ -32,6 +33,11 @@ func (g *Game) lookAround() {
 			sights = append(sights, sight{pos: it.Pos, item: it})
 		}
 	}
+	for _, t := range g.Traps {
+		if t.Found && g.IsSeen(t.Pos) && g.MonsterAt(t.Pos) == nil {
+			sights = append(sights, sight{pos: t.Pos, trap: t})
+		}
+	}
 	if len(sights) == 0 {
 		g.say("見えるものはない。")
 		return
@@ -42,9 +48,12 @@ func (g *Game) lookAround() {
 	p := &Prompt{Title: "見えるもの", kind: promptLook}
 	for _, s := range sights {
 		name := ""
-		if s.monster != nil {
+		switch {
+		case s.monster != nil:
 			name = s.monster.Glyph + " " + s.monster.Name
-		} else {
+		case s.trap != nil:
+			name = glyphTrap + " " + s.trap.Def.Name
+		default:
 			name = g.Label(s.item)
 		}
 		p.Choices = append(p.Choices, name+"  "+g.whereIs(s.pos))
@@ -81,6 +90,10 @@ func (g *Game) lookAt(n int) {
 	g.sights = nil
 	if s.item != nil {
 		g.say(g.describe(s.item) + "が落ちている。")
+		return
+	}
+	if t := s.trap; t != nil {
+		g.say(t.Def.Name + "：" + trapTexts[t.Def.Effect])
 		return
 	}
 	m := s.monster

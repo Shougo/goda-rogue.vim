@@ -93,10 +93,30 @@ func (g *Game) check(p Point) {
 	}
 }
 
+// trapTexts say what each kind of trap does, for look.
+var trapTexts = map[TrapEffect]string{
+	TrapPit:    "落ちて次の階へ。少しダメージを受ける。",
+	TrapMine:   "爆発して HP が半分になる。",
+	TrapSnare:  "しばらく動けなくなる。",
+	TrapPoison: "毒矢でダメージを受け、ちからが下がる。",
+	TrapSleep:  "しばらく眠ってしまう。",
+	TrapWarp:   "フロアのどこかへ飛ばされる。",
+	TrapHunger: "お腹が減る。",
+	TrapRust:   "装備している武器と盾がさびる。",
+}
+
+// commandStep steps on the trap under the player on purpose.
+const commandStep = "踏む"
+
 // stepOn is the player stepping on the trap t; it says whether the trap
 // went off.
-func (g *Game) stepOn(t *Trap) bool {
-	if t.Found && g.Dungeon.Rules.FoundTrapsSafe {
+func (g *Game) stepOn(t *Trap) bool { return g.spring(t, false) }
+
+// spring sets off the trap t under the player; a found trap does not go
+// off by itself with the rule 見つけた罠 安全, but stepping on it on
+// purpose (force) does. It says whether the trap went off.
+func (g *Game) spring(t *Trap, force bool) bool {
+	if t.Found && g.Dungeon.Rules.FoundTrapsSafe && !force {
 		g.say(t.Def.Name + "がある。")
 		return false
 	}

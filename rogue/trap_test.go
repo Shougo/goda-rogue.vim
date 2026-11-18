@@ -205,3 +205,48 @@ func TestDashStopsAtTraps(t *testing.T) {
 		t.Errorf("at %v, the trap at %v", g.Player, hidden.Pos)
 	}
 }
+
+// TestStepOnPurpose sets off a found trap on purpose from the inventory.
+func TestStepOnPurpose(t *testing.T) {
+	g, r := trapGame(t)
+	tr := trap(g, "harahe", Point{r.X + 1, r.Y})
+	tr.Found = true
+	move(t, g, "right")
+	full := g.Fullness
+	if !strings.Contains(g.Message, "腹減りの罠がある。") {
+		t.Fatalf("the found trap went off: %q", g.Message)
+	}
+	// The trap is listed under the player, even with nothing carried.
+	if err := g.Do("inventory", nil); err != nil {
+		t.Fatal(err)
+	}
+	if want := []string{"罠 腹減りの罠 [足元]"}; strings.Join(g.Prompt.Choices, ",") != strings.Join(want, ",") {
+		t.Fatalf("choices %q", g.Prompt.Choices)
+	}
+	turn := g.Turn
+	chooseLabel(t, g, "罠 腹減りの罠 [足元]")
+	chooseLabel(t, g, commandStep)
+	if g.Fullness >= full || g.Turn != turn+1 {
+		t.Errorf("fullness %d (was %d), turn %d", g.Fullness, full, g.Turn)
+	}
+}
+
+// TestLookTraps lists the found traps in sight, with their kinds.
+func TestLookTraps(t *testing.T) {
+	g, r := trapGame(t)
+	g.Monsters = nil
+	trap(g, "jirai", Point{r.X + 2, r.Y}).Found = true
+	trap(g, "warp", Point{r.X + 3, r.Y})
+	if err := g.Do("look", nil); err != nil {
+		t.Fatal(err)
+	}
+	if g.Prompt == nil || len(g.Prompt.Choices) != 1 || !strings.HasPrefix(g.Prompt.Choices[0], "罠 地雷  ") {
+		t.Fatalf("prompt %+v", g.Prompt)
+	}
+	if err := g.Do("choose", []string{"0"}); err != nil {
+		t.Fatal(err)
+	}
+	if g.Message != "地雷："+trapTexts[TrapMine] {
+		t.Errorf("message %q", g.Message)
+	}
+}
