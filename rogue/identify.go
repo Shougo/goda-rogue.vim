@@ -1,6 +1,7 @@
 package rogue
 
 import (
+	"fmt"
 	"math"
 	"math/rand/v2"
 )
@@ -31,6 +32,9 @@ func (g *Game) nameItems() {
 // Name is the name of the item as the player knows it: its fake name until
 // its kind is identified.
 func (g *Game) Name(it *Item) string {
+	if it.Def.Category == CategoryMoney {
+		return fmt.Sprintf("%dG", it.Amount)
+	}
 	if g.identified[it.Def.ID] {
 		return it.Def.Name
 	}

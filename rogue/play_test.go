@@ -361,7 +361,7 @@ func checkGame(g *Game) error {
 		if it.Charges < 0 || it.Cracks < 0 {
 			fail("%s %s: %d charges, %d cracks", it.Def.ID, w, it.Charges, it.Cracks)
 		}
-		if it.Def.Category == CategoryMoney && (it.Amount <= 0 || w == "carried") {
+		if it.Def.Category == CategoryMoney && it.Amount <= 0 {
 			fail("%dG %s", it.Amount, w)
 		}
 	}

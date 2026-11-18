@@ -88,6 +88,11 @@ func (g *Game) hitBy(it *Item, m *Monster) bool {
 		}
 		return true
 	}
+	if it.Def.Category == CategoryMoney {
+		// Its amount makes the damage; defense does not lower it.
+		g.hurt(m, max(it.Amount/r.GoldThrow, 1))
+		return true
+	}
 	g.hurt(m, between(g.rng, 1, 2))
 	if it.Def.Category == CategoryPot {
 		g.smash(it, m.Pos)

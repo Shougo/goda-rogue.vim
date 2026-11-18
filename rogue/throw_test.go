@@ -67,9 +67,9 @@ func TestShoot(t *testing.T) {
 	// Picking them up gathers them.
 	arrows(g, "kiya", 5)
 	g.Player = g.Items[0].Pos
-	g.pickUp()
+	g.pickUp(true)
 	g.Player = g.Items[0].Pos
-	g.pickUp()
+	g.pickUp(true)
 	if len(g.Inventory) != 1 || g.Inventory[0].Count != 7 || !strings.Contains(g.Message, "木の矢を1本拾った。") {
 		t.Errorf("inventory %v, message %q", g.Inventory, g.Message)
 	}

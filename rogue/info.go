@@ -112,6 +112,10 @@ func (g *Game) info(it *Item) []string {
 		} else {
 			lines = append(lines, "残りの回数は分からない。")
 		}
+	case CategoryMoney:
+		lines = append(lines,
+			fmt.Sprintf("投げて当てると %d のダメージ（金額の 1/%d、防御は効かない）。", max(it.Amount/g.Dungeon.Rules.GoldThrow, 1), g.Dungeon.Rules.GoldThrow),
+			"「財布に入れる」と所持金になる。")
 	case CategoryPot:
 		lines = append(lines, effectText(def))
 		if it.Known {

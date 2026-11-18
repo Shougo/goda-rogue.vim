@@ -21,7 +21,8 @@ const (
 	CategoryStaff    Category = "杖"
 	CategoryPot      Category = "壺"
 	CategoryFood     Category = "食料"
-	// CategoryMoney is not carried: it adds to the player's money.
+	// CategoryMoney adds to the player's money when walked on; picked up
+	// (or swapped), it is carried, to throw.
 	CategoryMoney Category = "お金"
 )
 
@@ -184,6 +185,7 @@ const (
 	commandEat     = "食べる"
 	commandThrow   = "投げる"
 	commandPickUp  = "拾う"
+	commandPurse   = "財布に入れる"
 	commandSwap    = "交換"
 )
 
@@ -203,6 +205,9 @@ func (it *Item) commands() []string {
 	}
 	if it.Def.Category == CategoryPot {
 		cs = append(cs, commandLook, commandPutIn)
+	}
+	if it.Def.Category == CategoryMoney {
+		cs = append(cs, commandPurse)
 	}
 	if it.equipment() {
 		if it.Equipped {
@@ -231,17 +236,16 @@ func (g *Game) sortInventory() {
 }
 
 // pickUp picks up the item under the player, if any; it says whether
-// there was one to try.
-func (g *Game) pickUp() bool {
+// there was one to try. Money walked on goes to the purse (the gold), as
+// in Shiren; picked up on purpose, it is carried.
+func (g *Game) pickUp(walked bool) bool {
 	i := slices.IndexFunc(g.Items, func(it *Item) bool { return it.Pos == g.Player })
 	if i < 0 {
 		return false
 	}
 	it := g.Items[i]
-	if it.Def.Category == CategoryMoney {
-		g.Gold += it.Amount
-		g.Items = slices.Delete(g.Items, i, i+1)
-		g.say(fmt.Sprintf("%dG 拾った。", it.Amount))
+	if it.Def.Category == CategoryMoney && walked {
+		g.toPurse(it)
 		return true
 	}
 	// Arrows join those of their kind.
@@ -269,13 +273,21 @@ func (g *Game) pickUp() bool {
 }
 
 // foot is the item under the player, to choose from the inventory as in
-// Shiren, or nil (money is picked up as soon as walked on).
+// Shiren, or nil. Money is there only when the player did not walk on it
+// (a dash stops on it without picking it up).
 func (g *Game) foot() *Item {
 	it, ok := g.ItemAt(g.Player)
-	if !ok || it.Def.Category == CategoryMoney {
+	if !ok {
 		return nil
 	}
 	return it
+}
+
+// toPurse puts the money it (carried, or on the floor) in the purse.
+func (g *Game) toPurse(it *Item) {
+	g.discard(it)
+	g.Gold += it.Amount
+	g.say(fmt.Sprintf("%dG を財布に入れた。", it.Amount))
 }
 
 // footIndex and footTrapIndex stand for the item and the found trap under
@@ -341,6 +353,9 @@ func (g *Game) itemList() *ItemList {
 // pick it up, swap it with one carried, use it where it is, throw it.
 func (g *Game) footCommands(it *Item) []string {
 	cs := []string{commandPickUp}
+	if it.Def.Category == CategoryMoney {
+		cs = append(cs, commandPurse)
+	}
 	if g.canSwap() && len(g.Inventory) > 0 {
 		cs = append(cs, commandSwap)
 	}
@@ -506,6 +521,10 @@ func (g *Game) choose(arg string) (bool, error) {
 		case commandInfo:
 			g.showInfo(it)
 			return false, nil
+		case commandPurse:
+			// Putting money away costs no turn.
+			g.toPurse(it)
+			return false, nil
 		case commandThrow:
 			g.throwItem(g.Inventory[p.item])
 			return true, nil
@@ -526,7 +545,10 @@ func (g *Game) doAtFoot(c string) bool {
 	}
 	switch c {
 	case commandPickUp:
-		return g.pickUp()
+		return g.pickUp(false)
+	case commandPurse:
+		g.toPurse(it)
+		return false
 	case commandSwap:
 		g.askSwap()
 		return false

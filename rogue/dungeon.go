@@ -82,6 +82,10 @@ type Dungeon struct {
 	Hash string
 }
 
+// defaultGoldThrow is お金投げ without it in rules.txt: a tenth of the
+// amount (Shiren 6 has a fifth, for its tougher monsters).
+const defaultGoldThrow = 10
+
 // Rules are the rules of a run.
 type Rules struct {
 	PlayerHP       int
@@ -117,6 +121,9 @@ type Rules struct {
 	// Fullness is the max fullness; HungerTurns how many turns make the
 	// player 1 hungrier.
 	Fullness, HungerTurns int
+	// GoldThrow divides the amount of money thrown into its damage
+	// (rules.txt お金投げ, optional: defaultGoldThrow).
+	GoldThrow int
 }
 
 // MonsterDef is a kind of monster. Kinds of the same glyph are one family,
@@ -457,6 +464,7 @@ func (l *loader) load() {
 		"最大HP", "ちから", "回復ターン", "湧きターン", "最大モンスター数",
 		"風1", "風2", "風3", "防御K", "主の命中", "敵の命中", "成長", "最初の仲間", "強敵ランク差",
 		"持ち物の数", "ひびの段階", "腕輪の傷みやすさ", "満腹度", "腹減りターン", "見つけた罠", "デバッグ",
+		"お金投げ",
 	})
 	r := &d.Rules
 	r.PlayerHP = l.keyInt("rules.txt", rk, "最大HP", 1)
@@ -478,6 +486,12 @@ func (l *loader) load() {
 	r.CrackStages = l.keyInt("rules.txt", rk, "ひびの段階", 0)
 	r.Wear = l.keyInt("rules.txt", rk, "腕輪の傷みやすさ", 0)
 	r.Fullness = l.keyInt("rules.txt", rk, "満腹度", 1)
+	// (Optional: dungeons from before it keep their hash, so their runs
+	// and replays.)
+	r.GoldThrow = defaultGoldThrow
+	if _, ok := rk["お金投げ"]; ok {
+		r.GoldThrow = l.keyInt("rules.txt", rk, "お金投げ", 1)
+	}
 	if ln, ok := rk["見つけた罠"]; !ok {
 		l.errorf("rules.txt", 0, "no %q", "見つけた罠")
 	} else {

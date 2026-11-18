@@ -466,7 +466,7 @@ func (g *Game) Do(action string, args []string) error {
 		g.Prompt = nil
 	case "pickup":
 		g.beginAction()
-		if !g.pickUp() {
+		if !g.pickUp(false) {
 			g.say("足元には何もない。")
 			return nil
 		}
@@ -786,7 +786,7 @@ func (g *Game) step(d Point, pick bool) bool {
 	}
 	if it, ok := g.ItemAt(to); ok {
 		// Walking onto an item picks it up; a dash only stops on it.
-		if !pick || !g.pickUp() {
+		if !pick || !g.pickUp(true) {
 			g.say(g.Name(it) + "が落ちている。")
 		}
 	}

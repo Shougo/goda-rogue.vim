@@ -86,7 +86,7 @@ func pickUpGoods(t *testing.T, g *Game) *Item {
 	t.Helper()
 	it := forSale(g)[0]
 	g.Player = it.Pos
-	if !g.pickUp() {
+	if !g.pickUp(true) {
 		t.Fatal("cannot pick up")
 	}
 	return it
