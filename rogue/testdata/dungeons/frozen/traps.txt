@@ -1,0 +1,19 @@
+# The traps. 効果 is what a trap does when the player steps on it, with
+# 強さ as how much:
+#   落とし穴  the player falls to the next floor, with 強さ damage
+#   地雷      halves the HP of the player
+#   トラばさみ  the player cannot move for 強さ turns
+#   毒矢      強さ damage, and the strength goes down by 1
+#   睡眠      the player sleeps for 強さ turns
+#   ワープ    the player is sent somewhere on the floor
+#   腹減り    the fullness goes down by 強さ
+#   サビ      the upgrade values of the weapon and the shield go down by 1
+ID	名前	効果	強さ
+otoshiana	落とし穴	落とし穴	5
+jirai	地雷	地雷	0
+torabasami	トラばさみ	トラばさみ	10
+dokuya	毒矢の罠	毒矢	5
+suimin	睡眠ガスの罠	睡眠	5
+warp	ワープの罠	ワープ	0
+harahe	腹減りの罠	腹減り	10
+sabi	サビの罠	サビ	0

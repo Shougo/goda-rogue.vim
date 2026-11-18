@@ -1,0 +1,36 @@
+# The rules of a run in this dungeon.
+# The player at the start.
+最大HP	15
+ちから	8
+# Walking or waiting this many turns restores 1 HP.
+回復ターン	2
+# The max fullness, and how many turns make the player 1 hungrier.
+# Whether a trap the player has found goes off when stepped on: 安全
+# (never), or 発動 (as any trap).
+見つけた罠	安全
+満腹度	100
+腹減りターン	10
+# Lingering: a monster appears every 湧きターン turns, up to 最大モンスター数.
+湧きターン	40
+最大モンスター数	16
+# Kron's wind: a warning, a strong monster, the end of the run.
+風1	800
+風2	900
+風3	1000
+# The strong monster of the second wind: this many ranks above the floor.
+強敵ランク差	2
+# Combat (provisional): damage x K / (K + defense); hit rates in percent.
+防御K	20
+主の命中	92
+敵の命中	88
+# The growth table of the player (and of monsters without their own).
+成長	普通
+# The ally at the start (empty: none).
+最初の仲間	nezumi1
+# How many items the player can carry.
+持ち物の数	20
+# How many cracks a bracelet can have: one more breaks it.
+ひびの段階	3
+# How easily bracelets crack, a percent of their ひび (100: as items.txt
+# says, 0: never).
+腕輪の傷みやすさ	100

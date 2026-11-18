@@ -1,0 +1,18 @@
+# The seals (印) of weapons and shields: one kanji each. 効果 is what a
+# seal does while its weapon or shield is equipped, with 強さ as how much:
+#   攻撃      adds 強さ to the attack
+#   防御      adds 強さ to the defense
+#   会心      強さ % of the attacks of the player do twice the damage
+#   必中      the attacks of the player always hit
+#   反撃      with a chance of 強さ %, the damage the player takes goes
+#             back to the attacker
+#   サビよけ  the weapon and the shield do not rust
+#   ハラヘラズ  the player gets hungry half as fast
+印	名前	効果	強さ
+攻	攻撃の印	攻撃	3
+防	防御の印	防御	3
+会	会心の印	会心	25
+必	必中の印	必中	0
+反	反撃の印	反撃	30
+錆	サビよけの印	サビよけ	0
+腹	ハラヘラズの印	ハラヘラズ	0
