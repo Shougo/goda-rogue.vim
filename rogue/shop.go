@@ -244,11 +244,16 @@ func (g *Game) sell() {
 	g.say(fmt.Sprintf("%sを %dG で売った。", g.Name(it), sellPrice(it)))
 }
 
-// steal is the player leaving the shop with what it owes: the items are
-// its, and the shopkeepers and their guards come after it.
+// steal makes the player a thief, leaving the shop with what it owes or
+// attacking a shopkeeper (as in Shiren): the shopkeepers get angry and
+// sell no more (what the shop sold is anyone's, so the player owes them
+// nothing), and they and their guards come after it.
 func (g *Game) steal() {
 	g.say(sayThief)
-	g.anger()
+	for _, k := range g.Shop.Keepers {
+		k.Angry, k.Hunter, k.Dozing = true, true, false
+	}
+	g.closeShop()
 	def := g.Shop.Def
 	if def.Guard == nil {
 		return
@@ -295,23 +300,13 @@ func (g *Game) keepersCalm() bool {
 	return g.Shop != nil && len(g.Shop.Keepers) > 0 && !g.Shop.Keepers[0].Angry
 }
 
-// provoke makes the shopkeepers angry at an attack on one of them.
+// provoke makes the player a thief at an attack on a shopkeeper.
 func (g *Game) provoke(m *Monster) {
 	if !m.Keeper || m.Angry || g.Shop == nil {
 		return
 	}
 	g.say("店主を怒らせてしまった！")
-	g.anger()
-}
-
-// anger makes the shopkeepers angry: they come after the player, and the
-// shop sells no more (what it sold is anyone's), so that the player owes
-// nothing to them.
-func (g *Game) anger() {
-	for _, k := range g.Shop.Keepers {
-		k.Angry, k.Hunter, k.Dozing = true, true, false
-	}
-	g.closeShop()
+	g.steal()
 }
 
 // closeShop is the shop without shopkeepers, or with them angry: what it

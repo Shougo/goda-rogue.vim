@@ -185,15 +185,16 @@ func TestNoGoodsInPot(t *testing.T) {
 	}
 }
 
-// TestProvokeFreesGoods: angry shopkeepers sell no more; the player owes
-// them nothing.
-func TestProvokeFreesGoods(t *testing.T) {
+// TestProvokeIsTheft: attacking a shopkeeper makes the player a thief,
+// as in Shiren: the goods are free, and guards come.
+func TestProvokeIsTheft(t *testing.T) {
 	g := shopGame(t, "yorozu")
 	pickUpGoods(t, g)
 	g.provoke(g.Shop.Keepers[0])
 	if g.debt() != 0 || len(forSale(g)) != 0 {
 		t.Errorf("debt %d, %d for sale", g.debt(), len(forSale(g)))
 	}
+	checkThief(t, g)
 }
 
 func TestSteal(t *testing.T) {
@@ -206,8 +207,18 @@ func TestSteal(t *testing.T) {
 	if g.inShop(g.Player) {
 		t.Skip("warped into the shop")
 	}
-	if it.ForSale || !strings.Contains(strings.Join(g.Log, ""), "泥棒だ！") {
-		t.Errorf("for sale %v, log %q", it.ForSale, g.Log)
+	if it.ForSale {
+		t.Error("still for sale")
+	}
+	checkThief(t, g)
+}
+
+// checkThief checks that the player is a thief: told so, the shopkeepers
+// angry, guards after it.
+func checkThief(t *testing.T, g *Game) {
+	t.Helper()
+	if !strings.Contains(strings.Join(g.Log, ""), "泥棒だ！") {
+		t.Errorf("log %q", g.Log)
 	}
 	guards := 0
 	for _, m := range g.Monsters {
