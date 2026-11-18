@@ -525,7 +525,25 @@ floors once the files change.
 				The cracks are shown in the inventory
 				([ひび1]).  値段 is the price in shops (of
 				one arrow); a shop buys for half of it.
-	item_table.txt		Which items appear on which floors, a table.
+	category_tables.txt	The item tables, a table: 表 is the name of
+				a table, 種類 a kind of items and 頻度 its
+				weight on the floors 開始 to 終了.  A table
+				picks an item in two stages: first its kind
+				by weight, then an item of that kind by
+				weight (item_tables.txt), so adding items of
+				a kind does not crowd out the other kinds.
+				The floors (floors.txt 道具表) and the shops
+				(shops.txt 品表) name their table.
+	item_tables.txt		The items of the item tables, a table: 表,
+				the item (ID) and its weight (頻度) among
+				the items of its kind, on the floors 開始 to
+				終了.  Every kind a table gives on a floor
+				needs an item there, and every item a kind
+				with a weight.
+	guaranteed_items.txt	Items that surely appear (optional), a
+				table: each row puts the item (ID) on one
+				floor of 開始 to 終了, the seed decides
+				which, on top of the items of the floor.
 	seals.txt		The seals of weapons and shields, a table:
 				印 is the kanji of a seal, 効果 what it does
 				(the comments of the built-in seals.txt tell
@@ -539,24 +557,22 @@ floors once the files change.
 				(the comments of the built-in traps.txt tell
 				what each does), 強さ how much.
 	trap_table.txt		Which traps appear on which floors, a table.
-	shops.txt		The shops, a table: 品 the kinds of items
-				it sells (- for any), 店主 the shopkeeper
-				and 店主の数 how many, 番犬 the guard after
-				a thief and 番犬の数 how many.
+	shops.txt		The shops, a table: 品表 the item table it
+				sells from (no money in it), 店主 the
+				shopkeeper and 店主の数 how many, 番犬 the
+				guard after a thief and 番犬の数 how many.
 	shop_table.txt		Which shops appear on which floors, a table.
-	shop_item_table.txt	Which items the shops sell on which floors,
-				a table: 店 is a shop, or - for any shop
-				that sells the kind of the item.
 	floors.txt		How many monsters, items and traps (罠の数,
-				optional) a floor starts with (min-max), how
-				much of it the player sees (明るさ,
-				optional): 通常 the room it is in and around
-				it, 明るい all of the floor (as a scroll of
-				light does), 暗い only around it; and the
-				chances (percent, optional) of a floor of
-				one big room (大部屋), of a maze (迷路), of
-				a monster house (モンスターハウス), and of a
-				shop (店), a table.
+				optional) a floor starts with (min-max), the
+				item table of its items (道具表, optional:
+				床 by default), how much of it the player
+				sees (明るさ, optional): 通常 the room it is
+				in and around it, 明るい all of the floor
+				(as a scroll of light does), 暗い only around
+				it; and the chances (percent, optional) of a
+				floor of one big room (大部屋), of a maze
+				(迷路), of a monster house (モンスターハウス),
+				and of a shop (店), a table.
 	growth.txt		The growth tables: the total EXP for each
 				level from 2, and the HP, attack and defense
 				a level adds, a table.

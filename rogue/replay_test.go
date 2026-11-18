@@ -259,11 +259,9 @@ func TestLastRun(t *testing.T) {
 
 	// Changed by hand: what is not in the replay does not replay.
 	q, path := recordedGame(t, t.TempDir(), "hand")
-	q.game.HP = 1
-	for range 50 {
-		if err := q.do("wait", nil); err != nil {
-			t.Fatal(err)
-		}
+	q.game.Player = q.game.Stairs
+	if err := q.do("stairs", nil); err != nil {
+		t.Fatal(err)
 	}
 	q.rec.Close()
 	if got := lastRun(path); got.State != "broken" || !strings.Contains(got.Error, "does not replay the same") {

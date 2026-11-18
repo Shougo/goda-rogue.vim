@@ -4,7 +4,8 @@ import "math/rand/v2"
 
 // newItem makes an item of the floor on p, from its item table.
 func (g *Game) newItem(rng *rand.Rand, pos Point) *Item {
-	return g.newItemOf(rng, g.Dungeon.Item(pick(rng, g.Dungeon.ItemRows, g.Depth)), pos)
+	d := g.Dungeon
+	return g.newItemOf(rng, d.ItemTable(d.counts(g.Depth).ItemTable).pick(rng, d, g.Depth), pos)
 }
 
 // newItemOf makes an item of the kind def on p.

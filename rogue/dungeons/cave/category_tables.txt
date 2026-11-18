@@ -1,0 +1,37 @@
+# The item tables pick an item in two stages: first its kind (種類) by
+# weight (頻度), here, then an item of that kind by weight, in
+# item_tables.txt. So adding items of a kind does not crowd out the other
+# kinds: each kind keeps its share. 表 is the name of a table: floors.txt
+# says which table the items of the floors come from (道具表), shops.txt
+# which table a shop sells from (品表).
+表	開始	終了	種類	頻度
+# The items lying on the floors.
+床	1	30	武器	6
+床	1	30	盾	7
+床	1	30	腕輪	4
+床	1	30	矢	4
+床	1	30	草	11
+床	1	30	巻物	5
+床	1	30	杖	2
+床	1	30	壺	3
+床	1	30	食料	5
+床	1	30	お金	6
+# The general store sells a bit of everything; deeper, more bracelets,
+# arrows and pots.
+よろず	1	30	武器	9
+よろず	1	30	盾	9
+よろず	1	14	腕輪	4
+よろず	15	30	腕輪	8
+よろず	1	4	矢	2
+よろず	5	30	矢	4
+よろず	1	30	草	10
+よろず	1	30	巻物	6
+よろず	1	30	杖	2
+よろず	1	9	壺	3
+よろず	10	30	壺	5
+よろず	1	30	食料	4
+# The specialist shops.
+草	1	30	草	1
+武具	1	30	武器	1
+武具	1	30	盾	1
+腕輪	1	30	腕輪	1

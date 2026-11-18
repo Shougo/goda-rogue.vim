@@ -165,8 +165,11 @@ function! s:items() abort
 endfunction
 
 function! s:actions() abort
-  call goda_rogue#start(#{dungeon: 'cave', seed: 42})
+  call goda_rogue#start(#{dungeon: 'cave', seed: 42, debug: v:true})
   call s:check('number seed', s:status() =~# 'シード 42$', 1)
+  " The checks below must not depend on the floors: the player cannot
+  " fall.
+  call goda_rogue#do('debug', 'invincible')
 
   call goda_rogue#do('turn')
   call s:check('turn to an enemy', s:status() =~# '  ターン 0（', 1)

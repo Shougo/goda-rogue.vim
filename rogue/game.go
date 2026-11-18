@@ -87,6 +87,9 @@ type Game struct {
 	// events are what happened in the run, for its replay file (see
 	// event).
 	events []string
+	// guaranteed are the guaranteed items of each floor
+	// (planGuaranteed).
+	guaranteed map[int][]string
 	// Axis says whether the line the player faces shows (after turning:
 	// the axis of a throw, an arrow or a bolt).
 	Axis bool
@@ -139,8 +142,21 @@ func NewGame(d *Dungeon, seed string) *Game {
 		identified: map[string]bool{},
 	}
 	g.nameItems()
+	g.planGuaranteed()
 	g.descend()
 	return g
+}
+
+// planGuaranteed decides on which floor each guaranteed item appears
+// (guaranteed_items.txt), by a random source of its own: the other floors
+// stay as they are without them.
+func (g *Game) planGuaranteed() {
+	rng := rand.New(rand.NewPCG(seedHash(g.Dungeon, g.Seed), math.MaxUint64-2))
+	g.guaranteed = map[int][]string{}
+	for _, r := range g.Dungeon.Guaranteed {
+		f := between(rng, r.First, min(r.Last, g.Dungeon.Floors))
+		g.guaranteed[f] = append(g.guaranteed[f], r.ID)
+	}
 }
 
 // floorRNG is the random source of the layout of the floor depth: the
@@ -239,6 +255,15 @@ func (g *Game) descend() {
 	}
 	if c.Shop > 0 && rng.IntN(100) < c.Shop {
 		g.openShop(rng, rooms, start)
+	}
+	// The guaranteed items: free, so not in the shop.
+	for _, id := range g.guaranteed[g.Depth] {
+		for range 100 {
+			if pos := g.spot(rng, rooms); g.free(pos) && !g.inShop(pos) {
+				g.Items = append(g.Items, g.newItemOf(rng, d.Item(id), pos))
+				break
+			}
+		}
 	}
 	g.placeTraps(rng, rooms)
 

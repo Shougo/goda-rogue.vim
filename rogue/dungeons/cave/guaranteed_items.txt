@@ -1,0 +1,5 @@
+# Items that surely appear: each row puts the item (ID) on one floor of
+# 開始 to 終了 (which one, the seed decides), on top of the items of the
+# floor. A safety net: e.g. a scroll the player will need early.
+開始	終了	ID
+1	3	shikibetsu

@@ -10,8 +10,8 @@ import (
 type ShopDef struct {
 	ID   string
 	Name string
-	// Goods are the categories of the items it sells (none: any).
-	Goods []Category
+	// Table is the item table it sells from.
+	Table string
 	// Keeper is the shopkeeper, Keepers how many: from, to.
 	Keeper  *MonsterDef
 	Keepers [2]int
@@ -77,11 +77,7 @@ func (g *Game) openShop(rng *rand.Rand, rooms []int, start int) {
 	d := g.Dungeon
 	room := candidates[rng.IntN(len(candidates))]
 	def := d.Shop(pick(rng, d.ShopRows, g.Depth))
-	rows := g.goodsRows(def)
-	if len(rows) == 0 {
-		// Nothing to sell here.
-		return
-	}
+	table := d.ItemTable(def.Table)
 	r := g.Level.Rooms[room]
 	// The shop has the room to itself.
 	g.Monsters = slices.DeleteFunc(g.Monsters, func(m *Monster) bool { return r.Contains(m.Pos) })
@@ -109,7 +105,7 @@ func (g *Game) openShop(rng *rand.Rand, rooms []int, start int) {
 			if !g.free(p) || slices.ContainsFunc(doors, func(d Point) bool { return chebyshev(d, p) <= 1 }) {
 				continue
 			}
-			it := g.newItemOf(rng, d.Item(pick(rng, rows, g.Depth)), p)
+			it := g.newItemOf(rng, table.pick(rng, d, g.Depth), p)
 			it.ForSale = true
 			g.Items = append(g.Items, it)
 		}
@@ -147,23 +143,6 @@ func (g *Game) keeperHome(i int, door Point) (Point, bool) {
 // isEntry says whether p is a tile a door of the room i leads to.
 func (g *Game) isEntry(i int, p Point) bool {
 	return slices.ContainsFunc(g.doors(i), func(d Point) bool { return g.entry(i, d) == p })
-}
-
-// goodsRows are the rows of the shop item table of the floor for the shop
-// def: its own, and those for any shop of the kinds it sells.
-func (g *Game) goodsRows(def *ShopDef) []FloorRow {
-	d := g.Dungeon
-	var rows []FloorRow
-	for _, r := range d.ShopItemRows {
-		if r.First > g.Depth || g.Depth > r.Last {
-			continue
-		}
-		c := d.Item(r.ID).Category
-		if r.Shop == def.ID || r.Shop == "" && (len(def.Goods) == 0 || slices.Contains(def.Goods, c)) {
-			rows = append(rows, r.FloorRow)
-		}
-	}
-	return rows
 }
 
 // doors returns the doors of the room i: the walkable tiles of its wall.
