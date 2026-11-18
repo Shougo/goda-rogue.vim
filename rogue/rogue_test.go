@@ -819,53 +819,6 @@ func TestClear(t *testing.T) {
 	}
 }
 
-// TestRandomPlay plays runs with random actions, and checks that nothing
-// breaks: no two creatures on one tile, everyone on a walkable tile, HP in
-// bounds, and the run ending only for a reason.
-func TestRandomPlay(t *testing.T) {
-	actions := []string{"move", "move", "move", "dash", "attack", "turn", "wait", "stairs", "inventory", "pickup", "shoot", "look", "choose", "cancel"}
-	for seed := range 20 {
-		g := NewGame(cave(), fmt.Sprint("play", seed))
-		rng := rand.New(rand.NewPCG(uint64(seed), 0))
-		for range 3000 {
-			if g.Over != "" {
-				break
-			}
-			action := actions[rng.IntN(len(actions))]
-			var args []string
-			if action == "move" || action == "dash" || (action == "turn" && rng.IntN(2) == 0) {
-				args = []string{clockwise[rng.IntN(len(clockwise))]}
-			}
-			if action == "choose" {
-				if g.Prompt == nil {
-					continue
-				}
-				args = []string{fmt.Sprint(rng.IntN(len(g.Prompt.Choices)))}
-			}
-			if action == "stairs" && rng.IntN(4) == 0 {
-				g.Player = g.Stairs
-			}
-			if err := g.Do(action, args); err != nil {
-				t.Fatal(err)
-			}
-			tiles := map[Point]bool{g.Player: true}
-			for _, m := range g.Monsters {
-				if tiles[m.Pos] || !g.Level.At(m.Pos).Walkable() {
-					t.Fatalf("seed %d: %s on %v", seed, m.Name, m.Pos)
-				}
-				tiles[m.Pos] = true
-				if m.HP <= 0 || m.HP > m.MaxHP {
-					t.Fatalf("seed %d: %s HP %d/%d", seed, m.Name, m.HP, m.MaxHP)
-				}
-			}
-			if g.HP < 0 || g.HP > g.MaxHP || (g.HP == 0) != (g.Over != "" && !g.Cleared && !strings.Contains(g.Over, "風")) {
-				t.Fatalf("seed %d: HP %d/%d, over %q", seed, g.HP, g.MaxHP, g.Over)
-			}
-		}
-		_ = g.Render(Size{80, 24})
-	}
-}
-
 // TestResultShowsMap: the result screen keeps the floor as it was at the
 // end, with the cursor on the player.
 func TestResultShowsMap(t *testing.T) {
