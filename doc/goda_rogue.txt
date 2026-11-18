@@ -254,7 +254,9 @@ shoot                                                       *goda-rogue-shoot*
 turn [{direction}]                                           *goda-rogue-turn*
 		Face {direction}.  Without it, face an enemy next to the
 		player that it can attack: again and again, each of them in
-		turn, clockwise.  It costs no turn.
+		turn, clockwise.  It costs no turn.  Until the next action,
+		the line the player faces is highlighted to the first wall
+		(GodaRogueFacing): the axis of a throw, an arrow or a staff.
 
 wait                                                         *goda-rogue-wait*
 		Let a turn pass (and restore HP).
@@ -385,7 +387,8 @@ GodaRogueFloorSafe	The floor known to have no trap: where the player
 GodaRogueStairs		The stairs.
 GodaRogueTrap		A trap the player has found.
 GodaRogueFacing		The tile the player faces: its background, over the
-			highlight of what is there.
+			highlight of what is there.  After turning, the
+			whole line the player faces (|goda-rogue-turn|).
 GodaRogueOldMessage	The messages of the actions before the last one.
 GodaRogueTitle		The title of the result screen.
 GodaRogueHP		The HP bar of the top line (a background): its

@@ -144,9 +144,25 @@ func (g *Game) renderMap(s *Screen, viewW, viewH int) {
 		}
 		s.Lines = append(s.Lines, b.String())
 	}
-	if f := g.Player.Add(Directions[g.Facing]); f.X >= x0 && f.X < x0+w && f.Y >= y0 && f.Y < y0+h {
-		col := (f.X-x0)*glyphBytes + 1
-		s.Highlights[hlFacing] = []Span{{top + f.Y - y0 + 1, col, col + glyphBytes}}
+	in := func(p Point) bool { return p.X >= x0 && p.X < x0+w && p.Y >= y0 && p.Y < y0+h }
+	span := func(p Point) Span {
+		col := (p.X-x0)*glyphBytes + 1
+		return Span{top + p.Y - y0 + 1, col, col + glyphBytes}
+	}
+	d := Directions[g.Facing]
+	if f := g.Player.Add(d); in(f) {
+		s.Highlights[hlFacing] = []Span{span(f)}
+	}
+	if !g.Axis {
+		return
+	}
+	// The axis: on in the facing direction, over creatures, to the first
+	// wall or the first tile not seen.
+	f := g.Player.Add(d)
+	for p := f; g.Level.At(p).Walkable() && g.IsSeen(p); p = p.Add(d) {
+		if p != f && in(p) {
+			s.Highlights[hlFacing] = append(s.Highlights[hlFacing], span(p))
+		}
 	}
 }
 

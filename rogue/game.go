@@ -87,6 +87,9 @@ type Game struct {
 	// events are what happened in the run, for its replay file (see
 	// event).
 	events []string
+	// Axis says whether the line the player faces shows (after turning:
+	// the axis of a throw, an arrow or a bolt).
+	Axis bool
 	// DebugMode says whether the run may use the debug mode (debug.go),
 	// Debugged whether it did, and Invincible whether the player cannot
 	// fall (a debug command).
@@ -462,10 +465,11 @@ func (g *Game) Do(action string, args []string) error {
 			g.endTurn(true)
 		}
 	case "turn":
-		// Facing costs no turn.
+		// Facing costs no turn. The axis shows until another action.
 		if len(args) == 0 {
 			g.beginAction()
 			g.faceEnemy()
+			g.Axis = true
 			return nil
 		}
 		name, _, err := dir()
@@ -473,6 +477,7 @@ func (g *Game) Do(action string, args []string) error {
 			return err
 		}
 		g.Facing = name
+		g.Axis = true
 	case "dash":
 		name, d, err := dir()
 		if err != nil {
@@ -685,6 +690,7 @@ func (g *Game) takeEvents() []string {
 // beginAction starts the messages of an action.
 func (g *Game) beginAction() {
 	g.Message = ""
+	g.Axis = false
 	g.actionStart = len(g.Log)
 }
 
