@@ -365,3 +365,35 @@ func TestWatch(t *testing.T) {
 		t.Errorf("watched:\n%s\nplayed:\n%s", got, want)
 	}
 }
+
+// TestSamePath: two names of one file are the same path (the short and
+// the long names of Windows, here a link); a missing file is only the
+// same string.
+func TestSamePath(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "last.replay")
+	if err := os.WriteFile(path, nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// (Not filepath.Join: it cleans the "." away.)
+	sep := string(filepath.Separator)
+	other := dir + sep + "." + sep + "last.replay"
+	link := filepath.Join(dir, "link")
+	if err := os.Symlink(dir, link); err != nil {
+		t.Skip("no symbolic link:", err)
+	}
+	for _, tc := range []struct {
+		a, b string
+		want bool
+	}{
+		{path, path, true},
+		{path, other, true},
+		{path, filepath.Join(link, "last.replay"), true},
+		{path, filepath.Join(dir, "other.replay"), false},
+		{filepath.Join(dir, "x"), dir + sep + "." + sep + "x", false},
+	} {
+		if got := samePath(tc.a, tc.b); got != tc.want {
+			t.Errorf("samePath(%q, %q) = %v, want %v", tc.a, tc.b, got, tc.want)
+		}
+	}
+}

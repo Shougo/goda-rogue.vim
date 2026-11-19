@@ -133,6 +133,22 @@ func replayGame(path string) (*Replay, *Game, error) {
 	return rp, g, nil
 }
 
+// samePath says whether the paths a and b name the same file: the same
+// string, or two names of one file. On Windows the same path may come
+// in a short (8.3) and a long form (expand() in Vim gives the long one
+// once the directory exists), or with other slashes.
+func samePath(a, b string) bool {
+	if a == b {
+		return true
+	}
+	fa, err := os.Stat(a)
+	if err != nil {
+		return false
+	}
+	fb, err := os.Stat(b)
+	return err == nil && os.SameFile(fa, fb)
+}
+
 // stop ends the game being played or watched.
 func (p *Plugin) stop() {
 	if p.rec != nil {
@@ -333,7 +349,7 @@ func (p *Plugin) Handlers() map[string]sdk.Handler {
 			}
 			p.mu.Lock()
 			defer p.mu.Unlock()
-			if p.rec != nil && p.rec.Path == path && p.game.Over == "" {
+			if p.rec != nil && samePath(p.rec.Path, path) && p.game.Over == "" {
 				// The run being played: starting another is asked
 				// for, not resuming it.
 				return sdk.Generic(LastRun{State: "playing"})
