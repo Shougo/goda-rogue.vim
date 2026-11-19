@@ -72,6 +72,11 @@ their number), the harder it is; deep shops sell rarer items.  Attacking
 a shopkeeper is stealing too.  Angry shopkeepers sell no more, and with
 none left either: the items are anyone's.  Items not paid for cannot be
 put in a pot.
+In a shop that trades, the inventory shows what the shop pays for each
+item (売), and the description of an item shows its price; for an item
+not identified, it also shows the kinds it may be by that price (the
+kinds of its category of the same price, not identified yet), as a player
+who knows the prices would reckon.
 
                                                             *goda-rogue-traps*
 Traps are hidden on the floors.  A swing at nothing (|goda-rogue-attack|)

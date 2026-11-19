@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand/v2"
 	"slices"
+	"strings"
 )
 
 // ShopDef is a kind of shop.
@@ -298,6 +299,45 @@ func (g *Game) enterShop(wasIn bool) {
 // keepersCalm says whether the shop has shopkeepers, and none is angry.
 func (g *Game) keepersCalm() bool {
 	return g.Shop != nil && len(g.Shop.Keepers) > 0 && !g.Shop.Keepers[0].Angry
+}
+
+// shopOpen says whether the player is in a shop that trades: its
+// shopkeepers are there, and none is angry.
+func (g *Game) shopOpen() bool {
+	return g.keepersCalm() && g.inShop(g.Player)
+}
+
+// priceCandidates returns the names of the kinds an unidentified item it
+// may be by its price, as a player who knows the prices of the kinds
+// reckons in a shop: the kinds of its category of the same price, not
+// identified yet.
+func (g *Game) priceCandidates(it *Item) []string {
+	var names []string
+	for _, def := range g.Dungeon.Items {
+		if def.Category == it.Def.Category && def.Price == it.Def.Price && !g.identified[def.ID] {
+			names = append(names, def.Name)
+		}
+	}
+	return names
+}
+
+// shopInfo returns the lines of the description of it about a shop: its
+// price for sale, or what the shop the player is in pays for it; and, not
+// identified, the kinds it may be by that price.
+func (g *Game) shopInfo(it *Item) []string {
+	var lines []string
+	switch {
+	case it.ForSale:
+		lines = append(lines, fmt.Sprintf("値段 %dG（店の商品）", price(it)))
+	case g.shopOpen() && sellPrice(it) > 0:
+		lines = append(lines, fmt.Sprintf("売値 %dG（値段 %dG）", sellPrice(it), price(it)))
+	default:
+		return nil
+	}
+	if !g.identified[it.Def.ID] && it.Def.Price > 0 {
+		lines = append(lines, "値段からの候補："+strings.Join(g.priceCandidates(it), "、"))
+	}
+	return lines
 }
 
 // provoke makes the player a thief at an attack on a shopkeeper.

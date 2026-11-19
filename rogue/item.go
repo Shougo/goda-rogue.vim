@@ -328,8 +328,14 @@ func (g *Game) openInventory() {
 // their items: those carried, then the item under the player and the
 // found trap there.
 func (g *Game) inventory() (entries []string, items []int) {
+	open := g.shopOpen()
 	for i, it := range g.Inventory {
-		entries = append(entries, g.Entry(it))
+		e := g.Entry(it)
+		if open && !it.ForSale && sellPrice(it) > 0 {
+			// In a shop: what it pays.
+			e += fmt.Sprintf(" 売%dG", sellPrice(it))
+		}
+		entries = append(entries, e)
 		items = append(items, i)
 	}
 	if foot := g.foot(); foot != nil {

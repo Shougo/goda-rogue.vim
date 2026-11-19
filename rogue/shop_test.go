@@ -1,6 +1,7 @@
 package rogue
 
 import (
+	"fmt"
 	"slices"
 	"strings"
 	"testing"
@@ -305,5 +306,39 @@ func TestNoSwapInShop(t *testing.T) {
 	carry(g, "yakusou", 0)
 	if slices.Contains(g.footCommands(goods), commandSwap) || slices.Contains(g.itemCommands(g.Inventory[0]), commandSwap) {
 		t.Errorf("swap offered in a shop: %q %q", g.footCommands(goods), g.itemCommands(g.Inventory[0]))
+	}
+}
+
+// TestShopPrices: in a shop, the inventory shows what the shop pays, and
+// the description of an item not identified the kinds it may be by its
+// price.
+func TestShopPrices(t *testing.T) {
+	g := shopGame(t, "yorozu")
+	r := g.shopRoom()
+	g.Player = Point{r.X, r.Y}
+	grass := carry(g, "otogiri", 0)
+	// Two more grasses of its price: one identified, one not.
+	for _, id := range []string{"yakusou", "chikarakusa"} {
+		g.Dungeon.Item(id).Price = grass.Def.Price
+	}
+	g.identified["otogiri"], g.identified["chikarakusa"] = false, false
+	want := fmt.Sprintf(" 売%dG", sellPrice(grass))
+	if entries, _ := g.inventory(); !strings.HasSuffix(entries[len(g.Inventory)-1], want) {
+		t.Errorf("%q", entries)
+	}
+	info := strings.Join(g.info(grass), "\n")
+	for _, s := range []string{fmt.Sprintf("売値 %dG", sellPrice(grass)), "値段からの候補：弟切草、ちからの草"} {
+		if !strings.Contains(info, s) {
+			t.Errorf("no %q in\n%s", s, info)
+		}
+	}
+
+	// Out of the shop: nothing of it.
+	g.Player = Point{-1, -1}
+	if entries, _ := g.inventory(); strings.Contains(entries[len(g.Inventory)-1], "売") {
+		t.Errorf("%q", entries)
+	}
+	if info := strings.Join(g.info(grass), "\n"); strings.Contains(info, "候補") {
+		t.Errorf("%s", info)
 	}
 }

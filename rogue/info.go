@@ -74,7 +74,8 @@ func (g *Game) info(it *Item) []string {
 	def := it.Def
 	lines := []string{fmt.Sprintf("%s（%s）", g.describe(it), def.Category)}
 	if !g.identified[def.ID] {
-		return append(lines, "正体はまだ分からない。使うか識別すると分かる。")
+		lines = append(lines, "正体はまだ分からない。使うか識別すると分かる。")
+		return append(lines, g.shopInfo(it)...)
 	}
 	switch def.Category {
 	case CategoryWeapon, CategoryShield:
@@ -124,10 +125,7 @@ func (g *Game) info(it *Item) []string {
 	default:
 		lines = append(lines, effectText(def))
 	}
-	if it.ForSale {
-		lines = append(lines, fmt.Sprintf("値段 %dG（店の商品）", price(it)))
-	}
-	return lines
+	return append(lines, g.shopInfo(it)...)
 }
 
 // showInfo shows the description of it.
