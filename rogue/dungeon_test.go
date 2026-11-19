@@ -149,9 +149,15 @@ func TestDungeonErrors(t *testing.T) {
 		{"unknown seal", func(m fstest.MapFS) {
 			m["items.txt"].Data = append(m["items.txt"].Data, "x\t剣\tx\t武器\t1\t-\t0\t-\t炎\t2\t0\n"...)
 		}, `印: no seal "炎"`},
-		{"seal of a grass", func(m fstest.MapFS) {
+		{"slots of a grass", func(m fstest.MapFS) {
 			m["items.txt"].Data = append(m["items.txt"].Data, "x\t草\tx\t草\t1\t-\t0\t-\t会\t2\t0\n"...)
-		}, `印: only weapons and shields`},
+		}, `印数: only weapons and shields`},
+		{"money as a material", func(m fstest.MapFS) {
+			m["items.txt"].Data = append(m["items.txt"].Data, "x\t金\tx\tお金\t0\t-\t0\t-\t会\t0\t0\n"...)
+		}, `印: money is no material`},
+		{"a seal twice for weapons", func(m fstest.MapFS) {
+			m["seals.txt"].Data = append(m["seals.txt"].Data, "会\t会心の印\t会心\t5\t武器\n"...)
+		}, `the seal "会" again`},
 		{"no slot for its seal", func(m fstest.MapFS) {
 			m["items.txt"].Data = append(m["items.txt"].Data, "x\t剣\tx\t武器\t1\t-\t0\t-\t会\t0\t0\n"...)
 		}, `印数: no room`},

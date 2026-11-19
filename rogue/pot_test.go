@@ -152,6 +152,59 @@ func TestSynthesis(t *testing.T) {
 	}
 }
 
+// TestMixedSynthesis: a material gives a weapon its seal for weapons and
+// a shield its seal for shields (one glyph, two effects); a material with
+// no seal stays in the pot as it is.
+func TestMixedSynthesis(t *testing.T) {
+	g, _ := roomGame(t, 4, 3)
+	put := func(p, it *Item) {
+		t.Helper()
+		command(t, g, p, commandPutIn)
+		chooseLabel(t, g, g.Entry(it))
+	}
+
+	p := pot(g, "gousei", 3)
+	sword := carry(g, "katana", 0)
+	put(p, sword)
+	grass := carry(g, "chikarakusa", 0)
+	put(p, grass)
+	if len(p.Contents) != 1 || !slices.Equal(sword.Seals, []string{"力"}) {
+		t.Fatalf("contents %d, seals %v", len(p.Contents), sword.Seals)
+	}
+	if !strings.Contains(g.Message, "カタナとちからの草が合成された！") {
+		t.Errorf("message %q", g.Message)
+	}
+
+	p = pot(g, "gousei", 3)
+	shield := carry(g, "tetsutate", 0)
+	put(p, shield)
+	put(p, carry(g, "chikarakusa", 0))
+	other := carry(g, "yakusou", 0)
+	put(p, other) // No seal: kept apart.
+	if len(p.Contents) != 2 || !slices.Equal(shield.Seals, []string{"力"}) {
+		t.Fatalf("contents %d, seals %v", len(p.Contents), shield.Seals)
+	}
+
+	// The two sides: attack on the weapon, a counter on the shield.
+	sword.Equipped, shield.Equipped = true, true
+	g.Inventory = append(g.Inventory, sword, shield)
+	if n := g.sealStrength(SealAttack); n != 2 {
+		t.Errorf("attack %d", n)
+	}
+	if n := g.sealStrength(SealCounter); n != 15 {
+		t.Errorf("counter %d", n)
+	}
+	if n := g.sealStrength(SealDefense); n != 0 {
+		t.Errorf("defense %d", n)
+	}
+	info := strings.Join(g.info(carry(g, "chikarakusa", 0)), "\n")
+	for _, want := range []string{"武器に合成すると【力】力の印：攻撃力 +2。", "盾に合成すると【力】力の印：15% の確率"} {
+		if !strings.Contains(info, want) {
+			t.Errorf("info %q, want %q", info, want)
+		}
+	}
+}
+
 func TestMendBracelet(t *testing.T) {
 	g, _ := roomGame(t, 4, 3)
 	p := pot(g, "gousei", 3)

@@ -67,7 +67,7 @@ func (g *Game) equippedSeals() []*SealDef {
 	for _, c := range []Category{CategoryWeapon, CategoryShield} {
 		if it := g.equipped(c); it != nil {
 			for _, glyph := range it.Seals {
-				if s := g.Dungeon.Seal(glyph); s != nil {
+				if s := g.Dungeon.SealOn(glyph, c); s != nil {
 					seals = append(seals, s)
 				}
 			}

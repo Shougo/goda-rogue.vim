@@ -31,7 +31,9 @@
 # 回数 is how many times a staff can be waved, how many arrows there are,
 # how many items a pot holds (min-max; - for others).
 # 印 is the seal a weapon or a shield is born with (seals.txt; - for
-# none), 印数 how many seals it can have.
+# none), 印数 how many seals it can have. On another item, 印 makes it a
+# material: put in a pot of synthesis after a weapon or a shield, it adds
+# its seal for weapons or for shields (異種合成), and is used up.
 # Any item can be thrown: an arrow hurts the monster it hits, a grass
 # has its effect on it, another item hurts it a little.
 # 値段 is the price in shops (of one arrow for arrows); a shop buys for
@@ -53,7 +55,7 @@ kiya	矢	木の矢	矢	4	-	0	5-15	-	0	10
 tetsuya	矢	鉄の矢	矢	8	-	0	3-10	-	0	20
 yakusou	草	薬草	草	25	HP回復	0	-	-	0	50
 otogiri	草	弟切草	草	100	HP回復	0	-	-	0	200
-chikarakusa	草	ちからの草	草	1	ちから	0	-	-	0	500
+chikarakusa	草	ちからの草	草	1	ちから	0	-	力	0	500
 shikibetsu	巻	識別の巻物	巻物	0	識別	0	-	-	0	100
 akari	巻	あかりの巻物	巻物	0	あかり	0	-	-	0	200
 fukitobashi	杖	吹き飛ばしの杖	杖	0	吹き飛ばし	0	4-6	-	0	500

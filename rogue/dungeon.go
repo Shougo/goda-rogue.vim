@@ -597,8 +597,13 @@ func (l *loader) load() {
 				l.errorf(row.file, row.n, "付く先: want %s or %s, not %q", CategoryWeapon, CategoryShield, f)
 			}
 		}
-		if d.Seal(s.Glyph) != nil {
-			l.errorf(row.file, row.n, "the seal %q again", s.Glyph)
+		// One glyph, two seals: one for weapons and one for shields
+		// (a material gives either, by what it is merged into).
+		for _, o := range d.Seals {
+			if o.Glyph == s.Glyph && (o.For == "" || s.For == "" || o.For == s.For) {
+				l.errorf(row.file, row.n, "the seal %q again", s.Glyph)
+				break
+			}
 		}
 		d.Seals = append(d.Seals, s)
 	}
@@ -637,13 +642,17 @@ func (l *loader) load() {
 		if _, ok := row.cols["値段"]; ok {
 			it.Price = l.int(row, "値段", 0)
 		}
-		if (it.Seal != "" || it.Slots > 0) && c != CategoryWeapon && c != CategoryShield {
-			l.errorf(row.file, row.n, "印: only weapons and shields have seals, not %s", c)
+		equipment := c == CategoryWeapon || c == CategoryShield
+		if it.Slots > 0 && !equipment {
+			l.errorf(row.file, row.n, "印数: only weapons and shields have seals, not %s", c)
 		}
-		if it.Seal != "" && it.Slots == 0 {
+		if it.Seal != "" && c == CategoryMoney {
+			l.errorf(row.file, row.n, "印: money is no material")
+		}
+		if it.Seal != "" && equipment && it.Slots == 0 {
 			l.errorf(row.file, row.n, "印数: no room for its seal %q", it.Seal)
 		}
-		if s := d.Seal(it.Seal); s != nil && s.For != "" && s.For != c {
+		if s := d.Seal(it.Seal); s != nil && equipment && d.SealOn(it.Seal, c) == nil {
 			l.errorf(row.file, row.n, "印: the seal %q goes on a %s, not a %s", it.Seal, s.For, c)
 		}
 		if (c == CategoryStaff || c == CategoryArrow || c == CategoryPot) && it.Charges[1] == 0 {
@@ -925,10 +934,22 @@ func (d *Dungeon) Trap(id string) *TrapDef {
 	return nil
 }
 
-// Seal returns the seal of the glyph, or nil.
+// Seal returns the seal of the glyph, or nil: the first, if the glyph
+// has one seal for weapons and another for shields.
 func (d *Dungeon) Seal(glyph string) *SealDef {
 	for _, s := range d.Seals {
 		if s.Glyph == glyph {
+			return s
+		}
+	}
+	return nil
+}
+
+// SealOn returns the seal of the glyph that goes on an item of the
+// category c (a weapon or a shield), or nil.
+func (d *Dungeon) SealOn(glyph string, c Category) *SealDef {
+	for _, s := range d.Seals {
+		if s.Glyph == glyph && (s.For == "" || s.For == c) {
 			return s
 		}
 	}

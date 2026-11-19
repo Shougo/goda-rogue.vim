@@ -86,19 +86,26 @@ func (g *Game) putIn(pot, it *Item) {
 
 // merge merges it into base, in a pot of synthesis, and says whether it
 // did: a weapon or a shield gets the seals (as many as its slots hold)
-// and the upgrade value of another of its category; a bracelet is mended
-// by the same bracelet.
+// and the upgrade value of another of its category, or the seal of a
+// material for its category (異種合成: a seal for weapons or for
+// shields, items.txt 印); a bracelet is mended by the same bracelet.
 func (g *Game) merge(base, it *Item) bool {
 	c := base.Def.Category
 	switch {
 	case (c == CategoryWeapon || c == CategoryShield) && it.Def.Category == c:
 		base.Upgrade += it.Upgrade
 		for _, s := range it.Seals {
-			if len(base.Seals) < base.Def.Slots && !slices.Contains(base.Seals, s) {
-				base.Seals = append(base.Seals, s)
-			}
+			g.addSeal(base, s)
 		}
 		base.Known = base.Known && it.Known
+		g.say(g.Name(base) + "と" + g.Name(it) + "が合成された！")
+		return true
+	case (c == CategoryWeapon || c == CategoryShield) && it.Def.Category != CategoryWeapon &&
+		it.Def.Category != CategoryShield && g.Dungeon.SealOn(it.Def.Seal, c) != nil:
+		// (Merged even with no room: the material is used up, as the
+		// player chose to put it in.)
+		g.addSeal(base, it.Def.Seal)
+		g.learn(it)
 		g.say(g.Name(base) + "と" + g.Name(it) + "が合成された！")
 		return true
 	case c == CategoryBracelet && it.Def == base.Def:
@@ -107,6 +114,14 @@ func (g *Game) merge(base, it *Item) bool {
 		return true
 	}
 	return false
+}
+
+// addSeal adds the seal glyph to base, if it has room and not the seal
+// yet.
+func (g *Game) addSeal(base *Item, glyph string) {
+	if len(base.Seals) < base.Def.Slots && !slices.Contains(base.Seals, glyph) {
+		base.Seals = append(base.Seals, glyph)
+	}
 }
 
 // lookIn shows what is in the pot it (at index i), to choose one.

@@ -10,6 +10,8 @@
 #   ハラヘラズ  the player gets hungry half as fast
 # 付く先 is what it goes on, a weapon (武器) or a shield (盾): the seals of
 # weapons and of shields have different effects, so the two never add up.
+# A seal may have two rows, one for weapons and one for shields: the seal
+# of a material (items.txt) is the one for what it is merged into.
 印	名前	効果	強さ	付く先
 攻	攻撃の印	攻撃	3	武器
 防	防御の印	防御	3	盾
@@ -18,3 +20,5 @@
 反	反撃の印	反撃	30	盾
 錆	サビよけの印	サビよけ	0	盾
 腹	ハラヘラズの印	ハラヘラズ	0	盾
+力	力の印	攻撃	2	武器
+力	力の印	反撃	15	盾
