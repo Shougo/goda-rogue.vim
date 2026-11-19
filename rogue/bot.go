@@ -525,10 +525,22 @@ func (b *Bot) danger(g *Game) (string, []string) {
 			var target *Monster
 			away := fight
 			for _, m := range near {
+				// One that hits a wall or a monster at once
+				// stays next to the player, or comes back
+				// at once: it only takes the bump.
+				if blowAwayFlight(g, m) < minFlight {
+					continue
+				}
 				rest := slices.DeleteFunc(slices.Clone(ms), func(o *Monster) bool { return o == m })
 				if c := fightDeath(g, rest, g.HP, 1); target == nil || c < away {
 					target, away = m, c
 				}
+			}
+			if target == nil {
+				// Nothing to send away: it would not help
+				// (and the cheapest answer must not pick it
+				// for its chance with the enemy still there).
+				away = fightDeath(g, ms, g.HP, 1)
 			}
 			var chance float64
 			for _, def := range kinds {
@@ -584,6 +596,26 @@ func (b *Bot) danger(g *Game) (string, []string) {
 	}
 	b.spent++
 	return b.use(pick.item, pick.command)
+}
+
+// minFlight is how far a monster blown away must fly for the bot to count
+// it out of the fight: nearer, it is back before the fight is over.
+const minFlight = 3
+
+// blowAwayFlight is how many tiles a staff of blowing away sends the
+// monster m next to the player flying (Game.blowAway): 0 when it is
+// against a wall or another monster.
+func blowAwayFlight(g *Game, m *Monster) int {
+	d := m.Pos.Sub(g.Player)
+	p := m.Pos
+	for n := range blowAwayTiles {
+		next := p.Add(d)
+		if !g.clearFrom(p, d) || !g.Level.At(next).Walkable() || g.occupied(next) {
+			return n
+		}
+		p = next
+	}
+	return blowAwayTiles
 }
 
 // stepBack returns the direction of a step back into a corridor, where

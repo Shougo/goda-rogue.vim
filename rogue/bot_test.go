@@ -142,6 +142,22 @@ func TestBotDanger(t *testing.T) {
 		t.Fatalf("%s %+v", a, b.plan)
 	}
 
+	// Against the wall, the dragon would not fly: no staff.
+	b.plan = nil
+	g.Player = Point{r.X + r.W - 2, r.Y + 1}
+	m.Pos = Point{r.X + r.W - 1, r.Y + 1}
+	if n := blowAwayFlight(g, m); n != 0 {
+		t.Fatalf("flight against the wall: %d", n)
+	}
+	if a, _ := b.Next(g); a == "inventory" && len(b.plan) == 2 && b.plan[1].label == commandWave {
+		t.Fatalf("waved at a dragon against the wall: %+v", b.plan)
+	}
+	g.Player = Point{r.X + 1, r.Y + 1}
+	m.Pos = Point{r.X + 2, r.Y + 1}
+	if n := blowAwayFlight(g, m); n != r.W-3 {
+		t.Fatalf("flight across the room: %d, want %d", n, r.W-3)
+	}
+
 	// No staff: to the stairs, away from it.
 	b.plan = nil
 	g.Inventory = nil
