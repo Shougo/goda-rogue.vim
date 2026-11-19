@@ -154,8 +154,10 @@ func TestBotDanger(t *testing.T) {
 	}
 	g.Player = Point{r.X + 1, r.Y + 1}
 	m.Pos = Point{r.X + 2, r.Y + 1}
-	if n := blowAwayFlight(g, m); n != r.W-3 {
-		t.Fatalf("flight across the room: %d, want %d", n, r.W-3)
+	// (The room is the first big enough on the floors of the cave: its
+	// width changes with the data.)
+	if n, want := blowAwayFlight(g, m), min(r.W-3, blowAwayTiles); n != want {
+		t.Fatalf("flight across the room: %d, want %d", n, want)
 	}
 
 	// No staff: to the stairs, away from it.
