@@ -66,7 +66,7 @@ func (g *Game) fillHouse(rng *rand.Rand, rooms []int, start int) {
 	for range between(rng, c.MinHouseTrap, c.MaxHouseTrap) {
 		p := g.randomTile(rng, g.House)
 		def := d.Trap(pick(rng, d.TrapRows, g.Depth))
-		if !g.free(p) || g.TrapAt(p) != nil || def.Effect == TrapPit && g.Depth >= d.Floors {
+		if !g.trapSpot(p, def) {
 			continue
 		}
 		g.Traps = append(g.Traps, &Trap{Def: def, Pos: p})

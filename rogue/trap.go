@@ -63,18 +63,42 @@ func (g *Game) foundTrapAt(p Point) *Trap {
 }
 
 // placeTraps hides the traps of a new floor in its rooms: on free tiles,
-// not under items. No pit on the last floor.
+// not under items, not at an entrance. No pit on the last floor.
 func (g *Game) placeTraps(rng *rand.Rand, rooms []int) {
 	d := g.Dungeon
 	c := d.counts(g.Depth)
 	for range between(rng, c.MinTrap, c.MaxTrap) {
 		p := g.spot(rng, rooms)
 		def := d.Trap(pick(rng, d.TrapRows, g.Depth))
-		if !g.free(p) || g.TrapAt(p) != nil || g.inShop(p) || def.Effect == TrapPit && g.Depth >= d.Floors {
+		if !g.trapSpot(p, def) || g.inShop(p) {
 			continue
 		}
 		g.Traps = append(g.Traps, &Trap{Def: def, Pos: p})
 	}
+}
+
+// trapSpot says whether a trap of the kind def can be hidden on p: a free
+// tile with no trap, not the entrance of a room (a tile of it next to a
+// corridor: as in Shiren, the way in and out is never trapped), and no
+// pit on the last floor.
+func (g *Game) trapSpot(p Point, def *TrapDef) bool {
+	if !g.free(p) || g.TrapAt(p) != nil || def.Effect == TrapPit && g.Depth >= g.Dungeon.Floors {
+		return false
+	}
+	return !g.entrance(p)
+}
+
+// entrance says whether p is a tile of a room next to a corridor.
+func (g *Game) entrance(p Point) bool {
+	if g.Level.At(p) != TileRoom {
+		return false
+	}
+	for _, d := range Directions {
+		if g.Level.At(p.Add(d)) == TileCorridor {
+			return true
+		}
+	}
+	return false
 }
 
 // check is a swing at nothing: it checks the tile in front of the player,

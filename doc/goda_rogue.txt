@@ -79,16 +79,17 @@ kinds of its category of the same price, not identified yet), as a player
 who knows the prices would reckon.
 
                                                             *goda-rogue-traps*
-Traps are hidden on the floors.  A swing at nothing (|goda-rogue-attack|)
-finds a trap in front of the player, or shows the tile as safe, as
-walking on it does; stepping on a hidden trap sets it off: a pit (down to
-the next floor), a landmine (half the HP), a snare (no moving for some
-turns), a poison arrow (damage, and the strength down), sleeping gas,
-warping, hunger, rust (the upgrade values of the weapon and the shield
-down).  A trap the player has found shows as 罠, a dash stops before it,
-and by the rule of the built-in dungeon it never goes off by itself:
-standing on it, the inventory lists it (marked [足元]), to step on it on
-purpose (踏む).  |goda-rogue-look| tells its kind and what it does.
+Traps are hidden on the floors, more in a monster house, never at the
+entrance of a room (its tiles next to a corridor).  A swing at nothing
+(|goda-rogue-attack|) finds a trap in front of the player, or shows the
+tile as safe, as walking on it does; stepping on a hidden trap sets it
+off: a pit (down to the next floor), a landmine (half the HP), a snare
+(no moving for some turns), a poison arrow (damage, and the strength
+down), sleeping gas, warping, hunger, rust (the upgrade values of the
+weapon and the shield down).  A trap the player has found shows as 罠,
+a dash stops before it, and by the rule of the built-in dungeon it never
+goes off by itself: standing on it, the inventory lists it (marked
+[足元]), to step on it on purpose (踏む).  |goda-rogue-look| tells its kind and what it does.
 
 The player gets hungry: the fullness (満腹, on the top line) goes down a
 point every few turns.  Food restores it.  Starving, the player restores

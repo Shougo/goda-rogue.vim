@@ -1,6 +1,7 @@
 package rogue
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -248,5 +249,25 @@ func TestLookTraps(t *testing.T) {
 	}
 	if g.Message != "地雷："+trapTexts[TrapMine] {
 		t.Errorf("message %q", g.Message)
+	}
+}
+
+// TestNoTrapAtEntrances: no trap is hidden on a tile of a room next to a
+// corridor (the way in and out), monster houses included.
+func TestNoTrapAtEntrances(t *testing.T) {
+	traps := 0
+	for i := range 40 {
+		g := specialGame(t, fmt.Sprint("entrance", i), func(c *FloorCounts) {
+			c.MinTrap, c.MaxTrap, c.House = 20, 20, 50
+		})
+		for _, tr := range g.Traps {
+			traps++
+			if g.entrance(tr.Pos) {
+				t.Fatalf("seed %d: a trap at the entrance %v", i, tr.Pos)
+			}
+		}
+	}
+	if traps == 0 {
+		t.Fatal("no trap")
 	}
 }
