@@ -1,0 +1,206 @@
+// Command analyze measures the balance of a dungeon: bots play many runs
+// of it, and it prints how they went: clears, where and why they fell,
+// the HP on arriving on each floor, the items found and used.
+//
+//	go run ./cmd/analyze -dungeon cave -runs 200
+//
+// The runs are reproducible: run i of a bot has the seed "{seed}{i}" (the
+// same floors for every bot) and the bot's randomness from i.
+package main
+
+import (
+	"flag"
+	"fmt"
+	"io"
+	"os"
+	"runtime"
+	"slices"
+	"sort"
+	"strings"
+	"sync"
+
+	"github.com/Shougo/goda-rogue.vim/rogue"
+)
+
+func main() {
+	dungeon := flag.String("dungeon", "cave", "the dungeon (a built-in one)")
+	runs := flag.Int("runs", 100, "the runs of each bot")
+	bots := flag.String("bots", "careful,reckless", "the bots, by style, separated by commas")
+	seed := flag.String("seed", "analyze", "the prefix of the seeds of the runs")
+	actions := flag.Int("actions", 50000, "the most actions of a run")
+	jobs := flag.Int("j", runtime.NumCPU(), "the runs played at once")
+	tsv := flag.Bool("tsv", false, "print one line a run, tab-separated, instead of the summary")
+	flag.Parse()
+
+	d, err := rogue.LoadBuiltin(*dungeon)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "analyze:", err)
+		os.Exit(1)
+	}
+	var styles []rogue.BotStyle
+	for _, name := range strings.Split(*bots, ",") {
+		s, ok := rogue.BotStyles[name]
+		if !ok {
+			fmt.Fprintf(os.Stderr, "analyze: no bot %q\n", name)
+			os.Exit(2)
+		}
+		styles = append(styles, s)
+	}
+	if *tsv {
+		fmt.Println("bot\tseed\tdepth\tcause\tover\tturns\tlevel\tkills\tdamage\tunfair")
+	}
+	for _, s := range styles {
+		rs, err := play(d, s, *seed, *runs, *actions, *jobs)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "analyze:", err)
+			os.Exit(1)
+		}
+		if *tsv {
+			for _, r := range rs {
+				fmt.Printf("%v\t%s\t%d\t%s\t%s\t%d\t%d\t%d\t%d\t%v\n",
+					s, r.Seed, r.Depth, r.Cause, r.Over, r.Turns, r.Level, r.Kills, r.Damage, r.Unfair)
+			}
+			continue
+		}
+		summarize(os.Stdout, d, s, rs)
+	}
+}
+
+// play plays n runs of d by bots of style s, jobs at once.
+func play(d *rogue.Dungeon, s rogue.BotStyle, seed string, n, actions, jobs int) ([]rogue.BotRun, error) {
+	rs := make([]rogue.BotRun, n)
+	errs := make([]error, n)
+	next := make(chan int)
+	var wg sync.WaitGroup
+	for range max(jobs, 1) {
+		wg.Go(func() {
+			for i := range next {
+				rs[i], errs[i] = rogue.PlayBot(d, fmt.Sprint(seed, i), rogue.NewBot(s, uint64(i)), actions)
+			}
+		})
+	}
+	for i := range n {
+		next <- i
+	}
+	close(next)
+	wg.Wait()
+	for _, err := range errs {
+		if err != nil {
+			return nil, err
+		}
+	}
+	return rs, nil
+}
+
+// summarize prints the summary of the runs rs of the bot s.
+func summarize(w io.Writer, d *rogue.Dungeon, s rogue.BotStyle, rs []rogue.BotRun) {
+	n := len(rs)
+	pct := func(k int) string { return fmt.Sprintf("%d (%.0f%%)", k, 100*float64(k)/float64(max(n, 1))) }
+	count := func(f func(rogue.BotRun) bool) int {
+		k := 0
+		for _, r := range rs {
+			if f(r) {
+				k++
+			}
+		}
+		return k
+	}
+	mean := func(f func(rogue.BotRun) int) float64 {
+		t := 0
+		for _, r := range rs {
+			t += f(r)
+		}
+		return float64(t) / float64(max(n, 1))
+	}
+
+	fmt.Fprintf(w, "== %s, bot %v, %d runs\n", d.Name, s, n)
+	fmt.Fprintf(w, "cleared       %s\n", pct(count(func(r rogue.BotRun) bool { return r.Cleared })))
+	depths := make([]int, n)
+	for i, r := range rs {
+		depths[i] = r.Depth
+	}
+	slices.Sort(depths)
+	if n > 0 {
+		fmt.Fprintf(w, "floor reached mean %.1f, median %d, max %d (of %d)\n",
+			mean(func(r rogue.BotRun) int { return r.Depth }), depths[n/2], depths[n-1], d.Floors)
+	}
+	fmt.Fprintf(w, "level         mean %.1f;  turns mean %.0f;  kills mean %.1f;  damage taken mean %.0f\n",
+		mean(func(r rogue.BotRun) int { return r.Level }), mean(func(r rogue.BotRun) int { return r.Turns }),
+		mean(func(r rogue.BotRun) int { return r.Kills }), mean(func(r rogue.BotRun) int { return r.Damage }))
+
+	fmt.Fprintln(w, "ended by")
+	for _, c := range []string{"cleared", "monster", "trap", "hunger", "wind", "unfinished"} {
+		if k := count(func(r rogue.BotRun) bool { return r.Cause == c }); k > 0 {
+			fmt.Fprintf(w, "  %-10s %s\n", c, pct(k))
+		}
+	}
+	fmt.Fprintf(w, "unfair deaths %s (from full HP in one action, or within 10 turns of arriving)\n",
+		pct(count(func(r rogue.BotRun) bool { return r.Unfair })))
+
+	killers := map[string]int{}
+	for _, r := range rs {
+		if r.Cause == "monster" {
+			killers[strings.TrimSuffix(r.Over, "に倒された")]++
+		}
+	}
+	fmt.Fprintln(w, "killed by (top 8)")
+	for _, k := range top(killers, 8) {
+		fmt.Fprintf(w, "  %-10s %d\n", k, killers[k])
+	}
+
+	// By floor: how many reached it, fell on it, and the HP on arriving.
+	fmt.Fprintln(w, "floor  reached  fell  HP on arriving (mean %)  turns on it (mean)")
+	for f := 1; f <= d.Floors; f++ {
+		reached, fell, hp, turns, left := 0, 0, 0.0, 0, 0
+		for _, r := range rs {
+			for i, fl := range r.Floors {
+				if fl.Depth != f {
+					continue
+				}
+				reached++
+				hp += 100 * float64(fl.HP) / float64(max(fl.MaxHP, 1))
+				if i+1 < len(r.Floors) {
+					turns += r.Floors[i+1].Turn - fl.Turn
+					left++
+				}
+			}
+			if !r.Cleared && r.Depth == f {
+				fell++
+			}
+		}
+		if reached == 0 {
+			break
+		}
+		t := "-"
+		if left > 0 {
+			t = fmt.Sprintf("%.0f", float64(turns)/float64(left))
+		}
+		fmt.Fprintf(w, "%4d   %6d  %4d  %5.0f  %s  %s\n", f, reached, fell, hp/float64(reached),
+			strings.Repeat("#", fell*40/max(n, 1)), t)
+	}
+
+	fmt.Fprintln(w, "items a run (picked up / used)")
+	for _, c := range rogue.Categories() {
+		p := mean(func(r rogue.BotRun) int { return r.Picked[c] })
+		u := mean(func(r rogue.BotRun) int { return r.Used[c] })
+		if p > 0 || u > 0 {
+			fmt.Fprintf(w, "  %-6s %5.1f / %4.1f\n", c, p, u)
+		}
+	}
+	fmt.Fprintln(w)
+}
+
+// top returns the n keys of m with the largest counts.
+func top(m map[string]int, n int) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		if m[keys[i]] != m[keys[j]] {
+			return m[keys[i]] > m[keys[j]]
+		}
+		return keys[i] < keys[j]
+	})
+	return keys[:min(n, len(keys))]
+}

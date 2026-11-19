@@ -90,6 +90,12 @@ Dungeons are data: tab-separated text files in `rogue/dungeons/{id}/`
 (monsters, which floors they appear on, items, rules, growth tables).
 See `:help goda-rogue-dungeons`.
 
+To see how a dungeon plays, let bots play it many times:
+
+```sh
+go run ./cmd/analyze -dungeon cave -runs 200
+```
+
 ## License
 
 MIT, see [LICENSE](LICENSE).

@@ -31,6 +31,10 @@ var categories = []Category{
 	CategoryScroll, CategoryStaff, CategoryPot, CategoryFood, CategoryMoney,
 }
 
+// Categories returns the categories of items, in the order of the
+// inventory.
+func Categories() []Category { return slices.Clone(categories) }
+
 // Item is an item, lying on the floor or carried.
 type Item struct {
 	Def   *ItemDef
