@@ -76,7 +76,7 @@ func (b *Bot) Next(g *Game) (string, []string) {
 	}
 	for _, rule := range []func(*Game) (string, []string){
 		b.heal, b.danger, b.shoot, b.fight, b.eat, b.boost, b.equip, b.identify, b.light,
-		b.rest, b.leave, b.pick, b.explore,
+		b.tidy, b.rest, b.leave, b.pick, b.explore,
 	} {
 		if action, args := rule(g); action != "" {
 			return action, args
@@ -273,6 +273,76 @@ func (b *Bot) light(g *Game) (string, []string) {
 	return "", nil
 }
 
+// tidy drops an item it has no use for, when the inventory is full and
+// something to pick up is in sight: a weapon or a shield not stronger
+// than the one equipped, a bracelet not worn, a pot (the bots do not use
+// pots). Not in a shop (putting down is selling), nor on an item or the
+// stairs.
+func (b *Bot) tidy(g *Game) (string, []string) {
+	if len(g.Inventory) < g.Dungeon.Rules.Capacity || g.inShop(g.Player) || g.Player == g.Stairs {
+		return "", nil
+	}
+	if _, ok := g.ItemAt(g.Player); ok {
+		return "", nil
+	}
+	wanted := false
+	for _, it := range g.Items {
+		if g.IsSeen(it.Pos) && !it.ForSale && it.Def.Category != CategoryMoney && !useless(g, it) {
+			wanted = true
+			break
+		}
+	}
+	if !wanted {
+		return "", nil
+	}
+	junk := carried(g, func(it *Item) bool { return !it.Equipped && useless(g, it) })
+	if junk == nil {
+		return "", nil
+	}
+	return b.use(junk, commandDrop)
+}
+
+// useless says whether the bots have no use for it (not equipped): a
+// weapon or a shield not stronger than the one equipped, a bracelet when
+// one is worn, an empty pot (they do not use pots).
+func useless(g *Game, it *Item) bool {
+	switch c := it.Def.Category; c {
+	case CategoryWeapon, CategoryShield:
+		worn := g.equipped(c)
+		return worn != nil && worn != it && strength(it) <= strength(worn)
+	case CategoryBracelet:
+		worn := g.equipped(c)
+		return worn != nil && worn != it
+	case CategoryPot:
+		return len(it.Contents) == 0
+	}
+	return false
+}
+
+// dangerousFloorShare is the share of the monsters of a floor (by the
+// weights of its table) that the player would likely lose to, from which
+// the floor is dangerous: a careful player goes on at once.
+const dangerousFloorShare = 0.25
+
+// dangerousFloor says whether the floor is dangerous, by its monster
+// table, as a player who knows the table of the dungeon would judge: the
+// share of the monsters (by weight) that would likely beat the player one
+// on one, at its HP now.
+func dangerousFloor(g *Game) bool {
+	total, bad := 0, 0
+	for _, r := range g.Dungeon.MonsterRows {
+		def := g.Dungeon.Monster(r.ID)
+		if r.First > g.Depth || g.Depth > r.Last || def == nil {
+			continue
+		}
+		total += r.Weight
+		if dangerous(g, []*Monster{newMonster(def)}) {
+			bad += r.Weight
+		}
+	}
+	return total > 0 && float64(bad) >= dangerousFloorShare*float64(total)
+}
+
 // threatened says whether an enemy in sight would likely beat the player
 // one on one.
 func (b *Bot) threatened(g *Game) bool {
@@ -414,9 +484,11 @@ func (b *Bot) windNear(g *Game) bool {
 
 // leave goes to the stairs and down: the reckless bot as soon as it knows
 // where they are, the careful one when the wind is near, it is hungry with
-// nothing to eat, or it sees an enemy it would likely lose to.
+// nothing to eat, it sees an enemy it would likely lose to, or the floor is
+// a dangerous one.
 func (b *Bot) leave(g *Game) (string, []string) {
-	if !g.IsSeen(g.Stairs) || (b.Style == BotCareful && !b.windNear(g) && !b.hungry(g) && !b.threatened(g)) {
+	if !g.IsSeen(g.Stairs) || (b.Style == BotCareful && !b.windNear(g) && !b.hungry(g) &&
+		!b.threatened(g) && !dangerousFloor(g)) {
 		return "", nil
 	}
 	return b.toStairs(g)
@@ -436,7 +508,7 @@ func (b *Bot) pick(g *Game) (string, []string) {
 	full := len(g.Inventory) >= g.Dungeon.Rules.Capacity
 	return b.walk(g, func(p Point) bool {
 		it, ok := g.ItemAt(p)
-		return ok && g.IsSeen(p) && p != g.Player && !it.ForSale &&
+		return ok && g.IsSeen(p) && p != g.Player && !it.ForSale && !useless(g, it) &&
 			(!full || it.Def.Category == CategoryMoney)
 	})
 }
@@ -470,9 +542,10 @@ func (b *Bot) walk(g *Game, goal func(Point) bool) (string, []string) {
 			for from[p] != g.Player {
 				p = from[p]
 			}
-			// Onto the goods of a shop, a dash: it stops on them without
-			// picking them up (leaving with them is stealing).
-			if it, ok := g.ItemAt(p); ok && it.ForSale {
+			// Onto the goods of a shop or an item of no use, a dash: it
+			// stops on them without picking them up (leaving with goods
+			// is stealing).
+			if it, ok := g.ItemAt(p); ok && (it.ForSale || useless(g, it)) {
 				return "dash", []string{directionName(p.Sub(g.Player))}
 			}
 			return "move", []string{directionName(p.Sub(g.Player))}

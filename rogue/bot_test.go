@@ -126,3 +126,38 @@ func TestBotDanger(t *testing.T) {
 		t.Fatalf("%s %v", a, args)
 	}
 }
+
+// TestDangerousFloor: a floor is dangerous when enough of its monsters
+// (by the table) would beat the player.
+func TestDangerousFloor(t *testing.T) {
+	g := NewGame(cave(), "floor")
+	if dangerousFloor(g) {
+		t.Error("1F dangerous")
+	}
+	g.Depth = 30
+	if !dangerousFloor(g) {
+		t.Error("30F at level 1 not dangerous")
+	}
+}
+
+// TestUseless: the bots keep only what they use, and drop the rest when
+// the inventory is full and something is in sight.
+func TestUseless(t *testing.T) {
+	g, r := roomGame(t, 6, 3)
+	b := NewBot(BotCareful, 1)
+	sword := carry(g, "katana", 0)
+	sword.Equipped = true
+	weak := carry(g, "bokutou", 0)
+	strong := carry(g, "katana", 2)
+	if !useless(g, weak) || useless(g, strong) || useless(g, sword) {
+		t.Errorf("useless: weak %v, strong %v, equipped %v", useless(g, weak), useless(g, strong), useless(g, sword))
+	}
+	for len(g.Inventory) < g.Dungeon.Rules.Capacity {
+		carry(g, "yakusou", 0)
+	}
+	putAtFoot(g, "onigiri").Pos = Point{r.X + 3, r.Y}
+	strong.Equipped, sword.Equipped = true, false
+	if a, _ := b.tidy(g); a != "inventory" || b.plan[1].label != commandDrop || (b.plan[0].item != weak && b.plan[0].item != sword) {
+		t.Errorf("%s %+v", a, b.plan)
+	}
+}
