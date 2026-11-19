@@ -591,6 +591,12 @@ func (l *loader) load() {
 			l.errorf(row.file, row.n, "効果: unknown %q", s.Effect)
 		}
 		s.Strength = l.int(row, "強さ", 0)
+		if f, ok := row.cols["付く先"]; ok {
+			s.For = Category(f)
+			if s.For != CategoryWeapon && s.For != CategoryShield {
+				l.errorf(row.file, row.n, "付く先: want %s or %s, not %q", CategoryWeapon, CategoryShield, f)
+			}
+		}
 		if d.Seal(s.Glyph) != nil {
 			l.errorf(row.file, row.n, "the seal %q again", s.Glyph)
 		}
@@ -636,6 +642,9 @@ func (l *loader) load() {
 		}
 		if it.Seal != "" && it.Slots == 0 {
 			l.errorf(row.file, row.n, "印数: no room for its seal %q", it.Seal)
+		}
+		if s := d.Seal(it.Seal); s != nil && s.For != "" && s.For != c {
+			l.errorf(row.file, row.n, "印: the seal %q goes on a %s, not a %s", it.Seal, s.For, c)
 		}
 		if (c == CategoryStaff || c == CategoryArrow || c == CategoryPot) && it.Charges[1] == 0 {
 			l.errorf(row.file, row.n, "回数: %s needs some", c)

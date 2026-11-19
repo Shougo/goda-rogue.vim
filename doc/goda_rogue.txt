@@ -580,7 +580,10 @@ floors once the files change.
 	seals.txt		The seals of weapons and shields, a table:
 				印 is the kanji of a seal, 効果 what it does
 				(the comments of the built-in seals.txt tell
-				what each does), 強さ how much.
+				what each does), 強さ how much, 付く先 what it
+				goes on (武器 or 盾, optional: either).  Give
+				the seals of weapons and of shields different
+				effects: the seals of the two add up.
 	fake_names.txt		The names of unidentified items, by kind
 				(種類), a table.  The items of a kind with
 				names are unidentified at first, each with

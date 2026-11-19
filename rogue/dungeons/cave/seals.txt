@@ -8,11 +8,13 @@
 #             back to the attacker
 #   サビよけ  the weapon and the shield do not rust
 #   ハラヘラズ  the player gets hungry half as fast
-印	名前	効果	強さ
-攻	攻撃の印	攻撃	3
-防	防御の印	防御	3
-会	会心の印	会心	25
-必	必中の印	必中	0
-反	反撃の印	反撃	30
-錆	サビよけの印	サビよけ	0
-腹	ハラヘラズの印	ハラヘラズ	0
+# 付く先 is what it goes on, a weapon (武器) or a shield (盾): the seals of
+# weapons and of shields have different effects, so the two never add up.
+印	名前	効果	強さ	付く先
+攻	攻撃の印	攻撃	3	武器
+防	防御の印	防御	3	盾
+会	会心の印	会心	25	武器
+必	必中の印	必中	0	武器
+反	反撃の印	反撃	30	盾
+錆	サビよけの印	サビよけ	0	盾
+腹	ハラヘラズの印	ハラヘラズ	0	盾

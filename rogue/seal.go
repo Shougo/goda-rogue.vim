@@ -13,6 +13,10 @@ type SealDef struct {
 	Effect SealEffect
 	// Strength is how much its effect does.
 	Strength int
+	// For is the category it goes on, a weapon or a shield (付く先; ""
+	// for either, when seals.txt does not say). A seal goes on one of
+	// them, so that the two never add up the same effect.
+	For Category
 }
 
 // SealEffect is what a seal does while its weapon or shield is equipped.
