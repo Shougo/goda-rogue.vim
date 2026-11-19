@@ -355,3 +355,66 @@ func TestBotChecksHouse(t *testing.T) {
 		t.Error("checks with the house awake")
 	}
 }
+
+// TestBotItemCost: an item costs less the more of its kind the bot
+// carries and the deeper it is; a staff's last wave costs the most.
+func TestBotItemCost(t *testing.T) {
+	g, _ := roomGame(t, 3, 3)
+	b := NewBot(BotCareful, 1)
+	g.Inventory = nil
+	grass := carry(g, "yakusou", 0)
+	kinds := []*ItemDef{grass.Def}
+	one := b.itemCost(g, grass, kinds)
+	carry(g, "yakusou", 0)
+	if two := b.itemCost(g, grass, kinds); two >= one {
+		t.Errorf("two %v, one %v", two, one)
+	}
+	g.Depth = g.Dungeon.Floors
+	if deep := b.itemCost(g, grass, kinds); deep >= one/2 {
+		t.Errorf("deep %v, one %v", deep, one)
+	}
+	staff := carry(g, "fukitobashi", 0)
+	staff.Charges = 4
+	many := b.itemCost(g, staff, []*ItemDef{staff.Def})
+	staff.Charges = 1
+	if last := b.itemCost(g, staff, []*ItemDef{staff.Def}); last <= many {
+		t.Errorf("last %v, many %v", last, many)
+	}
+}
+
+// TestBotRestsInRoom: with low HP in a corridor, the careful bot walks
+// into a room to rest.
+func TestBotRestsInRoom(t *testing.T) {
+	g := find(t, func(g *Game) bool { return len(g.Level.Rooms) > 1 })
+	b := NewBot(BotCareful, 1)
+	g.Monsters, g.Items, g.Traps = nil, nil, nil
+	var corridor Point
+	found := false
+	for y := 1; y < g.Level.H-1 && !found; y++ {
+		for x := 1; x < g.Level.W-1 && !found; x++ {
+			p := Point{x, y}
+			if g.Level.At(p) == TileCorridor {
+				for _, d := range Directions {
+					if g.entrance(p.Add(d)) {
+						corridor, found = p, true
+					}
+				}
+			}
+		}
+	}
+	if !found {
+		t.Skip("no corridor by a room")
+	}
+	g.Player = corridor
+	for i := range g.Seen {
+		g.Seen[i] = true
+	}
+	g.HP = g.MaxHP / 4
+	if a, _ := b.rest(g); a != "move" {
+		t.Fatalf("in a corridor: %s", a)
+	}
+	g.Player = Point{g.Level.Rooms[0].X + 1, g.Level.Rooms[0].Y + 1}
+	if a, _ := b.rest(g); a != "wait" {
+		t.Fatalf("in a room: %s", a)
+	}
+}

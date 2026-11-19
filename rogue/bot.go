@@ -472,7 +472,7 @@ func (b *Bot) danger(g *Game) (string, []string) {
 				}
 			}
 			if len(kinds) > 0 {
-				answers = append(answers, botAnswer{meanPrice(kinds), chance / float64(len(kinds)), it, commandDrink, nil})
+				answers = append(answers, botAnswer{b.itemCost(g, it, kinds), chance / float64(len(kinds)), it, commandDrink, nil})
 			}
 		case CategoryStaff:
 			if it.Known && it.Charges == 0 {
@@ -497,7 +497,7 @@ func (b *Bot) danger(g *Game) (string, []string) {
 				}
 			}
 			if len(kinds) > 0 {
-				answers = append(answers, botAnswer{meanPrice(kinds) / 4, chance / float64(len(kinds)), it, commandWave, target})
+				answers = append(answers, botAnswer{b.itemCost(g, it, kinds), chance / float64(len(kinds)), it, commandWave, target})
 			}
 		}
 	}
@@ -573,6 +573,37 @@ func (b *Bot) stepBack(g *Game, ms []*Monster) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+// unknownCharges are the charges the bot counts on in a staff whose
+// charges it does not know.
+const unknownCharges = 3
+
+// itemCost returns what using it (one of kinds, as the player knows)
+// costs the bot: the mean price of the kinds, for a staff a wave of it
+// (the last one costs the whole staff), lower the more of the kind it
+// carries, and lower the fewer floors are left to need it (the article
+// "原始に続く穴 安定攻略への道": keep what the floors ahead need; an item
+// left at the bottom is worth nothing).
+func (b *Bot) itemCost(g *Game, it *Item, kinds []*ItemDef) float64 {
+	cost := meanPrice(kinds)
+	if it.Def.Category == CategoryStaff {
+		charges := unknownCharges
+		if it.Known {
+			charges = it.Charges
+		}
+		cost /= float64(max(charges, 1))
+	} else {
+		n := 0
+		for _, o := range g.Inventory {
+			if !o.ForSale && o.Def == it.Def {
+				n++
+			}
+		}
+		cost *= 2 / float64(n+1)
+	}
+	d := g.Dungeon.Floors
+	return cost * (0.25 + 0.75*float64(d-g.Depth)/float64(max(d-1, 1)))
 }
 
 // leaveCost is what leaving a floor at once costs the careful bot, as the
@@ -930,8 +961,20 @@ func (b *Bot) rest(g *Game) (string, []string) {
 	if b.Style != BotCareful || g.HP*10 >= g.MaxHP*7 || !b.canRest(g) {
 		return "", nil
 	}
+	if g.Level.RoomAt(g.Player) < 0 {
+		// Rest in a room, not in a corridor, where whatever comes
+		// is seen coming (the articles on 浜辺の魔洞, shiren2424).
+		if step, n, ok := b.route(g, func(p Point) bool {
+			return g.Level.RoomAt(p) >= 0 && !g.entrance(p)
+		}); ok && n <= restWalk && g.MonsterAt(step) == nil {
+			return "move", []string{directionName(step.Sub(g.Player))}
+		}
+	}
 	return "wait", nil
 }
+
+// restWalk is how far the bot walks to rest in a room.
+const restWalk = 10
 
 // canRest says whether the player can rest: no enemy in sight, the wind
 // far, and food enough (resting costs food).
