@@ -57,8 +57,10 @@ func TestMaze(t *testing.T) {
 				corridors++
 			}
 		}
-		if corridors < l.W*l.H/3 {
-			t.Errorf("%s: %d corridor tiles", seed, corridors)
+		// The maze is a part of the floor: about half of its tiles are
+		// corridors.
+		if want := (2*mazeCols + 1) * (2*mazeRows + 1) / 3; corridors < want {
+			t.Errorf("%s: %d corridor tiles, want %d at least", seed, corridors, want)
 		}
 	}
 }

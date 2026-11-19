@@ -252,16 +252,24 @@ func GenerateBigRoom() *Level {
 }
 
 // mazeRooms is how many small rooms a maze has, where things are put.
-const mazeRooms = 6
+const mazeRooms = 4
+
+// mazeCols and mazeRows are the size of a maze, in cells (a cell and the
+// wall after it are 2 tiles): a part of the floor, not all of it, so that
+// even with bad luck the stairs are found before the wind.
+const mazeCols, mazeRows = 20, 10
 
 // GenerateMaze makes a floor of a maze of corridors, with a few loops, and
-// mazeRooms small rooms (3x3) in it.
+// mazeRooms small rooms (3x3) in it, somewhere on the floor; the rest is
+// rock.
 func GenerateMaze(rng *rand.Rand) *Level {
 	l := &Level{W: MapWidth, H: MapHeight, Tiles: make([]Tile, MapWidth*MapHeight), Maze: true}
-	// The cells of the maze are on odd tiles, from 1 to the last odd tile
-	// that leaves rock at the edges.
-	cols, rows := (MapWidth-2)/2, (MapHeight-2)/2
-	cell := func(cx, cy int) Point { return Point{1 + 2*cx, 1 + 2*cy} }
+	// The cells of the maze are on odd tiles from an odd corner, leaving
+	// rock at the edges of the floor.
+	cols, rows := min(mazeCols, (MapWidth-2)/2), min(mazeRows, (MapHeight-2)/2)
+	ox := 2 * rng.IntN((MapWidth-2)/2-cols+1)
+	oy := 2 * rng.IntN((MapHeight-2)/2-rows+1)
+	cell := func(cx, cy int) Point { return Point{ox + 1 + 2*cx, oy + 1 + 2*cy} }
 	visited := make([]bool, cols*rows)
 	var stack [][2]int
 	start := [2]int{rng.IntN(cols), rng.IntN(rows)}
