@@ -210,6 +210,8 @@ func TestDash(t *testing.T) {
 	g := NewGame(cave(), "dash")
 	g.Monsters = nil
 	g.Items = nil
+	// (A hidden trap on the way stops the dash too.)
+	g.Traps = nil
 	g.Stairs = Point{-1, -1}
 	i := g.Level.RoomAt(g.Player)
 	r := g.Level.Rooms[i]
