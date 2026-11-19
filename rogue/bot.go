@@ -860,7 +860,7 @@ func (b *Bot) toStairs(g *Game) (string, []string) {
 // pick walks to the nearest item seen that it can take: not for sale, and
 // with room in the inventory (money always).
 func (b *Bot) pick(g *Game) (string, []string) {
-	return b.walk(g, func(p Point) bool { return wanted(g, p) })
+	return b.approach(g, func(p Point) bool { return wanted(g, p) })
 }
 
 // wanted says whether an item the bots would pick up lies on p (seen, not
@@ -874,7 +874,26 @@ func wanted(g *Game, p Point) bool {
 
 // explore walks to the nearest tile seen next to one not seen yet.
 func (b *Bot) explore(g *Game) (string, []string) {
-	return b.walk(g, func(p Point) bool { return frontier(g, p) })
+	return b.approach(g, func(p Point) bool { return frontier(g, p) })
+}
+
+// approach walks toward goal as walk does, but waits instead of a step
+// next to an enemy coming at the player, so that the enemy steps next to
+// it and the player strikes first (the articles on 浜辺の魔洞, shiren2424:
+// lead the enemy, take the first move). A fast enemy acts twice whatever
+// the player does: no waiting for it.
+func (b *Bot) approach(g *Game, goal func(Point) bool) (string, []string) {
+	action, args := b.walk(g, goal)
+	if action != "move" && action != "dash" || len(args) != 1 {
+		return action, args
+	}
+	p := g.Player.Add(Directions[args[0]])
+	for _, m := range g.visibleEnemies() {
+		if !m.Dozing && m.Speed != SpeedDouble && chebyshev(m.Pos, g.Player) == 2 && chebyshev(m.Pos, p) == 1 {
+			return "wait", nil
+		}
+	}
+	return action, args
 }
 
 // frontier says whether p, seen, is next to a tile not seen yet.

@@ -245,3 +245,20 @@ func TestBotCheapestAnswer(t *testing.T) {
 		t.Fatalf("with a staff: %s %+v", a, b.plan)
 	}
 }
+
+// TestBotFirstStrike: the bot waits for an enemy two steps away to come
+// next to it rather than step next to it; not for a dozing one.
+func TestBotFirstStrike(t *testing.T) {
+	g, r := roomGame(t, 8, 3)
+	b := NewBot(BotCareful, 1)
+	g.Player = Point{r.X, r.Y + 1}
+	m := place(g, kind("nezumi1"), Point{r.X + 2, r.Y + 1})
+	goal := func(p Point) bool { return p == Point{r.X + 4, r.Y + 1} }
+	if a, _ := b.approach(g, goal); a != "wait" {
+		t.Errorf("awake: %s", a)
+	}
+	m.Dozing = true
+	if a, _ := b.approach(g, goal); a != "move" {
+		t.Errorf("dozing: %s", a)
+	}
+}
