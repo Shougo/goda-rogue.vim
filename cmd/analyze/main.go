@@ -182,6 +182,8 @@ func summarize(w io.Writer, d *rogue.Dungeon, s rogue.BotStyle, rs []rogue.BotRu
 			float64(picked)/float64(reached), float64(used)/float64(reached))
 	}
 
+	summarizeParts(w, d, rs)
+
 	fmt.Fprintln(w, "items a run (picked up / used)")
 	for _, c := range rogue.Categories() {
 		p := mean(func(r rogue.BotRun) int { return r.Picked[c] })
@@ -192,6 +194,31 @@ func summarize(w io.Writer, d *rogue.Dungeon, s rogue.BotStyle, rs []rogue.BotRu
 	}
 	summarizeEnds(w, rs)
 	fmt.Fprintln(w)
+}
+
+// parts are how many parts of the dungeon summarizeParts splits it into.
+const parts = 3
+
+// summarizeParts prints the chance of dying in each part of the dungeon,
+// for a run that reached the part: the deep floors should be at least as
+// deadly as the first ones, or the difficulty sits in the wrong place.
+func summarizeParts(w io.Writer, d *rogue.Dungeon, rs []rogue.BotRun) {
+	fmt.Fprintln(w, "deaths by part of the dungeon (fell / reached its first floor)")
+	for i := range parts {
+		from, to := d.Floors*i/parts+1, d.Floors*(i+1)/parts
+		reached, fell := 0, 0
+		for _, r := range rs {
+			if r.Depth < from && !r.Cleared {
+				continue
+			}
+			reached++
+			if !r.Cleared && r.Depth <= to {
+				fell++
+			}
+		}
+		fmt.Fprintf(w, "  %2d-%2dF  %3d / %3d  %5.1f%%\n", from, to, fell, reached,
+			100*float64(fell)/float64(max(reached, 1)))
+	}
 }
 
 // answerCategories are the categories of the items that answer a danger
