@@ -418,3 +418,28 @@ func TestBotRestsInRoom(t *testing.T) {
 		t.Fatalf("in a room: %s", a)
 	}
 }
+
+// TestBotThreats: enemies coming at the player count in a fight from
+// when they come; a monster house awake is answered before contact.
+func TestBotThreats(t *testing.T) {
+	g, r := roomGame(t, 8, 3)
+	b := NewBot(BotCareful, 1)
+	g.Player = Point{r.X, r.Y + 1}
+	g.HP = 12
+	near := place(g, kind("nezumi1"), Point{r.X + 1, r.Y + 1})
+	alone := fightDeath(g, []*Monster{near}, g.HP, 0)
+	far := place(g, kind("kuma1"), Point{r.X + 4, r.Y + 1})
+	if arrival(g, far) != 3 {
+		t.Errorf("arrival %d", arrival(g, far))
+	}
+	if ms := b.threats(g); len(ms) != 2 {
+		t.Fatalf("%d threats", len(ms))
+	}
+	if both := fightDeath(g, b.threats(g), g.HP, 0); both <= alone {
+		t.Errorf("both %v, alone %v", both, alone)
+	}
+	far.Dozing = true
+	if ms := b.threats(g); len(ms) != 1 {
+		t.Errorf("a dozing one counts: %d", len(ms))
+	}
+}

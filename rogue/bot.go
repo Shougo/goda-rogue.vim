@@ -288,24 +288,59 @@ type foe struct {
 
 // fightDeath returns the chance that the player with hp dies fighting
 // the enemies ms, after delay turns of doing something else (using an
-// item) while they attack.
+// item) while they attack. An enemy not next to the player joins the
+// fight when it comes (arrival); the player kills them one by one as
+// they are there, the quickest first.
 func fightDeath(g *Game, ms []*Monster, hp, delay int) float64 {
 	if len(ms) == 0 {
 		return 0
 	}
 	foes := make([]foe, len(ms))
 	for i, m := range ms {
-		foes[i] = foe{hitDamages(g, m), 0, 0, m}
+		a := arrival(g, m)
+		foes[i] = foe{hitDamages(g, m), a + 1, 0, m}
 	}
 	slices.SortStableFunc(foes, func(a, c foe) int {
+		if a.first != c.first {
+			return a.first - c.first
+		}
 		return cmpFloat(killTurns(g, a.m), killTurns(g, c.m))
 	})
-	sum := float64(delay)
+	t := float64(delay)
 	for i := range foes {
-		sum += killTurns(g, foes[i].m)
-		foes[i].last = min(int(math.Ceil(sum)), riskTurns)
+		t = max(t, float64(foes[i].first-1)) + killTurns(g, foes[i].m)
+		foes[i].last = min(int(math.Ceil(t)), riskTurns)
 	}
 	return deathDP(g, hp, foes)
+}
+
+// arrival returns the turns m takes to come next to the player (0 next to
+// it), by its distance and speed.
+func arrival(g *Game, m *Monster) int {
+	steps := chebyshev(m.Pos, g.Player) - 1
+	switch m.Speed {
+	case SpeedDouble:
+		return (steps + 1) / 2
+	case SpeedSlow:
+		return 2 * steps
+	}
+	return steps
+}
+
+// comeReach is how far an enemy in sight may be to count in a fight: it
+// comes within a few turns.
+const comeReach = 5
+
+// threats returns the enemies of a fight: those next to the player, and
+// those awake in sight within comeReach, coming.
+func (b *Bot) threats(g *Game) []*Monster {
+	ms := b.adjacent(g)
+	for _, m := range g.visibleEnemies() {
+		if d := chebyshev(m.Pos, g.Player); d > 1 && d <= comeReach && !m.Dozing {
+			ms = append(ms, m)
+		}
+	}
+	return ms
 }
 
 // oneByOneDeath returns the chance that the player with hp dies fighting
@@ -315,7 +350,9 @@ func oneByOneDeath(g *Game, ms []*Monster, hp int) float64 {
 	ms = slices.Clone(ms)
 	foes := make([]foe, 0, 2*len(ms))
 	for _, m := range ms {
-		foes = append(foes, foe{hitDamages(g, m), 1, 1, m})
+		if arrival(g, m) == 0 {
+			foes = append(foes, foe{hitDamages(g, m), 1, 1, m})
+		}
 	}
 	slices.SortStableFunc(ms, func(a, c *Monster) int {
 		return cmpFloat(killTurns(g, a), killTurns(g, c))
@@ -442,11 +479,12 @@ type riskKey struct {
 // enough, the one that leaves the least chance of dying, if it beats
 // fighting on.
 func (b *Bot) danger(g *Game) (string, []string) {
-	ms := b.adjacent(g)
-	if len(ms) == 0 {
+	near := b.adjacent(g)
+	ms := b.threats(g)
+	if len(near) == 0 && len(ms) < swarm {
 		return "", nil
 	}
-	fight := deathChance(g, ms)
+	fight := fightDeath(g, ms, g.HP, 0)
 	if fight < b.risk() {
 		return "", nil
 	}
@@ -479,10 +517,14 @@ func (b *Bot) danger(g *Game) (string, []string) {
 				continue
 			}
 			kinds := b.mayBe(g, it)
-			// Blow away the enemy whose leaving helps most.
+			// Blow away the enemy next to it whose leaving helps
+			// most.
+			if len(near) == 0 {
+				continue
+			}
 			var target *Monster
 			away := fight
-			for _, m := range ms {
+			for _, m := range near {
 				rest := slices.DeleteFunc(slices.Clone(ms), func(o *Monster) bool { return o == m })
 				if c := fightDeath(g, rest, g.HP, 1); target == nil || c < away {
 					target, away = m, c
@@ -512,7 +554,7 @@ func (b *Bot) danger(g *Game) (string, []string) {
 			if b.Style == BotCareful {
 				cost = leaveCost
 			}
-			answers = append(answers, botAnswer{cost, fleeDeath(g, ms, g.HP, dist), nil, "", nil})
+			answers = append(answers, botAnswer{cost, fleeDeath(g, near, g.HP, dist), nil, "", nil})
 		}
 	}
 	var pick *botAnswer
@@ -605,6 +647,10 @@ func (b *Bot) itemCost(g *Game, it *Item, kinds []*ItemDef) float64 {
 	d := g.Dungeon.Floors
 	return cost * (0.25 + 0.75*float64(d-g.Depth)/float64(max(d-1, 1)))
 }
+
+// swarm is how many enemies coming at the player make a fight to answer
+// before they are next to it (a monster house awake).
+const swarm = 3
 
 // leaveCost is what leaving a floor at once costs the careful bot, as the
 // price of an item: what it would have found there.
