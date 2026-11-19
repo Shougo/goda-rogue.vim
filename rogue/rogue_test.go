@@ -853,19 +853,22 @@ func TestResultShowsMap(t *testing.T) {
 func TestFirstFloorsRank(t *testing.T) {
 	d := cave()
 	rng := rand.New(rand.NewPCG(1, 2))
+	strongest := 0
 	for floor := 1; floor <= 3; floor++ {
 		for range 1000 {
-			if r := d.Monster(pick(rng, d.MonsterRows, floor)).Rank; r != 1 {
-				t.Fatalf("rank %d on %dF", r, floor)
+			m := d.Monster(pick(rng, d.MonsterRows, floor))
+			if m.Rank != 1 {
+				t.Fatalf("rank %d on %dF", m.Rank, floor)
 			}
+			strongest = max(strongest, m.HP)
 		}
 	}
-	bumped := false
+	stronger := false
 	for range 1000 {
-		bumped = bumped || d.Monster(pick(rng, d.MonsterRows, 4)).Rank == 2
+		stronger = stronger || d.Monster(pick(rng, d.MonsterRows, 4)).HP > strongest
 	}
-	if !bumped {
-		t.Error("never a rank above on 4F")
+	if !stronger {
+		t.Error("never a stronger kind on 4F")
 	}
 }
 

@@ -456,8 +456,10 @@ Every tile is one full-width character, two cells wide:
 	罠	a trap the player has found ("GodaRogueTrap")
 	剣 盾 腕 草 巻 杖 壺 矢 金 食
 		items
-	鼠 蛇 狼 骸 霊 鬼 竜 盗
-		enemies (their color is their rank)
+	鼠 蛇 狼 霊 盗 骸 鬼 蟹 蜂 蛙 茸 竜 熊 亀 猪 鎧
+		enemies (their color is their rank); in each rank, the
+		first five are weak, the next six middle, the last five
+		strong
 
 The background of the tile the player faces (and attacks) is
 "GodaRogueFacing".
