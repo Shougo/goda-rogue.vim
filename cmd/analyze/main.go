@@ -149,15 +149,17 @@ func summarize(w io.Writer, d *rogue.Dungeon, s rogue.BotStyle, rs []rogue.BotRu
 	}
 
 	// By floor: how many reached it, fell on it, and the HP on arriving.
-	fmt.Fprintln(w, "floor  reached  fell  HP on arriving (mean %)  turns on it (mean)")
+	fmt.Fprintln(w, "floor  reached  fell  HP on arriving (mean %)  turns on it (mean)  answers picked up / used (mean)")
 	for f := 1; f <= d.Floors; f++ {
-		reached, fell, hp, turns, left := 0, 0, 0.0, 0, 0
+		reached, fell, hp, turns, left, picked, used := 0, 0, 0.0, 0, 0, 0, 0
 		for _, r := range rs {
 			for i, fl := range r.Floors {
 				if fl.Depth != f {
 					continue
 				}
 				reached++
+				picked += answers(fl.Picked)
+				used += answers(fl.Used)
 				hp += 100 * float64(fl.HP) / float64(max(fl.MaxHP, 1))
 				if i+1 < len(r.Floors) {
 					turns += r.Floors[i+1].Turn - fl.Turn
@@ -175,8 +177,9 @@ func summarize(w io.Writer, d *rogue.Dungeon, s rogue.BotStyle, rs []rogue.BotRu
 		if left > 0 {
 			t = fmt.Sprintf("%.0f", float64(turns)/float64(left))
 		}
-		fmt.Fprintf(w, "%4d   %6d  %4d  %5.0f  %s  %s\n", f, reached, fell, hp/float64(reached),
-			strings.Repeat("#", fell*40/max(n, 1)), t)
+		fmt.Fprintf(w, "%4d   %6d  %4d  %5.0f  %-4s  %5s  %5.2f / %4.2f\n", f, reached, fell, hp/float64(reached),
+			strings.Repeat("#", fell*40/max(n, 1)), t,
+			float64(picked)/float64(reached), float64(used)/float64(reached))
 	}
 
 	fmt.Fprintln(w, "items a run (picked up / used)")
@@ -187,7 +190,111 @@ func summarize(w io.Writer, d *rogue.Dungeon, s rogue.BotStyle, rs []rogue.BotRu
 			fmt.Fprintf(w, "  %-6s %5.1f / %4.1f\n", c, p, u)
 		}
 	}
+	summarizeEnds(w, rs)
 	fmt.Fprintln(w)
+}
+
+// answerCategories are the categories of the items that answer a danger
+// (the answers counted per floor).
+var answerCategories = []rogue.Category{rogue.CategoryGrass, rogue.CategoryScroll, rogue.CategoryStaff}
+
+// answers returns the count of answers in counts.
+func answers(counts map[rogue.Category]int) int {
+	n := 0
+	for _, c := range answerCategories {
+		n += counts[c]
+	}
+	return n
+}
+
+// lastFloors are the floors before a death whose items used are shown.
+const lastFloors = 3
+
+// summarizeEnds prints how the runs ended, as the items go: the items
+// left at a clear and at a death, the chance of dying the bot reckoned at
+// its last choice before a death by a monster, and the items used on the
+// floors before a death.
+func summarizeEnds(w io.Writer, rs []rogue.BotRun) {
+	var cleared, died []rogue.BotRun
+	for _, r := range rs {
+		switch r.Cause {
+		case "cleared":
+			cleared = append(cleared, r)
+		case "monster", "trap", "hunger", "wind":
+			died = append(died, r)
+		}
+	}
+	meanOf := func(rs []rogue.BotRun, f func(rogue.BotRun) int) float64 {
+		t := 0
+		for _, r := range rs {
+			t += f(r)
+		}
+		return float64(t) / float64(max(len(rs), 1))
+	}
+	fmt.Fprintf(w, "items left at the end (mean; %d cleared / %d died)\n", len(cleared), len(died))
+	for _, c := range rogue.Categories() {
+		a := meanOf(cleared, func(r rogue.BotRun) int { return r.Left[c] })
+		b := meanOf(died, func(r rogue.BotRun) int { return r.Left[c] })
+		if a > 0 || b > 0 {
+			fmt.Fprintf(w, "  %-6s %4.1f / %4.1f\n", c, a, b)
+		}
+	}
+
+	// The chance of dying at the last choice: a risk taken, or a surprise.
+	var monster []rogue.BotRun
+	for _, r := range died {
+		if r.Cause == "monster" {
+			monster = append(monster, r)
+		}
+	}
+	fmt.Fprintf(w, "deaths by monsters (%d), by the chance of dying the bot reckoned: at the start of the last fight / at the last choice\n", len(monster))
+	for _, b := range []struct {
+		name string
+		in   func(float64) bool
+	}{
+		{"no enemy next (surprise)", func(p float64) bool { return p == 0 }},
+		{"below 5%", func(p float64) bool { return p > 0 && p < 0.05 }},
+		{"5-20%", func(p float64) bool { return p >= 0.05 && p < 0.20 }},
+		{"20-50%", func(p float64) bool { return p >= 0.20 && p < 0.50 }},
+		{"50% or more", func(p float64) bool { return p >= 0.50 }},
+	} {
+		start, last := 0, 0
+		for _, r := range monster {
+			if b.in(r.FightRisk) {
+				start++
+			}
+			if b.in(r.Risk) {
+				last++
+			}
+		}
+		fmt.Fprintf(w, "  %-26s %3d / %3d\n", b.name, start, last)
+	}
+
+	// The items used on the last floors before a death.
+	fmt.Fprintf(w, "items used on the last %d floors before a death (mean)\n", lastFloors)
+	none := 0
+	for _, c := range rogue.Categories() {
+		u := meanOf(died, func(r rogue.BotRun) int {
+			n := 0
+			for _, f := range r.Floors[max(len(r.Floors)-lastFloors, 0):] {
+				n += f.Used[c]
+			}
+			return n
+		})
+		if u > 0 {
+			fmt.Fprintf(w, "  %-6s %4.1f\n", c, u)
+		}
+	}
+	for _, r := range died {
+		n := 0
+		for _, f := range r.Floors[max(len(r.Floors)-lastFloors, 0):] {
+			n += answers(f.Used)
+		}
+		if n == 0 {
+			none++
+		}
+	}
+	fmt.Fprintf(w, "  deaths with no answer used on them: %d of %d\n", none, len(died))
 }
 
 // top returns the n keys of m with the largest counts.

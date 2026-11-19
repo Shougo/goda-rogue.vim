@@ -615,13 +615,19 @@ To see how a dungeon plays, let bots play it, from this repository: >
 player knows: a careful one (it explores, rests, and leaves when the
 wind comes, when hungry with no food, or when it sees an enemy it would
 likely lose to) and a reckless one (it goes down as soon as it finds the
-stairs).  Both shoot arrows, blow away with a staff or flee to the stairs
-an enemy next to them they would likely lose to, and reckon by what a
-player knows of the kinds of monsters.
+stairs).  Both shoot arrows, and blow away with a staff or flee to the
+stairs from enemies next to them that would kill them: they reckon the
+chance of dying in the fight (by the hit rates, the spread of the damage
+and the speeds of the kinds, as a player who knows the kinds would) and
+answer it from 5% (careful) or 20% (reckless).
 It prints how many cleared, where and why they fell (by monster, trap,
 hunger or the wind; deaths from full HP in one action or just after
-arriving count as unfair), the HP on arriving on each floor and the turns
-spent on it, and the items picked up and used.  The runs are the same for
+arriving count as unfair), the HP on arriving on each floor, the turns
+spent on it and the answers (grasses, scrolls, staffs) picked up and used
+on it, the items picked up and used, the items left at a clear and at a
+death, the chance of dying the bot reckoned at the start of its last fight
+and at its last choice (0: a surprise), and the items used on the last
+floors before a death.  The runs are the same for
 the same seeds (-seed), so a change of the data shows in the numbers.
 The bots are simple: they measure, they do not play well.
 

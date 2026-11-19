@@ -2,6 +2,7 @@ package rogue
 
 import (
 	"fmt"
+	"math"
 	"math/rand/v2"
 	"slices"
 	"strings"
@@ -44,6 +45,13 @@ type Bot struct {
 	// stuck counts the actions without moving, to get out of a loop.
 	last  Point
 	stuck int
+	// risks remembers whether fights one on one are dangerous.
+	risks map[riskKey]bool
+	// lastRisk is the chance of dying of the fight with the enemies
+	// next to the player at its last choice (0 with none); fightRisk at
+	// the first choice of this fight (since the player last had no enemy
+	// next to it).
+	lastRisk, fightRisk float64
 }
 
 // botStep is an answer to a prompt: the item it (in the inventory), or
@@ -55,7 +63,7 @@ type botStep struct {
 
 // NewBot returns a bot of style, with its randomness from seed.
 func NewBot(style BotStyle, seed uint64) *Bot {
-	return &Bot{Style: style, rng: rand.New(rand.NewPCG(seed, 0x60da))}
+	return &Bot{Style: style, rng: rand.New(rand.NewPCG(seed, 0x60da)), risks: map[riskKey]bool{}}
 }
 
 // Next returns the next action of the bot in g, and its arguments.
@@ -64,6 +72,11 @@ func (b *Bot) Next(g *Game) (string, []string) {
 		return b.answer(g)
 	}
 	b.plan = nil
+	if b.lastRisk = deathChance(g, b.adjacent(g)); b.lastRisk == 0 {
+		b.fightRisk = 0
+	} else if b.fightRisk == 0 {
+		b.fightRisk = b.lastRisk
+	}
 	if g.Player == b.last {
 		b.stuck++
 	} else {
@@ -160,34 +173,157 @@ func (b *Bot) heal(g *Game) (string, []string) {
 	return "", nil
 }
 
-// expected returns the damage the player expects to deal to m in a turn,
-// and to take from it, as a player who knows the kinds of monsters (not
-// their HP) would reckon.
-func expected(g *Game, m *Monster) (deal, take float64) {
-	r := g.Dungeon.Rules
-	k := float64(r.DefenseK)
-	deal = float64(g.Attack()) * k / (k + float64(m.Defense)) * float64(r.PlayerHitRate) / 100
-	take = float64(m.Attack) * k / (k + float64(g.Defense())) * float64(r.MonsterHitRate) / 100
-	switch m.Speed {
-	case SpeedDouble:
-		take *= 2
-	case SpeedSlow:
-		take /= 2
+// Death chances. A bot judges a fight as the article "シレン5で上達する
+// ための思考法" (platinasun) says: by the chance of dying, not by the
+// expected damage. A careful bot answers a fight it would lose at
+// carefulRisk or more, a reckless one at recklessRisk.
+const (
+	carefulRisk  = 0.05
+	recklessRisk = 0.20
+	// riskTurns caps the turns of a fight reckoned.
+	riskTurns = 50
+)
+
+// risk returns the chance of dying the bot accepts.
+func (b *Bot) risk() float64 {
+	if b.Style == BotReckless {
+		return recklessRisk
 	}
-	return deal, take
+	return carefulRisk
 }
 
-// dangerous says whether fighting the enemies next to the player would
-// likely cost it more HP than it has: each in turn, the others hitting
-// meanwhile.
-func dangerous(g *Game, ms []*Monster) bool {
-	var turns, take float64
-	for _, m := range ms {
-		deal, t := expected(g, m)
-		turns += float64(m.MaxHP) / max(deal, 0.1)
-		take += t
+// killTurns returns the turns the player expects to take to kill m, as a
+// player who knows the kinds of monsters (not their HP) would reckon.
+func killTurns(g *Game, m *Monster) float64 {
+	r := g.Dungeon.Rules
+	k := float64(r.DefenseK)
+	deal := float64(g.Attack()) * k / (k + float64(m.Defense)) * float64(r.PlayerHitRate) / 100
+	return float64(m.MaxHP) / max(deal, 0.1)
+}
+
+// hitDamages returns the chances of the damage of an attack of m on the
+// player, by the damage (index 0 a miss), by the combat formula: a hit
+// rate, then a damage spread evenly over +-1/8, rounded, at least 1.
+func hitDamages(g *Game, m *Monster) []float64 {
+	r := g.Dungeon.Rules
+	hit := float64(r.MonsterHitRate) / 100
+	c := float64(m.Attack) * float64(r.DefenseK) / float64(r.DefenseK+g.Defense())
+	const lo, hi = 0.875, 1.125
+	top := max(int(c*hi+0.5), 1)
+	p := make([]float64, top+1)
+	p[0] = 1 - hit
+	for n := 0; n <= top; n++ {
+		// c*f+0.5 in [n, n+1): f in [(n-0.5)/c, (n+0.5)/c).
+		from, to := lo, hi
+		if c > 0 {
+			from, to = max((float64(n)-0.5)/c, lo), min((float64(n)+0.5)/c, hi)
+		} else if n > 0 {
+			continue
+		}
+		if to > from {
+			p[max(n, 1)] += hit * (to - from) / (hi - lo)
+		}
 	}
-	return take*turns >= float64(g.HP)
+	return p
+}
+
+// deathChance returns the chance that the player dies fighting the
+// enemies ms (next to it), as a player who knows the kinds would reckon:
+// it kills them one by one, the quickest first, in the turns it expects
+// (rounded up, which leaves a turn for a miss), and each of them attacks
+// on every turn it acts until it is killed (its speed counted).
+func deathChance(g *Game, ms []*Monster) float64 {
+	if len(ms) == 0 || g.HP <= 0 {
+		return 0
+	}
+	type foe struct {
+		hits []float64
+		last int
+		m    *Monster
+	}
+	foes := make([]foe, len(ms))
+	for i, m := range ms {
+		foes[i] = foe{hitDamages(g, m), 0, m}
+	}
+	slices.SortStableFunc(foes, func(a, c foe) int {
+		return cmpFloat(killTurns(g, a.m), killTurns(g, c.m))
+	})
+	var sum float64
+	end := 0
+	for i := range foes {
+		sum += killTurns(g, foes[i].m)
+		foes[i].last = min(int(math.Ceil(sum)), riskTurns)
+		end = foes[i].last
+	}
+	// alive[h] is the chance of having h HP left (and being alive).
+	alive := make([]float64, g.HP+1)
+	alive[g.HP] = 1
+	next := make([]float64, g.HP+1)
+	dead := 0.0
+	for t := 1; t <= end; t++ {
+		for _, f := range foes {
+			if t > f.last {
+				continue
+			}
+			for range f.m.Speed.actions(g.Turn + t) {
+				clear(next)
+				for h, p := range alive {
+					if p == 0 {
+						continue
+					}
+					for d, q := range f.hits {
+						if h-d <= 0 {
+							dead += p * q
+						} else {
+							next[h-d] += p * q
+						}
+					}
+				}
+				alive, next = next, alive
+			}
+		}
+	}
+	return dead
+}
+
+// cmpFloat compares a and c.
+func cmpFloat(a, c float64) int {
+	switch {
+	case a < c:
+		return -1
+	case a > c:
+		return 1
+	}
+	return 0
+}
+
+// dangerous says whether fighting the enemies ms next to the player
+// would kill it at the chance the bot accepts or more.
+func (b *Bot) dangerous(g *Game, ms []*Monster) bool {
+	if len(ms) == 1 {
+		// One on one is asked of every monster in sight and of the
+		// monster table: remembered.
+		m := ms[0]
+		key := riskKey{m.Def, m.MaxHP, m.Attack, m.Defense, g.HP, g.Attack(), g.Defense(), g.Turn % 2}
+		if d, ok := b.risks[key]; ok {
+			return d
+		}
+		if len(b.risks) > 4096 {
+			clear(b.risks)
+		}
+		d := deathChance(g, ms) >= b.risk()
+		b.risks[key] = d
+		return d
+	}
+	return deathChance(g, ms) >= b.risk()
+}
+
+// riskKey is what the chance of dying one on one depends on.
+type riskKey struct {
+	def                    *MonsterDef
+	maxHP, attack, defense int
+	hp, pattack, pdefense  int
+	parity                 int
 }
 
 // danger answers enemies next to the player it would likely lose to: a
@@ -195,7 +331,7 @@ func dangerous(g *Game, ms []*Monster) bool {
 // to the stairs, when they are known and free.
 func (b *Bot) danger(g *Game) (string, []string) {
 	ms := b.adjacent(g)
-	if len(ms) == 0 || !dangerous(g, ms) {
+	if len(ms) == 0 || !b.dangerous(g, ms) {
 		return "", nil
 	}
 	if g.Player == g.Stairs {
@@ -328,7 +464,7 @@ const dangerousFloorShare = 0.25
 // table, as a player who knows the table of the dungeon would judge: the
 // share of the monsters (by weight) that would likely beat the player one
 // on one, at its HP now.
-func dangerousFloor(g *Game) bool {
+func (b *Bot) dangerousFloor(g *Game) bool {
 	total, bad := 0, 0
 	for _, r := range g.Dungeon.MonsterRows {
 		def := g.Dungeon.Monster(r.ID)
@@ -336,7 +472,7 @@ func dangerousFloor(g *Game) bool {
 			continue
 		}
 		total += r.Weight
-		if dangerous(g, []*Monster{newMonster(def)}) {
+		if b.dangerous(g, []*Monster{newMonster(def)}) {
 			bad += r.Weight
 		}
 	}
@@ -347,7 +483,7 @@ func dangerousFloor(g *Game) bool {
 // one on one.
 func (b *Bot) threatened(g *Game) bool {
 	for _, m := range g.visibleEnemies() {
-		if dangerous(g, []*Monster{m}) {
+		if b.dangerous(g, []*Monster{m}) {
 			return true
 		}
 	}
@@ -488,7 +624,7 @@ func (b *Bot) windNear(g *Game) bool {
 // a dangerous one.
 func (b *Bot) leave(g *Game) (string, []string) {
 	if !g.IsSeen(g.Stairs) || (b.Style == BotCareful && !b.windNear(g) && !b.hungry(g) &&
-		!b.threatened(g) && !dangerousFloor(g) && !b.exploredEnough(g)) {
+		!b.threatened(g) && !b.dangerousFloor(g) && !b.exploredEnough(g)) {
 		return "", nil
 	}
 	return b.toStairs(g)
@@ -636,11 +772,24 @@ type BotRun struct {
 	Picked, Used map[Category]int
 	Kills        int
 	Damage       int
+	// Left counts the items carried at the end, by category.
+	Left map[Category]int
+	// Risk is the chance of dying the bot reckoned at its last choice,
+	// of the fight with the enemies next to the player (0 with none: a
+	// death by surprise); FightRisk at the first choice of that fight.
+	Risk, FightRisk float64
 }
 
-// BotFloor is a floor of a bot's run, on arriving.
+// BotFloor is a floor of a bot's run: on arriving, and the items picked
+// up and used on it, by category.
 type BotFloor struct {
 	Depth, Turn, HP, MaxHP int
+	Picked, Used           map[Category]int
+}
+
+// newBotFloor returns the floor g is on, as the player arrives.
+func newBotFloor(g *Game) BotFloor {
+	return BotFloor{g.Depth, g.Turn, g.HP, g.MaxHP, map[Category]int{}, map[Category]int{}}
 }
 
 // unfairTurns are the turns after arriving on a floor in which a death
@@ -651,7 +800,7 @@ const unfairTurns = 10
 func PlayBot(d *Dungeon, seed string, b *Bot, maxActions int) (BotRun, error) {
 	g := NewGame(d, seed)
 	r := BotRun{Seed: seed, Style: b.Style, Picked: map[Category]int{}, Used: map[Category]int{}}
-	r.Floors = append(r.Floors, BotFloor{g.Depth, g.Turn, g.HP, g.MaxHP})
+	r.Floors = append(r.Floors, newBotFloor(g))
 	for r.Actions < maxActions && g.Over == "" {
 		hp, depth := g.HP, g.Depth
 		action, args := b.Next(g)
@@ -661,7 +810,7 @@ func PlayBot(d *Dungeon, seed string, b *Bot, maxActions int) (BotRun, error) {
 		r.Actions++
 		r.count(d, g.takeEvents())
 		if g.Depth != depth && g.Over == "" {
-			r.Floors = append(r.Floors, BotFloor{g.Depth, g.Turn, g.HP, g.MaxHP})
+			r.Floors = append(r.Floors, newBotFloor(g))
 		}
 		if g.Over != "" && !g.Cleared && (cause(g) == "monster" || cause(g) == "trap") {
 			arrived := r.Floors[len(r.Floors)-1].Turn
@@ -670,6 +819,13 @@ func PlayBot(d *Dungeon, seed string, b *Bot, maxActions int) (BotRun, error) {
 	}
 	r.Cleared, r.Over, r.Depth, r.Turns, r.Level = g.Cleared, g.Over, g.Depth, g.Turn, g.PlayerLevel
 	r.Cause = cause(g)
+	r.Risk, r.FightRisk = b.lastRisk, b.fightRisk
+	r.Left = map[Category]int{}
+	for _, it := range g.Inventory {
+		if !it.ForSale {
+			r.Left[it.Def.Category]++
+		}
+	}
 	return r, nil
 }
 
@@ -684,10 +840,18 @@ func (r *BotRun) count(d *Dungeon, events []string) {
 		switch {
 		case len(f) == 2 && (f[0] == "pickup" || f[0] == "use"):
 			if it := d.Item(f[1]); it != nil {
+				counts := r.Used
 				if f[0] == "pickup" {
-					r.Picked[it.Category]++
-				} else {
-					r.Used[it.Category]++
+					counts = r.Picked
+				}
+				counts[it.Category]++
+				if len(r.Floors) > 0 {
+					fl := r.Floors[len(r.Floors)-1]
+					if f[0] == "pickup" {
+						fl.Picked[it.Category]++
+					} else {
+						fl.Used[it.Category]++
+					}
 				}
 			}
 		case len(f) == 2 && f[0] == "kill":

@@ -2,6 +2,7 @@ package rogue
 
 import (
 	"fmt"
+	"math"
 	"reflect"
 	"slices"
 	"strings"
@@ -65,8 +66,17 @@ func TestPlayBot(t *testing.T) {
 		t.Errorf("%+v\n%+v", a, b)
 	}
 	if a.Kills == 0 || a.Damage == 0 || len(a.Floors) != a.Depth || a.Depth < 2 ||
-		a.Floors[0] != (BotFloor{1, 0, a.Floors[0].HP, a.Floors[0].MaxHP}) {
+		a.Floors[0].Depth != 1 || a.Floors[0].Turn != 0 {
 		t.Errorf("%+v", a)
+	}
+	picked := 0
+	for _, f := range a.Floors {
+		for _, n := range f.Picked {
+			picked += n
+		}
+	}
+	if total := sumCounts(a.Picked); picked != total || total == 0 {
+		t.Errorf("picked %d on the floors, %d in all", picked, total)
 	}
 	// Too few actions: unfinished.
 	c, err := PlayBot(d, "same", NewBot(BotReckless, 7), 10)
@@ -111,7 +121,7 @@ func TestBotDanger(t *testing.T) {
 	b := NewBot(BotCareful, 1)
 	g.Player = Point{r.X + 1, r.Y + 1}
 	m := place(g, kind("ryu4"), Point{r.X + 2, r.Y + 1})
-	if !dangerous(g, []*Monster{m}) {
+	if !b.dangerous(g, []*Monster{m}) {
 		t.Fatal("not dangerous")
 	}
 	staff := carry(g, "fukitobashi", 0)
@@ -137,11 +147,12 @@ func TestBotDanger(t *testing.T) {
 // (by the table) would beat the player.
 func TestDangerousFloor(t *testing.T) {
 	g := NewGame(cave(), "floor")
-	if dangerousFloor(g) {
+	b := NewBot(BotCareful, 1)
+	if b.dangerousFloor(g) {
 		t.Error("1F dangerous")
 	}
 	g.Depth = 30
-	if !dangerousFloor(g) {
+	if !b.dangerousFloor(g) {
 		t.Error("30F at level 1 not dangerous")
 	}
 }
@@ -166,4 +177,43 @@ func TestUseless(t *testing.T) {
 	if a, _ := b.tidy(g); a != "inventory" || b.plan[1].label != commandDrop || (b.plan[0].item != weak && b.plan[0].item != sword) {
 		t.Errorf("%s %+v", a, b.plan)
 	}
+}
+
+// TestDeathChance: the chances of an attack add up to 1, and the chance of
+// dying grows with the enemies and falls with the HP.
+func TestDeathChance(t *testing.T) {
+	g, r := roomGame(t, 8, 3)
+	g.Player = Point{r.X + 1, r.Y + 1}
+	m := place(g, kind("kuma1"), Point{r.X + 2, r.Y + 1})
+	var sum float64
+	for _, p := range hitDamages(g, m) {
+		sum += p
+	}
+	if math.Abs(sum-1) > 1e-9 {
+		t.Fatalf("sum %v", sum)
+	}
+	g.HP = 1
+	if d := deathChance(g, []*Monster{m}); d < 0.5 {
+		t.Errorf("1 HP: %v", d)
+	}
+	g.HP = 1000
+	if d := deathChance(g, []*Monster{m}); d != 0 {
+		t.Errorf("1000 HP: %v", d)
+	}
+	g.HP = 30
+	one := deathChance(g, []*Monster{m})
+	n := place(g, kind("kuma1"), Point{r.X + 2, r.Y + 2})
+	two := deathChance(g, []*Monster{m, n})
+	if two <= one {
+		t.Errorf("one %v, two %v", one, two)
+	}
+}
+
+// sumCounts returns the sum of the counts of m.
+func sumCounts(m map[Category]int) int {
+	n := 0
+	for _, k := range m {
+		n += k
+	}
+	return n
 }
