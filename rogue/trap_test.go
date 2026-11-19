@@ -19,6 +19,8 @@ func trapGame(t *testing.T) (*Game, Room) {
 	g, r := roomGame(t, 6, 3)
 	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.SpawnTurns = 1 << 30 })
 	g.HP, g.MaxHP = 100, 100
+	// No tile known safe (the start of the floor may be in the room).
+	clear(g.Safe)
 	return g, r
 }
 

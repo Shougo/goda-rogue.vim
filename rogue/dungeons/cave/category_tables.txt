@@ -10,11 +10,11 @@
 床	1	30	盾	7
 床	1	30	腕輪	4
 床	1	30	矢	4
-床	1	30	草	11
+床	1	30	草	7
 床	1	30	巻物	5
 床	1	30	杖	2
 床	1	30	壺	3
-床	1	30	食料	10
+床	1	30	食料	12
 床	1	30	お金	6
 # The general store sells a bit of everything; deeper, more bracelets,
 # arrows and pots.
