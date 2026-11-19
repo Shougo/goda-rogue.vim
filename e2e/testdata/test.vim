@@ -363,9 +363,18 @@ endfunction
 
 " The records of the finished runs.
 function! s:records() abort
+  " A run that ends: waiting, until a monster, hunger or the wind ends it.
+  call delete(goda_rogue#last_replay())
+  call goda_rogue#start(#{dungeon: 'cave', seed: 'records'})
+  for _ in range(3000)
+    if search('冒険の結果', 'nw') > 0
+      break
+    endif
+    call goda_rogue#do('wait')
+  endfor
+  call s:check('a run over', search('冒険の結果', 'nw') > 0, 1)
   call goda_rogue#records()
   call s:check('records buffer', bufname('%'), 'goda-rogue://records')
-  " (The runs before ended: they are there.)
   call s:check('records', getline(1), '自己ベスト')
   call s:check('all records', search('^すべての記録（\d\+回', 'n') > 0, 1)
 endfunction

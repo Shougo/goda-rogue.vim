@@ -14,7 +14,7 @@
 床	1	30	巻物	5
 床	1	30	杖	2
 床	1	30	壺	3
-床	1	30	食料	5
+床	1	30	食料	8
 床	1	30	お金	6
 # The general store sells a bit of everything; deeper, more bracelets,
 # arrows and pots.
