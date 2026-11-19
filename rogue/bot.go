@@ -1001,7 +1001,30 @@ func (b *Bot) approach(g *Game, goal func(Point) bool) (string, []string) {
 			return "wait", nil
 		}
 	}
+	if b.checkFirst(g, p) {
+		// A swing at nothing checks the tile for a trap.
+		if g.Facing != args[0] {
+			return "turn", args
+		}
+		return "attack", nil
+	}
 	return action, args
+}
+
+// checkFirst says whether the bot checks the tile p for a trap before
+// stepping on it: a tile not known safe in a monster house whose monsters
+// sleep (a monster house has more traps; a sleeping trap or a mine among
+// them can end the run).
+func (b *Bot) checkFirst(g *Game, p Point) bool {
+	if g.House < 0 || g.Level.RoomAt(p) != g.House || g.IsSafe(p) || g.MonsterAt(p) != nil {
+		return false
+	}
+	for _, m := range g.visibleEnemies() {
+		if m.House && m.Dozing {
+			return true
+		}
+	}
+	return false
 }
 
 // frontier says whether p, seen, is next to a tile not seen yet.

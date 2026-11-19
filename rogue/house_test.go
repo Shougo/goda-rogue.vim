@@ -83,6 +83,15 @@ func TestMonsterHouse(t *testing.T) {
 	if len(house) < 5 {
 		t.Errorf("%d monsters in the house", len(house))
 	}
+	traps := 0
+	for _, tr := range g.Traps {
+		if r.Contains(tr.Pos) {
+			traps++
+		}
+	}
+	if traps < g.Dungeon.counts(g.Depth).MinHouseTrap {
+		t.Errorf("%d traps in the house", traps)
+	}
 
 	// Entering it wakes them all.
 	g.Player = Point{r.X - 1, r.Y}

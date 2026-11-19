@@ -321,3 +321,37 @@ func TestBotStepBack(t *testing.T) {
 		t.Error("one by one is not safer")
 	}
 }
+
+// TestBotChecksHouse: in a monster house whose monsters sleep, the bot
+// swings at a tile not known safe before stepping on it.
+func TestBotChecksHouse(t *testing.T) {
+	g := specialGame(t, "bighouse", func(c *FloorCounts) { c.BigRoom, c.House = 100, 100 })
+	b := NewBot(BotCareful, 1)
+	var p Point
+	found := false
+	for _, name := range clockwise {
+		d := Directions[name]
+		if q := g.Player.Add(d); g.canStep(d) && g.MonsterAt(q) == nil && !g.IsSafe(q) {
+			p, found = q, true
+			break
+		}
+	}
+	if !found {
+		t.Skip("no tile to check")
+	}
+	if !b.checkFirst(g, p) {
+		t.Fatal("no check")
+	}
+	g.markSafe(p)
+	if b.checkFirst(g, p) {
+		t.Error("checks a safe tile")
+	}
+	for _, m := range g.Monsters {
+		m.Dozing = false
+	}
+	i, _ := g.index(p)
+	g.Safe[i] = false
+	if b.checkFirst(g, p) {
+		t.Error("checks with the house awake")
+	}
+}

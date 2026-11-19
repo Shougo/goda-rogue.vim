@@ -220,6 +220,9 @@ type FloorCounts struct {
 	MinMonster, MaxMonster int
 	MinItem, MaxItem       int
 	MinTrap, MaxTrap       int
+	// MinHouseTrap and MaxHouseTrap are the traps a monster house adds
+	// in its room (ハウスの罠, optional: none).
+	MinHouseTrap, MaxHouseTrap int
 	// BigRoom and Maze are the chances (percent) of a floor of one big
 	// room, of a maze; House the chance of a monster house.
 	BigRoom, Maze, House int
@@ -745,6 +748,9 @@ func (l *loader) load() {
 		}
 		if _, ok := row.cols["罠の数"]; ok {
 			c.MinTrap, c.MaxTrap = l.span(row, "罠の数")
+		}
+		if _, ok := row.cols["ハウスの罠"]; ok {
+			c.MinHouseTrap, c.MaxHouseTrap = l.span(row, "ハウスの罠")
 		}
 		percent := func(col string) int {
 			if _, ok := row.cols[col]; !ok {

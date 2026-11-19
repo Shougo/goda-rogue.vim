@@ -604,7 +604,9 @@ floors once the files change.
 				it; and the chances (percent, optional) of a
 				floor of one big room (大部屋), of a maze
 				(迷路), of a monster house (モンスターハウス),
-				and of a shop (店), a table.
+				and of a shop (店); the traps a monster
+				house adds in its room (ハウスの罠, optional,
+				min-max), a table.
 	growth.txt		The growth tables: the total EXP for each
 				level from 2, and the HP, attack and defense
 				a level adds, a table.
@@ -628,8 +630,9 @@ or 20% (reckless) by the cheapest answer that is enough (by the prices
 of the items): the stairs, a step back into a corridor to fight two
 enemies one by one, a healing grass, a staff, walking away to the
 stairs.  They shoot arrows at enemies worth them (any with ten arrows or
-more), read unknown scrolls on the stairs, and the careful one leaves a
-floor whose fights cost more answers than it gave.  Out of a fight they heal when their HP is below what the
+more), read unknown scrolls on the stairs, check for traps before
+stepping in a monster house whose monsters sleep, and the careful one
+leaves a floor whose fights cost more answers than it gave.  Out of a fight they heal when their HP is below what the
 monsters of the floor could take in two turns, and they wait for an
 enemy coming at them rather than step next to it, to strike first.
 It prints how many cleared, where and why they fell (by monster, trap,

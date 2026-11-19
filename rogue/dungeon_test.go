@@ -63,7 +63,7 @@ func TestDungeonErrors(t *testing.T) {
 			m["monster_table.txt"].Data = append(m["monster_table.txt"].Data, "1\t3\tnobody\t1\n"...)
 		}, `monster_table.txt:`},
 		{"floor out of range", func(m fstest.MapFS) {
-			m["floors.txt"].Data = append(m["floors.txt"].Data, "1\t31\t5-8\t6-10\t床\t0\t通常\t0\t0\t0\t0\n"...)
+			m["floors.txt"].Data = append(m["floors.txt"].Data, "1\t31\t5-8\t6-10\t床\t0\t0\t通常\t0\t0\t0\t0\n"...)
 		}, `floors 1-31 out of 1-30`},
 		{"no monster on a floor", func(m fstest.MapFS) {
 			m["header.txt"].Data = []byte("名前\tx\n階数\t31\n")
@@ -99,7 +99,7 @@ func TestDungeonErrors(t *testing.T) {
 			m["fake_names.txt"].Data = append(m["fake_names.txt"].Data, "お金\t小判\n"...)
 		}, `money is never unidentified`},
 		{"bad brightness", func(m fstest.MapFS) {
-			m["floors.txt"].Data = append(m["floors.txt"].Data, "1\t1\t5-8\t6-10\t床\t0\t真っ暗\t0\t0\t0\t0\n"...)
+			m["floors.txt"].Data = append(m["floors.txt"].Data, "1\t1\t5-8\t6-10\t床\t0\t0\t真っ暗\t0\t0\t0\t0\n"...)
 		}, `明るさ: want 通常, 明るい or 暗い`},
 		{"unknown trap effect", func(m fstest.MapFS) {
 			m["traps.txt"].Data = append(m["traps.txt"].Data, "x\tx\t爆弾\t1\n"...)
@@ -144,7 +144,7 @@ func TestDungeonErrors(t *testing.T) {
 			m["rules.txt"].Data = append(m["rules.txt"].Data, "見つけた罠\t危険\n"...)
 		}, `見つけた罠: want 安全 or 発動`},
 		{"too many special floors", func(m fstest.MapFS) {
-			m["floors.txt"].Data = append(m["floors.txt"].Data, "1\t1\t5-8\t6-10\t床\t0\t通常\t60\t50\t0\t0\n"...)
+			m["floors.txt"].Data = append(m["floors.txt"].Data, "1\t1\t5-8\t6-10\t床\t0\t0\t通常\t60\t50\t0\t0\n"...)
 		}, `大部屋 and 迷路: 110% together`},
 		{"unknown seal", func(m fstest.MapFS) {
 			m["items.txt"].Data = append(m["items.txt"].Data, "x\t剣\tx\t武器\t1\t-\t0\t-\t炎\t2\t0\n"...)
