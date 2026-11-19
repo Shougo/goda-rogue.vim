@@ -62,8 +62,8 @@ func (g *Game) foundTrapAt(p Point) *Trap {
 	return nil
 }
 
-// placeTraps hides the traps of a new floor in its rooms: on free tiles,
-// not under items, not at an entrance. No pit on the last floor.
+// placeTraps hides the traps of a new floor in its rooms (trapSpot), not
+// in a shop.
 func (g *Game) placeTraps(rng *rand.Rand, rooms []int) {
 	d := g.Dungeon
 	c := d.counts(g.Depth)
@@ -77,14 +77,18 @@ func (g *Game) placeTraps(rng *rand.Rand, rooms []int) {
 	}
 }
 
-// trapSpot says whether a trap of the kind def can be hidden on p: a free
-// tile with no trap, not the entrance of a room (a tile of it next to a
-// corridor: as in Shiren, the way in and out is never trapped), and no
-// pit on the last floor.
+// trapSpot says whether a trap of the kind def can be hidden on p: a tile
+// with no trap, item, player or stairs (a monster may stand on it), not
+// the entrance of a room (a tile of it next to a corridor: as in Shiren,
+// the way in and out is never trapped), and no pit on the last floor.
 func (g *Game) trapSpot(p Point, def *TrapDef) bool {
-	if !g.free(p) || g.TrapAt(p) != nil || def.Effect == TrapPit && g.Depth >= g.Dungeon.Floors {
+	if p == g.Player || p == g.Stairs || g.TrapAt(p) != nil || def.Effect == TrapPit && g.Depth >= g.Dungeon.Floors {
 		return false
 	}
+	if _, ok := g.ItemAt(p); ok {
+		return false
+	}
+	// Under a monster is fine: monsters do not set traps off.
 	return !g.entrance(p)
 }
 

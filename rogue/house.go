@@ -31,8 +31,8 @@ func (g *Game) newItemOf(rng *rand.Rand, def *ItemDef, pos Point) *Item {
 
 // fillHouse makes a room of the floor a monster house: many monsters,
 // asleep, items, and more traps (as in Shiren: a danger, and a help to a
-// player who lures monsters onto them). It is not the room where the player starts, unless
-// it is the only one (a big room).
+// player who knows it). It is not the room where the player starts,
+// unless it is the only one (a big room).
 func (g *Game) fillHouse(rng *rand.Rand, rooms []int, start int) {
 	var candidates []int
 	for _, i := range rooms {
@@ -63,13 +63,16 @@ func (g *Game) fillHouse(rng *rand.Rand, rooms []int, start int) {
 		}
 	}
 	c := d.counts(g.Depth)
-	for range between(rng, c.MinHouseTrap, c.MaxHouseTrap) {
+	n := between(rng, c.MinHouseTrap, c.MaxHouseTrap)
+	// A few tries a trap: its traps are the point of a monster house.
+	for tries := 4 * n; n > 0 && tries > 0; tries-- {
 		p := g.randomTile(rng, g.House)
 		def := d.Trap(pick(rng, d.TrapRows, g.Depth))
 		if !g.trapSpot(p, def) {
 			continue
 		}
 		g.Traps = append(g.Traps, &Trap{Def: def, Pos: p})
+		n--
 	}
 }
 
