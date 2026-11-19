@@ -217,3 +217,31 @@ func sumCounts(m map[Category]int) int {
 	}
 	return n
 }
+
+// TestBotCheapestAnswer: in danger, the bot uses the cheapest answer that
+// is enough: a healing grass before a staff, the staff without the grass;
+// out of danger, neither.
+func TestBotCheapestAnswer(t *testing.T) {
+	g, r := roomGame(t, 8, 3)
+	b := NewBot(BotCareful, 1)
+	g.Player = Point{r.X + 1, r.Y + 1}
+	place(g, kind("nezumi1"), Point{r.X + 2, r.Y + 1})
+	g.Inventory = nil
+	staff := carry(g, "fukitobashi", 0)
+	staff.Charges = 3
+	grass := carry(g, "yakusou", 0)
+
+	g.HP = g.MaxHP
+	if a, _ := b.Next(g); a == "inventory" {
+		t.Fatalf("full HP: %s %+v", a, b.plan)
+	}
+	g.HP = 2
+	if a, _ := b.Next(g); a != "inventory" || b.plan[0].item != grass {
+		t.Fatalf("with a grass: %s %+v", a, b.plan)
+	}
+	g.Inventory = []*Item{staff}
+	g.Facing = "right"
+	if a, _ := b.Next(g); a != "inventory" || b.plan[0].item != staff || b.plan[1].label != commandWave {
+		t.Fatalf("with a staff: %s %+v", a, b.plan)
+	}
+}

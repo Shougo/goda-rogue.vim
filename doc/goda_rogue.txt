@@ -618,13 +618,16 @@ To see how a dungeon plays, let bots play it, from this repository: >
 	go run ./cmd/analyze -dungeon cave -runs 200
 <	Bots play the runs through the actions, like a player, with what a
 player knows: a careful one (it explores, rests, and leaves when the
-wind comes, when hungry with no food, or when it sees an enemy it would
-likely lose to) and a reckless one (it goes down as soon as it finds the
-stairs).  Both shoot arrows, and blow away with a staff or flee to the
-stairs from enemies next to them that would kill them: they reckon the
-chance of dying in the fight (by the hit rates, the spread of the damage
-and the speeds of the kinds, as a player who knows the kinds would) and
-answer it from 5% (careful) or 20% (reckless).
+wind comes, when its food would not last two floors, or when it sees an
+enemy it would likely lose to) and a reckless one (it goes down as soon
+as it finds the stairs).  Both shoot arrows, and answer enemies next to
+them that would kill them: they reckon the chance of dying in the fight
+(by the hit rates, the spread of the damage and the speeds of the kinds,
+as a player who knows the kinds would) and answer it from 5% (careful)
+or 20% (reckless) by the cheapest answer that is enough (by the prices
+of the items): the stairs, a healing grass, a staff, walking away to the
+stairs.  Out of a fight they heal when their HP is below what the
+monsters of the floor could take in two turns.
 It prints how many cleared, where and why they fell (by monster, trap,
 hunger or the wind; deaths from full HP in one action or just after
 arriving count as unfair), the HP on arriving on each floor, the turns

@@ -52,6 +52,12 @@ type Bot struct {
 	// the first choice of this fight (since the player last had no enemy
 	// next to it).
 	lastRisk, fightRisk float64
+	// worst remembers worstTurn.
+	worst map[worstKey]int
+	// depth is the floor the bot is on, arrived the turn it arrived;
+	// floors and floorsTurns count the floors it left and the turns it
+	// spent on them.
+	depth, arrived, floors, floorsTurns int
 }
 
 // botStep is an answer to a prompt: the item it (in the inventory), or
@@ -63,7 +69,7 @@ type botStep struct {
 
 // NewBot returns a bot of style, with its randomness from seed.
 func NewBot(style BotStyle, seed uint64) *Bot {
-	return &Bot{Style: style, rng: rand.New(rand.NewPCG(seed, 0x60da)), risks: map[riskKey]bool{}}
+	return &Bot{Style: style, rng: rand.New(rand.NewPCG(seed, 0x60da)), risks: map[riskKey]bool{}, worst: map[worstKey]int{}}
 }
 
 // Next returns the next action of the bot in g, and its arguments.
@@ -72,6 +78,7 @@ func (b *Bot) Next(g *Game) (string, []string) {
 		return b.answer(g)
 	}
 	b.plan = nil
+	b.track(g)
 	if b.lastRisk = deathChance(g, b.adjacent(g)); b.lastRisk == 0 {
 		b.fightRisk = 0
 	} else if b.fightRisk == 0 {
@@ -149,29 +156,56 @@ func (b *Bot) known(g *Game, it *Item, e Effect) bool {
 	return g.identified[it.Def.ID] && it.Def.Effect == e
 }
 
-// heal drinks a healing grass when the HP is low: at a third for the
-// careful bot, a fifth for the reckless one; with none, an unknown grass
-// when in danger.
+// heal drinks the cheapest healing grass known when no enemy is next to
+// the player (danger answers those) and its HP is below what the monsters
+// of the floor could take in two turns at worst, unless the careful bot
+// can rest instead.
 func (b *Bot) heal(g *Game) (string, []string) {
-	low := g.MaxHP / 3
-	if b.Style == BotReckless {
-		low = g.MaxHP / 5
-	}
-	if g.HP > low {
+	if len(b.adjacent(g)) > 0 || g.HP > 2*b.worstTurn(g) {
 		return "", nil
 	}
-	if it := carried(g, func(it *Item) bool { return b.known(g, it, EffectHeal) }); it != nil {
-		return b.use(it, commandDrink)
+	if b.Style == BotCareful && b.canRest(g) {
+		return "", nil
 	}
-	if len(b.adjacent(g)) > 0 {
-		if it := carried(g, func(it *Item) bool {
-			return it.Def.Category == CategoryGrass && !g.identified[it.Def.ID]
-		}); it != nil {
-			return b.use(it, commandDrink)
+	var best *Item
+	for _, it := range g.Inventory {
+		if !it.ForSale && b.known(g, it, EffectHeal) && (best == nil || it.Def.Price < best.Def.Price) {
+			best = it
 		}
 	}
-	return "", nil
+	if best == nil {
+		return "", nil
+	}
+	return b.use(best, commandDrink)
 }
+
+// worstTurn returns the most damage a monster of the floor (by the table)
+// can do to the player in a turn, its speed counted: what a player who
+// knows the table fears.
+func (b *Bot) worstTurn(g *Game) int {
+	key := worstKey{g.Depth, g.Defense()}
+	if w, ok := b.worst[key]; ok {
+		return w
+	}
+	w := 0
+	for _, r := range g.Dungeon.MonsterRows {
+		def := g.Dungeon.Monster(r.ID)
+		if r.First > g.Depth || g.Depth > r.Last || def == nil {
+			continue
+		}
+		m := newMonster(def)
+		n := len(hitDamages(g, m)) - 1
+		if m.Speed == SpeedDouble {
+			n *= 2
+		}
+		w = max(w, n)
+	}
+	b.worst[key] = w
+	return w
+}
+
+// worstKey is what worstTurn depends on.
+type worstKey struct{ depth, defense int }
 
 // Death chances. A bot judges a fight as the article "シレン5で上達する
 // ための思考法" (platinasun) says: by the chance of dying, not by the
@@ -233,13 +267,23 @@ func hitDamages(g *Game, m *Monster) []float64 {
 // (rounded up, which leaves a turn for a miss), and each of them attacks
 // on every turn it acts until it is killed (its speed counted).
 func deathChance(g *Game, ms []*Monster) float64 {
-	if len(ms) == 0 || g.HP <= 0 {
+	return fightDeath(g, ms, g.HP, 0)
+}
+
+// foe is an enemy in a reckoning of the chance of dying: the chances of
+// the damage of its attacks, and the last turn it attacks.
+type foe struct {
+	hits []float64
+	last int
+	m    *Monster
+}
+
+// fightDeath returns the chance that the player with hp dies fighting
+// the enemies ms, after delay turns of doing something else (using an
+// item) while they attack.
+func fightDeath(g *Game, ms []*Monster, hp, delay int) float64 {
+	if len(ms) == 0 {
 		return 0
-	}
-	type foe struct {
-		hits []float64
-		last int
-		m    *Monster
 	}
 	foes := make([]foe, len(ms))
 	for i, m := range ms {
@@ -248,17 +292,49 @@ func deathChance(g *Game, ms []*Monster) float64 {
 	slices.SortStableFunc(foes, func(a, c foe) int {
 		return cmpFloat(killTurns(g, a.m), killTurns(g, c.m))
 	})
-	var sum float64
-	end := 0
+	sum := float64(delay)
 	for i := range foes {
 		sum += killTurns(g, foes[i].m)
 		foes[i].last = min(int(math.Ceil(sum)), riskTurns)
-		end = foes[i].last
+	}
+	return deathDP(g, hp, foes)
+}
+
+// fleeDeath returns the chance that the player with hp dies walking
+// turns steps away from the enemies ms next to it: an enemy of normal
+// speed follows without attacking, a fast one attacks once a turn, a
+// slow one is left behind.
+func fleeDeath(g *Game, ms []*Monster, hp, turns int) float64 {
+	var foes []foe
+	for _, m := range ms {
+		if m.Speed == SpeedDouble {
+			// Its second action is the attack: as a normal one
+			// standing.
+			slow := *m
+			slow.Speed = SpeedNormal
+			foes = append(foes, foe{hitDamages(g, m), min(turns, riskTurns), &slow})
+		}
+	}
+	return deathDP(g, hp, foes)
+}
+
+// deathDP returns the chance that the player with hp dies to the attacks
+// of foes, each attacking on the turns it acts up to its last.
+func deathDP(g *Game, hp int, foes []foe) float64 {
+	if len(foes) == 0 {
+		return 0
+	}
+	if hp <= 0 {
+		return 1
+	}
+	end := 0
+	for _, f := range foes {
+		end = max(end, f.last)
 	}
 	// alive[h] is the chance of having h HP left (and being alive).
-	alive := make([]float64, g.HP+1)
-	alive[g.HP] = 1
-	next := make([]float64, g.HP+1)
+	alive := make([]float64, hp+1)
+	alive[hp] = 1
+	next := make([]float64, hp+1)
 	dead := 0.0
 	for t := 1; t <= end; t++ {
 		for _, f := range foes {
@@ -326,32 +402,147 @@ type riskKey struct {
 	parity                 int
 }
 
-// danger answers enemies next to the player it would likely lose to: a
-// staff of blowing away (or an unknown staff) at the strongest, or away
-// to the stairs, when they are known and free.
+// danger answers enemies next to the player that would kill it at the
+// chance the bot accepts or more, by the cheapest answer that is enough
+// (the article "シレン5で上達するための思考法": the cheapest move that is
+// enough, not always the best one): the stairs under it, a healing grass,
+// a staff of blowing away (or an unknown grass or staff, for what it may
+// be), walking away to the stairs. The cost of an item is its price (the
+// mean of the kinds it may be); a wave, a quarter of a staff's price;
+// leaving the floor, flatly costly for the careful bot. With no answer
+// enough, the one that leaves the least chance of dying, if it beats
+// fighting on.
 func (b *Bot) danger(g *Game) (string, []string) {
 	ms := b.adjacent(g)
-	if len(ms) == 0 || !b.dangerous(g, ms) {
+	if len(ms) == 0 {
+		return "", nil
+	}
+	fight := deathChance(g, ms)
+	if fight < b.risk() {
 		return "", nil
 	}
 	if g.Player == g.Stairs {
 		return "stairs", nil
 	}
-	staff := carried(g, func(it *Item) bool {
-		return it.Def.Category == CategoryStaff && (!it.Known || it.Charges > 0) &&
-			(!g.identified[it.Def.ID] || it.Def.Effect == EffectBlowAway)
-	})
-	if staff != nil {
-		m := slices.MaxFunc(ms, func(a, c *Monster) int { return a.Attack - c.Attack })
-		if name := directionName(m.Pos.Sub(g.Player)); g.Facing != name {
-			return "turn", []string{name}
+	var answers []botAnswer
+	seen := map[*ItemDef]bool{}
+	for _, it := range g.Inventory {
+		if it.ForSale || seen[it.Def] {
+			continue
 		}
-		return b.use(staff, commandWave)
+		seen[it.Def] = true
+		switch it.Def.Category {
+		case CategoryGrass:
+			kinds := b.mayBe(g, it)
+			var chance float64
+			for _, def := range kinds {
+				if def.Effect == EffectHeal {
+					chance += fightDeath(g, ms, min(g.HP+def.Strength, g.MaxHP), 1)
+				} else {
+					chance += fightDeath(g, ms, g.HP, 1)
+				}
+			}
+			if len(kinds) > 0 {
+				answers = append(answers, botAnswer{meanPrice(kinds), chance / float64(len(kinds)), it, commandDrink, nil})
+			}
+		case CategoryStaff:
+			if it.Known && it.Charges == 0 {
+				continue
+			}
+			kinds := b.mayBe(g, it)
+			// Blow away the enemy whose leaving helps most.
+			var target *Monster
+			away := fight
+			for _, m := range ms {
+				rest := slices.DeleteFunc(slices.Clone(ms), func(o *Monster) bool { return o == m })
+				if c := fightDeath(g, rest, g.HP, 1); target == nil || c < away {
+					target, away = m, c
+				}
+			}
+			var chance float64
+			for _, def := range kinds {
+				if def.Effect == EffectBlowAway {
+					chance += away
+				} else {
+					chance += fightDeath(g, ms, g.HP, 1)
+				}
+			}
+			if len(kinds) > 0 {
+				answers = append(answers, botAnswer{meanPrice(kinds) / 4, chance / float64(len(kinds)), it, commandWave, target})
+			}
+		}
 	}
 	if g.IsSeen(g.Stairs) {
-		return b.toStairs(g)
+		if step, dist, ok := b.route(g, func(p Point) bool { return p == g.Stairs }); ok && g.MonsterAt(step) == nil {
+			cost := 0.0
+			if b.Style == BotCareful {
+				cost = leaveCost
+			}
+			answers = append(answers, botAnswer{cost, fleeDeath(g, ms, g.HP, dist), nil, "", nil})
+		}
 	}
-	return "", nil
+	var pick *botAnswer
+	for i, a := range answers {
+		if a.chance < b.risk() && (pick == nil || a.cost < pick.cost) {
+			pick = &answers[i]
+		}
+	}
+	if pick == nil {
+		for i, a := range answers {
+			if a.chance < fight && (pick == nil || a.chance < pick.chance) {
+				pick = &answers[i]
+			}
+		}
+	}
+	switch {
+	case pick == nil:
+		return "", nil
+	case pick.item == nil:
+		return b.toStairs(g)
+	case pick.target != nil:
+		if name := directionName(pick.target.Pos.Sub(g.Player)); g.Facing != name {
+			return "turn", []string{name}
+		}
+	}
+	return b.use(pick.item, pick.command)
+}
+
+// leaveCost is what leaving a floor at once costs the careful bot, as the
+// price of an item: what it would have found there.
+const leaveCost = 100
+
+// botAnswer is an answer to a danger: its cost, the chance of dying after
+// it, and how: the item and its command (none: walking to the stairs),
+// at the target.
+type botAnswer struct {
+	cost, chance float64
+	item         *Item
+	command      string
+	target       *Monster
+}
+
+// mayBe returns the kinds it may be, as the player knows: its kind when
+// identified, else the kinds of its category not identified yet.
+func (b *Bot) mayBe(g *Game, it *Item) []*ItemDef {
+	if g.identified[it.Def.ID] {
+		return []*ItemDef{it.Def}
+	}
+	var kinds []*ItemDef
+	for _, def := range g.Dungeon.Items {
+		if def.Category == it.Def.Category && !g.identified[def.ID] {
+			kinds = append(kinds, def)
+		}
+	}
+	return kinds
+}
+
+// meanPrice returns the mean price of kinds.
+func meanPrice(kinds []*ItemDef) float64 {
+	t := 0
+	for _, def := range kinds {
+		t += def.Price
+	}
+	return float64(t) / float64(max(len(kinds), 1))
 }
 
 // shoot shoots arrows at an enemy in a line from the player, not next to
@@ -493,8 +684,33 @@ func (b *Bot) threatened(g *Game) bool {
 // hungry says whether the player is hungry with nothing to eat: time to
 // go down and find food, not to rest.
 func (b *Bot) hungry(g *Game) bool {
-	return g.Fullness*100 <= g.Dungeon.Rules.Fullness*25 &&
+	r := g.Dungeon.Rules
+	return g.Fullness*r.HungerTurns < 2*b.floorTurns() &&
 		carried(g, func(it *Item) bool { return it.Def.Category == CategoryFood }) == nil
+}
+
+// defaultFloorTurns are the turns the bot expects to spend on a floor
+// before it has left one.
+const defaultFloorTurns = 200
+
+// floorTurns returns the mean turns the bot has spent on the floors it
+// left.
+func (b *Bot) floorTurns() int {
+	if b.floors == 0 {
+		return defaultFloorTurns
+	}
+	return b.floorsTurns / b.floors
+}
+
+// track keeps the turns spent on the floors the bot left.
+func (b *Bot) track(g *Game) {
+	if g.Depth != b.depth {
+		if b.depth != 0 {
+			b.floors++
+			b.floorsTurns += g.Turn - b.arrived
+		}
+		b.depth, b.arrived = g.Depth, g.Turn
+	}
 }
 
 // adjacent returns the enemies next to the player that it can attack.
@@ -603,14 +819,17 @@ func (b *Bot) identify(g *Game) (string, []string) {
 // rest waits to heal (the careful bot), with no enemy in sight and the
 // wind still far.
 func (b *Bot) rest(g *Game) (string, []string) {
-	if b.Style != BotCareful || g.HP*10 >= g.MaxHP*7 || len(g.visibleEnemies()) > 0 || b.windNear(g) {
-		return "", nil
-	}
-	if g.Fullness*100 <= g.Dungeon.Rules.Fullness*40 {
-		// Resting costs food.
+	if b.Style != BotCareful || g.HP*10 >= g.MaxHP*7 || !b.canRest(g) {
 		return "", nil
 	}
 	return "wait", nil
+}
+
+// canRest says whether the player can rest: no enemy in sight, the wind
+// far, and food enough (resting costs food).
+func (b *Bot) canRest(g *Game) bool {
+	return len(g.visibleEnemies()) == 0 && !b.windNear(g) &&
+		g.Fullness*100 > g.Dungeon.Rules.Fullness*40
 }
 
 // windNear says whether the first wind is near: time to leave.
