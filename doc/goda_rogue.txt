@@ -610,8 +610,12 @@ monsters, items and counts, levels go in order.
 To see how a dungeon plays, let bots play it, from this repository: >
 	go run ./cmd/analyze -dungeon cave -runs 200
 <	Bots play the runs through the actions, like a player, with what a
-player knows: a careful one (it explores, rests and leaves when the wind
-comes) and a reckless one (it goes down as soon as it finds the stairs).
+player knows: a careful one (it explores, rests, and leaves when the
+wind comes, when hungry with no food, or when it sees an enemy it would
+likely lose to) and a reckless one (it goes down as soon as it finds the
+stairs).  Both shoot arrows, blow away with a staff or flee to the stairs
+an enemy next to them they would likely lose to, and reckon by what a
+player knows of the kinds of monsters.
 It prints how many cleared, where and why they fell (by monster, trap,
 hunger or the wind; deaths from full HP in one action or just after
 arriving count as unfair), the HP on arriving on each floor and the turns

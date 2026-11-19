@@ -75,7 +75,8 @@ func (b *Bot) Next(g *Game) (string, []string) {
 		return "move", []string{clockwise[b.rng.IntN(len(clockwise))]}
 	}
 	for _, rule := range []func(*Game) (string, []string){
-		b.heal, b.fight, b.eat, b.equip, b.identify, b.rest, b.leave, b.pick, b.explore,
+		b.heal, b.danger, b.shoot, b.fight, b.eat, b.boost, b.equip, b.identify, b.light,
+		b.rest, b.leave, b.pick, b.explore,
 	} {
 		if action, args := rule(g); action != "" {
 			return action, args
@@ -157,6 +158,137 @@ func (b *Bot) heal(g *Game) (string, []string) {
 		}
 	}
 	return "", nil
+}
+
+// expected returns the damage the player expects to deal to m in a turn,
+// and to take from it, as a player who knows the kinds of monsters (not
+// their HP) would reckon.
+func expected(g *Game, m *Monster) (deal, take float64) {
+	r := g.Dungeon.Rules
+	k := float64(r.DefenseK)
+	deal = float64(g.Attack()) * k / (k + float64(m.Defense)) * float64(r.PlayerHitRate) / 100
+	take = float64(m.Attack) * k / (k + float64(g.Defense())) * float64(r.MonsterHitRate) / 100
+	switch m.Speed {
+	case SpeedDouble:
+		take *= 2
+	case SpeedSlow:
+		take /= 2
+	}
+	return deal, take
+}
+
+// dangerous says whether fighting the enemies next to the player would
+// likely cost it more HP than it has: each in turn, the others hitting
+// meanwhile.
+func dangerous(g *Game, ms []*Monster) bool {
+	var turns, take float64
+	for _, m := range ms {
+		deal, t := expected(g, m)
+		turns += float64(m.MaxHP) / max(deal, 0.1)
+		take += t
+	}
+	return take*turns >= float64(g.HP)
+}
+
+// danger answers enemies next to the player it would likely lose to: a
+// staff of blowing away (or an unknown staff) at the strongest, or away
+// to the stairs, when they are known and free.
+func (b *Bot) danger(g *Game) (string, []string) {
+	ms := b.adjacent(g)
+	if len(ms) == 0 || !dangerous(g, ms) {
+		return "", nil
+	}
+	if g.Player == g.Stairs {
+		return "stairs", nil
+	}
+	staff := carried(g, func(it *Item) bool {
+		return it.Def.Category == CategoryStaff && (!it.Known || it.Charges > 0) &&
+			(!g.identified[it.Def.ID] || it.Def.Effect == EffectBlowAway)
+	})
+	if staff != nil {
+		m := slices.MaxFunc(ms, func(a, c *Monster) int { return a.Attack - c.Attack })
+		if name := directionName(m.Pos.Sub(g.Player)); g.Facing != name {
+			return "turn", []string{name}
+		}
+		return b.use(staff, commandWave)
+	}
+	if g.IsSeen(g.Stairs) {
+		return b.toStairs(g)
+	}
+	return "", nil
+}
+
+// shoot shoots arrows at an enemy in a line from the player, not next to
+// it, within an arrow's range, nothing in between.
+func (b *Bot) shoot(g *Game) (string, []string) {
+	if g.equipped(CategoryArrow) == nil {
+		return "", nil
+	}
+	for _, m := range g.visibleEnemies() {
+		d := m.Pos.Sub(g.Player)
+		n := max(abs(d.X), abs(d.Y))
+		if n < 2 || n > throwRange || (d.X != 0 && d.Y != 0 && abs(d.X) != abs(d.Y)) {
+			continue
+		}
+		step := Point{sign(d.X), sign(d.Y)}
+		clear := true
+		for p := g.Player; p.Add(step) != m.Pos; p = p.Add(step) {
+			q := p.Add(step)
+			if !g.clearFrom(p, step) || !g.Level.At(q).Walkable() || g.MonsterAt(q) != nil {
+				clear = false
+				break
+			}
+		}
+		if !clear || !g.clearFrom(m.Pos.Sub(step), step) {
+			continue
+		}
+		if name := directionName(step); g.Facing != name {
+			return "turn", []string{name}
+		}
+		return "shoot", nil
+	}
+	return "", nil
+}
+
+// boost drinks the known grasses that only do good (strength).
+func (b *Bot) boost(g *Game) (string, []string) {
+	if it := carried(g, func(it *Item) bool { return b.known(g, it, EffectStrength) && it.Def.Category == CategoryGrass }); it != nil {
+		return b.use(it, commandDrink)
+	}
+	return "", nil
+}
+
+// light reads a known scroll of light when the stairs are not found and
+// the floor is explored as far as it can.
+func (b *Bot) light(g *Game) (string, []string) {
+	if g.IsSeen(g.Stairs) || g.Lit {
+		return "", nil
+	}
+	if action, _ := b.explore(g); action != "" {
+		return "", nil
+	}
+	if it := carried(g, func(it *Item) bool { return b.known(g, it, EffectLight) }); it != nil {
+		return b.use(it, commandRead)
+	}
+	return "", nil
+}
+
+// threatened says whether an enemy in sight would likely beat the player
+// one on one.
+func (b *Bot) threatened(g *Game) bool {
+	for _, m := range g.visibleEnemies() {
+		if dangerous(g, []*Monster{m}) {
+			return true
+		}
+	}
+	return false
+}
+
+// hungry says whether the player is hungry with nothing to eat: time to
+// go down and find food, not to rest.
+func (b *Bot) hungry(g *Game) bool {
+	return g.Fullness*100 <= g.Dungeon.Rules.Fullness*25 &&
+		carried(g, func(it *Item) bool { return it.Def.Category == CategoryFood }) == nil
 }
 
 // adjacent returns the enemies next to the player that it can attack.
@@ -268,7 +400,8 @@ func (b *Bot) rest(g *Game) (string, []string) {
 	if b.Style != BotCareful || g.HP*10 >= g.MaxHP*7 || len(g.visibleEnemies()) > 0 || b.windNear(g) {
 		return "", nil
 	}
-	if g.Fullness*100 <= g.Dungeon.Rules.Fullness*15 {
+	if g.Fullness*100 <= g.Dungeon.Rules.Fullness*40 {
+		// Resting costs food.
 		return "", nil
 	}
 	return "wait", nil
@@ -280,9 +413,10 @@ func (b *Bot) windNear(g *Game) bool {
 }
 
 // leave goes to the stairs and down: the reckless bot as soon as it knows
-// where they are, the careful one when the wind is near.
+// where they are, the careful one when the wind is near, it is hungry with
+// nothing to eat, or it sees an enemy it would likely lose to.
 func (b *Bot) leave(g *Game) (string, []string) {
-	if !g.IsSeen(g.Stairs) || (b.Style == BotCareful && !b.windNear(g)) {
+	if !g.IsSeen(g.Stairs) || (b.Style == BotCareful && !b.windNear(g) && !b.hungry(g) && !b.threatened(g)) {
 		return "", nil
 	}
 	return b.toStairs(g)

@@ -3,6 +3,7 @@ package rogue
 import (
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -77,5 +78,51 @@ func TestBotRunCount(t *testing.T) {
 	r.count(d, []string{"3 pickup yakusou", "4 use yakusou", "5 kill nezumi1", "6 hurt 4 nezumi1", "7 hurt 2 落とし穴", "8 floor 2"})
 	if r.Picked[CategoryGrass] != 1 || r.Used[CategoryGrass] != 1 || r.Kills != 1 || r.Damage != 6 {
 		t.Errorf("%+v", r)
+	}
+}
+
+// TestBotShoots: arrows at an enemy in a line, facing it first.
+func TestBotShoots(t *testing.T) {
+	g, r := roomGame(t, 8, 5)
+	b := NewBot(BotCareful, 1)
+	arrows(g, "kiya", 5)
+	g.Inventory[0].Equipped = true
+	place(g, kind("nezumi1"), Point{r.X + 3, r.Y + 3})
+	g.Facing = "up"
+	if a, args := b.Next(g); a != "turn" || !slices.Equal(args, []string{"downright"}) {
+		t.Fatalf("%s %v", a, args)
+	}
+	g.Facing = "downright"
+	if a, _ := b.Next(g); a != "shoot" {
+		t.Fatalf("%s", a)
+	}
+}
+
+// TestBotDanger: an enemy next to the player it would lose to is blown
+// away with a staff, or left by the stairs.
+func TestBotDanger(t *testing.T) {
+	g, r := roomGame(t, 8, 3)
+	b := NewBot(BotCareful, 1)
+	g.Player = Point{r.X + 1, r.Y + 1}
+	m := place(g, kind("ryu4"), Point{r.X + 2, r.Y + 1})
+	if !dangerous(g, []*Monster{m}) {
+		t.Fatal("not dangerous")
+	}
+	staff := carry(g, "fukitobashi", 0)
+	staff.Charges = 3
+	g.Facing = "right"
+	if a, _ := b.Next(g); a != "inventory" || len(b.plan) != 2 || b.plan[1].label != commandWave {
+		t.Fatalf("%s %+v", a, b.plan)
+	}
+
+	// No staff: to the stairs, away from it.
+	b.plan = nil
+	g.Inventory = nil
+	g.Stairs = Point{r.X, r.Y + 1}
+	for i := range g.Seen {
+		g.Seen[i] = true
+	}
+	if a, args := b.Next(g); a != "move" || !slices.Equal(args, []string{"left"}) {
+		t.Fatalf("%s %v", a, args)
 	}
 }
