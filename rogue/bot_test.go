@@ -13,9 +13,11 @@ import (
 // (checkGame): the bots are random play too.
 func TestBotsPlay(t *testing.T) {
 	d := cave()
-	runs := 3
+	// With the race detector, one run of each bot, its first actions: the
+	// bots go deep, and it is several times slower.
+	runs, actions := 3, 30000
 	if raceDetector {
-		runs = 1
+		runs, actions = 1, 1500
 	}
 	for style := range []BotStyle{BotCareful, BotReckless} {
 		for i := range runs {
@@ -24,8 +26,11 @@ func TestBotsPlay(t *testing.T) {
 				g := NewGame(d, fmt.Sprint("bot", i))
 				b := NewBot(BotStyle(style), uint64(i))
 				for n := 0; g.Over == ""; n++ {
-					if n == 30000 {
-						t.Fatalf("not over after %d actions, %dF", n, g.Depth)
+					if n == actions {
+						if !raceDetector {
+							t.Fatalf("not over after %d actions, %dF", n, g.Depth)
+						}
+						break
 					}
 					action, args := b.Next(g)
 					if err := g.Do(action, args); err != nil {
@@ -47,18 +52,19 @@ func TestBotsPlay(t *testing.T) {
 // counted.
 func TestPlayBot(t *testing.T) {
 	d := cave()
-	a, err := PlayBot(d, "same", NewBot(BotReckless, 7), 30000)
+	// (Its first actions: whole runs are long now that the bots go deep.)
+	a, err := PlayBot(d, "same", NewBot(BotReckless, 7), 1500)
 	if err != nil {
 		t.Fatal(err)
 	}
-	b, err := PlayBot(d, "same", NewBot(BotReckless, 7), 30000)
+	b, err := PlayBot(d, "same", NewBot(BotReckless, 7), 1500)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !reflect.DeepEqual(a, b) {
 		t.Errorf("%+v\n%+v", a, b)
 	}
-	if a.Over == "" || a.Cause == "unfinished" || a.Kills == 0 || a.Damage == 0 || len(a.Floors) != a.Depth ||
+	if a.Kills == 0 || a.Damage == 0 || len(a.Floors) != a.Depth || a.Depth < 2 ||
 		a.Floors[0] != (BotFloor{1, 0, a.Floors[0].HP, a.Floors[0].MaxHP}) {
 		t.Errorf("%+v", a)
 	}

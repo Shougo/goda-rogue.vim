@@ -488,7 +488,7 @@ func (b *Bot) windNear(g *Game) bool {
 // a dangerous one.
 func (b *Bot) leave(g *Game) (string, []string) {
 	if !g.IsSeen(g.Stairs) || (b.Style == BotCareful && !b.windNear(g) && !b.hungry(g) &&
-		!b.threatened(g) && !dangerousFloor(g)) {
+		!b.threatened(g) && !dangerousFloor(g) && !b.exploredEnough(g)) {
 		return "", nil
 	}
 	return b.toStairs(g)
@@ -505,50 +505,83 @@ func (b *Bot) toStairs(g *Game) (string, []string) {
 // pick walks to the nearest item seen that it can take: not for sale, and
 // with room in the inventory (money always).
 func (b *Bot) pick(g *Game) (string, []string) {
+	return b.walk(g, func(p Point) bool { return wanted(g, p) })
+}
+
+// wanted says whether an item the bots would pick up lies on p (seen, not
+// under the player).
+func wanted(g *Game, p Point) bool {
 	full := len(g.Inventory) >= g.Dungeon.Rules.Capacity
-	return b.walk(g, func(p Point) bool {
-		it, ok := g.ItemAt(p)
-		return ok && g.IsSeen(p) && p != g.Player && !it.ForSale && !useless(g, it) &&
-			(!full || it.Def.Category == CategoryMoney)
-	})
+	it, ok := g.ItemAt(p)
+	return ok && g.IsSeen(p) && p != g.Player && !it.ForSale && !useless(g, it) &&
+		(!full || it.Def.Category == CategoryMoney)
 }
 
 // explore walks to the nearest tile seen next to one not seen yet.
 func (b *Bot) explore(g *Game) (string, []string) {
-	return b.walk(g, func(p Point) bool {
-		if p == g.Player {
-			return false
-		}
-		for _, d := range Directions {
-			q := p.Add(d)
-			if _, ok := g.index(q); ok && !g.IsSeen(q) {
-				return true
-			}
-		}
+	return b.walk(g, func(p Point) bool { return frontier(g, p) })
+}
+
+// frontier says whether p, seen, is next to a tile not seen yet.
+func frontier(g *Game, p Point) bool {
+	if p == g.Player {
 		return false
-	})
+	}
+	for _, d := range Directions {
+		q := p.Add(d)
+		if _, ok := g.index(q); ok && !g.IsSeen(q) {
+			return true
+		}
+	}
+	return false
+}
+
+// exploreReach is how far the nearest tile to explore can be, in steps,
+// for a careful bot that knows the stairs to go on exploring: beyond, the
+// rest of the floor is not worth the walk (and the food, and the wind).
+const exploreReach = 12
+
+// exploredEnough says whether the floor is explored enough to leave: the
+// stairs known, and nothing left to explore or to pick up near.
+func (b *Bot) exploredEnough(g *Game) bool {
+	if !g.IsSeen(g.Stairs) {
+		return false
+	}
+	_, n, ok := b.route(g, func(p Point) bool { return frontier(g, p) || wanted(g, p) })
+	return !ok || n > exploreReach
 }
 
 // walk steps toward the nearest tile that goal accepts, over the tiles
 // seen, around the traps found and the monsters; "" when none is
 // reachable.
 func (b *Bot) walk(g *Game, goal func(Point) bool) (string, []string) {
+	p, _, ok := b.route(g, goal)
+	if !ok {
+		return "", nil
+	}
+	// Onto the goods of a shop or an item of no use, a dash: it stops on
+	// them without picking them up (leaving with goods is stealing).
+	if it, ok := g.ItemAt(p); ok && (it.ForSale || useless(g, it)) {
+		return "dash", []string{directionName(p.Sub(g.Player))}
+	}
+	return "move", []string{directionName(p.Sub(g.Player))}
+}
+
+// route finds the nearest tile that goal accepts, as walk does, and
+// returns the first step toward it and how many steps it is away.
+func (b *Bot) route(g *Game, goal func(Point) bool) (Point, int, bool) {
 	from := map[Point]Point{g.Player: g.Player}
 	queue := []Point{g.Player}
 	for len(queue) > 0 {
 		p := queue[0]
 		queue = queue[1:]
 		if goal(p) {
+			n := 1
 			for from[p] != g.Player {
 				p = from[p]
+				n++
 			}
-			// Onto the goods of a shop or an item of no use, a dash: it
-			// stops on them without picking them up (leaving with goods
-			// is stealing).
-			if it, ok := g.ItemAt(p); ok && (it.ForSale || useless(g, it)) {
-				return "dash", []string{directionName(p.Sub(g.Player))}
-			}
-			return "move", []string{directionName(p.Sub(g.Player))}
+			return p, n, true
 		}
 		for _, name := range clockwise {
 			d := Directions[name]
@@ -560,11 +593,11 @@ func (b *Bot) walk(g *Game, goal func(Point) bool) (string, []string) {
 			queue = append(queue, q)
 		}
 	}
-	return "", nil
+	return Point{}, 0, false
 }
 
 // passable says whether the bot walks through p: not onto a trap found
-// (unless found traps are safe).
+// (unless found traps are safe), nor into a calm shopkeeper.
 func (b *Bot) passable(g *Game, p Point) bool {
 	if !g.IsSeen(p) || !g.Level.At(p).Walkable() {
 		return false
@@ -572,8 +605,11 @@ func (b *Bot) passable(g *Game, p Point) bool {
 	if g.foundTrapAt(p) != nil && !g.Dungeon.Rules.FoundTrapsSafe {
 		return false
 	}
+	// An enemy is no wall: next to it, the bot fights it (a monster asleep
+	// in a corridor would cut the floor off). A calm shopkeeper is one
+	// (walking into it asks to pay).
 	m := g.MonsterAt(p)
-	return m == nil || m.Ally || !g.Visible(p)
+	return m == nil || !g.Visible(p) || m.Ally || m.hostile()
 }
 
 // BotRun is what a bot did in a run, for cmd/analyze.
