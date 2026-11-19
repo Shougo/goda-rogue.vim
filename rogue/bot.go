@@ -892,18 +892,44 @@ func frontier(g *Game, p Point) bool {
 }
 
 // exploreReach is how far the nearest tile to explore can be, in steps,
-// for a careful bot that knows the stairs to go on exploring: beyond, the
-// rest of the floor is not worth the walk (and the food, and the wind).
+// for a careful bot that knows the stairs to go on exploring, with food
+// for a few floors: beyond, the rest of the floor is not worth the walk
+// (and the food, and the wind). An item it wants is worth twice the walk.
 const exploreReach = 12
 
 // exploredEnough says whether the floor is explored enough to leave: the
-// stairs known, and nothing left to explore or to pick up near.
+// stairs known, and no item it wants nor tile to explore worth the steps
+// (the article "シレン5で上達するための思考法": no step without a reason).
 func (b *Bot) exploredEnough(g *Game) bool {
 	if !g.IsSeen(g.Stairs) {
 		return false
 	}
-	_, n, ok := b.route(g, func(p Point) bool { return frontier(g, p) || wanted(g, p) })
-	return !ok || n > exploreReach
+	reach := b.reach(g)
+	if _, n, ok := b.route(g, func(p Point) bool { return wanted(g, p) }); ok && n <= 2*reach {
+		return false
+	}
+	_, n, ok := b.route(g, func(p Point) bool { return frontier(g, p) })
+	return !ok || n > reach
+}
+
+// reach returns how far a tile to explore is worth walking to, by the
+// food: half as far with food for fewer than three floors, half again as
+// far with food for five or more.
+func (b *Bot) reach(g *Game) int {
+	r := g.Dungeon.Rules
+	food := g.Fullness
+	for _, it := range g.Inventory {
+		if !it.ForSale && it.Def.Category == CategoryFood {
+			food += it.Def.Strength
+		}
+	}
+	switch floors := food * r.HungerTurns / max(b.floorTurns(), 1); {
+	case floors < 3:
+		return exploreReach / 2
+	case floors >= 5:
+		return exploreReach * 3 / 2
+	}
+	return exploreReach
 }
 
 // walk steps toward the nearest tile that goal accepts, over the tiles
