@@ -4,8 +4,10 @@
 # rank fades in over a few floors and out after its own, so that the
 # monsters grow stronger floor by floor, without a floor where they all
 # rank up at once: middle ones of rank 1 from 4F, strong ones from 9F
-# (all there by 12F), rank 2 from 7F (middle ones from 14F), and a few
-# strong ones of rank 2 from 21F to the end. The fast 山犬 waits for 3F.
+# (all there by 12F), rank 2 from 7F (middle ones from 14F), and strong
+# ones of rank 2 from 21F to the end, as many as the middle ones from 24F:
+# the last floors are the hardest, above all for a low level. The fast
+# 山犬 waits for 3F.
 開始	終了	ID	頻度
 1	6	nezumi1	4
 1	6	hebi1	4
@@ -153,11 +155,11 @@
 21	21	ookami2	3
 21	21	rei2	3
 21	21	touzoku2	3
-21	23	ryu2	1
-21	23	kuma2	1
-21	23	kame2	1
-21	23	inoshishi2	1
-21	23	yoroi2	1
+21	23	ryu2	2
+21	23	kuma2	2
+21	23	kame2	2
+21	23	inoshishi2	2
+21	23	yoroi2	2
 22	23	nezumi2	2
 22	23	hebi2	2
 22	23	ookami2	2
@@ -168,8 +170,8 @@
 24	24	ookami2	1
 24	24	rei2	1
 24	24	touzoku2	1
-24	30	ryu2	2
-24	30	kuma2	2
-24	30	kame2	2
-24	30	inoshishi2	2
-24	30	yoroi2	2
+24	30	ryu2	4
+24	30	kuma2	4
+24	30	kame2	4
+24	30	inoshishi2	4
+24	30	yoroi2	4
