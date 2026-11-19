@@ -38,6 +38,9 @@ type Point struct{ X, Y int }
 // Add returns p moved by d.
 func (p Point) Add(d Point) Point { return Point{p.X + d.X, p.Y + d.Y} }
 
+// Sub returns the step from q to p: p - q.
+func (p Point) Sub(q Point) Point { return Point{p.X - q.X, p.Y - q.Y} }
+
 // Room is the interior of a room. A dummy is a single corridor tile where
 // corridors meet.
 type Room struct {
