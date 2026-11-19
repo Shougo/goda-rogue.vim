@@ -625,8 +625,11 @@ them that would kill them: they reckon the chance of dying in the fight
 (by the hit rates, the spread of the damage and the speeds of the kinds,
 as a player who knows the kinds would) and answer it from 5% (careful)
 or 20% (reckless) by the cheapest answer that is enough (by the prices
-of the items): the stairs, a healing grass, a staff, walking away to the
-stairs.  Out of a fight they heal when their HP is below what the
+of the items): the stairs, a step back into a corridor to fight two
+enemies one by one, a healing grass, a staff, walking away to the
+stairs.  They shoot arrows at enemies worth them (any with ten arrows or
+more), read unknown scrolls on the stairs, and the careful one leaves a
+floor whose fights cost more answers than it gave.  Out of a fight they heal when their HP is below what the
 monsters of the floor could take in two turns, and they wait for an
 enemy coming at them rather than step next to it, to strike first.
 It prints how many cleared, where and why they fell (by monster, trap,

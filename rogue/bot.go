@@ -58,6 +58,10 @@ type Bot struct {
 	// floors and floorsTurns count the floors it left and the turns it
 	// spent on them.
 	depth, arrived, floors, floorsTurns int
+	// answersIn are the answers carried on arriving on this floor;
+	// consumed counts the grasses and scrolls used on it, spent the
+	// answers used against a danger.
+	answersIn, consumed, spent int
 }
 
 // botStep is an answer to a prompt: the item it (in the inventory), or
@@ -138,6 +142,9 @@ func (b *Bot) answer(g *Game) (string, []string) {
 // use plans to do command with it (carried): the inventory, it, command.
 func (b *Bot) use(it *Item, command string) (string, []string) {
 	b.plan = []botStep{{item: it}, {label: command}}
+	if c := it.Def.Category; c == CategoryGrass || c == CategoryScroll {
+		b.consumed++
+	}
 	return "inventory", nil
 }
 
@@ -271,11 +278,12 @@ func deathChance(g *Game, ms []*Monster) float64 {
 }
 
 // foe is an enemy in a reckoning of the chance of dying: the chances of
-// the damage of its attacks, and the last turn it attacks.
+// the damage of its attacks, and the first and last turns it attacks (a
+// first of 0 or 1: from the start).
 type foe struct {
-	hits []float64
-	last int
-	m    *Monster
+	hits        []float64
+	first, last int
+	m           *Monster
 }
 
 // fightDeath returns the chance that the player with hp dies fighting
@@ -287,7 +295,7 @@ func fightDeath(g *Game, ms []*Monster, hp, delay int) float64 {
 	}
 	foes := make([]foe, len(ms))
 	for i, m := range ms {
-		foes[i] = foe{hitDamages(g, m), 0, m}
+		foes[i] = foe{hitDamages(g, m), 0, 0, m}
 	}
 	slices.SortStableFunc(foes, func(a, c foe) int {
 		return cmpFloat(killTurns(g, a.m), killTurns(g, c.m))
@@ -296,6 +304,27 @@ func fightDeath(g *Game, ms []*Monster, hp, delay int) float64 {
 	for i := range foes {
 		sum += killTurns(g, foes[i].m)
 		foes[i].last = min(int(math.Ceil(sum)), riskTurns)
+	}
+	return deathDP(g, hp, foes)
+}
+
+// oneByOneDeath returns the chance that the player with hp dies fighting
+// the enemies ms one at a time (from a corridor, where only one can stand
+// next to it), after a step back while they all attack.
+func oneByOneDeath(g *Game, ms []*Monster, hp int) float64 {
+	ms = slices.Clone(ms)
+	foes := make([]foe, 0, 2*len(ms))
+	for _, m := range ms {
+		foes = append(foes, foe{hitDamages(g, m), 1, 1, m})
+	}
+	slices.SortStableFunc(ms, func(a, c *Monster) int {
+		return cmpFloat(killTurns(g, a), killTurns(g, c))
+	})
+	sum := 1.0
+	for _, m := range ms {
+		first := int(math.Ceil(sum)) + 1
+		sum += killTurns(g, m)
+		foes = append(foes, foe{hitDamages(g, m), first, min(int(math.Ceil(sum)), riskTurns), m})
 	}
 	return deathDP(g, hp, foes)
 }
@@ -312,7 +341,7 @@ func fleeDeath(g *Game, ms []*Monster, hp, turns int) float64 {
 			// standing.
 			slow := *m
 			slow.Speed = SpeedNormal
-			foes = append(foes, foe{hitDamages(g, m), min(turns, riskTurns), &slow})
+			foes = append(foes, foe{hitDamages(g, m), 0, min(turns, riskTurns), &slow})
 		}
 	}
 	return deathDP(g, hp, foes)
@@ -338,7 +367,7 @@ func deathDP(g *Game, hp int, foes []foe) float64 {
 	dead := 0.0
 	for t := 1; t <= end; t++ {
 		for _, f := range foes {
-			if t > f.last {
+			if t < f.first || t > f.last {
 				continue
 			}
 			for range f.m.Speed.actions(g.Turn + t) {
@@ -472,6 +501,11 @@ func (b *Bot) danger(g *Game) (string, []string) {
 			}
 		}
 	}
+	if len(ms) > 1 {
+		if d, ok := b.stepBack(g, ms); ok {
+			answers = append(answers, botAnswer{0, oneByOneDeath(g, ms, g.HP), nil, "move " + d, nil})
+		}
+	}
 	if g.IsSeen(g.Stairs) {
 		if step, dist, ok := b.route(g, func(p Point) bool { return p == g.Stairs }); ok && g.MonsterAt(step) == nil {
 			cost := 0.0
@@ -497,6 +531,8 @@ func (b *Bot) danger(g *Game) (string, []string) {
 	switch {
 	case pick == nil:
 		return "", nil
+	case strings.HasPrefix(pick.command, "move "):
+		return "move", []string{strings.TrimPrefix(pick.command, "move ")}
 	case pick.item == nil:
 		return b.toStairs(g)
 	case pick.target != nil:
@@ -504,7 +540,39 @@ func (b *Bot) danger(g *Game) (string, []string) {
 			return "turn", []string{name}
 		}
 	}
+	b.spent++
 	return b.use(pick.item, pick.command)
+}
+
+// stepBack returns the direction of a step back into a corridor, where
+// the enemies ms next to the player can come at it only one at a time
+// (the articles on 浜辺の魔洞, shiren2424: two enemies next to you in a
+// room, step back to make it one on one): a corridor tile it can step
+// to, with at most two ways on, next to at most one of ms.
+func (b *Bot) stepBack(g *Game, ms []*Monster) (string, bool) {
+	for _, name := range clockwise {
+		d := Directions[name]
+		p := g.Player.Add(d)
+		if !g.canStep(d) || g.MonsterAt(p) != nil || g.Level.RoomAt(p) >= 0 {
+			continue
+		}
+		ways := 0
+		for _, e := range Directions {
+			if q := p.Add(e); g.Level.At(q).Walkable() && g.clearFrom(p, e) {
+				ways++
+			}
+		}
+		near := 0
+		for _, m := range ms {
+			if chebyshev(m.Pos, p) == 1 {
+				near++
+			}
+		}
+		if ways <= 2 && near <= 1 {
+			return name, true
+		}
+	}
+	return "", false
 }
 
 // leaveCost is what leaving a floor at once costs the careful bot, as the
@@ -512,8 +580,8 @@ func (b *Bot) danger(g *Game) (string, []string) {
 const leaveCost = 100
 
 // botAnswer is an answer to a danger: its cost, the chance of dying after
-// it, and how: the item and its command (none: walking to the stairs),
-// at the target.
+// it, and how: the item and its command (none: walking to the stairs, or
+// a command "move <direction>": a step), at the target.
 type botAnswer struct {
 	cost, chance float64
 	item         *Item
@@ -548,10 +616,14 @@ func meanPrice(kinds []*ItemDef) float64 {
 // shoot shoots arrows at an enemy in a line from the player, not next to
 // it, within an arrow's range, nothing in between.
 func (b *Bot) shoot(g *Game) (string, []string) {
-	if g.equipped(CategoryArrow) == nil {
+	arrows := g.equipped(CategoryArrow)
+	if arrows == nil {
 		return "", nil
 	}
 	for _, m := range g.visibleEnemies() {
+		if arrows.Count < plentyArrows && !b.worthArrows(g, m) {
+			continue
+		}
 		d := m.Pos.Sub(g.Player)
 		n := max(abs(d.X), abs(d.Y))
 		if n < 2 || n > throwRange || (d.X != 0 && d.Y != 0 && abs(d.X) != abs(d.Y)) {
@@ -710,7 +782,28 @@ func (b *Bot) track(g *Game) {
 			b.floorsTurns += g.Turn - b.arrived
 		}
 		b.depth, b.arrived = g.Depth, g.Turn
+		b.answersIn, b.consumed, b.spent = answersCarried(g), 0, 0
 	}
+}
+
+// answersCarried counts the answers carried: grasses, scrolls and staffs.
+func answersCarried(g *Game) int {
+	n := 0
+	for _, it := range g.Inventory {
+		if c := it.Def.Category; !it.ForSale && (c == CategoryGrass || c == CategoryScroll || c == CategoryStaff) {
+			n++
+		}
+	}
+	return n
+}
+
+// costlyFloor says whether the floor has cost the bot more answers in
+// fights than it has given (the article "原始に続く穴 安定攻略への道",
+// platinasun: go down at once when the answers a floor costs outweigh
+// what it gives).
+func (b *Bot) costlyFloor(g *Game) bool {
+	found := answersCarried(g) - b.answersIn + b.consumed
+	return b.spent > 0 && b.spent > found
 }
 
 // adjacent returns the enemies next to the player that it can attack.
@@ -722,6 +815,19 @@ func (b *Bot) adjacent(g *Game) []*Monster {
 		}
 	}
 	return ms
+}
+
+// plentyArrows is the count of arrows from which the bot shoots any
+// enemy; with fewer, only those worth them.
+const plentyArrows = 10
+
+// worthArrows says whether an enemy is worth arrows (the article "原始に
+// 続く穴 安定攻略への道", platinasun: do not spend arrows on enemies the
+// player can outheal; shoot the costly ones while they are far): fighting
+// it from full HP would kill the player at a chance of a tenth of what the
+// bot accepts or more.
+func (b *Bot) worthArrows(g *Game, m *Monster) bool {
+	return fightDeath(g, []*Monster{m}, g.MaxHP, 0) >= b.risk()/10
 }
 
 // fight attacks an enemy next to the player, the weakest first.
@@ -807,7 +913,9 @@ func (b *Bot) identify(g *Game) (string, []string) {
 			return b.use(s, commandRead)
 		}
 	}
-	if s := unknown(CategoryScroll); s != nil {
+	if s := unknown(CategoryScroll); s != nil && g.Player == g.Stairs {
+		// Read near the stairs once the floor is done: a scroll may
+		// not be undone (the article "原始に続く穴 安定攻略への道").
 		return b.use(s, commandRead)
 	}
 	if s := unknown(CategoryGrass); s != nil && g.HP == g.MaxHP {
@@ -843,7 +951,7 @@ func (b *Bot) windNear(g *Game) bool {
 // a dangerous one.
 func (b *Bot) leave(g *Game) (string, []string) {
 	if !g.IsSeen(g.Stairs) || (b.Style == BotCareful && !b.windNear(g) && !b.hungry(g) &&
-		!b.threatened(g) && !b.dangerousFloor(g) && !b.exploredEnough(g)) {
+		!b.threatened(g) && !b.dangerousFloor(g) && !b.costlyFloor(g) && !b.exploredEnough(g)) {
 		return "", nil
 	}
 	return b.toStairs(g)

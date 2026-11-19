@@ -97,13 +97,14 @@ func TestBotRunCount(t *testing.T) {
 	}
 }
 
-// TestBotShoots: arrows at an enemy in a line, facing it first.
+// TestBotShoots: arrows at an enemy in a line worth them, facing it
+// first; at any enemy with plenty of arrows; not at a weak one with few.
 func TestBotShoots(t *testing.T) {
 	g, r := roomGame(t, 8, 5)
 	b := NewBot(BotCareful, 1)
 	arrows(g, "kiya", 5)
 	g.Inventory[0].Equipped = true
-	place(g, kind("nezumi1"), Point{r.X + 3, r.Y + 3})
+	m := place(g, kind("kuma1"), Point{r.X + 3, r.Y + 3})
 	g.Facing = "up"
 	if a, args := b.Next(g); a != "turn" || !slices.Equal(args, []string{"downright"}) {
 		t.Fatalf("%s %v", a, args)
@@ -111,6 +112,16 @@ func TestBotShoots(t *testing.T) {
 	g.Facing = "downright"
 	if a, _ := b.Next(g); a != "shoot" {
 		t.Fatalf("%s", a)
+	}
+
+	m.Def = kind("nezumi1")
+	m.HP, m.MaxHP, m.Attack, m.Defense = m.Def.HP, m.Def.HP, m.Def.Attack, m.Def.Defense
+	if a, _ := b.Next(g); a == "shoot" {
+		t.Fatal("a weak one shot")
+	}
+	g.Inventory[0].Count = plentyArrows
+	if a, _ := b.Next(g); a != "shoot" {
+		t.Fatalf("plenty: %s", a)
 	}
 }
 
@@ -260,5 +271,53 @@ func TestBotFirstStrike(t *testing.T) {
 	m.Dozing = true
 	if a, _ := b.approach(g, goal); a != "move" {
 		t.Errorf("dozing: %s", a)
+	}
+}
+
+// TestBotStepBack: two enemies next to the player in a room, a corridor
+// behind it: the bot steps back into the corridor to fight them one by
+// one, if that is enough.
+func TestBotStepBack(t *testing.T) {
+	g := find(t, func(g *Game) bool { return len(g.Level.Rooms) > 1 })
+	b := NewBot(BotCareful, 1)
+	g.Monsters, g.Items, g.Traps = nil, nil, nil
+	g.Stairs = Point{-1, -1}
+	// A corridor tile next to a room tile: the player on the room
+	// tile, two enemies on the other side.
+	var at, back Point
+	found := false
+	for y := 1; y < g.Level.H-1 && !found; y++ {
+		for x := 1; x < g.Level.W-1 && !found; x++ {
+			p := Point{x, y}
+			if !g.Level.At(p).Walkable() || g.Level.RoomAt(p) < 0 {
+				continue
+			}
+			for _, d := range []Point{{-1, 0}, {1, 0}, {0, -1}, {0, 1}} {
+				q := p.Add(d)
+				o := p.Sub(d)
+				if g.Level.At(q).Walkable() && g.Level.RoomAt(q) < 0 && g.Level.RoomAt(o) >= 0 &&
+					g.Level.RoomAt(o.Add(Point{d.Y, d.X})) >= 0 {
+					at, back, found = p, q, true
+					place(g, kind("kuma1"), o)
+					place(g, kind("kuma1"), o.Add(Point{d.Y, d.X}))
+					break
+				}
+			}
+		}
+	}
+	if !found {
+		t.Skip("no room door")
+	}
+	g.Player = at
+	ms := b.adjacent(g)
+	if len(ms) != 2 {
+		t.Fatalf("%d next", len(ms))
+	}
+	name, ok := b.stepBack(g, ms)
+	if !ok || at.Add(Directions[name]) != back {
+		t.Fatalf("%v %v", name, ok)
+	}
+	if oneByOneDeath(g, ms, g.HP) >= deathChance(g, ms) {
+		t.Error("one by one is not safer")
 	}
 }
