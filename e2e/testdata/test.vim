@@ -393,6 +393,10 @@ try
 catch
   call add(s:errors, v:throwpoint . ': ' . v:exception)
 endtry
-call writefile(s:errors + (empty(s:errors) ? ['ok'] : []) + goda#log(), s:result)
+" On a failure, the messages too: an error the plugin printed (a request
+" that failed) explains a check that failed after it.
+call writefile(s:errors + (empty(s:errors) ? ['ok']
+      \ : ['--- messages:'] + split(execute('messages'), "\n"))
+      \ + goda#log(), s:result)
 call goda#stop()
 qall!
