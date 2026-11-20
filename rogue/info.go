@@ -25,7 +25,6 @@ var effectTexts = map[Effect]string{
 	EffectFood:       "満腹度が %d 回復する。",
 	EffectKeep:       "入れた道具をしまっておける。「見る」で中の道具を使える。",
 	EffectSynthesis: "武器と盾は、先に入れた同じ種類のものに印と修正値が合成される。" +
-		"印の素材になる道具は、先に入れた武器か盾に印をつける。" +
 		"同じ腕輪を入れるとひびが直る。中のものは出せない。",
 }
 
@@ -131,7 +130,7 @@ func (g *Game) info(it *Item) []string {
 }
 
 // materialInfo says what seal def gives, as a material merged into a
-// weapon or a shield in a pot of synthesis (none for others).
+// weapon or a shield (異種合成; none for others).
 func (g *Game) materialInfo(def *ItemDef) []string {
 	if def.Seal == "" || def.Category == CategoryWeapon || def.Category == CategoryShield {
 		return nil
@@ -139,7 +138,7 @@ func (g *Game) materialInfo(def *ItemDef) []string {
 	var lines []string
 	for _, c := range []Category{CategoryWeapon, CategoryShield} {
 		if s := g.Dungeon.SealOn(def.Seal, c); s != nil {
-			lines = append(lines, fmt.Sprintf("合成の壺で%sに合成すると【%s】%s：%s", c, s.Glyph, s.Name,
+			lines = append(lines, fmt.Sprintf("%sに異種合成すると【%s】%s：%s", c, s.Glyph, s.Name,
 				withStrength(sealTexts[s.Effect], s.Strength)))
 		}
 	}

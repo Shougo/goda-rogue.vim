@@ -318,9 +318,10 @@ inventory                                               *goda-rogue-inventory*
 		(出す), and in a pot of keeping (保存の壺) also used or
 		thrown where it is.  A pot of synthesis (合成の壺) gives
 		nothing back: a weapon or a shield put in it first gets
-		the seals and upgrades of another of its kind, and the
-		seal of a material (an item with a seal, as a grass)
-		put in after it.
+		the seals and upgrades of another of its kind.  A
+		material (an item with a seal, as a grass) is not
+		merged in it: mixed synthesis (異種合成) is a monster's,
+		as in Shiren.
 
 choose {index}                                             *goda-rogue-choose*
 cancel                                                     *goda-rogue-cancel*
@@ -549,10 +550,11 @@ floors once the files change.
 				the seal a weapon or a shield is born with
 				(- for none), 印数 how many seals it can
 				have.  On another item, 印 makes it a
-				material: put in a pot of synthesis after
-				a weapon or a shield, it gives it its seal
-				for weapons or for shields, and is used
-				up.  ひび is how easily a
+				material: merged into a weapon or a shield
+				by mixed synthesis (異種合成, by a monster;
+				a pot of synthesis merges items of a kind
+				only), it gives its seal for weapons or for
+				shields, and is used up.  ひび is how easily a
 				bracelet cracks, a percent (0 for never).
 				Leaving a floor where a bracelet had its
 				effect (it showed a monster out of sight,

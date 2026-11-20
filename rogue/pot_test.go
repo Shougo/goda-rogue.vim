@@ -153,39 +153,38 @@ func TestSynthesis(t *testing.T) {
 }
 
 // TestMixedSynthesis: a material gives a weapon its seal for weapons and
-// a shield its seal for shields (one glyph, two effects); a material with
-// no seal stays in the pot as it is.
+// a shield its seal for shields (one glyph, two effects), by mixed
+// synthesis; a pot of synthesis merges items of a kind only, so a
+// material stays in it as it is.
 func TestMixedSynthesis(t *testing.T) {
 	g, _ := roomGame(t, 4, 3)
-	put := func(p, it *Item) {
-		t.Helper()
+	p := pot(g, "gousei", 3)
+	sword := carry(g, "katana", 0)
+	grass := carry(g, "chikarakusa", 0)
+	for _, it := range []*Item{sword, grass} {
 		command(t, g, p, commandPutIn)
 		chooseLabel(t, g, g.Entry(it))
 	}
+	if len(p.Contents) != 2 || len(sword.Seals) != 0 {
+		t.Fatalf("pot: contents %d, seals %v", len(p.Contents), sword.Seals)
+	}
 
-	p := pot(g, "gousei", 3)
-	sword := carry(g, "katana", 0)
-	put(p, sword)
-	grass := carry(g, "chikarakusa", 0)
-	put(p, grass)
-	if len(p.Contents) != 1 || !slices.Equal(sword.Seals, []string{"力"}) {
-		t.Fatalf("contents %d, seals %v", len(p.Contents), sword.Seals)
+	if !g.merge(sword, carry(g, "chikarakusa", 0), true) || !slices.Equal(sword.Seals, []string{"力"}) {
+		t.Fatalf("seals %v", sword.Seals)
 	}
 	if !strings.Contains(g.Message, "カタナとちからの草が合成された！") {
 		t.Errorf("message %q", g.Message)
 	}
-
-	p = pot(g, "gousei", 3)
 	shield := carry(g, "tetsutate", 0)
-	put(p, shield)
-	put(p, carry(g, "chikarakusa", 0))
-	other := carry(g, "yakusou", 0)
-	put(p, other) // No seal: kept apart.
-	if len(p.Contents) != 2 || !slices.Equal(shield.Seals, []string{"力"}) {
-		t.Fatalf("contents %d, seals %v", len(p.Contents), shield.Seals)
+	if !g.merge(shield, carry(g, "chikarakusa", 0), true) || !slices.Equal(shield.Seals, []string{"力"}) {
+		t.Fatalf("seals %v", shield.Seals)
+	}
+	if g.merge(shield, carry(g, "yakusou", 0), true) {
+		t.Error("merged a grass of no seal")
 	}
 
 	// The two sides: attack on the weapon, a counter on the shield.
+	g.Inventory = nil
 	sword.Equipped, shield.Equipped = true, true
 	g.Inventory = append(g.Inventory, sword, shield)
 	if n := g.sealStrength(SealAttack); n != 2 {
@@ -198,7 +197,7 @@ func TestMixedSynthesis(t *testing.T) {
 		t.Errorf("defense %d", n)
 	}
 	info := strings.Join(g.info(carry(g, "chikarakusa", 0)), "\n")
-	for _, want := range []string{"武器に合成すると【力】力の印：攻撃力 +2。", "盾に合成すると【力】力の印：15% の確率"} {
+	for _, want := range []string{"武器に異種合成すると【力】力の印：攻撃力 +2。", "盾に異種合成すると【力】力の印：15% の確率"} {
 		if !strings.Contains(info, want) {
 			t.Errorf("info %q, want %q", info, want)
 		}

@@ -32,8 +32,9 @@
 # how many items a pot holds (min-max; - for others).
 # 印 is the seal a weapon or a shield is born with (seals.txt; - for
 # none), 印数 how many seals it can have. On another item, 印 makes it a
-# material: put in a pot of synthesis after a weapon or a shield, it adds
-# its seal for weapons or for shields (異種合成), and is used up.
+# material: merged into a weapon or a shield by mixed synthesis (異種合成,
+# by a monster; a pot of synthesis merges items of a kind only), it adds
+# its seal for weapons or for shields, and is used up.
 # Any item can be thrown: an arrow hurts the monster it hits, a grass
 # has its effect on it, another item hurts it a little.
 # 値段 is the price in shops (of one arrow for arrows); a shop buys for

@@ -76,7 +76,7 @@ func (g *Game) putIn(pot, it *Item) {
 	g.learn(pot)
 	if pot.Def.Effect == EffectSynthesis {
 		for _, base := range pot.Contents {
-			if g.merge(base, it) {
+			if g.merge(base, it, false) {
 				return
 			}
 		}
@@ -84,12 +84,14 @@ func (g *Game) putIn(pot, it *Item) {
 	pot.Contents = append(pot.Contents, it)
 }
 
-// merge merges it into base, in a pot of synthesis, and says whether it
-// did: a weapon or a shield gets the seals (as many as its slots hold)
-// and the upgrade value of another of its category, or the seal of a
-// material for its category (異種合成: a seal for weapons or for
-// shields, items.txt 印); a bracelet is mended by the same bracelet.
-func (g *Game) merge(base, it *Item) bool {
+// merge merges it into base, and says whether it did: a weapon or a
+// shield gets the seals (as many as its slots hold) and the upgrade value
+// of another of its category; with mixed, also the seal of a material for
+// its category (異種合成: a seal for weapons or for shields, items.txt
+// 印); a bracelet is mended by the same bracelet. A pot of synthesis
+// merges items of a kind only; mixed synthesis is left to a monster, as
+// in Shiren.
+func (g *Game) merge(base, it *Item, mixed bool) bool {
 	c := base.Def.Category
 	switch {
 	case (c == CategoryWeapon || c == CategoryShield) && it.Def.Category == c:
@@ -100,7 +102,7 @@ func (g *Game) merge(base, it *Item) bool {
 		base.Known = base.Known && it.Known
 		g.say(g.Name(base) + "と" + g.Name(it) + "が合成された！")
 		return true
-	case (c == CategoryWeapon || c == CategoryShield) && it.Def.Category != CategoryWeapon &&
+	case mixed && (c == CategoryWeapon || c == CategoryShield) && it.Def.Category != CategoryWeapon &&
 		it.Def.Category != CategoryShield && g.Dungeon.SealOn(it.Def.Seal, c) != nil:
 		// (Merged even with no room: the material is used up, as the
 		// player chose to put it in.)
