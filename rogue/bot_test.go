@@ -186,6 +186,26 @@ func TestDangerousFloor(t *testing.T) {
 	}
 }
 
+// TestDangerousFar: one on one is reckoned next to the player, wherever
+// the monster is: far away or of the table, it is as dangerous.
+func TestDangerousFar(t *testing.T) {
+	g, r := roomGame(t, 8, 3)
+	g.Player = Point{r.X, r.Y}
+	near := place(g, kind("kuma2"), Point{r.X + 1, r.Y})
+	far := place(g, kind("kuma2"), Point{r.X + 7, r.Y + 2})
+	// Across the floor: it would come after the turns reckoned.
+	far.Pos = Point{g.Level.W - 1 - r.X, g.Level.H - 1 - r.Y}
+	if chebyshev(far.Pos, g.Player) <= riskTurns {
+		far.Pos = Point{r.X + riskTurns + 2, r.Y}
+	}
+	if !NewBot(BotCareful, 1).dangerous(g, []*Monster{far}) {
+		t.Error("far: not dangerous")
+	}
+	if !NewBot(BotCareful, 1).dangerous(g, []*Monster{near}) {
+		t.Error("near: not dangerous")
+	}
+}
+
 // TestUseless: the bots keep only what they use, and drop the rest when
 // the inventory is full and something is in sight.
 func TestUseless(t *testing.T) {

@@ -453,11 +453,20 @@ func (b *Bot) dangerous(g *Game, ms []*Monster) bool {
 		if len(b.risks) > 4096 {
 			clear(b.risks)
 		}
-		d := deathChance(g, ms) >= b.risk()
+		d := oneOnOneDeath(g, m) >= b.risk()
 		b.risks[key] = d
 		return d
 	}
 	return deathChance(g, ms) >= b.risk()
+}
+
+// oneOnOneDeath returns the chance that the player dies fighting m one on
+// one, m next to it wherever it is: a monster of the table (with no place)
+// or one in sight. (The cache of dangerous keeps no place: a monster
+// reckoned far away must not count as harmless next to the player.)
+func oneOnOneDeath(g *Game, m *Monster) float64 {
+	f := foe{hitDamages(g, m), 1, min(int(math.Ceil(killTurns(g, m))), riskTurns), m}
+	return deathDP(g, g.HP, []foe{f})
 }
 
 // riskKey is what the chance of dying one on one depends on.
