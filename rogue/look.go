@@ -9,7 +9,7 @@ import (
 const promptLook = "look"
 
 // speedNames are the speeds as the player reads them.
-var speedNames = map[Speed]string{SpeedSlow: "鈍足", SpeedNormal: "通常", SpeedDouble: "倍速"}
+var speedNames = map[Speed]string{SpeedSlow: "鈍足", SpeedNormal: "通常", SpeedDouble: "倍速", SpeedMoveDouble: "移動倍速"}
 
 // sight is something the player sees: a monster or an item.
 type sight struct {
@@ -103,7 +103,7 @@ func (g *Game) lookAt(n int) {
 		msg += fmt.Sprintf("  仲間 Lv%d  HP %d/%d", m.Level, m.HP, m.MaxHP)
 	case m.Keeper && !m.Angry:
 		msg += "  店主"
-	case m.Angry:
+	case m.Angry, m.Enraged:
 		msg += "  怒っている"
 	case m.Dozing:
 		msg += "  眠っている"

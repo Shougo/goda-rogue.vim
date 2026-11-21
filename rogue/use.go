@@ -110,6 +110,9 @@ func (g *Game) blowAway() {
 		}
 		m.HP -= blowAwayDamage
 		g.say(fmt.Sprintf("%sはぶつかって%dのダメージ。", m.Name, blowAwayDamage))
+		if m.HP > 0 {
+			g.wounded(m)
+		}
 		if m.HP <= 0 {
 			g.remove(m)
 			g.say(m.Name + "を倒した。")

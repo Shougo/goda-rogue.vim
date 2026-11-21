@@ -243,8 +243,9 @@ func (g *Game) descend() {
 		pos := g.spot(rng, rooms)
 		m := newMonster(d.Monster(pick(rng, d.MonsterRows, g.Depth)))
 		m.Pos = pos
-		// A third of them doze, but never in the player's room.
-		m.Dozing = rng.IntN(3) == 0 && g.Level.RoomAt(pos) != start
+		// Some of them doze (a third, or as monsters.txt 眠り says),
+		// but never in the player's room.
+		m.Dozing = m.dozes(rng) && g.Level.RoomAt(pos) != start
 		g.Monsters = append(g.Monsters, m)
 	}
 	for range between(rng, c.MinItem, c.MaxItem) {
@@ -604,6 +605,9 @@ func (g *Game) attack() bool {
 	g.use(EffectStrength)
 	m.HP -= n
 	g.say(fmt.Sprintf("%sに%dのダメージ。", m.Name, n))
+	if m.HP > 0 {
+		g.wounded(m)
+	}
 	if m.HP <= 0 {
 		g.remove(m)
 		g.say(m.Name + "を倒した。")

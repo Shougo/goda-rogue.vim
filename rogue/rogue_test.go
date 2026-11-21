@@ -528,9 +528,10 @@ func TestMonsterChases(t *testing.T) {
 		turns int
 		steps int
 	}{
-		{kind("nezumi1"), 1, 1},   // normal
-		{kind("ookami1"), 1, 2},   // double speed
-		{kind("gaikotsu1"), 2, 1}, // slow
+		{kind("nezumi1"), 1, 1}, // normal
+		{kind("ookami1"), 1, 2}, // moves twice a turn
+		{kind("hachi1"), 1, 2},  // double speed
+		{kind("kame1"), 2, 1},   // slow
 	} {
 		g, r := roomGame(t, 8, 3)
 		m := place(g, tc.kind, Point{r.X + 7, r.Y})

@@ -141,6 +141,11 @@ type MonsterDef struct {
 	Growth  string
 	// Kind is "" for monsters of the floors, KindKeeper or KindGuard.
 	Kind string
+	// Abilities are its special abilities (monsters.txt 能力).
+	Abilities []Ability
+	// Asleep is the share of them asleep on a new floor, a percent; -1
+	// for the default (a third).
+	Asleep int
 }
 
 // The kinds of monsters that are not of the floors (monsters.txt 種別).
@@ -448,7 +453,7 @@ func (l *loader) glyph(r row, c string) string {
 	return g
 }
 
-var speeds = map[string]Speed{"鈍足": SpeedSlow, "通常": SpeedNormal, "倍速": SpeedDouble}
+var speeds = map[string]Speed{"鈍足": SpeedSlow, "通常": SpeedNormal, "倍速": SpeedDouble, "移動倍速": SpeedMoveDouble}
 
 func (l *loader) load() {
 	d := l.d
@@ -557,9 +562,21 @@ func (l *loader) load() {
 		}
 		s, ok := speeds[row.cols["速度"]]
 		if !ok {
-			l.errorf(row.file, row.n, "速度: want 鈍足, 通常 or 倍速, not %q", row.cols["速度"])
+			l.errorf(row.file, row.n, "速度: want 鈍足, 通常, 倍速 or 移動倍速, not %q", row.cols["速度"])
 		}
 		m.Speed = s
+		as, err := parseAbilities(row.cols["能力"])
+		if err != nil {
+			l.errorf(row.file, row.n, "能力: %v", err)
+		}
+		m.Abilities = as
+		m.Asleep = -1
+		if v, ok := row.cols["眠り"]; ok && v != "-" {
+			m.Asleep = l.int(row, "眠り", 0)
+			if m.Asleep > 100 {
+				l.errorf(row.file, row.n, "眠り: %d above 100", m.Asleep)
+			}
+		}
 		switch k := row.cols["種別"]; k {
 		case "", "-":
 		case KindKeeper, KindGuard:

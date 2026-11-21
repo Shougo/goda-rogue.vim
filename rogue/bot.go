@@ -265,6 +265,17 @@ func hitDamages(g *Game, m *Monster) []float64 {
 			p[max(n, 1)] += hit * (to - from) / (hi - lo)
 		}
 	}
+	if a, ok := m.ability(AbilityCritical); ok {
+		// A share of the hits do more.
+		c := float64(a.Values[0]) / 100
+		q := make([]float64, top*a.Values[1]/100+1)
+		q[0] = p[0]
+		for n := 1; n <= top; n++ {
+			q[n] += p[n] * (1 - c)
+			q[n*a.Values[1]/100] += p[n] * c
+		}
+		p = q
+	}
 	return p
 }
 
@@ -319,7 +330,7 @@ func fightDeath(g *Game, ms []*Monster, hp, delay int) float64 {
 func arrival(g *Game, m *Monster) int {
 	steps := chebyshev(m.Pos, g.Player) - 1
 	switch m.Speed {
-	case SpeedDouble:
+	case SpeedDouble, SpeedMoveDouble:
 		return (steps + 1) / 2
 	case SpeedSlow:
 		return 2 * steps
@@ -373,7 +384,7 @@ func oneByOneDeath(g *Game, ms []*Monster, hp int) float64 {
 func fleeDeath(g *Game, ms []*Monster, hp, turns int) float64 {
 	var foes []foe
 	for _, m := range ms {
-		if m.Speed == SpeedDouble {
+		if m.Speed.fast() {
 			// Its second action is the attack: as a normal one
 			// standing.
 			slow := *m
@@ -407,7 +418,7 @@ func deathDP(g *Game, hp int, foes []foe) float64 {
 			if t < f.first || t > f.last {
 				continue
 			}
-			for range f.m.Speed.actions(g.Turn + t) {
+			for range f.m.Speed.attacks(g.Turn + t) {
 				clear(next)
 				for h, p := range alive {
 					if p == 0 {
@@ -1127,7 +1138,7 @@ func (b *Bot) approach(g *Game, goal func(Point) bool) (string, []string) {
 	}
 	p := g.Player.Add(Directions[args[0]])
 	for _, m := range g.visibleEnemies() {
-		if !m.Dozing && m.Speed != SpeedDouble && chebyshev(m.Pos, g.Player) == 2 && chebyshev(m.Pos, p) == 1 {
+		if !m.Dozing && !m.Speed.fast() && chebyshev(m.Pos, g.Player) == 2 && chebyshev(m.Pos, p) == 1 {
 			return "wait", nil
 		}
 	}

@@ -106,6 +106,9 @@ func (g *Game) hurt(m *Monster, n int) {
 	g.provoke(m)
 	m.HP -= n
 	g.say(fmt.Sprintf("%sに%dのダメージ。", m.Name, n))
+	if m.HP > 0 {
+		g.wounded(m)
+	}
 	if m.HP <= 0 {
 		g.remove(m)
 		g.say(m.Name + "を倒した。")

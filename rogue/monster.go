@@ -15,6 +15,9 @@ const (
 	SpeedNormal
 	// SpeedDouble acts twice a turn.
 	SpeedDouble
+	// SpeedMoveDouble acts twice a turn, but attacks once at most: it
+	// moves fast and hits as a normal one.
+	SpeedMoveDouble
 )
 
 // actions returns how many times a creature of speed s acts in turn.
@@ -22,11 +25,23 @@ func (s Speed) actions(turn int) int {
 	switch s {
 	case SpeedSlow:
 		return turn % 2
-	case SpeedDouble:
+	case SpeedDouble, SpeedMoveDouble:
 		return 2
 	}
 	return 1
 }
+
+// attacks returns how many times a creature of speed s can attack in
+// turn, standing next to its foe.
+func (s Speed) attacks(turn int) int {
+	if s == SpeedMoveDouble {
+		return 1
+	}
+	return s.actions(turn)
+}
+
+// fast says whether s moves twice a turn.
+func (s Speed) fast() bool { return s == SpeedDouble || s == SpeedMoveDouble }
 
 // Monster is a creature on the floor: an enemy, or an ally of the player
 // (the same creature on the other side).
@@ -60,6 +75,8 @@ type Monster struct {
 	// Hunters always know where the player is (the strong monster of the
 	// second wind).
 	Hunter bool
+	// Enraged says whether its anger (AbilityAnger) raised its attack.
+	Enraged bool
 	// EXP is what defeating it gives. An ally has Gained EXP, and its
 	// Level from them.
 	EXP    int
@@ -121,38 +138,42 @@ func (g *Game) monstersAct() {
 			if g.Over != "" || !slices.Contains(g.Monsters, m) {
 				break
 			}
-			g.act(m)
+			if g.act(m) && m.Speed == SpeedMoveDouble {
+				break
+			}
 		}
 	}
 }
 
 // act is one action of m: attack a foe next to it, or step toward where it
-// is heading.
-func (g *Game) act(m *Monster) {
+// is heading. It says whether m attacked.
+func (g *Game) act(m *Monster) bool {
 	if m.Keeper && !m.Angry {
 		g.actKeeper(m)
-		return
+		return false
 	}
 	if m.Dozing {
 		g.stir(m)
-		return
+		return false
 	}
 	if m.Ally {
-		g.actAlly(m)
-		return
+		return g.actAlly(m)
+	}
+	if g.erratic(m) {
+		return false
 	}
 
 	// Attack the player first, then an ally.
 	for _, d := range around {
 		if m.Pos.Add(d) == g.Player && g.clearFrom(m.Pos, d) {
 			g.hitPlayer(m)
-			return
+			return true
 		}
 	}
 	for _, d := range around {
 		if f := g.MonsterAt(m.Pos.Add(d)); f != nil && f.Ally && g.clearFrom(m.Pos, d) {
 			g.hitMonster(m, f)
-			return
+			return true
 		}
 	}
 
@@ -166,20 +187,22 @@ func (g *Game) act(m *Monster) {
 		// Stuck: go somewhere else next time.
 		m.hasTarget = false
 	}
+	return false
 }
 
 // actAlly is one action of an ally: attack an enemy next to it, or follow
-// the player.
-func (g *Game) actAlly(m *Monster) {
+// the player. It says whether the ally attacked.
+func (g *Game) actAlly(m *Monster) bool {
 	for _, d := range around {
 		if f := g.MonsterAt(m.Pos.Add(d)); f != nil && f.hostile() && g.clearFrom(m.Pos, d) {
 			g.hitMonster(m, f)
-			return
+			return true
 		}
 	}
 	if chebyshev(m.Pos, g.Player) > 1 {
 		g.stepToward(m, g.Player)
 	}
+	return false
 }
 
 // wanderTarget returns a random tile of a random room.
@@ -259,7 +282,7 @@ func (g *Game) hitPlayer(m *Monster) {
 		g.say(m.Name + "の攻撃は外れた。")
 		return
 	}
-	n := damage(g.rng, m.Attack, g.Defense(), r.DefenseK)
+	n := g.critical(m, damage(g.rng, m.Attack, g.Defense(), r.DefenseK), true)
 	g.HP -= n
 	g.say(fmt.Sprintf("%sの攻撃。%dのダメージ。", m.Name, n))
 	g.event("hurt %d %s", n, m.Def.ID)
@@ -285,10 +308,13 @@ func (g *Game) hitMonster(a, m *Monster) {
 		}
 		return
 	}
-	n := damage(g.rng, a.Attack, m.Defense, r.DefenseK)
+	n := g.critical(a, damage(g.rng, a.Attack, m.Defense, r.DefenseK), shown)
 	m.HP -= n
 	if shown {
 		g.say(fmt.Sprintf("%sは%sに%dのダメージ。", a.Name, m.Name, n))
+	}
+	if m.HP > 0 {
+		g.wounded(m)
 	}
 	if m.HP <= 0 {
 		g.remove(m)
@@ -344,7 +370,7 @@ func (g *Game) rankUp(m *Monster) {
 	if next == nil {
 		return
 	}
-	m.Def, m.Name, m.Rank, m.Speed = next, next.Name, next.Rank, next.Speed
+	m.Def, m.Name, m.Rank, m.Speed, m.Enraged = next, next.Name, next.Rank, next.Speed, false
 	m.HP = max(m.HP*next.HP/m.MaxHP, 1)
 	m.MaxHP, m.Attack, m.Defense = next.HP, next.Attack, next.Defense
 }

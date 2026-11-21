@@ -523,10 +523,24 @@ floors once the files change.
 				overrides an earlier one.
 	monsters.txt		The monsters, a table.  A family is a glyph
 				(字), a kind of it a rank (ランク, 1 to 4).
+				速度 is 鈍足 (every other turn), 通常, 倍速
+				(twice a turn) or 移動倍速 (twice a turn,
+				but one attack at most).
 				種別 is - for monsters of the floors, 店主
 				for shopkeepers, 番犬 for the guards after
 				a thief: these never appear by themselves,
-				nor rank up.
+				nor rank up.  能力, optional, is its special
+				abilities, separated by spaces (- for
+				none), each with its numbers after colons:
+				  怒り:H:A   at H% of its max HP or below,
+				             its attack becomes A% (once)
+				  痛恨:C:D   C% of its blows are critical,
+				             doing D% of the damage
+				  ふらふら:C  C% of its actions are a step
+				             in a random direction
+				眠り, optional, is the share of the kind
+				asleep on a new floor, a percent (- for a
+				third).
 	monster_table.txt	Which monsters appear on which floors (開始
 				to 終了), by weight (頻度), a table.
 	items.txt		The items, a table.  種類 is the kind of an
