@@ -17,6 +17,13 @@ func TestShoot(t *testing.T) {
 	g.HP, g.MaxHP = 9999, 9999
 	g.Facing = "right"
 	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.PlayerHitRate = 100 })
+	// A row with rock on the right of the room (not a doorway), for the
+	// arrows to fall in the room. (The room comes from the data.)
+	y := r.Y
+	for g.Level.At(Point{r.X + r.W, y}).Walkable() {
+		y++
+	}
+	g.Player = Point{r.X, y}
 	if err := g.Do("shoot", nil); err != nil {
 		t.Fatal(err)
 	}
@@ -33,7 +40,7 @@ func TestShoot(t *testing.T) {
 	if !a.Equipped || g.Turn != 0 {
 		t.Fatalf("equipped %v, turn %d", a.Equipped, g.Turn)
 	}
-	m := place(g, kind("nezumi4"), Point{r.X + 3, r.Y})
+	m := place(g, kind("nezumi4"), Point{r.X + 3, y})
 	m.HP = 999
 	if err := g.Do("shoot", nil); err != nil {
 		t.Fatal(err)
@@ -60,7 +67,9 @@ func TestShoot(t *testing.T) {
 		t.Errorf("inventory %v, items %v", g.Inventory, g.Items)
 	}
 	for _, it := range g.Items {
-		if it.Count != 1 || it.Pos.Y != r.Y || it.Pos.X <= r.X {
+		// (The second falls next to the first: on its row or one
+		// next to it.)
+		if it.Count != 1 || abs(it.Pos.Y-y) > 1 || it.Pos.X <= r.X {
 			t.Errorf("arrow at %v, count %d", it.Pos, it.Count)
 		}
 	}

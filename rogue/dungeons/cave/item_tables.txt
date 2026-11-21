@@ -10,6 +10,7 @@
 床	1	30	kitate	3
 床	1	30	tetsutate	2
 床	1	30	seidou	1
+床	1	30	kintate	1
 床	1	30	kawa	1
 床	1	30	chikara	1
 床	1	30	kaifuku	1
@@ -35,6 +36,7 @@
 よろず	1	30	kitate	2
 よろず	1	30	tetsutate	3
 よろず	1	30	seidou	2
+よろず	1	30	kintate	2
 よろず	1	30	kawa	2
 よろず	1	30	chikara	1
 よろず	1	30	kaifuku	1
@@ -67,6 +69,7 @@
 武具	1	30	kitate	2
 武具	1	30	tetsutate	3
 武具	1	30	seidou	2
+武具	1	30	kintate	2
 武具	1	30	kawa	2
 # The bracelet shop: rarer bracelets.
 腕輪	1	30	chikara	1
