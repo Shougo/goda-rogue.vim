@@ -89,14 +89,33 @@ func TestEquipIdentifies(t *testing.T) {
 	if !g.unknown(b) || strings.Contains(g.Message, "だった。") {
 		t.Fatalf("identified when equipped: %q", g.Message)
 	}
-	// A monster out of sight, within the bracelet's reach.
+	// A monster out of sight, within the bracelet's reach (the player
+	// moved near one, if none is near: the floor comes from the data).
 	reach := b.Def.Strength
-	for i := range g.Level.Tiles {
+	placed := false
+	for i := 0; i < len(g.Level.Tiles) && !placed; i++ {
 		p := Point{i % g.Level.W, i / g.Level.W}
-		if g.Level.At(p).Walkable() && !g.Visible(p) && chebyshev(p, g.Player) <= reach && g.free(p) {
+		if !g.Level.At(p).Walkable() || !g.free(p) {
+			continue
+		}
+		for j := range g.Level.Tiles {
+			q := Point{j % g.Level.W, j / g.Level.W}
+			if q == p || !g.Level.At(q).Walkable() || !g.free(q) || chebyshev(p, q) > reach {
+				continue
+			}
+			from := g.Player
+			g.Player = q
+			if g.Visible(p) {
+				g.Player = from
+				continue
+			}
 			place(g, kind("nezumi1"), p).Dozing = true
+			placed = true
 			break
 		}
+	}
+	if !placed {
+		t.Fatal("no tile out of sight within the reach")
 	}
 	wait(t, g, 1)
 	if g.unknown(b) || !strings.Contains(strings.Join(g.Log, ""), fake+"は気配察知の腕輪だった。") {

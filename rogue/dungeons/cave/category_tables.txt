@@ -5,7 +5,10 @@
 # says which table the items of the floors come from (道具表), shops.txt
 # which table a shop sells from (品表).
 表	開始	終了	種類	頻度
-# The items lying on the floors.
+# The items lying on the floors. Food is about a seventh of them, mostly
+# big onigiri (item_tables.txt): as much fullness as before with fewer
+# items, which leaves room in the inventory (as Shiren 2: food 9%, big
+# onigiri twice as common as onigiri).
 床	1	30	武器	6
 床	1	30	盾	7
 床	1	30	腕輪	4
@@ -14,7 +17,7 @@
 床	1	30	巻物	5
 床	1	30	杖	2
 床	1	30	壺	3
-床	1	30	食料	12
+床	1	30	食料	8
 床	1	30	お金	6
 # The general store sells a bit of everything; deeper, more bracelets,
 # arrows and pots.
