@@ -721,6 +721,9 @@ function! s:draw_float(name, lines, title, highlights, bottom, right) abort
     else
       call nvim_win_set_config(winid, config)
     endif
+    " Not see-through: with 'winblend' (the user's), the map shows in
+    " its empty cells, and wide tiles break its border.
+    call nvim_set_option_value('winblend', 0, #{win: s:floats[a:name]})
     call s:highlight_buffer(buf, a:highlights)
     return
   endif

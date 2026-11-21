@@ -277,6 +277,15 @@ function! s:actions() abort
   call s:check('items on tiles', get(s:floats('^ 持ち物'), 0, #{tiles: 0}).tiles, 1)
   call goda_rogue#do('map')
   call s:check('map on tiles', get(s:floats('^ map $'), 0, #{tiles: 0}).tiles, 1)
+  if has('nvim')
+    " Not see-through, whatever 'winblend' the user gives them.
+    let floats = filter(nvim_list_wins(), {_, w -> nvim_win_get_config(w).relative !=# ''})
+    for winid in floats
+      call setwinvar(winid, '&winblend', 30)
+    endfor
+    call goda_rogue#do('redraw')
+    call s:check('not see-through', map(floats, {_, w -> getwinvar(w, '&winblend')}), [0, 0])
+  endif
   setlocal foldcolumn=0
   call goda_rogue#do('redraw')
   call s:check('items and map', [len(s:item_lines()) > 0, len(s:map_lines()) > 0], [1, 1])
