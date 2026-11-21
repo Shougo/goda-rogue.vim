@@ -124,6 +124,10 @@ type Rules struct {
 	// GoldThrow divides the amount of money thrown into its damage
 	// (rules.txt お金投げ, optional: defaultGoldThrow).
 	GoldThrow int
+	// DropRate is the chance, a percent, that a monster the player kills
+	// drops an item of the floor's item table, unless monsters.txt says
+	// otherwise (rules.txt 落とし物, optional: 0).
+	DropRate int
 }
 
 // MonsterDef is a kind of monster. Kinds of the same glyph are one family,
@@ -146,7 +150,31 @@ type MonsterDef struct {
 	// Asleep is the share of them asleep on a new floor, a percent; -1
 	// for the default (a third).
 	Asleep int
+	// Drop is what it drops when the player kills it (monsters.txt
+	// 落とし物); nil for the dungeon's rule.
+	Drop *Drop
 }
+
+// Drop is what a kind of monster drops when killed, and how often.
+type Drop struct {
+	// What is DropItem, DropMoney, DropNone or the ID of an item.
+	What string
+	// Rate is the chance, a percent.
+	Rate int
+	// file and line are where it is read, for the check of the item.
+	file string
+	line int
+}
+
+// What a monster drops (monsters.txt 落とし物).
+const (
+	// DropItem is an item of the floor's item table.
+	DropItem = "道具"
+	// DropMoney is money, as much as on the floor.
+	DropMoney = "お金"
+	// DropNone is nothing.
+	DropNone = "なし"
+)
 
 // The kinds of monsters that are not of the floors (monsters.txt 種別).
 const (
@@ -472,7 +500,7 @@ func (l *loader) load() {
 		"最大HP", "ちから", "回復ターン", "湧きターン", "最大モンスター数",
 		"風1", "風2", "風3", "防御K", "主の命中", "敵の命中", "成長", "最初の仲間", "強敵ランク差",
 		"持ち物の数", "ひびの段階", "腕輪の傷みやすさ", "満腹度", "腹減りターン", "見つけた罠", "デバッグ",
-		"お金投げ",
+		"お金投げ", "落とし物",
 	})
 	r := &d.Rules
 	r.PlayerHP = l.keyInt("rules.txt", rk, "最大HP", 1)
@@ -499,6 +527,12 @@ func (l *loader) load() {
 	r.GoldThrow = defaultGoldThrow
 	if _, ok := rk["お金投げ"]; ok {
 		r.GoldThrow = l.keyInt("rules.txt", rk, "お金投げ", 1)
+	}
+	if _, ok := rk["落とし物"]; ok {
+		r.DropRate = l.keyInt("rules.txt", rk, "落とし物", 0)
+		if r.DropRate > 100 {
+			l.errorf("rules.txt", rk["落とし物"].n, "落とし物: %d above 100", r.DropRate)
+		}
 	}
 	if ln, ok := rk["見つけた罠"]; !ok {
 		l.errorf("rules.txt", 0, "no %q", "見つけた罠")
@@ -570,6 +604,7 @@ func (l *loader) load() {
 			l.errorf(row.file, row.n, "能力: %v", err)
 		}
 		m.Abilities = as
+		m.Drop = l.drop(row)
 		m.Asleep = -1
 		if v, ok := row.cols["眠り"]; ok && v != "-" {
 			m.Asleep = l.int(row, "眠り", 0)
@@ -721,6 +756,7 @@ func (l *loader) load() {
 	// Shopkeepers and guards are not monsters of the floors.
 	d.MonsterRows = l.appearance("monster_table.txt", func(id string) bool { m := d.Monster(id); return m != nil && m.Kind == "" })
 	l.loadItemTables(d)
+	l.checkDrops(d)
 	if _, err := fs.Stat(l.fsys, "guaranteed_items.txt"); err == nil {
 		for _, row := range l.table("guaranteed_items.txt", "開始", "終了", "ID") {
 			r := FloorRow{ID: row.cols["ID"]}
@@ -981,4 +1017,37 @@ func (d *Dungeon) Shop(id string) *ShopDef {
 		}
 	}
 	return nil
+}
+
+// drop reads the 落とし物 of a row of monsters.txt: - (or no column) for
+// the dungeon's rule, なし, or what and a percent: 道具:20, お金:100, or the
+// ID of an item: onigiri:50.
+func (l *loader) drop(row row) *Drop {
+	v, ok := row.cols["落とし物"]
+	if !ok || v == "-" {
+		return nil
+	}
+	if v == DropNone {
+		return &Drop{What: DropNone}
+	}
+	what, rate, ok := strings.Cut(v, ":")
+	n, err := strconv.Atoi(rate)
+	if !ok || err != nil || n < 1 || n > 100 {
+		l.errorf(row.file, row.n, "落とし物: want -, なし, or what:percent (1 to 100), not %q", v)
+		return nil
+	}
+	// (Items are read later: checkDrops checks the item.)
+	return &Drop{What: what, Rate: n, file: row.file, line: row.n}
+}
+
+// checkDrops checks the items the monsters drop.
+func (l *loader) checkDrops(d *Dungeon) {
+	for _, m := range d.Monsters {
+		if m.Drop == nil || m.Drop.What == DropItem || m.Drop.What == DropMoney || m.Drop.What == DropNone {
+			continue
+		}
+		if it := d.Item(m.Drop.What); it == nil || it.Category == CategoryMoney {
+			l.errorf(m.Drop.file, m.Drop.line, "落とし物: no item %q (want 道具, お金, なし or the ID of an item)", m.Drop.What)
+		}
+	}
 }

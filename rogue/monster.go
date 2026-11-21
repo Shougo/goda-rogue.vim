@@ -338,6 +338,7 @@ func (g *Game) defeated(m *Monster) {
 	if m.Spawned || m.EXP == 0 {
 		return
 	}
+	g.dropFrom(m)
 	g.EXP += m.EXP
 	growth := g.Dungeon.Growth[g.Dungeon.Rules.Growth]
 	for g.PlayerLevel-1 < len(growth) && g.EXP >= growth[g.PlayerLevel-1].EXP {
@@ -399,4 +400,36 @@ func (g *Game) remove(m *Monster) {
 			g.closeShop()
 		}
 	}
+}
+
+// dropFrom is m, killed by the player, dropping an item by chance where
+// it fell: as its kind says (monsters.txt 落とし物), or by the dungeon's
+// rule (an item of the floor's item table).
+func (g *Game) dropFrom(m *Monster) {
+	d := g.Dungeon
+	what, rate := DropItem, d.Rules.DropRate
+	if m.Def.Drop != nil {
+		what, rate = m.Def.Drop.What, m.Def.Drop.Rate
+	}
+	if what == DropNone || rate == 0 || g.rng.IntN(100) >= rate {
+		return
+	}
+	var def *ItemDef
+	switch what {
+	case DropItem:
+		def = d.ItemTable(d.counts(g.Depth).ItemTable).pick(g.rng, d, g.Depth)
+	case DropMoney:
+		for _, it := range d.Items {
+			if it.Category == CategoryMoney {
+				def = it
+				break
+			}
+		}
+	default:
+		def = d.Item(what)
+	}
+	if def == nil {
+		return
+	}
+	g.land(g.newItemOf(g.rng, def, m.Pos), m.Pos)
 }

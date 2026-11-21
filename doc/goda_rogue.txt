@@ -561,7 +561,13 @@ floors once the files change.
 				             hits (H 1) or not (0)
 				眠り, optional, is the share of the kind
 				asleep on a new floor, a percent (- for a
-				third).
+				third).  落とし物, optional, is what it
+				drops when the player kills it, and how
+				often: 道具:P (P% an item of the floor's
+				item table), お金:P, the ID of an item:P,
+				なし, or - (rules.txt 落とし物: the
+				percent of an item of the floor's item
+				table, 0 without it).
 	monster_table.txt	Which monsters appear on which floors (開始
 				to 終了), by weight (頻度), a table.
 	items.txt		The items, a table.  種類 is the kind of an

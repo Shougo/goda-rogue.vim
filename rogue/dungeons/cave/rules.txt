@@ -27,6 +27,9 @@
 成長	普通
 # The ally at the start (empty: none).
 最初の仲間	nezumi1
+# The chance, a percent, that a monster the player kills drops an item of
+# the floor's item table (monsters.txt 落とし物 may say otherwise).
+落とし物	8
 # How many items the player can carry.
 持ち物の数	20
 # How many cracks a bracelet can have: one more breaks it.
