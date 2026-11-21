@@ -1245,6 +1245,50 @@ func (b *Bot) walk(g *Game, goal func(Point) bool) (string, []string) {
 // route finds the nearest tile that goal accepts, as walk does, and
 // returns the first step toward it and how many steps it is away.
 func (b *Bot) route(g *Game, goal func(Point) bool) (Point, int, bool) {
+	// Around the lines of an enemy that charges or pulls, if there is a
+	// way: on one, it reaches the player from afar.
+	if lines := reachLines(g); len(lines) > 0 {
+		if p, n, ok := b.routeAvoiding(g, goal, lines); ok {
+			return p, n, true
+		}
+	}
+	return b.routeAvoiding(g, goal, nil)
+}
+
+// reachLines returns the tiles from where the enemies in sight, awake,
+// would charge or pull the player.
+func reachLines(g *Game) map[Point]bool {
+	var lines map[Point]bool
+	for _, m := range g.visibleEnemies() {
+		if m.Dozing {
+			continue
+		}
+		reach := 0
+		for _, n := range []AbilityName{AbilityCharge, AbilityPull} {
+			if a, ok := m.ability(n); ok {
+				reach = max(reach, a.Values[0])
+			}
+		}
+		for _, d := range around {
+			p := m.Pos
+			for range reach {
+				p = p.Add(d)
+				if _, _, ok := g.lineTo(m.Pos, p, reach); ok {
+					if lines == nil {
+						lines = map[Point]bool{}
+					}
+					lines[p] = true
+				} else if chebyshev(m.Pos, p) > 1 {
+					break
+				}
+			}
+		}
+	}
+	return lines
+}
+
+// routeAvoiding is route, not through the tiles avoid.
+func (b *Bot) routeAvoiding(g *Game, goal func(Point) bool, avoid map[Point]bool) (Point, int, bool) {
 	from := map[Point]Point{g.Player: g.Player}
 	queue := []Point{g.Player}
 	for len(queue) > 0 {
@@ -1261,7 +1305,7 @@ func (b *Bot) route(g *Game, goal func(Point) bool) (Point, int, bool) {
 		for _, name := range clockwise {
 			d := Directions[name]
 			q := p.Add(d)
-			if _, ok := from[q]; ok || !b.passable(g, q) || !g.clearFrom(p, d) {
+			if _, ok := from[q]; ok || avoid[q] || !b.passable(g, q) || !g.clearFrom(p, d) {
 				continue
 			}
 			from[q] = p
