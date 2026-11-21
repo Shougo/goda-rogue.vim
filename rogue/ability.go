@@ -22,6 +22,14 @@ const (
 	// AbilityErratic: a share of its actions (a percent) are a step in a
 	// random direction, even next to the player.
 	AbilityErratic AbilityName = "ふらふら"
+	// AbilityCharge: with the player on one of its lines within a reach
+	// and not next to it, it rushes up, hurts the first creature in the
+	// way (a damage) and blows it away.
+	AbilityCharge AbilityName = "突進"
+	// AbilityPull: with the player on one of its lines within a reach (0:
+	// anywhere in its room) and not next to it, it pulls the player next
+	// to it by a chance (a percent), and then hits it (1) or not (0).
+	AbilityPull AbilityName = "引き寄せ"
 )
 
 // abilityDef is what an ability takes: its numbers, each in a range.
@@ -36,11 +44,16 @@ var abilityDefs = map[AbilityName]abilityDef{
 	AbilityAnger:    {[]string{"HP %", "attack %"}, []int{1, 100}, []int{99, 1000}},
 	AbilityCritical: {[]string{"chance %", "damage %"}, []int{1, 100}, []int{100, 1000}},
 	AbilityErratic:  {[]string{"chance %"}, []int{1}, []int{100}},
+	AbilityCharge:   {[]string{"reach", "damage"}, []int{2, 0}, []int{maxReach, 999}},
+	AbilityPull:     {[]string{"reach", "chance %", "hit"}, []int{0, 1, 0}, []int{maxReach, 100, 1}},
 }
+
+// maxReach is the farthest reach of an ability along a line.
+const maxReach = 20
 
 // abilityNames are the abilities in a fixed order, for the error that
 // lists them.
-var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic}
+var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull}
 
 // Ability is an ability of a kind of monster, with its numbers.
 type Ability struct {
@@ -150,4 +163,149 @@ func (m *Monster) dozes(rng *rand.Rand) bool {
 		return rng.IntN(3) == 0
 	}
 	return rng.IntN(100) < m.Def.Asleep
+}
+
+// lineTo returns the direction from a to b and how far, if b is on one of
+// the eight lines from a, 2 to reach tiles away, with nothing but
+// creatures in between (no rock, no corner of rock).
+func (g *Game) lineTo(a, b Point, reach int) (Point, int, bool) {
+	v := b.Sub(a)
+	n := chebyshev(a, b)
+	if n < 2 || n > reach || v.X != 0 && v.Y != 0 && abs(v.X) != abs(v.Y) {
+		return Point{}, 0, false
+	}
+	d := Point{sign(v.X), sign(v.Y)}
+	for p := a; p != b; p = p.Add(d) {
+		if !g.clearFrom(p, d) || !g.Level.At(p.Add(d)).Walkable() {
+			return Point{}, 0, false
+		}
+	}
+	return d, n, true
+}
+
+// reachAbility uses an ability of m that reaches the player from afar (a
+// charge, a pull); it says whether m did.
+func (g *Game) reachAbility(m *Monster) bool {
+	if a, ok := m.ability(AbilityCharge); ok && g.charge(m, a) {
+		return true
+	}
+	if a, ok := m.ability(AbilityPull); ok && g.pull(m, a) {
+		return true
+	}
+	return false
+}
+
+// charge is m rushing along its line to the player: it stops next to the
+// first creature in the way, hurts it and blows it away.
+func (g *Game) charge(m *Monster, a Ability) bool {
+	d, _, ok := g.lineTo(m.Pos, g.Player, a.Values[0])
+	if !ok {
+		return false
+	}
+	for next := m.Pos.Add(d); next != g.Player && g.MonsterAt(next) == nil; next = m.Pos.Add(d) {
+		m.Pos = next
+	}
+	g.say(m.Name + "が突進してきた！")
+	n := a.Values[1]
+	if f := g.MonsterAt(m.Pos.Add(d)); f != nil {
+		f.Dozing = false
+		f.HP -= n
+		g.say(fmt.Sprintf("%sに%dのダメージ。", f.Name, n))
+		if f.HP <= 0 {
+			g.remove(f)
+			g.say(f.Name + "は倒れた。")
+			return true
+		}
+		g.wounded(f)
+		g.say(f.Name + "は吹き飛ばされた。")
+		g.fling(f, d, false)
+		return true
+	}
+	if g.playerHurt(n, m) {
+		return true
+	}
+	g.say("吹き飛ばされた。")
+	g.flingPlayer(d, m)
+	return true
+}
+
+// pull is m pulling the player next to it: along its line (stopping before
+// a creature in the way), or from anywhere in its room.
+func (g *Game) pull(m *Monster, a Ability) bool {
+	reach, chance, hit := a.Values[0], a.Values[1], a.Values[2] == 1
+	to := g.Player
+	if reach == 0 {
+		i := g.Level.RoomAt(m.Pos)
+		if i < 0 || i != g.Level.RoomAt(g.Player) || chebyshev(m.Pos, g.Player) <= 1 {
+			return false
+		}
+		best := -1
+		for _, d := range around {
+			p := m.Pos.Add(d)
+			if !g.Level.At(p).Walkable() || g.occupied(p) || !g.clearFrom(m.Pos, d) {
+				continue
+			}
+			if n := chebyshev(p, g.Player); best < 0 || n < best {
+				to, best = p, n
+			}
+		}
+		if best < 0 {
+			return false
+		}
+	} else {
+		d, _, ok := g.lineTo(m.Pos, g.Player, reach)
+		if !ok {
+			return false
+		}
+		for next := to.Sub(d); next != m.Pos && !g.occupied(next); next = to.Sub(d) {
+			to = next
+		}
+		if to == g.Player {
+			return false
+		}
+	}
+	if g.rng.IntN(100) >= chance {
+		return false
+	}
+	g.say(m.Name + "に引き寄せられた！")
+	g.shove(to)
+	if hit && g.Over == "" && chebyshev(m.Pos, g.Player) == 1 {
+		g.hitPlayer(m)
+	}
+	return true
+}
+
+// playerHurt hurts the player by n, done by m; it says whether the player
+// fell.
+func (g *Game) playerHurt(n int, m *Monster) bool {
+	g.HP -= n
+	g.say(fmt.Sprintf("%dのダメージ。", n))
+	g.event("hurt %d %s", n, m.Def.ID)
+	if g.HP <= 0 {
+		g.HP = 0
+		g.end(m.Name+"に倒された", false)
+		return true
+	}
+	return false
+}
+
+// flingPlayer sends the player flying by d, up to blowAwayTiles, as m did;
+// hitting a wall or a creature hurts it. A trap where it lands goes off.
+func (g *Game) flingPlayer(d Point, m *Monster) {
+	p := g.Player
+	for range blowAwayTiles {
+		next := p.Add(d)
+		if g.clearFrom(p, d) && g.Level.At(next).Walkable() && !g.occupied(next) {
+			p = next
+			continue
+		}
+		g.say("ぶつかった。")
+		if g.playerHurt(blowAwayDamage, m) {
+			return
+		}
+		break
+	}
+	if p != g.Player {
+		g.shove(p)
+	}
 }

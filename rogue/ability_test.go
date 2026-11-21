@@ -136,3 +136,86 @@ func TestAsleep(t *testing.T) {
 		}
 	}
 }
+
+// TestCharge: a boar on the player's line rushes up, hurts it and blows
+// it away; a monster in between takes it instead; next to the player it
+// only hits.
+func TestCharge(t *testing.T) {
+	g, r := roomGame(t, 12, 1)
+	g.HP, g.MaxHP = 999, 999
+	b := place(g, kind("inoshishi1"), Point{r.X + 4, r.Y})
+	g.act(b)
+	if b.Pos != (Point{r.X + 1, r.Y}) {
+		t.Errorf("the boar at %v, want next to the player at %v", b.Pos, g.Player)
+	}
+	if want := (Point{r.X, r.Y}); g.Player != want {
+		t.Errorf("the player at %v, want %v (against the wall)", g.Player, want)
+	}
+	if want := 999 - 5 - blowAwayDamage; g.HP != want {
+		t.Errorf("HP %d, want %d (the charge and the bump)", g.HP, want)
+	}
+
+	// Blown away from the wall, over the room.
+	g, r = roomGame(t, 12, 1)
+	g.HP, g.MaxHP = 999, 999
+	g.Player = Point{r.X + 3, r.Y}
+	b = place(g, kind("inoshishi1"), Point{r.X, r.Y})
+	g.act(b)
+	if g.Player.X <= r.X+3 {
+		t.Errorf("the player at %v, want blown away to the right", g.Player)
+	}
+
+	// A monster in between takes the charge.
+	g, r = roomGame(t, 12, 1)
+	g.HP, g.MaxHP = 999, 999
+	b = place(g, kind("inoshishi1"), Point{r.X + 5, r.Y})
+	m := place(g, kind("kame4"), Point{r.X + 2, r.Y})
+	hp := m.HP
+	g.act(b)
+	if g.HP != 999 || m.HP >= hp {
+		t.Errorf("HP %d, the turtle %d/%d: want the turtle hurt and not the player", g.HP, m.HP, hp)
+	}
+
+	// Out of reach, it walks.
+	g, r = roomGame(t, 12, 1)
+	b = place(g, kind("inoshishi1"), Point{r.X + 7, r.Y})
+	g.act(b)
+	if chebyshev(b.Pos, g.Player) != 6 || g.Player != (Point{r.X, r.Y}) {
+		t.Errorf("out of reach: the boar at %v, the player at %v; want a step closer", b.Pos, g.Player)
+	}
+}
+
+// TestPull: a frog pulls the player along its line next to it; its rank
+// 4 pulls from anywhere in its room.
+func TestPull(t *testing.T) {
+	g, r := roomGame(t, 6, 3)
+	f := place(g, kind("kaeru1"), Point{r.X + 3, r.Y})
+	g.act(f)
+	if want := (Point{r.X + 2, r.Y}); g.Player != want {
+		t.Errorf("the player at %v, want %v", g.Player, want)
+	}
+
+	// Not on its line: it walks.
+	g, r = roomGame(t, 6, 3)
+	f = place(g, kind("kaeru1"), Point{r.X + 3, r.Y + 1})
+	g.act(f)
+	if g.Player != (Point{r.X, r.Y}) {
+		t.Errorf("off its line: the player at %v, want not pulled", g.Player)
+	}
+
+	// Rank 4: anywhere in its room, by chance.
+	g, r = roomGame(t, 6, 3)
+	f = place(g, kind("kaeru4"), Point{r.X + 5, r.Y + 2})
+	pulled := false
+	for range 100 {
+		g.act(f)
+		if chebyshev(g.Player, f.Pos) == 1 {
+			pulled = true
+			break
+		}
+		f.Pos = Point{r.X + 5, r.Y + 2}
+	}
+	if !pulled {
+		t.Errorf("rank 4 never pulled the player")
+	}
+}

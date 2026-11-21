@@ -800,6 +800,31 @@ func (g *Game) step(d Point, pick bool) bool {
 	return true
 }
 
+// shove puts the player on to, as moved by a monster (pulled, blown away):
+// as a step, but nothing is picked up.
+func (g *Game) shove(to Point) {
+	from := g.Level.RoomAt(g.Player)
+	wasInShop := g.inShop(g.Player)
+	g.Player = to
+	if room := g.Level.RoomAt(to); room != from {
+		g.wake(from)
+		g.wake(room)
+		g.enterHouse()
+		g.enterShop(wasInShop)
+	}
+	g.look()
+	if t := g.TrapAt(to); t != nil {
+		if g.stepOn(t) {
+			return
+		}
+	} else {
+		g.markSafe(to)
+	}
+	if it, ok := g.ItemAt(to); ok {
+		g.say(g.Name(it) + "が落ちている。")
+	}
+}
+
 // dash moves the player by d until something stops it: rock or a monster
 // ahead, an item or the stairs under it, entering or leaving a room, an
 // enemy coming into sight, or getting hurt.

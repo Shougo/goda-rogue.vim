@@ -100,8 +100,14 @@ func (g *Game) blowAway() {
 	}
 	m.Dozing = false
 	g.provoke(m)
-	d := Directions[g.Facing]
 	g.say(m.Name + "を吹き飛ばした。")
+	g.fling(m, Directions[g.Facing], true)
+}
+
+// fling sends m flying by d, up to blowAwayTiles; hitting a wall or another
+// creature on the way hurts it. byPlayer says whether the player (a staff)
+// sent it, who then defeats it.
+func (g *Game) fling(m *Monster, d Point, byPlayer bool) {
 	for range blowAwayTiles {
 		next := m.Pos.Add(d)
 		if g.clearFrom(m.Pos, d) && g.Level.At(next).Walkable() && !g.occupied(next) {
@@ -112,13 +118,16 @@ func (g *Game) blowAway() {
 		g.say(fmt.Sprintf("%sはぶつかって%dのダメージ。", m.Name, blowAwayDamage))
 		if m.HP > 0 {
 			g.wounded(m)
+			return
 		}
-		if m.HP <= 0 {
-			g.remove(m)
-			g.say(m.Name + "を倒した。")
-			if !m.Ally {
-				g.defeated(m)
-			}
+		g.remove(m)
+		if !byPlayer {
+			g.say(m.Name + "は倒れた。")
+			return
+		}
+		g.say(m.Name + "を倒した。")
+		if !m.Ally {
+			g.defeated(m)
 		}
 		return
 	}

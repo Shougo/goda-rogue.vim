@@ -176,6 +176,9 @@ func (g *Game) act(m *Monster) bool {
 			return true
 		}
 	}
+	if g.reachAbility(m) {
+		return true
+	}
 
 	if m.Hunter || g.sees(m.Pos, g.Player) {
 		m.target, m.hasTarget = g.Player, true

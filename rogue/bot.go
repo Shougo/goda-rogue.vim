@@ -328,6 +328,9 @@ func fightDeath(g *Game, ms []*Monster, hp, delay int) float64 {
 // arrival returns the turns m takes to come next to the player (0 next to
 // it), by its distance and speed.
 func arrival(g *Game, m *Monster) int {
+	if reachesNow(g, m) {
+		return 0
+	}
 	steps := chebyshev(m.Pos, g.Player) - 1
 	switch m.Speed {
 	case SpeedDouble, SpeedMoveDouble:
@@ -1417,4 +1420,17 @@ func cause(g *Game) string {
 		return "trap"
 	}
 	return "monster"
+}
+
+// reachesNow says whether m can reach the player from where it is on its
+// next action: a charge or a pull along its line.
+func reachesNow(g *Game, m *Monster) bool {
+	for _, n := range []AbilityName{AbilityCharge, AbilityPull} {
+		if a, ok := m.ability(n); ok && a.Values[0] > 0 {
+			if _, _, ok := g.lineTo(m.Pos, g.Player, a.Values[0]); ok {
+				return true
+			}
+		}
+	}
+	return false
 }

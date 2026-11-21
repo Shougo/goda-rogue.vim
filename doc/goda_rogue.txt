@@ -538,6 +538,17 @@ floors once the files change.
 				             doing D% of the damage
 				  ふらふら:C  C% of its actions are a step
 				             in a random direction
+				  突進:R:D   with the player on one of its
+				             lines, 2 to R tiles away, it
+				             rushes up, does D damage to the
+				             first creature in the way and
+				             blows it away (as the staff)
+				  引き寄せ:R:C:H  with the player on one
+				             of its lines, 2 to R tiles away
+				             (R 0: anywhere in its room),
+				             C% of its actions pull the
+				             player next to it, and then it
+				             hits (H 1) or not (0)
 				眠り, optional, is the share of the kind
 				asleep on a new floor, a percent (- for a
 				third).

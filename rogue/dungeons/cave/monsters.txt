@@ -6,6 +6,12 @@
 #   怒り:H:A   at H% of its max HP or below, its attack becomes A% (once)
 #   痛恨:C:D   C% of its blows are critical, doing D% of the damage
 #   ふらふら:C  C% of its actions are a step in a random direction
+#   突進:R:D   with the player on one of its lines, 2 to R tiles away:
+#              it rushes up, does D damage to the first creature in the
+#              way and blows it away (as the staff)
+#   引き寄せ:R:C:H  with the player on one of its lines, 2 to R tiles
+#              away (R 0: anywhere in its room), C% of its actions pull
+#              the player next to it, and then it hits (H 1) or not (0)
 # 眠り: the share asleep on a new floor, a percent (- for a third).
 # 種別: - for monsters of the floors, 店主 for shopkeepers, 番犬 for the
 # guards that come after a thief (shops.txt); these two never appear on
@@ -51,10 +57,10 @@ hachi1	蜂	蜂	1	6	4	1	4	倍速	-	-	-
 hachi2	蜂	大蜂	2	14	8	3	13	倍速	-	-	-
 hachi3	蜂	殺人蜂	3	28	12	6	40	倍速	-	-	-
 hachi4	蜂	女王蜂	4	54	18	10	120	倍速	-	-	-
-kaeru1	蛙	蛙	1	12	4	2	6	通常	-	-	-
-kaeru2	蛙	大蛙	2	26	8	5	20	通常	-	-	-
-kaeru3	蛙	毒蛙	3	50	12	9	60	通常	-	-	-
-kaeru4	蛙	蛙王	4	92	18	15	180	通常	-	-	-
+kaeru1	蛙	蛙	1	12	4	2	6	通常	-	引き寄せ:3:100:0	-
+kaeru2	蛙	大蛙	2	26	8	5	20	通常	-	引き寄せ:5:25:1	-
+kaeru3	蛙	毒蛙	3	50	12	9	60	通常	-	引き寄せ:10:50:1	-
+kaeru4	蛙	蛙王	4	92	18	15	180	通常	-	引き寄せ:0:25:0	-
 kinoko1	茸	毒茸	1	16	5	2	4	鈍足	-	-	-
 kinoko2	茸	大毒茸	2	34	10	5	13	鈍足	-	-	-
 kinoko3	茸	妖茸	3	64	15	9	40	鈍足	-	-	-
@@ -67,10 +73,10 @@ kame1	亀	石亀	1	20	5	10	5	鈍足	-	-	-
 kame2	亀	岩亀	2	42	10	18	16	鈍足	-	-	-
 kame3	亀	鉄亀	3	78	15	30	50	鈍足	-	-	-
 kame4	亀	玄武	4	140	22	46	150	鈍足	-	-	-
-inoshishi1	猪	猪	1	16	7	4	5	通常	-	-	-
-inoshishi2	猪	大猪	2	34	13	7	16	通常	-	-	-
-inoshishi3	猪	猛猪	3	64	20	12	50	通常	-	-	-
-inoshishi4	猪	猪王	4	116	30	20	150	通常	-	-	-
+inoshishi1	猪	猪	1	16	7	4	5	通常	-	突進:5:5	-
+inoshishi2	猪	大猪	2	34	13	7	16	通常	-	突進:5:10	-
+inoshishi3	猪	猛猪	3	64	20	12	50	通常	-	突進:10:20	-
+inoshishi4	猪	猪王	4	116	30	20	150	通常	-	突進:10:30	-
 yoroi1	鎧	古鎧	1	22	7	7	5	通常	-	-	-
 yoroi2	鎧	鉄鎧	2	44	13	12	16	通常	-	-	-
 yoroi3	鎧	鬼鎧	3	82	20	21	50	通常	-	-	-
