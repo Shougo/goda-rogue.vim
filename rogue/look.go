@@ -24,7 +24,7 @@ type sight struct {
 func (g *Game) lookAround() {
 	var sights []sight
 	for _, m := range g.Monsters {
-		if m.Ally || g.Visible(m.Pos) || g.wears(EffectSenseEnemy) {
+		if m.Ally || g.Visible(m.Pos) || g.sensesMonster(m.Pos) {
 			sights = append(sights, sight{pos: m.Pos, monster: m})
 		}
 	}

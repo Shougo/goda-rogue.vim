@@ -89,10 +89,12 @@ func TestEquipIdentifies(t *testing.T) {
 	if !g.unknown(b) || strings.Contains(g.Message, "だった。") {
 		t.Fatalf("identified when equipped: %q", g.Message)
 	}
-	here := g.Level.RoomAt(g.Player)
-	for i, r := range g.Level.Rooms {
-		if i != here {
-			place(g, kind("nezumi1"), Point{r.X, r.Y})
+	// A monster out of sight, within the bracelet's reach.
+	reach := b.Def.Strength
+	for i := range g.Level.Tiles {
+		p := Point{i % g.Level.W, i / g.Level.W}
+		if g.Level.At(p).Walkable() && !g.Visible(p) && chebyshev(p, g.Player) <= reach && g.free(p) {
+			place(g, kind("nezumi1"), p).Dozing = true
 			break
 		}
 	}

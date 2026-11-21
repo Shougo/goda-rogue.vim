@@ -635,6 +635,16 @@ func (g *Game) wears(e Effect) bool {
 	return b != nil && b.Def.Effect == e
 }
 
+// sensesMonster says whether a bracelet of sensing shows a monster on p:
+// within its reach (items.txt 強さ, in tiles; 0 for the whole floor).
+func (g *Game) sensesMonster(p Point) bool {
+	b := g.equipped(CategoryBracelet)
+	if b == nil || b.Def.Effect != EffectSenseEnemy {
+		return false
+	}
+	return b.Def.Strength == 0 || chebyshev(p, g.Player) <= b.Def.Strength
+}
+
 // CurrentStrength is the strength of the player, with what its bracelet
 // adds.
 func (g *Game) CurrentStrength() int {
@@ -679,7 +689,7 @@ func (g *Game) use(e Effect) {
 // show what the player would not see.
 func (g *Game) sense() {
 	for _, m := range g.Monsters {
-		if m.hostile() && !g.Visible(m.Pos) {
+		if m.hostile() && !g.Visible(m.Pos) && g.sensesMonster(m.Pos) {
 			g.use(EffectSenseEnemy)
 			break
 		}

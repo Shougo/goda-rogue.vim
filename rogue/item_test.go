@@ -335,12 +335,31 @@ func TestSensingBracelets(t *testing.T) {
 		t.Fatalf("%q before", glyph())
 	}
 	command(t, g, carry(g, "kehai", 0), commandEquip)
+	// It shows the monsters within its reach (10 tiles) only.
+	reach := g.equipped(CategoryBracelet).Def.Strength
+	at := func(near bool) {
+		t.Helper()
+		for i := range g.Level.Tiles {
+			p := Point{i % g.Level.W, i / g.Level.W}
+			if d := chebyshev(p, far); g.Level.At(p).Walkable() && d > 1 && (d <= reach) == near {
+				g.Player = p
+				return
+			}
+		}
+		t.Fatalf("no tile near %v", near)
+	}
+	at(false)
+	if glyph() != glyphUnknown {
+		t.Errorf("%q with 気配察知, out of its reach", glyph())
+	}
+	at(true)
 	if glyph() != m.Glyph {
 		t.Errorf("%q with 気配察知", glyph())
 	}
 	if c, _ := g.miniGlyph(far); c != miniMonster {
 		t.Errorf("mini-map %q", c)
 	}
+	g.Player = Point{r.X, r.Y}
 
 	g.Monsters = nil
 	it := item(g, "yakusou", far)

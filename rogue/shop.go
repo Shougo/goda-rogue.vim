@@ -267,12 +267,14 @@ func (g *Game) steal() {
 	g.say("番犬が放たれた！")
 }
 
-// spawnNear puts a monster of def on a free tile a few tiles from the
-// player (guards after a thief), and returns it (nil if there is none).
+// spawnNear puts a monster of def on a tile with no creature a few tiles
+// from the player (guards after a thief), and returns it (nil if there is
+// none). An item there is no obstacle: a shop full of goods has room for
+// the guards.
 func (g *Game) spawnNear(def *MonsterDef) *Monster {
 	for range 200 {
 		p := g.Player.Add(Point{g.rng.IntN(13) - 6, g.rng.IntN(13) - 6})
-		if !g.Level.At(p).Walkable() || !g.free(p) || chebyshev(p, g.Player) < 3 {
+		if !g.Level.At(p).Walkable() || g.occupied(p) || chebyshev(p, g.Player) < 3 {
 			continue
 		}
 		m := newMonster(def)

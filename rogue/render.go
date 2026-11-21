@@ -332,7 +332,7 @@ func (g *Game) miniGlyph(p Point) (byte, string) {
 	if !g.IsSeen(p) && !g.senses(p) {
 		return miniUnknown, ""
 	}
-	if m := g.MonsterAt(p); m != nil && (m.Ally || g.Visible(p) || g.wears(EffectSenseEnemy)) {
+	if m := g.MonsterAt(p); m != nil && (m.Ally || g.Visible(p) || g.sensesMonster(p)) {
 		if m.Ally {
 			return miniMonster, hlAlly + string(rune('0'+m.Rank))
 		}
@@ -377,7 +377,7 @@ func (g *Game) glyph(p Point) (string, string) {
 	if !g.IsSeen(p) && !g.senses(p) {
 		return glyphUnknown, ""
 	}
-	if m := g.MonsterAt(p); m != nil && (m.Ally || g.Visible(p) || g.wears(EffectSenseEnemy)) {
+	if m := g.MonsterAt(p); m != nil && (m.Ally || g.Visible(p) || g.sensesMonster(p)) {
 		if m.Ally {
 			return m.Glyph, hlAlly + string(rune('0'+m.Rank))
 		}
@@ -407,7 +407,7 @@ func (g *Game) glyph(p Point) (string, string) {
 // senses says whether a bracelet shows what is at p on a tile the player
 // has not seen: a monster, or an item.
 func (g *Game) senses(p Point) bool {
-	if g.wears(EffectSenseEnemy) && g.MonsterAt(p) != nil {
+	if g.sensesMonster(p) && g.MonsterAt(p) != nil {
 		return true
 	}
 	if g.wears(EffectSenseItem) {

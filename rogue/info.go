@@ -16,7 +16,7 @@ const promptInfo = "info"
 var effectTexts = map[Effect]string{
 	EffectStrength:   "ちからが %d 上がる。",
 	EffectRegen:      "HP の回復が 2 倍速くなる（お腹も 2 倍速く減る）。",
-	EffectSenseEnemy: "フロアの敵の居場所が分かる。",
+	EffectSenseEnemy: "%d マス以内の敵の居場所が分かる。",
 	EffectSenseItem:  "フロアの道具の場所が分かる。",
 	EffectHeal:       "HP が %d 回復する。HP が満タンなら最大 HP が上がる。",
 	EffectLight:      "フロア全体が明るくなり、地形と道具と敵が見える。",
@@ -56,6 +56,9 @@ func effectText(def *ItemDef) string {
 	}
 	if def.Category == CategoryPot {
 		return t
+	}
+	if def.Effect == EffectSenseEnemy && def.Strength == 0 {
+		t = "フロアの敵の居場所が分かる。"
 	}
 	return usePrefixes[def.Category] + withStrength(t, def.Strength)
 }

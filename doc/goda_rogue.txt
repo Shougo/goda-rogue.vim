@@ -559,7 +559,9 @@ floors once the files change.
 				item, which decides what it can do: 武器 盾
 				腕輪 矢 草 巻物 杖 壺 食料 お金.  強さ is
 				the strength of a weapon or a shield, and
-				how much the effect of another item does.
+				how much the effect of another item does
+				(of 気配察知, its reach in tiles: 0 for
+				the whole floor).
 				効果 is what an item does (- for nothing),
 				by its kind (the comments of the built-in
 				items.txt tell what each does):
