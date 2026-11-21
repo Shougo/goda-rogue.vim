@@ -648,11 +648,15 @@ func (g *Game) sensesMonster(p Point) bool {
 // CurrentStrength is the strength of the player, with what its bracelet
 // adds.
 func (g *Game) CurrentStrength() int {
-	s := g.Strength
+	return g.Strength + g.braceletStrength()
+}
+
+// braceletStrength is what the bracelet worn adds to the strength.
+func (g *Game) braceletStrength() int {
 	if b := g.equipped(CategoryBracelet); b != nil && b.Def.Effect == EffectStrength {
-		s += b.Def.Strength
+		return b.Def.Strength
 	}
-	return s
+	return 0
 }
 
 // Attack is the attack of the player: its level and strength, and its

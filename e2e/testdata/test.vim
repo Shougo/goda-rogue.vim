@@ -121,7 +121,7 @@ function! s:start() abort
     call s:check('tiles of ' . lnum, strchars(getline(lnum)), tiles)
     call s:check('width of ' . lnum, strdisplaywidth(getline(lnum)), tiles * 2)
   endfor
-  call s:check('status', s:status() =~# '^攻撃 9  防御 0  ちから 8  ターン 0（この階 0）  歩数 0  時間 0:00:0\d  向き ↓  シード e2e$', 1)
+  call s:check('status', s:status() =~# '^攻撃 9  防御 0  ちから 8/8  ターン 0（この階 0）  歩数 0  時間 0:00:0\d  向き ↓  シード e2e$', 1)
   call s:check('message', s:messages(), ['1F に着いた。'])
 
   call s:check('cursor', s:cursor_char(), '主')

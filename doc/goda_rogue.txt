@@ -478,7 +478,8 @@ The background of the tile the player faces (and attacks) is
 The top line shows what matters all the time: the floor, the level, HP
 with a bar, the fullness, and the gold.  Then the window shows the part of the floor
 around the player that fits.  Under the map are the status line (the
-attack, the defense and the strength, the turn and the turns on this
+attack, the defense and the strength (now / max: poison lowers it
+under its max), the turn and the turns on this
 floor, the steps, the play time (as of the last action), the direction
 the player faces as an arrow, the seed, and the turns until the next
 wind once it has blown) and the last three messages, those of the

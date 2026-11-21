@@ -114,8 +114,11 @@ func TestTraps(t *testing.T) {
 			return ""
 		}},
 		{"dokuya", func(g *Game, _ Point) string {
-			if g.HP != 95 || g.Strength != 7 {
+			if g.HP != 95 || g.Strength != 7 || g.MaxStrength != 8 {
 				return "not poisoned"
+			}
+			if !strings.Contains(g.Status(), "  ちから 7/8  ") {
+				return "status " + g.Status()
 			}
 			return ""
 		}},

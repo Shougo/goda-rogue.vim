@@ -46,7 +46,9 @@ type Game struct {
 	// The player.
 	HP, MaxHP   int
 	PlayerLevel int
-	Strength    int
+	// Strength is the strength of the player now, MaxStrength what it
+	// comes back to (poison lowers the first).
+	Strength, MaxStrength int
 	// regen counts the turns toward the next HP restored.
 	regen int
 	// Fullness is how full the player is, up to the rule; hunger counts
@@ -136,7 +138,7 @@ func NewGame(d *Dungeon, seed string) *Game {
 	r := d.Rules
 	g := &Game{
 		Dungeon: d, Seed: seed, Facing: "down",
-		HP: r.PlayerHP, MaxHP: r.PlayerHP, PlayerLevel: 1, Strength: r.Strength,
+		HP: r.PlayerHP, MaxHP: r.PlayerHP, PlayerLevel: 1, Strength: r.Strength, MaxStrength: r.Strength,
 		Fullness:   r.Fullness,
 		rng:        rand.New(rand.NewPCG(seedHash(d, seed), math.MaxUint64)),
 		Started:    time.Now(),
@@ -880,8 +882,8 @@ func (g *Game) visibleEnemies() []*Monster {
 
 // Status is the status line, under the map.
 func (g *Game) Status() string {
-	s := fmt.Sprintf("攻撃 %d  防御 %d  ちから %d  ターン %d（この階 %d）  歩数 %d  時間 %s  向き %s  シード %s",
-		g.Attack(), g.Defense(), g.CurrentStrength(), g.Turn, g.FloorTurns, g.Steps,
+	s := fmt.Sprintf("攻撃 %d  防御 %d  ちから %d/%d  ターン %d（この階 %d）  歩数 %d  時間 %s  向き %s  シード %s",
+		g.Attack(), g.Defense(), g.CurrentStrength(), g.MaxStrength+g.braceletStrength(), g.Turn, g.FloorTurns, g.Steps,
 		playTime(g.PlayTime()), directionArrows[g.Facing], g.Seed)
 	if w := g.Dungeon.Rules.WindTurns; g.Wind > 0 && g.Wind < len(w) {
 		s += fmt.Sprintf("  次の風まで %d", w[g.Wind]-g.FloorTurns)

@@ -10,7 +10,8 @@
 #     道具感知  shows the items of the floor
 #   草, drunk:
 #     HP回復    restores 強さ HP, or raises the max HP if it is full
-#     ちから    adds 強さ to the strength
+#     ちから    under the max strength, restores 強さ of the strength
+#               (not above the max); at it, adds 強さ to both
 #   巻物, read:
 #     あかり    lights the floor: its map, items and monsters
 #     識別      identifies an item (nothing to identify yet)

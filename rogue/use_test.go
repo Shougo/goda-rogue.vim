@@ -40,10 +40,17 @@ func TestGrass(t *testing.T) {
 	if g.MaxHP != 103 {
 		t.Errorf("max HP %d", g.MaxHP)
 	}
+	// At its max, both go up.
 	s := g.Strength
 	use(t, g, "chikarakusa")
-	if g.Strength != s+1 {
-		t.Errorf("strength %d", g.Strength)
+	if g.Strength != s+1 || g.MaxStrength != s+1 || !strings.Contains(g.Message, "ちからが1上がった。") {
+		t.Errorf("strength %d/%d, message %q", g.Strength, g.MaxStrength, g.Message)
+	}
+	// Under it, the strength comes back only.
+	g.Strength -= 2
+	use(t, g, "chikarakusa")
+	if g.Strength != s || g.MaxStrength != s+1 || !strings.Contains(g.Message, "ちからが1回復した。") {
+		t.Errorf("poisoned: strength %d/%d, want %d/%d; message %q", g.Strength, g.MaxStrength, s, s+1, g.Message)
 	}
 }
 

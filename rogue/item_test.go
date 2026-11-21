@@ -287,7 +287,7 @@ func TestBracelets(t *testing.T) {
 	if g.CurrentStrength() != base+3 || g.Attack() <= attack {
 		t.Errorf("strength %d, attack %d with the bracelet", g.CurrentStrength(), g.Attack())
 	}
-	if !strings.Contains(g.Status(), fmt.Sprintf("  ちから %d  ", base+3)) {
+	if !strings.Contains(g.Status(), fmt.Sprintf("  ちから %d/%d  ", base+3, g.MaxStrength+3)) {
 		t.Errorf("status %q", g.Status())
 	}
 	if g.Entry(power) != "腕 E 力の腕輪" {

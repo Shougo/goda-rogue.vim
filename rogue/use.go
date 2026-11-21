@@ -47,6 +47,15 @@ func (g *Game) useItem(it *Item) {
 		g.HP += healed
 		g.say(fmt.Sprintf("HPが%d回復した。", healed))
 	case EffectStrength:
+		// Under its max, the strength comes back (not above it); at its
+		// max, both go up (as Shiren).
+		if g.Strength < g.MaxStrength {
+			up := min(n, g.MaxStrength-g.Strength)
+			g.Strength += up
+			g.say(fmt.Sprintf("ちからが%d回復した。", up))
+			return
+		}
+		g.MaxStrength += n
 		g.Strength += n
 		g.say(fmt.Sprintf("ちからが%d上がった。", n))
 	case EffectLight:
