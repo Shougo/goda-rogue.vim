@@ -193,8 +193,12 @@ func (g *Game) act(m *Monster) bool {
 	return false
 }
 
-// actAlly is one action of an ally: attack an enemy next to it, or follow
-// the player. It says whether the ally attacked.
+// allyReach is how far from the player an ally goes to fight an enemy.
+const allyReach = 5
+
+// actAlly is one action of an ally: attack an enemy next to it, go for one
+// it sees near the player, or follow the player. It says whether the ally
+// attacked.
 func (g *Game) actAlly(m *Monster) bool {
 	for _, d := range around {
 		if f := g.MonsterAt(m.Pos.Add(d)); f != nil && f.hostile() && g.clearFrom(m.Pos, d) {
@@ -202,10 +206,29 @@ func (g *Game) actAlly(m *Monster) bool {
 			return true
 		}
 	}
+	if f := g.allyTarget(m); f != nil && g.stepToward(m, f.Pos) {
+		return false
+	}
 	if chebyshev(m.Pos, g.Player) > 1 {
 		g.stepToward(m, g.Player)
 	}
 	return false
+}
+
+// allyTarget returns the enemy the ally m goes for: the nearest awake one
+// it sees, not far from the player (it stays near the player, and lets
+// sleeping ones sleep).
+func (g *Game) allyTarget(m *Monster) *Monster {
+	var best *Monster
+	for _, f := range g.Monsters {
+		if !f.hostile() || f.Dozing || chebyshev(f.Pos, g.Player) > allyReach || !g.sees(m.Pos, f.Pos) {
+			continue
+		}
+		if best == nil || chebyshev(f.Pos, m.Pos) < chebyshev(best.Pos, m.Pos) {
+			best = f
+		}
+	}
+	return best
 }
 
 // wanderTarget returns a random tile of a random room.
