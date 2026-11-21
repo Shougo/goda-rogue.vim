@@ -494,7 +494,17 @@ function! s:draw(screen) abort
   setlocal nomodifiable
 
   call s:highlight_buffer(bufnr('%'), a:screen.highlights)
+  " The map fits in the window: no horizontal scroll for the cursor near
+  " its edge (the user's 'sidescrolloff', which a :set also gives this
+  " window), and the lines from their start (the status line is longer
+  " than the window).
+  if &l:sidescrolloff != 0
+    setlocal sidescrolloff=0
+  endif
   call cursor(a:screen.cursor[0], a:screen.cursor[1])
+  if winsaveview().leftcol != 0
+    call winrestview(#{leftcol: 0})
+  endif
 
   call s:draw_floats(a:screen)
 

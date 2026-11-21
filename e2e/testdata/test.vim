@@ -125,6 +125,12 @@ function! s:start() abort
   call s:check('message', s:messages(), ['1F に着いた。'])
 
   call s:check('cursor', s:cursor_char(), '主')
+  " No horizontal scroll for the user's 'sidescrolloff': the long status
+  " line would be cut.
+  set sidescrolloff=999
+  call goda_rogue#do('redraw')
+  call s:check('no side scroll', [&l:sidescrolloff, winsaveview().leftcol], [0, 0])
+  set sidescrolloff=0
   call s:check('player highlight',
         \ filter(s:highlights(line('.')), {_, h -> h[0] == col('.')}),
         \ [[col('.'), col('.') + 3, 'GodaRoguePlayer']])
