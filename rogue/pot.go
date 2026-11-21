@@ -49,7 +49,7 @@ func (g *Game) askPutIn(i int) bool {
 		g.say(g.Name(pot) + "はいっぱいだ。")
 		return false
 	}
-	p := &Prompt{Title: g.Name(pot) + "に入れる", kind: promptPutIn, item: i}
+	p := &Prompt{Title: g.Name(pot) + "に入れる", Multi: true, kind: promptPutIn, item: i}
 	// Not the goods not paid for: in the pot, they would be the
 	// player's.
 	for j, it := range g.Inventory {

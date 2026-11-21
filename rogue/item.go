@@ -5,6 +5,7 @@ import (
 	"math/rand/v2"
 	"slices"
 	"strconv"
+	"strings"
 )
 
 // Category is what an item is; it decides what the item can do.
@@ -164,6 +165,9 @@ func rollUpgrade(rng *rand.Rand) int {
 type Prompt struct {
 	Title   string   `json:"title"`
 	Choices []string `json:"choices"`
+	// Multi says whether several choices may be chosen at once (the
+	// action "choose" with them separated by commas: "0,2,5").
+	Multi bool `json:"multi,omitempty"`
 
 	// What the choice is for: the inventory, what to do with the item at
 	// index item, or which item to identify (items are the indexes of
@@ -171,6 +175,38 @@ type Prompt struct {
 	kind  string
 	item  int
 	items []int
+}
+
+// chooseMany answers the prompt p with the choices of arg, separated by
+// commas: the items are put in the pot one by one, a turn each, until it
+// is full.
+func (g *Game) chooseMany(p *Prompt, arg string) (bool, error) {
+	var its []*Item
+	for _, f := range strings.Split(arg, ",") {
+		n, err := strconv.Atoi(strings.TrimSpace(f))
+		if err != nil || n < 0 || n >= len(p.Choices) {
+			return false, fmt.Errorf("choose: no choice %q", f)
+		}
+		if it := g.Inventory[p.items[n]]; !slices.Contains(its, it) {
+			its = append(its, it)
+		}
+	}
+	g.Prompt = nil
+	pot := g.Inventory[p.item]
+	for i, it := range its {
+		if len(pot.Contents) >= pot.Charges {
+			g.say(g.Name(pot) + "はいっぱいだ。")
+			return i > 0, nil
+		}
+		if i > 0 {
+			g.endTurn(false)
+			if g.Over != "" || !slices.Contains(g.Inventory, pot) || !slices.Contains(g.Inventory, it) {
+				return false, nil
+			}
+		}
+		g.putIn(pot, it)
+	}
+	return true, nil
 }
 
 // The kinds of prompts.
@@ -433,6 +469,9 @@ func (g *Game) choose(arg string) (bool, error) {
 	p := g.Prompt
 	if p == nil {
 		return false, fmt.Errorf("choose: nothing to choose")
+	}
+	if p.Multi && strings.Contains(arg, ",") {
+		return g.chooseMany(p, arg)
 	}
 	n, err := strconv.Atoi(arg)
 	if err != nil || n < 0 || n >= len(p.Choices) {

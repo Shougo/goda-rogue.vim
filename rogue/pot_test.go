@@ -300,3 +300,39 @@ func TestSeals(t *testing.T) {
 		t.Errorf("fullness %d", g.Fullness)
 	}
 }
+
+// TestPutInMany: several items chosen at once (commas) go in one by one,
+// a turn each, until the pot is full.
+func TestPutInMany(t *testing.T) {
+	g, _ := roomGame(t, 4, 3)
+	p := pot(g, "hozon", 2)
+	a := carry(g, "yakusou", 0)
+	b := carry(g, "otogiri", 0)
+	c := carry(g, "onigiri", 0)
+	command(t, g, p, commandPutIn)
+	if g.Prompt == nil || !g.Prompt.Multi {
+		t.Fatalf("prompt %+v: want several choices", g.Prompt)
+	}
+	idx := func(it *Item) string { return fmt.Sprint(slices.Index(g.Prompt.Choices, g.Entry(it))) }
+	turn := g.Turn
+	arg := idx(a) + "," + idx(b) + "," + idx(c)
+	if err := g.Do("choose", []string{arg}); err != nil {
+		t.Fatal(err)
+	}
+	if len(p.Contents) != 2 || p.Contents[0] != a || p.Contents[1] != b {
+		t.Errorf("contents %v", p.Contents)
+	}
+	if !slices.Contains(g.Inventory, c) || !strings.Contains(g.Message, "いっぱいだ") {
+		t.Errorf("the third: inventory %v, message %q", g.Inventory, g.Message)
+	}
+	if g.Turn != turn+2 {
+		t.Errorf("turns %d, want 2", g.Turn-turn)
+	}
+
+	// A choice out of range is an error, and nothing goes in.
+	q := pot(g, "hozon", 3)
+	command(t, g, q, commandPutIn)
+	if err := g.Do("choose", []string{"0,99"}); err == nil || len(q.Contents) != 0 {
+		t.Errorf("error %v, contents %v", err, q.Contents)
+	}
+}

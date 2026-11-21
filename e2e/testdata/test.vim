@@ -381,6 +381,23 @@ function! s:debug() abort
   call s:check('debug menu', get(s:asked, 'title', ''), 'デバッグ')
   call s:answer(index(s:asked.choices, '1000G 得る') + 1)
   call s:check('debug gold', getline(1) =~# '1000G$', 1)
+
+  " Several items put in a pot at once: the prompt takes a list.
+  call goda_rogue#do('debug', 'item', 'hozon')
+  call goda_rogue#do('debug', 'item', 'yakusou')
+  call goda_rogue#do('debug', 'item', 'otogiri')
+  " (Unidentified: known by their icons.)
+  call goda_rogue#do('inventory')
+  call s:answer(match(s:asked.choices, '^壺') + 1)
+  call s:answer(index(s:asked.choices, '入れる') + 1)
+  call s:check('put in many', get(s:asked, 'multi', v:false), v:true)
+  let grasses = filter(range(1, len(s:asked.choices)), {_, i -> s:asked.choices[i - 1] =~# '^草'})
+  call s:check('grasses', len(grasses), 2)
+  call s:answer(grasses)
+  call goda_rogue#do('inventory')
+  call s:check('put in', filter(copy(s:asked.choices), {_, c -> c =~# '^草\|^壺'}),
+        \ filter(copy(s:asked.choices), {_, c -> c =~# '^壺.*【草草】$'}))
+  call goda_rogue#do('cancel')
   unlet g:goda_rogue#prompt_func
   unlet g:goda_rogue#debug
 endfunction

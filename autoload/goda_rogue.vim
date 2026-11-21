@@ -520,8 +520,49 @@ let s:prompt = -1
 
 function! s:ask(prompt) abort
   let winid = win_getid()
+  if get(a:prompt, 'multi', v:false)
+    call s:select_many(a:prompt.title, a:prompt.choices,
+          \ {idx -> goda_rogue#_answer(winid, idx)})
+    return
+  endif
   call s:select(a:prompt.title, a:prompt.choices,
         \ {idx -> goda_rogue#_answer(winid, idx)})
+endfunction
+
+" Ask to choose some of {choices}: their numbers separated by commas
+" ("1,3,4"), typed on the command line under the list (any selection UI
+" chooses one only).  {callback} gets the choices, from 1, as a |List| (a
+" Number from g:goda_rogue#prompt_func choosing one; 0 or [] for none).
+function! s:select_many(title, choices, callback) abort
+  let s:on_select = a:callback
+  if !empty(get(g:, 'goda_rogue#prompt_func', ''))
+    call call(g:goda_rogue#prompt_func,
+          \ [#{title: a:title, choices: a:choices, multi: v:true},
+          \ {idx -> s:selected(idx)}])
+    return
+  endif
+  call s:close_prompt()
+  " Once the current action is over: input() does not wait for an answer
+  " inside win_execute().
+  call timer_start(0, {-> s:input_many(a:title, a:choices)})
+endfunction
+
+function! s:input_many(title, choices) abort
+  redraw
+  let width = len(len(a:choices))
+  let lines = [a:title]
+  for i in range(len(a:choices))
+    call add(lines, printf('%' . width . 'd: %s', i + 1, a:choices[i]))
+  endfor
+  let answer = input(join(lines, "\n") . "\n番号（カンマで区切って複数）: ")
+  let idx = []
+  for f in split(answer, '\s*,\s*')
+    let n = str2nr(trim(f))
+    if n >= 1 && n <= len(a:choices) && index(idx, n) < 0
+      call add(idx, n)
+    endif
+  endfor
+  call s:selected(idx)
 endfunction
 
 " Ask to choose one of {choices} with the selection UI; {callback} gets the
@@ -569,7 +610,7 @@ function! goda_rogue#_selected(idx) abort
 endfunction
 
 function! s:selected(idx) abort
-  if a:idx == -2
+  if type(a:idx) == v:t_number && a:idx == -2
     " A popup closed by the game: no answer.
     return
   endif
@@ -587,10 +628,13 @@ function! s:close_prompt() abort
 endfunction
 
 " Answer the prompt shown in the window {winid} with the choice {idx}, from
-" 1 (0 or less to cancel).
+" 1 (0 or less to cancel), or the choices of the |List| {idx} ([] to
+" cancel).
 function! goda_rogue#_answer(winid, idx) abort
-  let cmd = a:idx > 0
-        \ ? printf('call goda_rogue#do("choose", "%d")', a:idx - 1)
+  let idx = type(a:idx) == v:t_list ? a:idx : a:idx > 0 ? [a:idx] : []
+  let cmd = !empty(idx)
+        \ ? printf('call goda_rogue#do("choose", "%s")',
+        \   join(map(copy(idx), 'v:val - 1'), ','))
         \ : 'call goda_rogue#do("cancel")'
   call win_execute(a:winid, cmd)
 endfunction
