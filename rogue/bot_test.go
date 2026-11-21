@@ -144,18 +144,23 @@ func TestBotDanger(t *testing.T) {
 
 	// Against the wall, the dragon would not fly: no staff.
 	b.plan = nil
-	g.Player = Point{r.X + r.W - 2, r.Y + 1}
-	m.Pos = Point{r.X + r.W - 1, r.Y + 1}
+	// A row with rock on the right of the room (not a doorway).
+	y := r.Y + 1
+	for g.Level.At(Point{r.X + r.W, y}).Walkable() {
+		y++
+	}
+	g.Player = Point{r.X + r.W - 2, y}
+	m.Pos = Point{r.X + r.W - 1, y}
 	if n := blowAwayFlight(g, m); n != 0 {
 		t.Fatalf("flight against the wall: %d", n)
 	}
 	if a, _ := b.Next(g); a == "inventory" && len(b.plan) == 2 && b.plan[1].label == commandWave {
 		t.Fatalf("waved at a dragon against the wall: %+v", b.plan)
 	}
-	g.Player = Point{r.X + 1, r.Y + 1}
-	m.Pos = Point{r.X + 2, r.Y + 1}
+	g.Player = Point{r.X + 1, y}
+	m.Pos = Point{r.X + 2, y}
 	// (The room is the first big enough on the floors of the cave: its
-	// width changes with the data.)
+	// width and doorways change with the data.)
 	if n, want := blowAwayFlight(g, m), min(r.W-3, blowAwayTiles); n != want {
 		t.Fatalf("flight across the room: %d, want %d", n, want)
 	}
@@ -163,7 +168,7 @@ func TestBotDanger(t *testing.T) {
 	// No staff: to the stairs, away from it.
 	b.plan = nil
 	g.Inventory = nil
-	g.Stairs = Point{r.X, r.Y + 1}
+	g.Stairs = Point{r.X, y}
 	for i := range g.Seen {
 		g.Seen[i] = true
 	}
