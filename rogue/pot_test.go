@@ -105,7 +105,7 @@ func TestUseInPot(t *testing.T) {
 
 func TestSynthesis(t *testing.T) {
 	g, _ := roomGame(t, 4, 3)
-	p := pot(g, "gousei", 3)
+	p := pot(g, "gousei", 4)
 	base := carry(g, "katana", 1)
 	other := carry(g, "kaishin", 2)
 	other.Seals = []string{"会", "必"}
@@ -138,6 +138,14 @@ func TestSynthesis(t *testing.T) {
 	}
 	if g.describe(base) != "カタナ+3【会必攻反】" {
 		t.Errorf("label %q", g.describe(base))
+	}
+	// Four items went in, two merged: the pot is full.
+	if n := p.Charges - len(p.Contents); n != 0 {
+		t.Errorf("room for %d more, want 0", n)
+	}
+	command(t, g, p, commandPutIn)
+	if g.Prompt != nil || !strings.Contains(g.Message, "いっぱいだ") {
+		t.Errorf("a full pot: prompt %+v, message %q", g.Prompt, g.Message)
 	}
 
 	// Nothing comes out of it, nor is used in it.
@@ -216,6 +224,9 @@ func TestMendBracelet(t *testing.T) {
 	chooseLabel(t, g, g.Entry(other))
 	if b.Cracks != 0 || len(p.Contents) != 1 || !strings.Contains(g.Message, "ひびが直った") {
 		t.Errorf("cracks %d, contents %d, message %q", b.Cracks, len(p.Contents), g.Message)
+	}
+	if n := p.Charges - len(p.Contents); n != 1 {
+		t.Errorf("room for %d more, want 1 (two of 3 taken)", n)
 	}
 }
 

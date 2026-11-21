@@ -318,7 +318,8 @@ inventory                                               *goda-rogue-inventory*
 		(出す), and in a pot of keeping (保存の壺) also used or
 		thrown where it is.  A pot of synthesis (合成の壺) gives
 		nothing back: a weapon or a shield put in it first gets
-		the seals and upgrades of another of its kind.  A
+		the seals and upgrades of another of its kind; every item
+		put in takes room, the merged ones too.  A
 		material (an item with a seal, as a grass) is not
 		merged in it: mixed synthesis (異種合成) is a monster's,
 		as in Shiren.

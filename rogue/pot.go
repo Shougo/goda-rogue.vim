@@ -77,6 +77,9 @@ func (g *Game) putIn(pot, it *Item) {
 	if pot.Def.Effect == EffectSynthesis {
 		for _, base := range pot.Contents {
 			if g.merge(base, it, false) {
+				// What is merged takes its room all the same: two
+				// items merged into one take two.
+				pot.Charges--
 				return
 			}
 		}
