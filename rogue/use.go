@@ -26,6 +26,7 @@ func (g *Game) useItem(it *Item) {
 			return
 		}
 		it.Charges--
+		it.Waved++
 	case CategoryFood:
 		g.say(name + "を食べた。")
 	}

@@ -51,7 +51,8 @@ its effect shows while it is worn (at once for one that senses, at the
 first blow for one of strength).  A scroll of identification tells it
 too, and also the upgrade value of a weapon or a shield (shown once it
 is equipped too; until then the weapon or the shield has a "?": 木刀?)
-and the charges of a staff.
+and the charges of a staff (until then they show as [?], or as how many
+times the player waved it: [-2]).
 
                                                            *goda-rogue-floors*
 Some floors are special: one big room; a maze of corridors, with things

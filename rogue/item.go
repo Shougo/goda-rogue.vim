@@ -47,8 +47,9 @@ type Item struct {
 	Equipped bool
 	// Cracks are the cracks of a bracelet.
 	Cracks int
-	// Charges are how many more times a staff can be waved.
-	Charges int
+	// Charges are how many more times a staff can be waved; Waved how
+	// many times the player waved it (shown while Charges are unknown).
+	Charges, Waved int
 	// Count is how many arrows it is.
 	Count int
 	// ForSale says whether it belongs to the shop: lying there, or
@@ -122,9 +123,13 @@ func (g *Game) describe(it *Item) string {
 	case it.Def.Category == CategoryArrow:
 		s += fmt.Sprintf("[%d]", it.Count)
 	case it.Def.Category == CategoryStaff && g.identified[it.Def.ID]:
-		if it.Known {
+		switch {
+		case it.Known:
 			s += fmt.Sprintf("[%d]", it.Charges)
-		} else {
+		case it.Waved > 0:
+			// The charges unknown, the waves counted: "[-2]".
+			s += fmt.Sprintf("[-%d]", it.Waved)
+		default:
 			s += "[?]"
 		}
 	}

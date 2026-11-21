@@ -122,8 +122,25 @@ func TestStaffCharges(t *testing.T) {
 	if l := g.Label(staff); l != "杖 "+g.fakeNames["fukitobashi"]+"?" {
 		t.Errorf("label %q", l)
 	}
+	// Waving it tells what it is; its charges stay unknown, the waves
+	// are counted.
 	command(t, g, staff, commandWave)
-	if l := g.Label(staff); l != "杖 吹き飛ばしの杖[?]" {
+	if l := g.Label(staff); l != "杖 吹き飛ばしの杖[-1]" {
+		t.Errorf("label %q", l)
+	}
+	command(t, g, staff, commandWave)
+	if l := g.Label(staff); l != "杖 吹き飛ばしの杖[-2]" {
+		t.Errorf("label %q", l)
+	}
+	// Another one of the kind, not waved yet.
+	other := carry(g, "fukitobashi", 0)
+	other.Known = false
+	if l := g.Label(other); l != "杖 吹き飛ばしの杖[?]" {
+		t.Errorf("label %q", l)
+	}
+	// Known, the charges show.
+	staff.Known = true
+	if l := g.Label(staff); l != "杖 吹き飛ばしの杖[1]" {
 		t.Errorf("label %q", l)
 	}
 }
