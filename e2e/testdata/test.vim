@@ -51,22 +51,29 @@ function! s:float_lines(pattern) abort
   return get(s:floats(a:pattern), 0, #{lines: []}).lines
 endfunction
 
-" The windows beside the game whose titles match {pattern}: their titles and
-" lines.
+" The windows beside the game whose titles match {pattern}: their titles,
+" lines, and whether they cover whole tiles of the map (from a column where
+" a tile starts, an even number of cells wide, the border included).
 function! s:floats(pattern) abort
   let floats = []
+  let info = getwininfo(win_getid())[0]
+  let shift = info.textoff - winsaveview().leftcol
   if has('nvim')
     for winid in nvim_list_wins()
       let config = nvim_win_get_config(winid)
       if config.relative !=# ''
         let title = join(map(copy(get(config, 'title', [])), 'v:val[0]'), '')
-        call add(floats, #{title: title, lines: getbufline(winbufnr(winid), 1, '$')})
+        let tiles = (float2nr(config.col) - shift) % 2 == 0 && (config.width + 2) % 2 == 0
+        call add(floats, #{title: title, lines: getbufline(winbufnr(winid), 1, '$'),
+              \ tiles: tiles})
       endif
     endfor
   else
     for winid in popup_list()
+      let pos = popup_getpos(winid)
+      let tiles = (pos.col - info.wincol - shift) % 2 == 0 && pos.width % 2 == 0
       call add(floats, #{title: get(popup_getoptions(winid), 'title', ''),
-            \ lines: getbufline(winbufnr(winid), 1, '$')})
+            \ lines: getbufline(winbufnr(winid), 1, '$'), tiles: tiles})
     endfor
   endif
   return filter(floats, {_, f -> f.title =~# a:pattern})
@@ -263,7 +270,15 @@ function! s:actions() abort
   call s:check('items cost no turn', s:status(), status)
   call s:check('items title', get(s:floats('^ 持ち物'), 0, #{title: ''}).title =~# '^ 持ち物 \d\+/20 $', 1)
   call s:check('items lines', len(s:item_lines()) > 0, 1)
+  " Over whole tiles: a border over half of one is cleared by some
+  " terminals. (A fold column of one cell shifts the tiles.)
+  setlocal foldcolumn=1
+  call goda_rogue#do('redraw')
+  call s:check('items on tiles', get(s:floats('^ 持ち物'), 0, #{tiles: 0}).tiles, 1)
   call goda_rogue#do('map')
+  call s:check('map on tiles', get(s:floats('^ map $'), 0, #{tiles: 0}).tiles, 1)
+  setlocal foldcolumn=0
+  call goda_rogue#do('redraw')
   call s:check('items and map', [len(s:item_lines()) > 0, len(s:map_lines()) > 0], [1, 1])
   call goda_rogue#do('map')
   let game = bufnr('%')

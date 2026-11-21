@@ -680,6 +680,23 @@ function! s:draw_float(name, lines, title, highlights, bottom, right) abort
   " (The rows of the top and the bottom of the map, from 0.)
   let top = s:over_map
   let bottom = max([info.height - s:under_map, top + 1])
+  " The window covers whole tiles of the map (two cells each), so that
+  " its border is never over half of one: some terminals then clear the
+  " whole tile, the border with it. A tile starts on an even column of
+  " the text, which a horizontal scroll shifts.
+  let width = max(map(copy(a:lines), 'strwidth(v:val)') + [strwidth(a:title)])
+  " (With its border, an even number of cells.)
+  let width += width % 2
+  let shift = winsaveview().leftcol % 2
+  if a:right
+    let edge = info.width
+    if (edge - info.textoff + shift) % 2 != 0
+      let edge -= 1
+    endif
+    let left = max([edge - (width + 2), 0])
+  else
+    let left = info.textoff + shift
+  endif
   if has('nvim')
     let buf = get(s:float_bufs, a:name, -1)
     if buf < 0 || !nvim_buf_is_valid(buf)
@@ -690,9 +707,9 @@ function! s:draw_float(name, lines, title, highlights, bottom, right) abort
     " (Placed again every time: the window may have been resized.)
     let config = #{
           \ relative: 'win', win: win_getid(),
-          \ anchor: (a:bottom ? 'S' : 'N') . (a:right ? 'E' : 'W'),
-          \ row: a:bottom ? bottom : top, col: a:right ? info.width : 0,
-          \ width: max(map(copy(a:lines), 'strwidth(v:val)') + [strwidth(a:title)]),
+          \ anchor: (a:bottom ? 'S' : 'N') . 'W',
+          \ row: a:bottom ? bottom : top, col: left,
+          \ width: width,
           \ height: len(a:lines),
           \ border: 'single', title: a:title,
           \ }
@@ -709,8 +726,9 @@ function! s:draw_float(name, lines, title, highlights, bottom, right) abort
   endif
   let pos = #{
         \ line: a:bottom ? info.winrow + bottom - 1 : info.winrow + top,
-        \ col: a:right ? info.wincol + info.width - 1 : info.wincol,
-        \ pos: (a:bottom ? 'bot' : 'top') . (a:right ? 'right' : 'left'),
+        \ col: info.wincol + left,
+        \ pos: (a:bottom ? 'bot' : 'top') . 'left',
+        \ minwidth: width, maxwidth: width,
         \ }
   if winid < 0 || empty(popup_getpos(winid))
     let winid = popup_create(a:lines, extend(#{
