@@ -354,6 +354,39 @@ func (g *Game) item(i int) *Item {
 // footEntry is the line of the item under the player in a list of items.
 func (g *Game) footEntry(it *Item) string { return g.Entry(it) + " [足元]" }
 
+// footPrompt asks what to do with the item it under the player.
+func (g *Game) footPrompt(it *Item) {
+	g.Prompt = &Prompt{
+		Title:   g.Label(it) + " [足元]",
+		Choices: g.footCommands(it),
+		kind:    promptFoot,
+	}
+}
+
+// footTrapPrompt asks whether to step on the found trap t under the
+// player.
+func (g *Game) footTrapPrompt(t *Trap) {
+	g.Prompt = &Prompt{
+		Title:   t.Def.Name + " [足元]",
+		Choices: []string{commandStep},
+		kind:    promptFootTrap,
+	}
+}
+
+// openFoot asks what to do with what is under the player: the item, else
+// a found trap.
+func (g *Game) openFoot() {
+	if it := g.foot(); it != nil {
+		g.footPrompt(it)
+		return
+	}
+	if t := g.foundTrapAt(g.Player); t != nil {
+		g.footTrapPrompt(t)
+		return
+	}
+	g.say("足元には何もない。")
+}
+
 // openInventory asks which item: one carried, or the one under the
 // player, last (and the trap the player stands on, if found).
 func (g *Game) openInventory() {
@@ -482,21 +515,11 @@ func (g *Game) choose(arg string) (bool, error) {
 	case promptInventory:
 		i := p.items[n]
 		if i == footTrapIndex {
-			t := g.foundTrapAt(g.Player)
-			g.Prompt = &Prompt{
-				Title:   t.Def.Name + " [足元]",
-				Choices: []string{commandStep},
-				kind:    promptFootTrap,
-			}
+			g.footTrapPrompt(g.foundTrapAt(g.Player))
 			return false, nil
 		}
 		if i == footIndex {
-			it := g.foot()
-			g.Prompt = &Prompt{
-				Title:   g.Label(it) + " [足元]",
-				Choices: g.footCommands(it),
-				kind:    promptFoot,
-			}
+			g.footPrompt(g.foot())
 			return false, nil
 		}
 		it := g.Inventory[i]

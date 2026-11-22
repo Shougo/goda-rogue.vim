@@ -455,7 +455,7 @@ endfunction
 "	call goda_rogue#do('move', 'left')
 " Actions: move, dash and turn (with a direction: left, right, up, down,
 " upleft, upright, downleft, downright), attack, shoot, wait, stairs, pickup,
-" inventory, choose (an index, from 0), cancel, look, map, items, log, redraw,
+" inventory, foot, choose (an index, from 0), cancel, look, map, items, log, redraw,
 " suspend, debug.
 function! goda_rogue#do(action, ...) abort
   if &filetype !=# 'goda-rogue'

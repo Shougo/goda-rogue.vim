@@ -147,6 +147,7 @@ There are no default mappings: map the actions in the game buffer. >vim
 	  nnoremap <buffer> . <Cmd>call goda_rogue#do('wait')<CR>
 	  nnoremap <buffer> > <Cmd>call goda_rogue#do('stairs')<CR>
 	  nnoremap <buffer> i <Cmd>call goda_rogue#do('inventory')<CR>
+	  nnoremap <buffer> ; <Cmd>call goda_rogue#do('foot')<CR>
 	  nnoremap <buffer> , <Cmd>call goda_rogue#do('pickup')<CR>
 	  nnoremap <buffer> f <Cmd>call goda_rogue#do('shoot')<CR>
 	  nnoremap <buffer> x <Cmd>call goda_rogue#do('look')<CR>
@@ -293,6 +294,12 @@ pickup                                                     *goda-rogue-pickup*
 		adds to the gold of the top line (the purse); money a dash
 		stopped on is under the player, to pick up: it is carried
 		then, as an item, to throw (|goda-rogue-inventory|).
+
+foot                                                         *goda-rogue-foot*
+		Go straight to what is under the player: the item (its
+		commands, as the [足元] entry of |goda-rogue-inventory|),
+		else a found trap (踏む).  With nothing there, it says so.
+		It costs no turn.
 
 inventory                                               *goda-rogue-inventory*
 		Choose an item of the inventory, and then what to do with

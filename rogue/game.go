@@ -463,6 +463,10 @@ func (g *Game) Do(action string, args []string) error {
 		// Looking costs no turn.
 		g.beginAction()
 		g.openInventory()
+	case "foot":
+		// Nor looking under the player.
+		g.beginAction()
+		g.openFoot()
 	case "choose":
 		if len(args) != 1 {
 			return fmt.Errorf("choose: a choice expected")

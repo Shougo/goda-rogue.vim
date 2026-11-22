@@ -276,3 +276,42 @@ func TestNoTrapAtEntrances(t *testing.T) {
 		t.Fatal("no trap")
 	}
 }
+
+// TestFootCommand: the foot command goes straight to what is under the player:
+// the item, else a found trap; with no turn.
+func TestFootCommand(t *testing.T) {
+	g, r := trapGame(t)
+	if err := g.Do("foot", nil); err != nil {
+		t.Fatal(err)
+	}
+	if g.Prompt != nil || g.Message != "足元には何もない。" {
+		t.Fatalf("prompt %+v, message %q", g.Prompt, g.Message)
+	}
+
+	trap(g, "harahe", Point{r.X + 1, r.Y}).Found = true
+	move(t, g, "right")
+	turn, full := g.Turn, g.Fullness
+	if err := g.Do("foot", nil); err != nil {
+		t.Fatal(err)
+	}
+	if g.Prompt == nil || g.Prompt.Title != "腹減りの罠 [足元]" || g.Turn != turn {
+		t.Fatalf("prompt %+v, turn %d", g.Prompt, g.Turn-turn)
+	}
+	chooseLabel(t, g, commandStep)
+	if g.Fullness >= full {
+		t.Errorf("fullness %d, was %d", g.Fullness, full)
+	}
+
+	g, _ = trapGame(t)
+	it := item(g, "yakusou", g.Player)
+	if err := g.Do("foot", nil); err != nil {
+		t.Fatal(err)
+	}
+	if g.Prompt == nil || g.Prompt.Title != g.Label(it)+" [足元]" {
+		t.Fatalf("prompt %+v", g.Prompt)
+	}
+	chooseLabel(t, g, commandPickUp)
+	if len(g.Inventory) != 1 || g.Inventory[0] != it {
+		t.Errorf("inventory %v, want the grass picked up", g.Inventory)
+	}
+}
