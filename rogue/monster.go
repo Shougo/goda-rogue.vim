@@ -52,8 +52,10 @@ type Monster struct {
 	Glyph string
 	Name  string
 	// Rank is 1 to 4, shown as its color.
-	Rank    int
-	Ally    bool
+	Rank int
+	Ally bool
+	// Order is what the player told it, an ally ("": OrderFollow).
+	Order   Order
 	HP      int
 	MaxHP   int
 	Attack  int
@@ -213,8 +215,9 @@ func (g *Game) act(m *Monster) bool {
 // allyReach is how far from the player an ally goes to fight an enemy.
 const allyReach = 5
 
-// actAlly is one action of an ally: attack an enemy next to it, go for one
-// it sees near the player, or follow the player. It says whether the ally
+// actAlly is one action of an ally: attack an enemy next to it, then as
+// it was told: go for one it sees near the player or follow the player,
+// go where it likes, or wait. It says whether the ally
 // attacked.
 func (g *Game) actAlly(m *Monster) bool {
 	for _, d := range around {
@@ -223,22 +226,37 @@ func (g *Game) actAlly(m *Monster) bool {
 			return true
 		}
 	}
-	if f := g.allyTarget(m); f != nil && g.stepToward(m, f.Pos) {
-		return false
-	}
-	if chebyshev(m.Pos, g.Player) > 1 {
-		g.stepToward(m, g.Player)
+	switch m.order() {
+	case OrderWait:
+	case OrderFree:
+		// Where it likes: to an enemy it sees, else wandering.
+		if f := g.allyTarget(m); f != nil {
+			m.target, m.hasTarget = f.Pos, true
+		} else if !m.hasTarget || m.Pos == m.target {
+			m.target, m.hasTarget = g.wanderTarget(), true
+		}
+		if !g.stepToward(m, m.target) {
+			m.hasTarget = false
+		}
+	default:
+		if f := g.allyTarget(m); f != nil && g.stepToward(m, f.Pos) {
+			return false
+		}
+		if chebyshev(m.Pos, g.Player) > 1 {
+			g.stepToward(m, g.Player)
+		}
 	}
 	return false
 }
 
 // allyTarget returns the enemy the ally m goes for: the nearest awake one
-// it sees, not far from the player (it stays near the player, and lets
-// sleeping ones sleep).
+// it sees (it lets sleeping ones sleep), and, unless it is free, not far
+// from the player.
 func (g *Game) allyTarget(m *Monster) *Monster {
 	var best *Monster
 	for _, f := range g.Monsters {
-		if !f.hostile() || f.Dozing || chebyshev(f.Pos, g.Player) > allyReach || !g.sees(m.Pos, f.Pos) {
+		if !f.hostile() || f.Dozing || !g.sees(m.Pos, f.Pos) ||
+			m.order() != OrderFree && chebyshev(f.Pos, g.Player) > allyReach {
 			continue
 		}
 		if best == nil || chebyshev(f.Pos, m.Pos) < chebyshev(best.Pos, m.Pos) {

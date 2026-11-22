@@ -109,6 +109,9 @@ type Rules struct {
 	// FirstAlly is the monster that comes along from the start ("" for
 	// none).
 	FirstAlly string
+	// MaxAllies is how many allies the player has at most (rules.txt
+	// 仲間の上限, 3 without it).
+	MaxAllies int
 	// StrongerBy is how many ranks above the floor's the monster of the
 	// second wind is.
 	StrongerBy int
@@ -231,6 +234,7 @@ const (
 	EffectLight      Effect = "あかり"
 	EffectIdentify   Effect = "識別"
 	EffectBlowAway   Effect = "吹き飛ばし"
+	EffectRecruit    Effect = "仲間"
 	EffectFood       Effect = "満腹"
 	EffectKeep       Effect = "保存"
 	EffectSynthesis  Effect = "合成"
@@ -241,7 +245,7 @@ var effects = map[Category][]Effect{
 	CategoryBracelet: {EffectStrength, EffectRegen, EffectSenseEnemy, EffectSenseItem},
 	CategoryGrass:    {EffectHeal, EffectStrength},
 	CategoryScroll:   {EffectLight, EffectIdentify},
-	CategoryStaff:    {EffectBlowAway},
+	CategoryStaff:    {EffectBlowAway, EffectRecruit},
 	CategoryFood:     {EffectFood},
 	CategoryPot:      {EffectKeep, EffectSynthesis},
 }
@@ -510,7 +514,7 @@ func (l *loader) load() {
 		"最大HP", "ちから", "回復ターン", "湧きターン", "最大モンスター数",
 		"風1", "風2", "風3", "防御K", "主の命中", "敵の命中", "成長", "最初の仲間", "強敵ランク差",
 		"持ち物の数", "ひびの段階", "腕輪の傷みやすさ", "満腹度", "腹減りターン", "見つけた罠", "デバッグ",
-		"お金投げ", "落とし物", "仲間の命中", "主の投擲命中", "敵の投擲命中",
+		"お金投げ", "落とし物", "仲間の命中", "主の投擲命中", "敵の投擲命中", "仲間の上限",
 	})
 	r := &d.Rules
 	r.PlayerHP = l.keyInt("rules.txt", rk, "最大HP", 1)
@@ -581,6 +585,10 @@ func (l *loader) load() {
 	}
 	if ln, ok := rk["最初の仲間"]; ok {
 		r.FirstAlly = ln.fields[1]
+	}
+	r.MaxAllies = 3
+	if _, ok := rk["仲間の上限"]; ok {
+		r.MaxAllies = l.keyInt("rules.txt", rk, "仲間の上限", 1)
 	}
 	// Optional: most dungeons have no debug mode.
 	if ln, ok := rk["デバッグ"]; ok {

@@ -103,7 +103,12 @@ enters or leaves their room, or they are attacked.  Walking and waiting
 restore HP; at 0 HP the run is over.
 
 Defeating an enemy gives its EXP to the player and to every ally, whole:
-they level up on the same table.  At the end of a run, the result screen
+they level up on the same table.  A staff of 仲間 makes the monster it
+hits an ally, up to the dungeon's limit (3 in the cave).  Looking at an
+ally (|goda-rogue-look|) asks what to tell it: ついてきて (follow the
+player and fight the enemies near it; so it does at first), 自由に (go
+where it likes and fight the enemies it sees) or 待って (stay there and
+fight the enemies next to it).  A sealed mouth gives no orders.  At the end of a run, the result screen
 shows how it ended, the floor, the level, the enemies defeated, the
 turns, the play time and the seed, and under it the floor as it was at
 the end, with the last messages, to see what happened.
@@ -285,8 +290,9 @@ wait                                                         *goda-rogue-wait*
 		Let a turn pass (and restore HP).
 
 stairs                                                     *goda-rogue-stairs*
-		Go down the stairs the player stands on.  An ally next to
-		the player comes along.
+		Go down the stairs the player stands on.  The allies next to
+		the player or in its room come along (one told to wait
+		follows again).
 
 pickup                                                     *goda-rogue-pickup*
 		Pick up the item under the player.  Walking onto an item
@@ -345,8 +351,10 @@ look                                                         *goda-rogue-look*
 		上2"), to read about it: the rank and the speed of a
 		monster, whether it is asleep, its states (混乱, 鈍足, 睡眠,
 		封印), what its abilities do and what the dungeon says of it
-		(monsters.txt 説明), the level and HP of an ally; the kind of
-		a trap and what it does.  It costs no turn.
+		(monsters.txt 説明), the level, HP and order of an ally; the
+		kind of a trap and what it does.  Looking at an ally then
+		asks what to tell it (ついてきて, 自由に, 待って).  It costs
+		no turn.
 
 map                                                           *goda-rogue-map*
 		Show or hide the mini-map (|goda-rogue-mini-map|).  It costs
@@ -531,7 +539,9 @@ floors once the files change.
 	rules.txt		The rules: the player at the start, HP
 				regeneration, fullness, spawning, Kron's wind,
 				combat constants, the growth table of the
-				player, the first ally, whether a trap the
+				player, the first ally, how many allies at
+				most (仲間の上限, optional, default 3),
+				whether a trap the
 				player has found goes off (見つけた罠: 安全 or
 				発動), and, optional, whether runs may use
 				the debug mode (デバッグ: 可 or 不可, the
@@ -634,7 +644,7 @@ floors once the files change.
 				  腕輪: ちから 回復 気配察知 道具感知
 				  草: HP回復 ちから
 				  巻物: あかり 識別
-				  杖: 吹き飛ばし
+				  杖: 吹き飛ばし 仲間
 				  食料: 満腹
 				  壺: 保存 合成
 				The 強さ of arrows is their attack.  回数 is

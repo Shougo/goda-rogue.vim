@@ -17,6 +17,8 @@
 #     識別      identifies an item (nothing to identify yet)
 #   杖, waved (a magic bolt to the front):
 #     吹き飛ばし  blows the monster it hits 10 tiles away
+#     仲間      makes the monster it hits an ally (not a shopkeeper or a
+#               guard, and not past rules.txt 仲間の上限)
 #   食料, eaten:
 #     満腹      restores 強さ of fullness
 # ひび is how easily a bracelet cracks (a percent, 0 for never): leaving
@@ -62,6 +64,7 @@ chikarakusa	草	ちからの草	草	1	ちから	0	-	力	0	500
 shikibetsu	巻	識別の巻物	巻物	0	識別	0	-	-	0	100
 akari	巻	あかりの巻物	巻物	0	あかり	0	-	-	0	200
 fukitobashi	杖	吹き飛ばしの杖	杖	0	吹き飛ばし	0	4-6	-	0	500
+nakama	杖	仲間の杖	杖	0	仲間	0	1-2	-	0	1500
 hozon	壺	保存の壺	壺	0	保存	0	3-5	-	0	300
 gousei	壺	合成の壺	壺	0	合成	0	2-3	-	0	1000
 onigiri	食	おにぎり	食料	50	満腹	0	-	-	0	100

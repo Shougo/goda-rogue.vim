@@ -34,6 +34,8 @@
 成長	普通
 # The ally at the start (empty: none).
 最初の仲間	nezumi1
+# How many allies the player has at most (optional: 3 if missing).
+仲間の上限	3
 # The chance, a percent, that a monster the player kills drops an item of
 # the floor's item table (monsters.txt 落とし物 may say otherwise). The
 # cave gives each family its own rate (stronger ones drop more); this low

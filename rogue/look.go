@@ -101,7 +101,7 @@ func (g *Game) lookAt(n int) {
 	msg := fmt.Sprintf("%s：ランク%d  %s", m.Name, m.Rank, speedNames[m.Speed])
 	switch {
 	case m.Ally:
-		msg += fmt.Sprintf("  仲間 Lv%d  HP %d/%d", m.Level, m.HP, m.MaxHP)
+		msg += fmt.Sprintf("  仲間 Lv%d  HP %d/%d  命令：%s", m.Level, m.HP, m.MaxHP, m.order())
 	case m.Keeper && !m.Angry:
 		msg += "  店主"
 	case m.Angry, m.Enraged:
@@ -133,6 +133,9 @@ func (g *Game) lookAt(n int) {
 	}
 	if m.Def.Description != "" {
 		g.say(m.Def.Description)
+	}
+	if m.Ally {
+		g.askOrder(m)
 	}
 }
 

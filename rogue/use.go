@@ -68,6 +68,8 @@ func (g *Game) useItem(it *Item) {
 		}
 	case EffectBlowAway:
 		g.blowAway()
+	case EffectRecruit:
+		g.recruit()
 	case EffectFood:
 		g.Fullness = min(g.Fullness+n, g.Dungeon.Rules.Fullness)
 		g.hunger = 0

@@ -565,11 +565,34 @@ func (b *Bot) danger(g *Game) (string, []string) {
 				// for its chance with the enemy still there).
 				away = fightDeath(g, ms, g.HP, 1)
 			}
+			// A recruiting staff takes the enemy out of the fight
+			// for good: the one blown away, else the one whose
+			// leaving helps most.
+			joins := fightDeath(g, ms, g.HP, 1)
+			if len(g.allies()) < g.Dungeon.Rules.MaxAllies {
+				without := func(m *Monster) float64 {
+					rest := slices.DeleteFunc(slices.Clone(ms), func(o *Monster) bool { return o == m })
+					return fightDeath(g, rest, g.HP, 1)
+				}
+				recruitable := func(m *Monster) bool { return !m.Keeper && m.Def.Kind == "" }
+				if target != nil && recruitable(target) {
+					joins = without(target)
+				} else if target == nil {
+					for _, m := range near {
+						if c := without(m); recruitable(m) && c < joins {
+							target, joins = m, c
+						}
+					}
+				}
+			}
 			var chance float64
 			for _, def := range kinds {
-				if def.Effect == EffectBlowAway {
+				switch def.Effect {
+				case EffectBlowAway:
 					chance += away
-				} else {
+				case EffectRecruit:
+					chance += joins
+				default:
 					chance += fightDeath(g, ms, g.HP, 1)
 				}
 			}

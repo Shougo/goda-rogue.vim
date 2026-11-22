@@ -60,6 +60,8 @@ type Game struct {
 	Lit bool
 	// sights are what the prompt of look lists.
 	sights []sight
+	// ordered is the ally the prompt of orders is about.
+	ordered *Monster
 	// Dark says whether the floor is dark: the player sees only around.
 	Dark bool
 	// Traps are the traps of the floor.
@@ -188,16 +190,17 @@ func seedHash(d *Dungeon, seed string) uint64 {
 	return h.Sum64()
 }
 
-// descend makes the next floor. An ally next to the player comes along.
+// descend makes the next floor. The allies next to the player or in its
+// room come along.
 func (g *Game) descend() {
 	if g.Shop != nil && g.debt() > 0 {
 		// Leaving the floor with what it owes (a pit).
 		g.steal()
 	}
-	var ally *Monster
-	for _, m := range g.Monsters {
-		if m.Ally && chebyshev(m.Pos, g.Player) <= 1 {
-			ally = m
+	var along []*Monster
+	for _, m := range g.allies() {
+		if g.comesAlong(m) {
+			along = append(along, m)
 		}
 	}
 
@@ -284,12 +287,18 @@ func (g *Game) descend() {
 	g.placeTraps(rng, rooms)
 
 	if g.Depth == 1 && d.Rules.FirstAlly != "" {
-		ally = newMonster(d.Monster(d.Rules.FirstAlly))
+		ally := newMonster(d.Monster(d.Rules.FirstAlly))
 		ally.Ally = true
+		along = append(along, ally)
 	}
-	if ally != nil {
+	for _, ally := range along {
 		if p, ok := g.freeNeighbor(g.Player); ok {
 			ally.Pos = p
+			// One that waited came along: it follows again.
+			if ally.Order == OrderWait {
+				ally.Order = OrderFollow
+			}
+			ally.hasTarget = false
 			g.Monsters = append(g.Monsters, ally)
 		}
 	}

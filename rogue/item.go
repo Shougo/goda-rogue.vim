@@ -547,6 +547,9 @@ func (g *Game) choose(arg string) (bool, error) {
 	case promptLook:
 		g.lookAt(n)
 		return false, nil
+	case promptOrder:
+		g.giveOrder(n)
+		return false, nil
 	case promptPutIn:
 		g.putIn(g.Inventory[p.item], g.Inventory[p.items[n]])
 		return true, nil
