@@ -106,7 +106,7 @@ func (g *Game) Render(size Size) Screen {
 	s := Screen{Highlights: map[string][]Span{}}
 	s.Lines = append(s.Lines, g.topLine(s.Highlights))
 	if g.Over != "" {
-		g.result(&s)
+		g.result(&s, size.Width)
 	}
 	g.renderMap(&s, max(size.Width/2, 1), max(size.Height-len(s.Lines)-1-messageLines, 1))
 	s.Lines = append(s.Lines, g.Status())
@@ -178,8 +178,9 @@ func (g *Game) renderMap(s *Screen, viewW, viewH int) {
 	}
 }
 
-// result adds to s the result of the run.
-func (g *Game) result(s *Screen) {
+// result adds to s the result of the run: how it ended, the player, and
+// what it carried (in two columns, if width cells hold them).
+func (g *Game) result(s *Screen, width int) {
 	title := "冒険の結果"
 	if g.Cleared {
 		title = "踏破！"
@@ -197,6 +198,16 @@ func (g *Game) result(s *Screen) {
 		fmt.Sprintf("  歩数      %d", g.Steps),
 		"  時間      "+playTime(g.PlayTime()),
 		"  シード    "+g.Seed,
+		fmt.Sprintf("  所持金    %dG", g.Gold),
+		"",
+		fmt.Sprintf("  持ち物 %d/%d", len(g.Inventory), g.Dungeon.Rules.Capacity),
+	)
+	items := g.revealed()
+	if len(items) == 0 {
+		items = []string{"何も持っていない"}
+	}
+	s.Lines = append(s.Lines, columns(items, width-4, "    ")...)
+	s.Lines = append(s.Lines,
 		"",
 		"  "+g.Summary(),
 		"",
@@ -415,4 +426,64 @@ func (g *Game) senses(p Point) bool {
 		return ok
 	}
 	return false
+}
+
+// revealed returns the entries of the items the player carried, all of
+// them identified, their upgrade values and charges known: to look back
+// on the run.
+func (g *Game) revealed() []string {
+	all := *g
+	all.identified = map[string]bool{}
+	for _, it := range g.Dungeon.Items {
+		all.identified[it.ID] = true
+	}
+	var entries []string
+	for _, it := range g.Inventory {
+		c := *it
+		c.Known = true
+		entries = append(entries, all.Entry(&c))
+	}
+	return entries
+}
+
+// columns lays out entries in two columns (down the first, then the
+// second) if width cells hold them, else in one; each line begins with
+// indent.
+func columns(entries []string, width int, indent string) []string {
+	widest := 0
+	for _, e := range entries {
+		widest = max(widest, cells(e))
+	}
+	const gap = 2
+	if len(entries) < 2 || 2*widest+gap > width {
+		lines := make([]string, len(entries))
+		for i, e := range entries {
+			lines[i] = indent + e
+		}
+		return lines
+	}
+	rows := (len(entries) + 1) / 2
+	lines := make([]string, rows)
+	for i := range rows {
+		line := indent + entries[i]
+		if j := i + rows; j < len(entries) {
+			line += strings.Repeat(" ", widest+gap-cells(entries[i])) + entries[j]
+		}
+		lines[i] = line
+	}
+	return lines
+}
+
+// cells is the width of s on the screen: two cells for a character
+// outside ASCII (the game's text is Japanese), one for ASCII.
+func cells(s string) int {
+	n := 0
+	for _, r := range s {
+		if r < 0x80 {
+			n++
+		} else {
+			n += 2
+		}
+	}
+	return n
 }

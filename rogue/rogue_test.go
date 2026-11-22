@@ -853,6 +853,44 @@ func TestResultShowsMap(t *testing.T) {
 	}
 }
 
+// TestResultItems: the result screen lists what the player carried,
+// identified, in two columns when the window is wide enough.
+func TestResultItems(t *testing.T) {
+	g, _ := roomGame(t, 4, 3)
+	g.Gold = 120
+	for range g.Dungeon.Rules.Capacity {
+		g.Inventory = append(g.Inventory, g.newItemOf(g.rng, g.Dungeon.Item("yakusou"), Point{}))
+	}
+	g.Inventory[0].Def = g.Dungeon.Item("bokutou")
+	g.Inventory[0].Upgrade = 2
+	g.identified["yakusou"] = false
+	g.identified["bokutou"] = false
+	g.end("テスト", false)
+	s := g.Render(Size{80, 40})
+	want := fmt.Sprintf("  持ち物 %d/%d", len(g.Inventory), g.Dungeon.Rules.Capacity)
+	i := slices.Index(s.Lines, want)
+	if i < 0 || !slices.Contains(s.Lines, "  所持金    120G") {
+		t.Fatalf("no items or money: %q", s.Lines)
+	}
+	if first := s.Lines[i+1]; !strings.Contains(first, "木刀+2") || !strings.Contains(first, "薬草") || strings.Contains(first, "?") {
+		t.Errorf("first row %q, want 木刀+2 and 薬草, identified", first)
+	}
+	// The player's own knowledge stays as it was.
+	if g.identified["yakusou"] {
+		t.Error("the result identified the kind for the game")
+	}
+	if len(s.Lines) > 40 {
+		t.Errorf("%d lines for a window of 40", len(s.Lines))
+	}
+
+	// Narrow: one column.
+	s = g.Render(Size{30, 60})
+	i = slices.Index(s.Lines, want)
+	if next := s.Lines[i+2]; !strings.Contains(next, "薬草") {
+		t.Errorf("second row %q, want item 2", next)
+	}
+}
+
 // TestFirstFloorsRank: no monster of a rank above the floor's on the
 // first three floors of the built-in dungeon.
 func TestFirstFloorsRank(t *testing.T) {
