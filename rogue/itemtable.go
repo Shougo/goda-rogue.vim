@@ -63,11 +63,20 @@ func (t *ItemTable) pick(rng *rand.Rand, d *Dungeon, floor int) *ItemDef {
 		}
 		n -= r.Weight
 	}
+	return t.pickOf(rng, d, floor, c)
+}
+
+// pickOf picks an item of the category c of the table for the floor, by
+// weight; nil if the table has none there.
+func (t *ItemTable) pickOf(rng *rand.Rand, d *Dungeon, floor int, c Category) *ItemDef {
 	var rows []FloorRow
 	for _, r := range t.Items {
 		if on(floor, r.First, r.Last) && d.Item(r.ID).Category == c {
 			rows = append(rows, r)
 		}
+	}
+	if len(rows) == 0 {
+		return nil
 	}
 	return d.Item(pick(rng, rows, floor))
 }

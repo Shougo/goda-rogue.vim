@@ -8,7 +8,8 @@
 # ones of rank 2 from 21F to the end, as many as the middle ones from 24F:
 # the last floors are the hardest, above all for a low level. The fast
 # 山犬 waits for 3F. The charging 猪 comes later than the other strong
-# ones: rank 1 from 15F, rank 2 only on 27-30F, and fewer.
+# ones: rank 1 from 15F, rank 2 only on 27-30F, and fewer. The archer 射
+# shoots from afar: rank 1 on 6-18F, rank 2 from 22F.
 開始	終了	ID	頻度
 1	6	nezumi1	4
 1	6	hebi1	4
@@ -174,3 +175,10 @@
 21	21	inoshishi1	2
 22	22	inoshishi1	1
 27	30	inoshishi2	2
+6	6	shashu1	1
+7	7	shashu1	2
+8	13	shashu1	3
+14	16	shashu1	2
+17	18	shashu1	1
+22	22	shashu2	1
+23	30	shashu2	2

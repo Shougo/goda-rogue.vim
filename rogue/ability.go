@@ -30,6 +30,13 @@ const (
 	// anywhere in its room) and not next to it, it pulls the player next
 	// to it by a chance (a percent), and then hits it (1) or not (0).
 	AbilityPull AbilityName = "引き寄せ"
+	// AbilityShoot: with the player in sight on one of its lines within a
+	// reach and not next to it, it shoots an arrow (an item's ID, of the
+	// kind 矢) at it by a chance (a percent), even with a creature in the
+	// way: the arrow hits the first creature it meets, or with pierce (1)
+	// every one. An arrow that hits no one falls where it stops, unless
+	// it pierces.
+	AbilityShoot AbilityName = "射撃"
 )
 
 // abilityDef is what an ability takes: its numbers, each in a range.
@@ -38,14 +45,18 @@ type abilityDef struct {
 	// maxs their ranges.
 	values     []string
 	mins, maxs []int
+	// item is the place of the value that is the ID of an item (not a
+	// number), plus 1; 0 for none.
+	item int
 }
 
 var abilityDefs = map[AbilityName]abilityDef{
-	AbilityAnger:    {[]string{"HP %", "attack %"}, []int{1, 100}, []int{99, 1000}},
-	AbilityCritical: {[]string{"chance %", "damage %"}, []int{1, 100}, []int{100, 1000}},
-	AbilityErratic:  {[]string{"chance %"}, []int{1}, []int{100}},
-	AbilityCharge:   {[]string{"reach", "damage"}, []int{2, 0}, []int{maxReach, 999}},
-	AbilityPull:     {[]string{"reach", "chance %", "hit"}, []int{0, 1, 0}, []int{maxReach, 100, 1}},
+	AbilityAnger:    {[]string{"HP %", "attack %"}, []int{1, 100}, []int{99, 1000}, 0},
+	AbilityCritical: {[]string{"chance %", "damage %"}, []int{1, 100}, []int{100, 1000}, 0},
+	AbilityErratic:  {[]string{"chance %"}, []int{1}, []int{100}, 0},
+	AbilityCharge:   {[]string{"reach", "damage"}, []int{2, 0}, []int{maxReach, 999}, 0},
+	AbilityPull:     {[]string{"reach", "chance %", "hit"}, []int{0, 1, 0}, []int{maxReach, 100, 1}, 0},
+	AbilityShoot:    {[]string{"reach", "chance %", "arrow", "pierce"}, []int{2, 1, 0, 0}, []int{maxReach, 100, 0, 1}, 3},
 }
 
 // maxReach is the farthest reach of an ability along a line.
@@ -53,12 +64,21 @@ const maxReach = 20
 
 // abilityNames are the abilities in a fixed order, for the error that
 // lists them.
-var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull}
+var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot}
 
-// Ability is an ability of a kind of monster, with its numbers.
+// lineAbilities are the abilities that reach the player from afar along
+// a line, their reach their first number.
+var lineAbilities = []AbilityName{AbilityCharge, AbilityPull, AbilityShoot}
+
+// Ability is an ability of a kind of monster, with its numbers (0 in the
+// place of an item's ID) and the ID of its item, if it takes one.
 type Ability struct {
 	Name   AbilityName
 	Values []int
+	Item   string
+	// file and line are where it is read, for the check of the item.
+	file string
+	line int
 }
 
 // parseAbilities reads a 能力 cell: abilities separated by spaces, "-"
@@ -89,6 +109,11 @@ func parseAbilities(s string) ([]Ability, error) {
 		}
 		a := Ability{Name: name}
 		for i, v := range parts[1:] {
+			if i == def.item-1 {
+				a.Item = v
+				a.Values = append(a.Values, 0)
+				continue
+			}
 			n, err := strconv.Atoi(v)
 			if err != nil || n < def.mins[i] || n > def.maxs[i] {
 				return nil, fmt.Errorf("%s: %s wants %d to %d, not %q", name, def.values[i], def.mins[i], def.maxs[i], v)
@@ -192,6 +217,9 @@ func (g *Game) reachAbility(m *Monster) bool {
 	if a, ok := m.ability(AbilityPull); ok && g.pull(m, a) {
 		return true
 	}
+	if a, ok := m.ability(AbilityShoot); ok && g.shootAt(m, a) {
+		return true
+	}
 	return false
 }
 
@@ -214,6 +242,7 @@ func (g *Game) charge(m *Monster, a Ability) bool {
 		if f.HP <= 0 {
 			g.remove(f)
 			g.say(f.Name + "は倒れた。")
+			g.killed(m, f, true)
 			return true
 		}
 		g.wounded(f)
@@ -307,5 +336,83 @@ func (g *Game) flingPlayer(d Point, m *Monster) {
 	}
 	if p != g.Player {
 		g.shove(p)
+	}
+}
+
+// shootAt is m shooting its arrow along its line to the player, which it
+// sees.
+func (g *Game) shootAt(m *Monster, a Ability) bool {
+	d, _, ok := g.lineTo(m.Pos, g.Player, a.Values[0])
+	if !ok || !g.sees(m.Pos, g.Player) || g.rng.IntN(100) >= a.Values[1] {
+		return false
+	}
+	def := g.Dungeon.Item(a.Item)
+	pierce := a.Values[3] == 1
+	r := g.Dungeon.Rules
+	attack := m.Attack/2 + def.Strength
+	g.say(m.Name + "は" + def.Name + "を撃った！")
+	p := m.Pos
+	for range throwRange {
+		if !g.clearFrom(p, d) || !g.Level.At(p.Add(d)).Walkable() {
+			break
+		}
+		p = p.Add(d)
+		if p == g.Player {
+			if !hits(g.rng, r.MonsterHitRate) {
+				g.say("矢は当たらなかった。")
+				continue
+			}
+			n := damage(g.rng, attack, g.Defense(), r.DefenseK)
+			g.say(def.Name + "が当たった。")
+			if g.playerHurt(n, m) || !pierce {
+				return true
+			}
+			continue
+		}
+		f := g.MonsterAt(p)
+		if f == nil {
+			continue
+		}
+		shown := g.sees(g.Player, p)
+		f.Dozing = false
+		if !hits(g.rng, r.MonsterHitRate) {
+			if shown {
+				g.say(def.Name + "は" + f.Name + "に当たらなかった。")
+			}
+			continue
+		}
+		n := damage(g.rng, attack, f.Defense, r.DefenseK)
+		f.HP -= n
+		if shown {
+			g.say(fmt.Sprintf("%sが%sに当たった。%dのダメージ。", def.Name, f.Name, n))
+		}
+		if f.HP > 0 {
+			g.wounded(f)
+		} else {
+			g.remove(f)
+			if shown {
+				g.say(f.Name + "は倒れた。")
+			}
+			g.killed(m, f, shown)
+		}
+		if !pierce {
+			return true
+		}
+	}
+	if !pierce {
+		g.land(&Item{Def: def, Glyph: def.Glyph, Count: 1}, p)
+	}
+	return true
+}
+
+// killed is the monster m defeating f: an enemy of the floors ranks up.
+func (g *Game) killed(m, f *Monster, shown bool) {
+	if m.Ally || m.Def.Kind != "" {
+		return
+	}
+	name := m.Name
+	g.rankUp(m)
+	if shown && m.Name != name {
+		g.say(name + "は" + m.Name + "になった！")
 	}
 }

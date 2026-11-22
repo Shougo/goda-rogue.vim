@@ -12,10 +12,17 @@
 #   引き寄せ:R:C:H  with the player on one of its lines, 2 to R tiles
 #              away (R 0: anywhere in its room), C% of its actions pull
 #              the player next to it, and then it hits (H 1) or not (0)
+#   射撃:R:C:A:P  with the player in sight on one of its lines, 2 to R
+#              tiles away, C% of its actions shoot the arrow A (an item's
+#              ID) at it, even past a creature in the way: it hits the
+#              first one it meets, or every one with P 1 (and then never
+#              falls)
 # 眠り: the share asleep on a new floor, a percent (- for a third).
 # 落とし物: what it drops when the player kills it, and how often: 道具:P
-# (P% an item of the floor's table), お金:P, an item's ID:P, なし, or - (as
-# rules.txt 落とし物 says).
+# (P% an item of the floor's table), お金:P, a kind of items:P (矢:P, an
+# arrow of the floor's table), an item's ID:P, なし, or - (as rules.txt
+# 落とし物 says).
+# A monster of the floors that defeats another ranks up.
 # 種別: - for monsters of the floors, 店主 for shopkeepers, 番犬 for the
 # guards that come after a thief (shops.txt); these two never appear on
 # the floors by themselves, nor rank up.
@@ -80,6 +87,10 @@ inoshishi1	猪	猪	1	16	7	4	5	通常	-	突進:5:5	-	道具:4
 inoshishi2	猪	大猪	2	34	13	7	16	通常	-	突進:5:10	-	道具:6
 inoshishi3	猪	猛猪	3	64	20	12	50	通常	-	突進:10:20	-	道具:9
 inoshishi4	猪	猪王	4	116	30	20	150	通常	-	突進:10:30	-	道具:12
+shashu1	射	射手	1	10	3	2	8	通常	-	射撃:10:100:kiya:0	-	矢:3
+shashu2	射	弓兵	2	24	6	5	25	通常	-	射撃:10:100:tetsuya:0	-	矢:4
+shashu3	射	強弓	3	46	10	9	70	通常	-	射撃:10:100:tetsuya:1	-	矢:6
+shashu4	射	弓聖	4	80	14	13	200	倍速	-	射撃:10:100:tetsuya:1	-	矢:8
 yoroi1	鎧	古鎧	1	22	7	7	5	通常	-	-	-	道具:4
 yoroi2	鎧	鉄鎧	2	44	13	12	16	通常	-	-	-	道具:6
 yoroi3	鎧	鬼鎧	3	82	20	21	50	通常	-	-	-	道具:9

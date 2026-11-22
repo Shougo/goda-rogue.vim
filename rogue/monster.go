@@ -354,6 +354,7 @@ func (g *Game) hitMonster(a, m *Monster) {
 		if a.Ally {
 			g.defeated(m)
 		}
+		g.killed(a, m, shown)
 	}
 }
 
@@ -453,7 +454,11 @@ func (g *Game) dropFrom(m *Monster) {
 			}
 		}
 	default:
-		def = d.Item(what)
+		if c := Category(what); slices.Contains(categories, c) {
+			def = d.ItemTable(d.counts(g.Depth).ItemTable).pickOf(g.rng, d, g.Depth, c)
+		} else {
+			def = d.Item(what)
+		}
 	}
 	if def == nil {
 		return

@@ -563,15 +563,28 @@ floors once the files change.
 				             C% of its actions pull the
 				             player next to it, and then it
 				             hits (H 1) or not (0)
+				  射撃:R:C:A:P  with the player in sight
+				             on one of its lines, 2 to R
+				             tiles away,
+				             C% of its actions shoot the
+				             arrow A (the ID of an item of
+				             the kind 矢) at it, even past a
+				             creature in the way: it hits
+				             the first one it meets, or
+				             every one with P 1 (and then
+				             never falls)
 				眠り, optional, is the share of the kind
 				asleep on a new floor, a percent (- for a
 				third).  落とし物, optional, is what it
 				drops when the player kills it, and how
 				often: 道具:P (P% an item of the floor's
-				item table), お金:P, the ID of an item:P,
-				なし, or - (rules.txt 落とし物: the
-				percent of an item of the floor's item
-				table, 0 without it).
+				item table), お金:P, a kind of items:P
+				(矢:P: an arrow of the floor's item
+				table), the ID of an item:P, なし, or -
+				(rules.txt 落とし物: the percent of an
+				item of the floor's item table, 0 without
+				it).  A monster of the floors that
+				defeats another ranks up.
 	monster_table.txt	Which monsters appear on which floors (開始
 				to 終了), by weight (頻度), a table.
 	items.txt		The items, a table.  種類 is the kind of an

@@ -160,7 +160,8 @@ type MonsterDef struct {
 
 // Drop is what a kind of monster drops when killed, and how often.
 type Drop struct {
-	// What is DropItem, DropMoney, DropNone or the ID of an item.
+	// What is DropItem, DropMoney, DropNone, a category of items (an
+	// item of it from the floor's item table) or the ID of an item.
 	What string
 	// Rate is the chance, a percent.
 	Rate int
@@ -617,6 +618,9 @@ func (l *loader) load() {
 		if err != nil {
 			l.errorf(row.file, row.n, "能力: %v", err)
 		}
+		for i := range as {
+			as[i].file, as[i].line = row.file, row.n
+		}
 		m.Abilities = as
 		m.Drop = l.drop(row)
 		m.Asleep = -1
@@ -1054,14 +1058,26 @@ func (l *loader) drop(row row) *Drop {
 	return &Drop{What: what, Rate: n, file: row.file, line: row.n}
 }
 
-// checkDrops checks the items the monsters drop.
+// checkDrops checks the items the monsters drop, and the arrows they
+// shoot.
 func (l *loader) checkDrops(d *Dungeon) {
 	for _, m := range d.Monsters {
+		for _, a := range m.Abilities {
+			if a.Item == "" {
+				continue
+			}
+			if it := d.Item(a.Item); it == nil || it.Category != CategoryArrow {
+				l.errorf(a.file, a.line, "能力: %s: no arrow %q", a.Name, a.Item)
+			}
+		}
 		if m.Drop == nil || m.Drop.What == DropItem || m.Drop.What == DropMoney || m.Drop.What == DropNone {
 			continue
 		}
+		if c := Category(m.Drop.What); slices.Contains(categories, c) && c != CategoryMoney {
+			continue
+		}
 		if it := d.Item(m.Drop.What); it == nil || it.Category == CategoryMoney {
-			l.errorf(m.Drop.file, m.Drop.line, "落とし物: no item %q (want 道具, お金, なし or the ID of an item)", m.Drop.What)
+			l.errorf(m.Drop.file, m.Drop.line, "落とし物: no item %q (want 道具, お金, なし, a kind of items or the ID of an item)", m.Drop.What)
 		}
 	}
 }

@@ -6,16 +6,20 @@ import (
 )
 
 func TestParseAbilities(t *testing.T) {
-	as, err := parseAbilities("怒り:33:150 ふらふら:50")
+	as, err := parseAbilities("怒り:33:150 ふらふら:50 射撃:10:100:kiya:1")
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []Ability{{AbilityAnger, []int{33, 150}}, {AbilityErratic, []int{50}}}
+	want := []Ability{
+		{Name: AbilityAnger, Values: []int{33, 150}},
+		{Name: AbilityErratic, Values: []int{50}},
+		{Name: AbilityShoot, Values: []int{10, 100, 0, 1}, Item: "kiya"},
+	}
 	if len(as) != len(want) {
 		t.Fatalf("got %v, want %v", as, want)
 	}
 	for i := range want {
-		if as[i].Name != want[i].Name || len(as[i].Values) != len(want[i].Values) {
+		if as[i].Name != want[i].Name || as[i].Item != want[i].Item || len(as[i].Values) != len(want[i].Values) {
 			t.Fatalf("got %v, want %v", as, want)
 		}
 		for j := range want[i].Values {

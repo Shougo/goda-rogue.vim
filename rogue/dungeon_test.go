@@ -161,6 +161,12 @@ func TestDungeonErrors(t *testing.T) {
 		{"bad debug rule", func(m fstest.MapFS) {
 			m["rules.txt"].Data = append(m["rules.txt"].Data, "デバッグ\tはい\n"...)
 		}, `デバッグ: want 可 or 不可`},
+		{"shooting no arrow", func(m fstest.MapFS) {
+			m["monsters.txt"].Data = []byte(strings.ReplaceAll(string(m["monsters.txt"].Data), "射撃:10:100:kiya:0", "射撃:10:100:bokutou:0"))
+		}, `能力: 射撃: no arrow "bokutou"`},
+		{"a drop of no kind", func(m fstest.MapFS) {
+			m["monsters.txt"].Data = []byte(strings.ReplaceAll(string(m["monsters.txt"].Data), "\t矢:3\n", "\t剣:3\n"))
+		}, `落とし物: no item "剣"`},
 		{"hit rate above 100", func(m fstest.MapFS) {
 			m["rules.txt"].Data = []byte(strings.ReplaceAll(string(m["rules.txt"].Data), "仲間の命中\t88", "仲間の命中\t101"))
 		}, `仲間の命中: 101 above 100`},

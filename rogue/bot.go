@@ -99,7 +99,7 @@ func (b *Bot) Next(g *Game) (string, []string) {
 		return "move", []string{clockwise[b.rng.IntN(len(clockwise))]}
 	}
 	for _, rule := range []func(*Game) (string, []string){
-		b.heal, b.danger, b.shoot, b.fight, b.eat, b.boost, b.equip, b.identify, b.light,
+		b.heal, b.danger, b.shoot, b.fight, b.chase, b.eat, b.boost, b.equip, b.identify, b.light,
 		b.tidy, b.rest, b.leave, b.pick, b.explore,
 	} {
 		if action, args := rule(g); action != "" {
@@ -976,6 +976,22 @@ func (b *Bot) fight(g *Game) (string, []string) {
 	return "attack", nil
 }
 
+// chase goes for an archer in sight, awake: it does not come, and shoots
+// from afar. The way keeps off the lines it shoots along, if it can.
+func (b *Bot) chase(g *Game) (string, []string) {
+	var archer *Monster
+	for _, m := range g.visibleEnemies() {
+		if _, ok := m.ability(AbilityShoot); ok && !m.Dozing &&
+			(archer == nil || chebyshev(m.Pos, g.Player) < chebyshev(archer.Pos, g.Player)) {
+			archer = m
+		}
+	}
+	if archer == nil || chebyshev(archer.Pos, g.Player) <= 1 {
+		return "", nil
+	}
+	return b.walk(g, func(p Point) bool { return chebyshev(p, archer.Pos) == 1 })
+}
+
 // directionName returns the name of the direction d.
 func directionName(d Point) string {
 	for _, name := range clockwise {
@@ -1245,8 +1261,8 @@ func (b *Bot) walk(g *Game, goal func(Point) bool) (string, []string) {
 // route finds the nearest tile that goal accepts, as walk does, and
 // returns the first step toward it and how many steps it is away.
 func (b *Bot) route(g *Game, goal func(Point) bool) (Point, int, bool) {
-	// Around the lines of an enemy that charges or pulls, if there is a
-	// way: on one, it reaches the player from afar.
+	// Around the lines of an enemy that charges, pulls or shoots, if
+	// there is a way: on one, it reaches the player from afar.
 	if lines := reachLines(g); len(lines) > 0 {
 		if p, n, ok := b.routeAvoiding(g, goal, lines); ok {
 			return p, n, true
@@ -1256,7 +1272,7 @@ func (b *Bot) route(g *Game, goal func(Point) bool) (Point, int, bool) {
 }
 
 // reachLines returns the tiles from where the enemies in sight, awake,
-// would charge or pull the player.
+// would charge, pull or shoot the player.
 func reachLines(g *Game) map[Point]bool {
 	var lines map[Point]bool
 	for _, m := range g.visibleEnemies() {
@@ -1264,7 +1280,7 @@ func reachLines(g *Game) map[Point]bool {
 			continue
 		}
 		reach := 0
-		for _, n := range []AbilityName{AbilityCharge, AbilityPull} {
+		for _, n := range lineAbilities {
 			if a, ok := m.ability(n); ok {
 				reach = max(reach, a.Values[0])
 			}
@@ -1467,9 +1483,9 @@ func cause(g *Game) string {
 }
 
 // reachesNow says whether m can reach the player from where it is on its
-// next action: a charge or a pull along its line.
+// next action: a charge, a pull or a shot along its line.
 func reachesNow(g *Game, m *Monster) bool {
-	for _, n := range []AbilityName{AbilityCharge, AbilityPull} {
+	for _, n := range lineAbilities {
 		if a, ok := m.ability(n); ok && a.Values[0] > 0 {
 			if _, _, ok := g.lineTo(m.Pos, g.Player, a.Values[0]); ok {
 				return true
