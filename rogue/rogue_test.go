@@ -932,3 +932,24 @@ func kind(id string) *MonsterDef {
 	}
 	return m
 }
+
+// TestDistancesKept: the distances are kept while the tiles stay the
+// same, and worked out again when one changes.
+func TestDistancesKept(t *testing.T) {
+	g, r := roomGame(t, 8, 1)
+	to := Point{r.X + 7, r.Y}
+	d1 := g.distances(to)
+	if d2 := g.distances(to); &d1[0] != &d2[0] {
+		t.Error("worked out again with the tiles the same")
+	}
+	i, _ := g.index(Point{r.X, r.Y})
+	if d1[i] != 7 {
+		t.Fatalf("distance %d, want 7", d1[i])
+	}
+	// (The way may go round the wall: only being worked out again is
+	// sure.)
+	g.Level.set(Point{r.X + 3, r.Y}, TileRock)
+	if d3 := g.distances(to); &d3[0] == &d1[0] {
+		t.Error("not worked out again after a wall")
+	}
+}

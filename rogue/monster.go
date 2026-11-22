@@ -288,8 +288,37 @@ func (g *Game) stepToward(m *Monster, to Point) bool {
 
 // distances returns the number of steps from every tile to to (-1 where it
 // cannot be reached), by the walkable tiles, diagonals around corners left
-// out; creatures are not obstacles.
+// out; creatures are not obstacles. The tiles alone decide it, so it is
+// kept while they stay the same (the monsters going for the player, or
+// wandering to the same tile, ask again and again): not to be changed by
+// the caller.
 func (g *Game) distances(to Point) []int {
+	c := &g.distCache
+	if c.level != g.Level || c.version != g.Level.version || len(c.dist) >= maxDistances {
+		*c = distCache{level: g.Level, version: g.Level.version, dist: map[Point][]int{}}
+	}
+	if dist, ok := c.dist[to]; ok {
+		return dist
+	}
+	dist := g.workOutDistances(to)
+	c.dist[to] = dist
+	return dist
+}
+
+// distCache keeps the distances on a level, as its tiles are, by where
+// they lead.
+type distCache struct {
+	level   *Level
+	version int
+	dist    map[Point][]int
+}
+
+// maxDistances is how many distances distCache keeps at most (each is as
+// big as the level): past it, it starts again.
+const maxDistances = 64
+
+// workOutDistances is distances, worked out.
+func (g *Game) workOutDistances(to Point) []int {
 	l := g.Level
 	dist := make([]int, len(l.Tiles))
 	for i := range dist {

@@ -66,6 +66,9 @@ type Level struct {
 	// Maze says whether it is a maze: things lie anywhere in it, not only
 	// in its rooms.
 	Maze bool
+	// version counts the changes of its tiles (set), for what is worked
+	// out from them (Game.distances).
+	version int
 }
 
 // At returns the tile at p; outside the floor, rock.
@@ -76,7 +79,10 @@ func (l *Level) At(p Point) Tile {
 	return l.Tiles[p.Y*l.W+p.X]
 }
 
-func (l *Level) set(p Point, t Tile) { l.Tiles[p.Y*l.W+p.X] = t }
+func (l *Level) set(p Point, t Tile) {
+	l.Tiles[p.Y*l.W+p.X] = t
+	l.version++
+}
 
 // RoomAt returns the index of the room (not a dummy) whose interior holds
 // p, or -1.

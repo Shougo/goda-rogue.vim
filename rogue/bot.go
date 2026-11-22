@@ -1308,26 +1308,39 @@ func reachLines(g *Game) map[Point]bool {
 
 // routeAvoiding is route, not through the tiles avoid.
 func (b *Bot) routeAvoiding(g *Game, goal func(Point) bool, avoid map[Point]bool) (Point, int, bool) {
-	from := map[Point]Point{g.Player: g.Player}
+	// from is the tile each tile is reached from, by its index (-1: not
+	// reached); the directions go clockwise from up, as clockwise.
+	l := g.Level
+	from := make([]int, len(l.Tiles))
+	for i := range from {
+		from[i] = -1
+	}
+	start, ok := g.index(g.Player)
+	if !ok {
+		return Point{}, 0, false
+	}
+	from[start] = start
 	queue := []Point{g.Player}
 	for len(queue) > 0 {
 		p := queue[0]
 		queue = queue[1:]
 		if goal(p) {
 			n := 1
-			for from[p] != g.Player {
-				p = from[p]
+			i, _ := g.index(p)
+			for from[i] != start {
+				i = from[i]
 				n++
 			}
-			return p, n, true
+			return Point{i % l.W, i / l.W}, n, true
 		}
-		for _, name := range clockwise {
-			d := Directions[name]
+		pi, _ := g.index(p)
+		for _, d := range around {
 			q := p.Add(d)
-			if _, ok := from[q]; ok || avoid[q] || !b.passable(g, q) || !g.clearFrom(p, d) {
+			qi, ok := g.index(q)
+			if !ok || from[qi] >= 0 || (len(avoid) > 0 && avoid[q]) || !b.passable(g, q) || !g.clearFrom(p, d) {
 				continue
 			}
-			from[q] = p
+			from[qi] = pi
 			queue = append(queue, q)
 		}
 	}

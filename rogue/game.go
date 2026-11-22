@@ -77,6 +77,8 @@ type Game struct {
 	Confused, Slowed, Hasted, Asleep int
 	MouthSealed                      bool
 	hasteSkip                        bool
+	// distCache keeps the distances worked out (distances).
+	distCache distCache
 	// Stuck is how many more turns the player is caught in a snare;
 	// sprung says whether a trap went off on the last step.
 	Stuck  int
