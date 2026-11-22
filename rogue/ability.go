@@ -424,7 +424,7 @@ func (g *Game) shootAt(m *Monster, a Ability) bool {
 		}
 		p = p.Add(d)
 		if p == g.Player {
-			if !hits(g.rng, r.MonsterHitRate) {
+			if !hits(g.rng, r.MonsterThrowRate) {
 				g.say("矢は当たらなかった。")
 				continue
 			}
@@ -441,7 +441,7 @@ func (g *Game) shootAt(m *Monster, a Ability) bool {
 		}
 		shown := g.sees(g.Player, p)
 		f.Dozing = false
-		if !hits(g.rng, r.MonsterHitRate) {
+		if !hits(g.rng, r.MonsterThrowRate) {
 			if shown {
 				g.say(def.Name + "は" + f.Name + "に当たらなかった。")
 			}

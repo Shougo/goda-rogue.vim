@@ -533,7 +533,10 @@ floors once the files change.
 				player (主の命中), of the monsters (敵の命中,
 				on the player and on an ally), and,
 				optional, of the allies (仲間の命中, default
-				敵の命中): key<TAB>value.  A later line
+				敵の命中), of what the player throws and
+				shoots (主の投擲命中, default 主の命中) and
+				of what the monsters shoot (敵の投擲命中,
+				default 敵の命中): key<TAB>value.  A later line
 				overrides an earlier one.
 	monsters.txt		The monsters, a table.  A family is a glyph
 				(字), a kind of it a rank (ランク, 1 to 4).

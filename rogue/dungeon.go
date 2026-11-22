@@ -100,6 +100,9 @@ type Rules struct {
 	// AllyHitRate is the hit rate of the attacks of allies (the monsters
 	// attack an ally at MonsterHitRate).
 	AllyHitRate int
+	// PlayerThrowRate and MonsterThrowRate are the hit rates of what the
+	// player and the monsters throw and shoot.
+	PlayerThrowRate, MonsterThrowRate int
 	// Growth is the growth table of the player and of monsters without
 	// one of their own.
 	Growth string
@@ -504,7 +507,7 @@ func (l *loader) load() {
 		"最大HP", "ちから", "回復ターン", "湧きターン", "最大モンスター数",
 		"風1", "風2", "風3", "防御K", "主の命中", "敵の命中", "成長", "最初の仲間", "強敵ランク差",
 		"持ち物の数", "ひびの段階", "腕輪の傷みやすさ", "満腹度", "腹減りターン", "見つけた罠", "デバッグ",
-		"お金投げ", "落とし物", "仲間の命中",
+		"お金投げ", "落とし物", "仲間の命中", "主の投擲命中", "敵の投擲命中",
 	})
 	r := &d.Rules
 	r.PlayerHP = l.keyInt("rules.txt", rk, "最大HP", 1)
@@ -536,7 +539,14 @@ func (l *loader) load() {
 	if _, ok := rk["仲間の命中"]; ok {
 		r.AllyHitRate = l.keyInt("rules.txt", rk, "仲間の命中", 0)
 	}
-	for _, key := range []string{"主の命中", "敵の命中", "仲間の命中"} {
+	r.PlayerThrowRate, r.MonsterThrowRate = r.PlayerHitRate, r.MonsterHitRate
+	if _, ok := rk["主の投擲命中"]; ok {
+		r.PlayerThrowRate = l.keyInt("rules.txt", rk, "主の投擲命中", 0)
+	}
+	if _, ok := rk["敵の投擲命中"]; ok {
+		r.MonsterThrowRate = l.keyInt("rules.txt", rk, "敵の投擲命中", 0)
+	}
+	for _, key := range []string{"主の命中", "敵の命中", "仲間の命中", "主の投擲命中", "敵の投擲命中"} {
 		if ln, ok := rk[key]; ok {
 			if n, err := strconv.Atoi(ln.fields[1]); err == nil && n > 100 {
 				l.errorf("rules.txt", ln.n, "%s: %d above 100", key, n)

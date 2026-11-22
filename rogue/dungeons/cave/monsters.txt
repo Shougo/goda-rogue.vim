@@ -15,8 +15,8 @@
 #   射撃:R:C:A:P  with the player in sight on one of its lines, 2 to R
 #              tiles away, C% of its actions shoot the arrow A (an item's
 #              ID) at it, even past a creature in the way: it hits the
-#              first one it meets, or every one with P 1 (and then never
-#              falls)
+#              first one it meets (at rules.txt 敵の投擲命中), or every
+#              one with P 1 (and then never falls)
 #   魔法:R:C:E  with the player in sight on one of its lines, 2 to R tiles
 #              away, C% of its actions wave a staff at it: a bolt of one
 #              of the effects E (separated by commas), at random, to the

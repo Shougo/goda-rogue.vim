@@ -12,9 +12,9 @@ func shootGame(t *testing.T, hit bool) (*Game, Room) {
 	g, r := roomGame(t, 12, 1)
 	g.HP, g.MaxHP = 999, 999
 	d := *g.Dungeon
-	d.Rules.MonsterHitRate = 0
+	d.Rules.MonsterThrowRate = 0
 	if hit {
-		d.Rules.MonsterHitRate = 100
+		d.Rules.MonsterThrowRate = 100
 	}
 	g.Dungeon = &d
 	return g, r

@@ -16,7 +16,7 @@ func TestShoot(t *testing.T) {
 	g, r := roomGame(t, 8, 3)
 	g.HP, g.MaxHP = 9999, 9999
 	g.Facing = "right"
-	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.PlayerHitRate = 100 })
+	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.PlayerThrowRate = 100 })
 	// A row with rock on the right of the room (not a doorway), for the
 	// arrows to fall in the room. (The room comes from the data.)
 	y := r.Y
@@ -88,7 +88,7 @@ func TestThrow(t *testing.T) {
 	g, r := roomGame(t, 8, 3)
 	g.HP, g.MaxHP = 9999, 9999
 	g.Facing = "right"
-	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.PlayerHitRate = 100 })
+	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.PlayerThrowRate = 100 })
 	m := place(g, kind("nezumi4"), Point{r.X + 2, r.Y})
 	m.HP = 50
 
@@ -128,4 +128,27 @@ func withRules(d *Dungeon, f func(*Rules)) *Dungeon {
 	c := *d
 	f(&c.Rules)
 	return &c
+}
+
+// TestThrowHitRate: what the player throws hits at 主の投擲命中, not at
+// 主の命中; a dungeon without it throws at 主の命中.
+func TestThrowHitRate(t *testing.T) {
+	g, r := roomGame(t, 8, 3)
+	g.Facing = "right"
+	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.PlayerHitRate, r.PlayerThrowRate = 100, 0 })
+	m := place(g, kind("nezumi4"), Point{r.X + 2, r.Y})
+	m.HP, m.MaxHP = 9999, 9999
+	for range 10 {
+		g.throwItem(g.newItemOf(g.rng, g.Dungeon.Item("kiya"), Point{}))
+	}
+	if m.HP != 9999 {
+		t.Errorf("an arrow hit at 主の投擲命中 0: HP %d", m.HP)
+	}
+	f := frozen(t).Rules
+	if f.PlayerThrowRate != f.PlayerHitRate || f.MonsterThrowRate != f.MonsterHitRate {
+		t.Errorf("throw rates %d/%d, want the hit rates %d/%d", f.PlayerThrowRate, f.MonsterThrowRate, f.PlayerHitRate, f.MonsterHitRate)
+	}
+	if c := cave().Rules; c.PlayerThrowRate != 84 || c.MonsterThrowRate != 84 {
+		t.Errorf("the cave throws at %d/%d, want 84/84", c.PlayerThrowRate, c.MonsterThrowRate)
+	}
 }

@@ -105,7 +105,7 @@ func TestGoldThrow(t *testing.T) {
 		{300, 5, 60},
 		{5, 10, 1},
 	} {
-		g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.PlayerHitRate, r.GoldThrow = 100, c.divisor })
+		g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.PlayerThrowRate, r.GoldThrow = 100, c.divisor })
 		m.HP, m.MaxHP, m.Pos = 9999, 9999, Point{r.X + 2, r.Y}
 		it := gold(g, c.amount, g.Player)
 		g.Items = nil

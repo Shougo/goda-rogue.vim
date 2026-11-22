@@ -51,7 +51,7 @@ func (g *Game) throwItem(it *Item) {
 			continue
 		}
 		m.Dozing = false
-		if !hits(g.rng, r.PlayerHitRate) {
+		if !hits(g.rng, r.PlayerThrowRate) {
 			g.say(m.Name + "に当たらなかった。")
 			continue
 		}
