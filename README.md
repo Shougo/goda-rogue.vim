@@ -58,6 +58,8 @@ function s:goda_rogue_settings() abort
   nnoremap <buffer> . <Cmd>call goda_rogue#do('wait')<CR>
   nnoremap <buffer> > <Cmd>call goda_rogue#do('stairs')<CR>
   nnoremap <buffer> i <Cmd>call goda_rogue#do('inventory')<CR>
+  " What is under the player: the item, else a found trap.
+  nnoremap <buffer> ; <Cmd>call goda_rogue#do('foot')<CR>
   nnoremap <buffer> , <Cmd>call goda_rogue#do('pickup')<CR>
   nnoremap <buffer> f <Cmd>call goda_rogue#do('shoot')<CR>
   nnoremap <buffer> x <Cmd>call goda_rogue#do('look')<CR>
