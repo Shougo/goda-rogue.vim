@@ -72,28 +72,28 @@ func TestDungeonErrors(t *testing.T) {
 			m["growth.txt"].Data = append(m["growth.txt"].Data, "普通\t40\t999999\t1\t1\t1\n"...)
 		}, `level 40, want 31`},
 		{"bad speed", func(m fstest.MapFS) {
-			m["monsters.txt"].Data = append(m["monsters.txt"].Data, "x1\t鼠\tx\t1\t1\t1\t1\t1\t光速\t-\t-\t-\t-\n"...)
+			m["monsters.txt"].Data = append(m["monsters.txt"].Data, "x1\t鼠\tx\t1\t1\t1\t1\t1\t光速\t-\t-\t-\t-\t-\n"...)
 		}, `速度: want`},
 		{"unknown ability", func(m fstest.MapFS) {
-			m["monsters.txt"].Data = append(m["monsters.txt"].Data, "x1\t鼠\tx\t1\t1\t1\t1\t1\t通常\t-\t飛行:1\t-\t-\n"...)
+			m["monsters.txt"].Data = append(m["monsters.txt"].Data, "x1\t鼠\tx\t1\t1\t1\t1\t1\t通常\t-\t飛行:1\t-\t-\t-\n"...)
 		}, `能力: unknown ability "飛行"`},
 		{"numbers of an ability", func(m fstest.MapFS) {
-			m["monsters.txt"].Data = append(m["monsters.txt"].Data, "x1\t鼠\tx\t1\t1\t1\t1\t1\t通常\t-\t怒り:33\t-\t-\n"...)
+			m["monsters.txt"].Data = append(m["monsters.txt"].Data, "x1\t鼠\tx\t1\t1\t1\t1\t1\t通常\t-\t怒り:33\t-\t-\t-\n"...)
 		}, `能力: 怒り: want 2 numbers`},
 		{"ability out of range", func(m fstest.MapFS) {
-			m["monsters.txt"].Data = append(m["monsters.txt"].Data, "x1\t鼠\tx\t1\t1\t1\t1\t1\t通常\t-\tふらふら:0\t-\t-\n"...)
+			m["monsters.txt"].Data = append(m["monsters.txt"].Data, "x1\t鼠\tx\t1\t1\t1\t1\t1\t通常\t-\tふらふら:0\t-\t-\t-\n"...)
 		}, `能力: ふらふら: chance % wants 1 to 100, not "0"`},
 		{"ability twice", func(m fstest.MapFS) {
-			m["monsters.txt"].Data = append(m["monsters.txt"].Data, "x1\t鼠\tx\t1\t1\t1\t1\t1\t通常\t-\tふらふら:5 ふらふら:6\t-\t-\n"...)
+			m["monsters.txt"].Data = append(m["monsters.txt"].Data, "x1\t鼠\tx\t1\t1\t1\t1\t1\t通常\t-\tふらふら:5 ふらふら:6\t-\t-\t-\n"...)
 		}, `能力: the ability ふらふら twice`},
 		{"drop of no item", func(m fstest.MapFS) {
-			m["monsters.txt"].Data = append(m["monsters.txt"].Data, "x1\t鼠\tx\t1\t1\t1\t1\t1\t通常\t-\t-\t-\tnoitem:5\n"...)
+			m["monsters.txt"].Data = append(m["monsters.txt"].Data, "x1\t鼠\tx\t1\t1\t1\t1\t1\t通常\t-\t-\t-\tnoitem:5\t-\n"...)
 		}, `落とし物: no item "noitem"`},
 		{"drop rate", func(m fstest.MapFS) {
-			m["monsters.txt"].Data = append(m["monsters.txt"].Data, "x1\t鼠\tx\t1\t1\t1\t1\t1\t通常\t-\t-\t-\tお金:0\n"...)
+			m["monsters.txt"].Data = append(m["monsters.txt"].Data, "x1\t鼠\tx\t1\t1\t1\t1\t1\t通常\t-\t-\t-\tお金:0\t-\n"...)
 		}, `落とし物: want -, なし, or what:percent`},
 		{"asleep above 100", func(m fstest.MapFS) {
-			m["monsters.txt"].Data = append(m["monsters.txt"].Data, "x1\t鼠\tx\t1\t1\t1\t1\t1\t通常\t-\t-\t101\t-\n"...)
+			m["monsters.txt"].Data = append(m["monsters.txt"].Data, "x1\t鼠\tx\t1\t1\t1\t1\t1\t通常\t-\t-\t101\t-\t-\n"...)
 		}, `眠り: 101 above 100`},
 		{"unknown effect", func(m fstest.MapFS) {
 			m["items.txt"].Data = append(m["items.txt"].Data, "x\t腕\tx\t腕輪\t0\t飛行\t0\t-\t-\t0\t0\n"...)
@@ -165,7 +165,7 @@ func TestDungeonErrors(t *testing.T) {
 			m["monsters.txt"].Data = []byte(strings.ReplaceAll(string(m["monsters.txt"].Data), "射撃:10:100:kiya:0", "射撃:10:100:bokutou:0"))
 		}, `能力: 射撃: no arrow "bokutou"`},
 		{"a drop of no kind", func(m fstest.MapFS) {
-			m["monsters.txt"].Data = []byte(strings.ReplaceAll(string(m["monsters.txt"].Data), "\t矢:3\n", "\t剣:3\n"))
+			m["monsters.txt"].Data = []byte(strings.ReplaceAll(string(m["monsters.txt"].Data), "\t矢:3\t", "\t剣:3\t"))
 		}, `落とし物: no item "剣"`},
 		{"hit rate above 100", func(m fstest.MapFS) {
 			m["rules.txt"].Data = []byte(strings.ReplaceAll(string(m["rules.txt"].Data), "仲間の命中\t88", "仲間の命中\t101"))

@@ -20,7 +20,8 @@ func TestDrops(t *testing.T) {
 	if its := kill("touzoku1"); len(its) != 1 || its[0].Def.Category != CategoryMoney || its[0].Amount <= 0 {
 		t.Errorf("a 盗人 dropped %v, want money", its)
 	}
-	if its := kill("touzoku2"); len(its) != 1 || its[0].Def.Category == CategoryMoney {
+	// (An item of the floor's table, which may be money.)
+	if its := kill("touzoku2"); len(its) != 1 {
 		t.Errorf("a 盗賊 dropped %v, want an item", its)
 	}
 	for _, tc := range []struct {

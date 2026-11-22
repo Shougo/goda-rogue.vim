@@ -336,8 +336,10 @@ look                                                         *goda-rogue-look*
 		Choose one of the monsters, items and found traps the
 		player sees, the nearest first, with where it is ("右5
 		上2"), to read about it: the rank and the speed of a
-		monster, whether it is asleep, the level and HP of an ally;
-		the kind of a trap and what it does.  It costs no turn.
+		monster, whether it is asleep, its states (混乱, 鈍足, 睡眠,
+		封印), what its abilities do and what the dungeon says of it
+		(monsters.txt 説明), the level and HP of an ally; the kind of
+		a trap and what it does.  It costs no turn.
 
 map                                                           *goda-rogue-map*
 		Show or hide the mini-map (|goda-rogue-mini-map|).  It costs
@@ -606,7 +608,10 @@ floors once the files change.
 				(rules.txt 落とし物: the percent of an
 				item of the floor's item table, 0 without
 				it).  A monster of the floors that
-				defeats another ranks up.
+				defeats another ranks up.  説明, optional,
+				is what the maker says of it, shown under
+				what its abilities do when the player looks
+				at it (- for none).
 	monster_table.txt	Which monsters appear on which floors (開始
 				to 終了), by weight (頻度), a table.
 	items.txt		The items, a table.  種類 is the kind of an

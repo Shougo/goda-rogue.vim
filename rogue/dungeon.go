@@ -159,6 +159,9 @@ type MonsterDef struct {
 	// Drop is what it drops when the player kills it (monsters.txt
 	// 落とし物); nil for the dungeon's rule.
 	Drop *Drop
+	// Description is what the maker of the dungeon says of it (monsters.txt
+	// 説明), shown when the player looks at it; "" for none.
+	Description string
 }
 
 // Drop is what a kind of monster drops when killed, and how often.
@@ -633,6 +636,9 @@ func (l *loader) load() {
 		}
 		m.Abilities = as
 		m.Drop = l.drop(row)
+		if v := row.cols["説明"]; v != "-" {
+			m.Description = v
+		}
 		m.Asleep = -1
 		if v, ok := row.cols["眠り"]; ok && v != "-" {
 			m.Asleep = l.int(row, "眠り", 0)
