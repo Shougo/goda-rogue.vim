@@ -3,6 +3,7 @@ package rogue
 import (
 	"fmt"
 	"math/rand/v2"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -37,7 +38,54 @@ const (
 	// every one. An arrow that hits no one falls where it stops, unless
 	// it pierces.
 	AbilityShoot AbilityName = "射撃"
+	// AbilityMagic: with the player in sight on one of its lines within a
+	// reach and not next to it, it waves a staff at it by a chance (a
+	// percent): a magic bolt of one of its effects (MagicEffect), at
+	// random, which takes the first creature it meets.
+	AbilityMagic AbilityName = "魔法"
 )
+
+// MagicEffect is an effect of the bolt of AbilityMagic.
+type MagicEffect string
+
+// The effects of the bolts of monsters.
+const (
+	MagicWarp    MagicEffect = "ワープ"
+	MagicHaste   MagicEffect = "倍速"
+	MagicBlow    MagicEffect = "吹き飛ばし"
+	MagicConfuse MagicEffect = "混乱"
+	MagicSlow    MagicEffect = "鈍足"
+	MagicSleep   MagicEffect = "睡眠"
+	MagicSeal    MagicEffect = "封印"
+	MagicHalf    MagicEffect = "HP1/2"
+	MagicQuarter MagicEffect = "HP1/4"
+	MagicLevel1  MagicEffect = "レベル-1"
+	MagicLevel3  MagicEffect = "レベル-3"
+)
+
+// magicEffects are the effects, in a fixed order, for the error that lists
+// them.
+var magicEffects = []MagicEffect{
+	MagicWarp, MagicHaste, MagicBlow, MagicConfuse, MagicSlow, MagicSleep,
+	MagicSeal, MagicHalf, MagicQuarter, MagicLevel1, MagicLevel3,
+}
+
+// parseMagic reads the effects of AbilityMagic: separated by commas.
+func parseMagic(s string) ([]MagicEffect, error) {
+	var es []MagicEffect
+	for _, f := range strings.Split(s, ",") {
+		e := MagicEffect(f)
+		if !slices.Contains(magicEffects, e) {
+			names := make([]string, len(magicEffects))
+			for i, n := range magicEffects {
+				names[i] = string(n)
+			}
+			return nil, fmt.Errorf("unknown effect %q (want %s)", f, strings.Join(names, ", "))
+		}
+		es = append(es, e)
+	}
+	return es, nil
+}
 
 // abilityDef is what an ability takes: its numbers, each in a range.
 type abilityDef struct {
@@ -45,9 +93,9 @@ type abilityDef struct {
 	// maxs their ranges.
 	values     []string
 	mins, maxs []int
-	// item is the place of the value that is the ID of an item (not a
-	// number), plus 1; 0 for none.
-	item int
+	// text is the place of the value that is text (not a number), plus 1;
+	// 0 for none.
+	text int
 }
 
 var abilityDefs = map[AbilityName]abilityDef{
@@ -57,6 +105,7 @@ var abilityDefs = map[AbilityName]abilityDef{
 	AbilityCharge:   {[]string{"reach", "damage"}, []int{2, 0}, []int{maxReach, 999}, 0},
 	AbilityPull:     {[]string{"reach", "chance %", "hit"}, []int{0, 1, 0}, []int{maxReach, 100, 1}, 0},
 	AbilityShoot:    {[]string{"reach", "chance %", "arrow", "pierce"}, []int{2, 1, 0, 0}, []int{maxReach, 100, 0, 1}, 3},
+	AbilityMagic:    {[]string{"reach", "chance %", "effects"}, []int{2, 1, 0}, []int{maxReach, 100, 0}, 3},
 }
 
 // maxReach is the farthest reach of an ability along a line.
@@ -64,18 +113,20 @@ const maxReach = 20
 
 // abilityNames are the abilities in a fixed order, for the error that
 // lists them.
-var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot}
+var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic}
 
 // lineAbilities are the abilities that reach the player from afar along
 // a line, their reach their first number.
-var lineAbilities = []AbilityName{AbilityCharge, AbilityPull, AbilityShoot}
+var lineAbilities = []AbilityName{AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic}
 
 // Ability is an ability of a kind of monster, with its numbers (0 in the
-// place of an item's ID) and the ID of its item, if it takes one.
+// place of its text) and its text, if it takes one: the ID of an item
+// (AbilityShoot), or Effects (AbilityMagic).
 type Ability struct {
-	Name   AbilityName
-	Values []int
-	Item   string
+	Name    AbilityName
+	Values  []int
+	Item    string
+	Effects []MagicEffect
 	// file and line are where it is read, for the check of the item.
 	file string
 	line int
@@ -109,9 +160,17 @@ func parseAbilities(s string) ([]Ability, error) {
 		}
 		a := Ability{Name: name}
 		for i, v := range parts[1:] {
-			if i == def.item-1 {
-				a.Item = v
+			if i == def.text-1 {
 				a.Values = append(a.Values, 0)
+				if name != AbilityMagic {
+					a.Item = v
+					continue
+				}
+				es, err := parseMagic(v)
+				if err != nil {
+					return nil, fmt.Errorf("%s: %v", name, err)
+				}
+				a.Effects = es
 				continue
 			}
 			n, err := strconv.Atoi(v)
@@ -125,8 +184,12 @@ func parseAbilities(s string) ([]Ability, error) {
 	return as, nil
 }
 
-// ability returns the ability of m named n, if it has it.
+// ability returns the ability of m named n, if it has it (and is not
+// sealed).
 func (m *Monster) ability(n AbilityName) (Ability, bool) {
+	if m.Sealed {
+		return Ability{}, false
+	}
 	for _, a := range m.Def.Abilities {
 		if a.Name == n {
 			return a, true
@@ -218,6 +281,9 @@ func (g *Game) reachAbility(m *Monster) bool {
 		return true
 	}
 	if a, ok := m.ability(AbilityShoot); ok && g.shootAt(m, a) {
+		return true
+	}
+	if a, ok := m.ability(AbilityMagic); ok && g.castAt(m, a) {
 		return true
 	}
 	return false

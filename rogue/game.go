@@ -68,6 +68,15 @@ type Game struct {
 	// houseFound says whether the player has entered it.
 	House      int
 	houseFound bool
+	// The states of the player the bolts of monsters bring (magic.go):
+	// the turns left confused (moving and attacking at random), slowed
+	// (two turns an action), fast (two actions a turn) and asleep, and
+	// whether its mouth is sealed for the floor (no eating, drinking,
+	// reading, talking). hasteSkip says whether the monsters skip the
+	// next action of a fast player.
+	Confused, Slowed, Hasted, Asleep int
+	MouthSealed                      bool
+	hasteSkip                        bool
 	// Stuck is how many more turns the player is caught in a snare;
 	// sprung says whether a trap went off on the last step.
 	Stuck  int
@@ -193,6 +202,7 @@ func (g *Game) descend() {
 	g.Depth++
 	g.event("floor %d", g.Depth)
 	g.FloorTurns, g.Wind, g.Lit, g.Dark = 0, 0, false, false
+	g.MouthSealed = false
 	rng := g.floorRNG(g.Depth)
 	c := g.Dungeon.counts(g.Depth)
 	switch n := c.BigRoom + c.Maze; {
@@ -490,12 +500,16 @@ func (g *Game) Do(action string, args []string) error {
 			return err
 		}
 		g.beginAction()
+		if g.Confused > 0 {
+			name, d = g.confusedDirection()
+		}
 		g.Facing = name
 		if g.Stuck > 0 && g.canStep(d) {
 			g.struggle()
 			return nil
 		}
-		if g.step(d, true) {
+		if g.step(d, true) || g.Confused > 0 {
+			// (Confused, a step into a wall costs the turn too.)
 			g.endTurn(true)
 		}
 	case "turn":
@@ -518,10 +532,21 @@ func (g *Game) Do(action string, args []string) error {
 			return err
 		}
 		g.beginAction()
+		if g.Confused > 0 {
+			// Confused, a dash is a step at random.
+			name, d = g.confusedDirection()
+			g.Facing = name
+			g.step(d, true)
+			g.endTurn(true)
+			return nil
+		}
 		g.Facing = name
 		g.dash(d)
 	case "attack":
 		g.beginAction()
+		if g.Confused > 0 {
+			g.Facing, _ = g.confusedDirection()
+		}
 		if g.attack() {
 			g.endTurn(false)
 		}
@@ -624,6 +649,48 @@ func (g *Game) endTurn(rest bool) {
 	if g.Over != "" {
 		// It ended in the action (a trap).
 		return
+	}
+	if g.Hasted > 0 {
+		g.Hasted--
+		if g.Hasted == 0 {
+			g.say("体の速さが元に戻った。")
+		}
+		g.hasteSkip = !g.hasteSkip
+		if g.hasteSkip {
+			// The monsters wait for the second action.
+			return
+		}
+	}
+	turns := 1
+	if g.Slowed > 0 {
+		turns = 2
+		g.Slowed--
+		if g.Slowed == 0 {
+			g.say("体が軽くなった。")
+		}
+	}
+	for range turns {
+		if g.Over != "" {
+			return
+		}
+		g.tick(rest)
+	}
+	for g.Asleep > 0 && g.Over == "" {
+		g.Asleep--
+		g.tick(true)
+		if g.Asleep == 0 && g.Over == "" {
+			g.say("目が覚めた。")
+		}
+	}
+}
+
+// tick is a turn passing: HP and fullness, the monsters, the floor.
+func (g *Game) tick(rest bool) {
+	if g.Confused > 0 {
+		g.Confused--
+		if g.Confused == 0 {
+			g.say("混乱が治った。")
+		}
 	}
 	g.Turn++
 	if rest && g.HP < g.MaxHP && g.Fullness > 0 {
@@ -759,6 +826,10 @@ func (g *Game) step(d Point, pick bool) bool {
 	to := g.Player.Add(d)
 	if m := g.MonsterAt(to); m != nil {
 		if m.Keeper && !m.Angry {
+			if g.MouthSealed {
+				g.say("口が封じられていて話せない。")
+				return false
+			}
 			g.talkTo(m)
 			return false
 		}
@@ -887,6 +958,17 @@ func (g *Game) Status() string {
 		playTime(g.PlayTime()), directionArrows[g.Facing], g.Seed)
 	if w := g.Dungeon.Rules.WindTurns; g.Wind > 0 && g.Wind < len(w) {
 		s += fmt.Sprintf("  次の風まで %d", w[g.Wind]-g.FloorTurns)
+	}
+	for _, st := range []struct {
+		on   bool
+		name string
+	}{
+		{g.Confused > 0, "混乱"}, {g.Slowed > 0, "鈍足"}, {g.Hasted > 0, "倍速"},
+		{g.Asleep > 0, "睡眠"}, {g.MouthSealed, "口封じ"},
+	} {
+		if st.on {
+			s += "  " + st.name
+		}
 	}
 	if g.Debugged {
 		s += "  デバッグ"

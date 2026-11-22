@@ -583,6 +583,9 @@ func (g *Game) choose(arg string) (bool, error) {
 			g.throwItem(g.Inventory[p.item])
 			return true, nil
 		case commandDrink, commandRead, commandWave, commandEat:
+			if g.mouthBlocks(p.Choices[n]) {
+				return false, nil
+			}
 			g.useItem(g.Inventory[p.item])
 			return true, nil
 		}
@@ -618,6 +621,9 @@ func (g *Game) doAtFoot(c string) bool {
 	case commandThrow:
 		g.throwItem(it)
 	case commandDrink, commandRead, commandWave, commandEat:
+		if g.mouthBlocks(c) {
+			return false
+		}
 		g.useItem(it)
 	default:
 		return false

@@ -181,6 +181,8 @@ func TestSwapWithAlly(t *testing.T) {
 	if !g.canStep(d) {
 		t.Skip("the ally is around a corner")
 	}
+	// No enemy for the ally to go for after the swap.
+	g.Monsters = []*Monster{ally}
 	if err := g.Do("move", []string{name}); err != nil {
 		t.Fatal(err)
 	}

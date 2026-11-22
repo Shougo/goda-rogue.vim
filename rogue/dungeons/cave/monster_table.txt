@@ -9,7 +9,8 @@
 # the last floors are the hardest, above all for a low level. The fast
 # 山犬 waits for 3F. The charging 猪 comes later than the other strong
 # ones: rank 1 from 15F, rank 2 only on 27-30F, and fewer. The archer 射
-# shoots from afar: rank 1 on 6-18F, rank 2 from 22F.
+# shoots from afar: rank 1 on 6-18F, rank 2 from 22F. The mage 魔 waves
+# its staff from afar: rank 1 on 5-16F, rank 2 from 19F.
 開始	終了	ID	頻度
 1	6	nezumi1	4
 1	6	hebi1	4
@@ -182,3 +183,8 @@
 17	18	shashu1	1
 22	22	shashu2	1
 23	30	shashu2	2
+5	5	mahou1	1
+6	12	mahou1	2
+13	16	mahou1	1
+19	20	mahou2	1
+21	30	mahou2	2

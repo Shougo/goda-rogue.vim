@@ -978,6 +978,16 @@ func (d *Dungeon) nextRank(m *MonsterDef) *MonsterDef {
 	return nil
 }
 
+// prevRank returns the kind of the family of m one rank below, or nil.
+func (d *Dungeon) prevRank(m *MonsterDef) *MonsterDef {
+	for _, n := range d.Monsters {
+		if n.Glyph == m.Glyph && n.Rank == m.Rank-1 {
+			return n
+		}
+	}
+	return nil
+}
+
 // ofRank returns the kinds of rank, or of the highest rank below it there
 // is.
 func (d *Dungeon) ofRank(rank int) []*MonsterDef {

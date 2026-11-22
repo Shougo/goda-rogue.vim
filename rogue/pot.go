@@ -194,6 +194,9 @@ func (g *Game) doInPot(i, n int, c string) bool {
 		g.throwItem(it)
 		return true
 	case commandDrink, commandRead, commandWave, commandEat:
+		if g.mouthBlocks(c) {
+			return false
+		}
 		g.useItem(it)
 		return true
 	}

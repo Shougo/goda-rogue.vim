@@ -17,6 +17,16 @@
 #              ID) at it, even past a creature in the way: it hits the
 #              first one it meets, or every one with P 1 (and then never
 #              falls)
+#   魔法:R:C:E  with the player in sight on one of its lines, 2 to R tiles
+#              away, C% of its actions wave a staff at it: a bolt of one
+#              of the effects E (separated by commas), at random, to the
+#              first creature on the way: ワープ, 倍速 (the player for 20
+#              turns, a monster for good), 吹き飛ばし, 混乱 (10 turns:
+#              moving and attacking at random), 鈍足 (10 actions of two
+#              turns), 睡眠 (5 turns), 封印 (the player: no eating,
+#              drinking, reading or talking on the floor; a monster: no
+#              abilities), HP1/2, HP1/4, レベル-1, レベル-3 (a monster:
+#              ranks)
 # 眠り: the share asleep on a new floor, a percent (- for a third).
 # 落とし物: what it drops when the player kills it, and how often: 道具:P
 # (P% an item of the floor's table), お金:P, a kind of items:P (矢:P, an
@@ -91,6 +101,10 @@ shashu1	射	射手	1	10	3	2	8	通常	-	射撃:10:100:kiya:0	-	矢:3
 shashu2	射	弓兵	2	24	6	5	25	通常	-	射撃:10:100:tetsuya:0	-	矢:4
 shashu3	射	強弓	3	46	10	9	70	通常	-	射撃:10:100:tetsuya:1	-	矢:6
 shashu4	射	弓聖	4	80	14	13	200	倍速	-	射撃:10:100:tetsuya:1	-	矢:8
+mahou1	魔	魔術師	1	12	3	2	10	通常	-	魔法:10:50:ワープ,倍速,吹き飛ばし	-	杖:3
+mahou2	魔	魔導士	2	26	6	5	30	通常	-	魔法:10:50:混乱,鈍足,レベル-1	-	杖:4
+mahou3	魔	大魔導	3	48	10	9	80	通常	-	魔法:10:50:睡眠,封印,HP1/2	-	杖:6
+mahou4	魔	魔人	4	84	14	13	220	通常	-	魔法:10:50:レベル-3,HP1/4,睡眠,封印	-	杖:8
 yoroi1	鎧	古鎧	1	22	7	7	5	通常	-	-	-	道具:4
 yoroi2	鎧	鉄鎧	2	44	13	12	16	通常	-	-	-	道具:6
 yoroi3	鎧	鬼鎧	3	82	20	21	50	通常	-	-	-	道具:9

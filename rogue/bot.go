@@ -976,12 +976,15 @@ func (b *Bot) fight(g *Game) (string, []string) {
 	return "attack", nil
 }
 
-// chase goes for an archer in sight, awake: it does not come, and shoots
-// from afar. The way keeps off the lines it shoots along, if it can.
+// chase goes for an archer or a mage in sight, awake: it does not come,
+// and shoots or waves its staff from afar. The way keeps off its lines,
+// if it can.
 func (b *Bot) chase(g *Game) (string, []string) {
 	var archer *Monster
 	for _, m := range g.visibleEnemies() {
-		if _, ok := m.ability(AbilityShoot); ok && !m.Dozing &&
+		_, shoots := m.ability(AbilityShoot)
+		_, casts := m.ability(AbilityMagic)
+		if (shoots || casts) && !m.Dozing &&
 			(archer == nil || chebyshev(m.Pos, g.Player) < chebyshev(archer.Pos, g.Player)) {
 			archer = m
 		}

@@ -77,6 +77,11 @@ type Monster struct {
 	Hunter bool
 	// Enraged says whether its anger (AbilityAnger) raised its attack.
 	Enraged bool
+	// The states the bolts of monsters bring (magic.go): the turns left
+	// confused, slowed (every other turn) and asleep (not woken by
+	// blows), and whether its abilities are sealed.
+	Confused, Slowed, Asleep int
+	Sealed                   bool
 	// EXP is what defeating it gives. An ally has Gained EXP, and its
 	// Level from them.
 	EXP    int
@@ -134,7 +139,16 @@ func (g *Game) sees(a, b Point) bool {
 func (g *Game) monstersAct() {
 	// A copy: monsters may die while others act.
 	for _, m := range slices.Clone(g.Monsters) {
-		for range m.Speed.actions(g.Turn) {
+		if m.Asleep > 0 {
+			m.Asleep--
+			continue
+		}
+		n := m.Speed.actions(g.Turn)
+		if m.Slowed > 0 {
+			m.Slowed--
+			n = min(n, g.Turn%2)
+		}
+		for range n {
 			if g.Over != "" || !slices.Contains(g.Monsters, m) {
 				break
 			}
@@ -155,6 +169,9 @@ func (g *Game) act(m *Monster) bool {
 	if m.Dozing {
 		g.stir(m)
 		return false
+	}
+	if m.Confused > 0 {
+		return g.actConfused(m)
 	}
 	if m.Ally {
 		return g.actAlly(m)
