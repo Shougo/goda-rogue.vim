@@ -328,7 +328,11 @@ func (g *Game) hitMonster(a, m *Monster) {
 	m.Dozing = false
 	shown := g.sees(g.Player, a.Pos) || g.sees(g.Player, m.Pos)
 	r := g.Dungeon.Rules
-	if !hits(g.rng, r.MonsterHitRate) {
+	rate := r.MonsterHitRate
+	if a.Ally {
+		rate = r.AllyHitRate
+	}
+	if !hits(g.rng, rate) {
 		if shown {
 			g.say(a.Name + "の攻撃は外れた。")
 		}

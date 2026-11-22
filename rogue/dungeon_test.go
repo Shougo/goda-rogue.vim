@@ -161,6 +161,9 @@ func TestDungeonErrors(t *testing.T) {
 		{"bad debug rule", func(m fstest.MapFS) {
 			m["rules.txt"].Data = append(m["rules.txt"].Data, "デバッグ\tはい\n"...)
 		}, `デバッグ: want 可 or 不可`},
+		{"hit rate above 100", func(m fstest.MapFS) {
+			m["rules.txt"].Data = []byte(strings.ReplaceAll(string(m["rules.txt"].Data), "仲間の命中\t88", "仲間の命中\t101"))
+		}, `仲間の命中: 101 above 100`},
 		{"bad found trap rule", func(m fstest.MapFS) {
 			m["rules.txt"].Data = append(m["rules.txt"].Data, "見つけた罠\t危険\n"...)
 		}, `見つけた罠: want 安全 or 発動`},

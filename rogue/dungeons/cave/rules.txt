@@ -23,6 +23,8 @@
 防御K	20
 主の命中	92
 敵の命中	88
+# The hit rate of the allies' attacks (optional: 敵の命中 if missing).
+仲間の命中	88
 # The growth table of the player (and of monsters without their own).
 成長	普通
 # The ally at the start (empty: none).
