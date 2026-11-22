@@ -350,12 +350,17 @@ func TestWatch(t *testing.T) {
 		t.Fatal(err)
 	}
 	w := &Plugin{game: g, watching: &watch{replay: rp}}
-	done, err := w.step(10)
-	if err != nil || done || w.watching.next != 10 {
-		t.Fatalf("step 10: %v, done %v, next %d", err, done, w.watching.next)
+	// Halfway, however long the random run lasted.
+	half := len(rp.Actions) / 2
+	if half == 0 {
+		t.Fatalf("a replay of %d actions", len(rp.Actions))
+	}
+	done, err := w.step(half)
+	if err != nil || done || w.watching.next != half {
+		t.Fatalf("step %d: %v, done %v, next %d", half, err, done, w.watching.next)
 	}
 	s := w.watchScreen(Size{80, 30})
-	if last := s.Lines[len(s.Lines)-1]; last != fmt.Sprintf("リプレイ  10/%d", len(rp.Actions)) {
+	if last := s.Lines[len(s.Lines)-1]; last != fmt.Sprintf("リプレイ  %d/%d", half, len(rp.Actions)) {
 		t.Errorf("progress %q", last)
 	}
 	if done, err := w.step(-1); err != nil || !done {

@@ -4,8 +4,12 @@
 # (大部屋), of a maze (迷路), and of a monster house (モンスターハウス: in
 # a room, or in the big room), and of a shop (店). 道具表 is the item
 # table the items of the floor come from (category_tables.txt). ハウスの罠
-# are the traps a monster house adds in its room (optional).
+# are the traps a monster house adds in its room (optional). Deeper
+# floors have fewer items: stronger monsters drop more, and shops make up
+# for the rest.
 開始	終了	敵の数	道具の数	道具表	罠の数	ハウスの罠	明るさ	大部屋	迷路	モンスターハウス	店
 1	2	5-8	6-10	床	2-5	3-6	通常	0	0	0	10
 3	4	5-8	6-10	床	2-5	3-6	通常	5	5	0	12
-5	30	5-8	6-10	床	2-5	3-6	通常	5	5	8	12
+5	8	5-8	6-10	床	2-5	3-6	通常	5	5	8	12
+9	18	5-8	5-8	床	2-5	3-6	通常	5	5	8	12
+19	30	5-8	4-6	床	2-5	3-6	通常	5	5	8	12

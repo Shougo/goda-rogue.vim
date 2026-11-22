@@ -28,8 +28,10 @@
 # The ally at the start (empty: none).
 最初の仲間	nezumi1
 # The chance, a percent, that a monster the player kills drops an item of
-# the floor's item table (monsters.txt 落とし物 may say otherwise).
-落とし物	8
+# the floor's item table (monsters.txt 落とし物 may say otherwise). The
+# cave gives each family its own rate (stronger ones drop more); this low
+# one is for a row that does not say.
+落とし物	3
 # How many items the player can carry.
 持ち物の数	20
 # How many cracks a bracelet can have: one more breaks it.
