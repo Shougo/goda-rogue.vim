@@ -109,15 +109,8 @@ func (g *Game) lookAt(n int) {
 	case m.Dozing:
 		msg += "  眠っている"
 	}
-	for _, st := range []struct {
-		on   bool
-		name string
-	}{
-		{m.Confused > 0, "混乱"}, {m.Slowed > 0, "鈍足"}, {m.Asleep > 0, "睡眠"}, {m.Sealed, "封印"},
-	} {
-		if st.on {
-			msg += "  " + st.name
-		}
+	for _, name := range m.States.names("封印") {
+		msg += "  " + name
 	}
 	g.say(msg)
 	if len(m.Def.Abilities) > 0 {

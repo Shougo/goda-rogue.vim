@@ -70,15 +70,11 @@ type Game struct {
 	// houseFound says whether the player has entered it.
 	House      int
 	houseFound bool
-	// The states of the player the bolts of monsters bring (magic.go):
-	// the turns left confused (moving and attacking at random), slowed
-	// (two turns an action), fast (two actions a turn) and asleep, and
-	// whether its mouth is sealed for the floor (no eating, drinking,
-	// reading, talking). hasteSkip says whether the monsters skip the
-	// next action of a fast player.
-	Confused, Slowed, Hasted, Asleep int
-	MouthSealed                      bool
-	hasteSkip                        bool
+	// States are the states of the player that pass with time
+	// (state.go). hasteSkip says whether the monsters skip the next
+	// action of a fast player.
+	States
+	hasteSkip bool
 	// distCache keeps the distances worked out (distances).
 	distCache distCache
 	// Stuck is how many more turns the player is caught in a snare;
@@ -207,7 +203,8 @@ func (g *Game) descend() {
 	g.Depth++
 	g.event("floor %d", g.Depth)
 	g.FloorTurns, g.Wind, g.Lit, g.Dark = 0, 0, false, false
-	g.MouthSealed = false
+	// (The seal of the mouth is for the floor.)
+	g.Sealed = false
 	rng := g.floorRNG(g.Depth)
 	c := g.Dungeon.counts(g.Depth)
 	switch n := c.BigRoom + c.Maze; {
@@ -841,7 +838,7 @@ func (g *Game) step(d Point, pick bool) bool {
 	to := g.Player.Add(d)
 	if m := g.MonsterAt(to); m != nil {
 		if m.Keeper && !m.Angry {
-			if g.MouthSealed {
+			if g.Sealed {
 				g.say("口が封じられていて話せない。")
 				return false
 			}
@@ -974,16 +971,8 @@ func (g *Game) Status() string {
 	if w := g.Dungeon.Rules.WindTurns; g.Wind > 0 && g.Wind < len(w) {
 		s += fmt.Sprintf("  次の風まで %d", w[g.Wind]-g.FloorTurns)
 	}
-	for _, st := range []struct {
-		on   bool
-		name string
-	}{
-		{g.Confused > 0, "混乱"}, {g.Slowed > 0, "鈍足"}, {g.Hasted > 0, "倍速"},
-		{g.Asleep > 0, "睡眠"}, {g.MouthSealed, "口封じ"},
-	} {
-		if st.on {
-			s += "  " + st.name
-		}
+	for _, name := range g.States.names("口封じ") {
+		s += "  " + name
 	}
 	if g.Debugged {
 		s += "  デバッグ"

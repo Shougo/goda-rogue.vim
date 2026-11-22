@@ -43,7 +43,7 @@ func (g *Game) allies() []*Monster {
 // askOrder asks what to tell the ally m (the one it follows now is
 // marked), unless the player's mouth is sealed.
 func (g *Game) askOrder(m *Monster) {
-	if g.MouthSealed {
+	if g.Sealed {
 		g.say("口が封じられていて命令できない。")
 		return
 	}

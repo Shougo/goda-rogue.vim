@@ -2,16 +2,6 @@ package rogue
 
 import "fmt"
 
-// The turns of the states the bolts of monsters bring.
-const (
-	confuseTurns = 10
-	slowTurns    = 10
-	sleepTurns   = 5
-	// hasteTurns is how long the player stays fast (a monster, for
-	// good).
-	hasteTurns = 20
-)
-
 // castAt is m waving its staff along its line to the player, which it
 // sees: a bolt of one of its effects, at random, to the first creature
 // on the way.
@@ -48,18 +38,9 @@ func (g *Game) magicOnPlayer(e MagicEffect, d Point, m *Monster) {
 	case MagicBlow:
 		g.say("吹き飛ばされた。")
 		g.flingPlayer(d, m)
-	case MagicConfuse:
-		g.Confused = confuseTurns
-		g.say("混乱した！")
-	case MagicSlow:
-		g.Slowed, g.Hasted = slowTurns, 0
-		g.say("体が重くなった……。")
-	case MagicSleep:
-		g.Asleep = sleepTurns
-		g.say("眠ってしまった……。")
-	case MagicSeal:
-		g.MouthSealed = true
-		g.say("口が封じられた！")
+	case MagicConfuse, MagicSlow, MagicSleep, MagicSeal:
+		g.States.take(e)
+		g.say(stateTexts[e].player)
 	case MagicHalf, MagicQuarter:
 		g.HP = max(g.HP/fraction(e), 1)
 		g.say(fmt.Sprintf("HPが%dになった。", g.HP))
@@ -90,18 +71,9 @@ func (g *Game) magicOn(f *Monster, e MagicEffect, d Point) {
 	case MagicBlow:
 		say("は吹き飛ばされた。")
 		g.fling(f, d, false)
-	case MagicConfuse:
-		f.Confused = confuseTurns
-		say("は混乱した！")
-	case MagicSlow:
-		f.Slowed = slowTurns
-		say("は遅くなった。")
-	case MagicSleep:
-		f.Asleep = sleepTurns
-		say("は眠ってしまった。")
-	case MagicSeal:
-		f.Sealed = true
-		say("は能力を封印された。")
+	case MagicConfuse, MagicSlow, MagicSleep, MagicSeal:
+		f.States.take(e)
+		say(stateTexts[e].monster)
 	case MagicHalf, MagicQuarter:
 		f.HP = max(f.HP/fraction(e), 1)
 		say(fmt.Sprintf("のHPが%dになった。", f.HP))
@@ -195,7 +167,7 @@ func (g *Game) rankDown(m *Monster) {
 // mouthBlocks says whether the player's sealed mouth keeps it from the
 // command c (eating, drinking, reading), and says so.
 func (g *Game) mouthBlocks(c string) bool {
-	if !g.MouthSealed {
+	if !g.Sealed {
 		return false
 	}
 	switch c {

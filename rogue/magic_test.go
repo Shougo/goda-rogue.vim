@@ -23,8 +23,8 @@ func TestCastAt(t *testing.T) {
 	m = place(g, kind("mahou1"), Point{r.X + 5, r.Y})
 	f := place(g, kind("kaeru1"), Point{r.X + 2, r.Y})
 	g.castAt(m, spell(MagicSeal))
-	if g.MouthSealed || !f.Sealed {
-		t.Errorf("player sealed %v, the frog %v: want the frog", g.MouthSealed, f.Sealed)
+	if g.Sealed || !f.Sealed {
+		t.Errorf("player sealed %v, the frog %v: want the frog", g.Sealed, f.Sealed)
 	}
 	if _, ok := f.ability(AbilityPull); ok {
 		t.Error("a sealed frog still pulls")
@@ -134,7 +134,7 @@ func TestPlayerConfused(t *testing.T) {
 // reading and talking, not from waving; until the next floor.
 func TestMouthSealed(t *testing.T) {
 	g, _ := roomGame(t, 6, 3)
-	g.MouthSealed = true
+	g.Sealed = true
 	for _, c := range []string{commandEat, commandDrink, commandRead} {
 		if !g.mouthBlocks(c) {
 			t.Errorf("%s with a sealed mouth", c)
@@ -147,7 +147,7 @@ func TestMouthSealed(t *testing.T) {
 		t.Errorf("status %q", g.Status())
 	}
 	g.descend()
-	if g.MouthSealed {
+	if g.Sealed {
 		t.Error("still sealed on the next floor")
 	}
 }

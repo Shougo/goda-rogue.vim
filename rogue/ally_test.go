@@ -184,7 +184,7 @@ func TestOrders(t *testing.T) {
 	g.Monsters = nil
 	a = place(g, kind("nezumi1"), Point{r.X + 1, r.Y})
 	a.Ally = true
-	g.MouthSealed = true
+	g.Sealed = true
 	g.Do("look", nil)
 	g.Do("choose", []string{"0"})
 	if g.Prompt != nil || !strings.Contains(g.Message, "口が封じられていて命令できない。") {
