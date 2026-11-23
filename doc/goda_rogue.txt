@@ -337,8 +337,8 @@ wait                                                         *goda-rogue-wait*
 
 stairs                                                     *goda-rogue-stairs*
 		Go down the stairs the player stands on.  The allies next to
-		the player or in its room come along (one told to wait
-		follows again).
+		the player, in its room or at an entrance of it come along
+		(one told to wait follows again).
 
 pickup                                                     *goda-rogue-pickup*
 		Pick up the item under the player.  Walking onto an item

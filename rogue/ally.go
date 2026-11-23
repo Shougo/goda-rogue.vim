@@ -93,11 +93,23 @@ func (g *Game) recruit() {
 }
 
 // comesAlong says whether the ally m goes down the stairs with the
-// player: next to it, or in its room.
+// player: next to it, in its room, or at an entrance of its room (on its
+// way in: to the eye, it is there).
 func (g *Game) comesAlong(m *Monster) bool {
 	if chebyshev(m.Pos, g.Player) <= 1 {
 		return true
 	}
 	room := g.Level.RoomAt(g.Player)
-	return room >= 0 && g.Level.RoomAt(m.Pos) == room
+	if room < 0 {
+		return false
+	}
+	if g.Level.RoomAt(m.Pos) == room {
+		return true
+	}
+	for _, d := range around {
+		if g.Level.RoomAt(m.Pos.Add(d)) == room && g.clearFrom(m.Pos, d) {
+			return true
+		}
+	}
+	return false
 }

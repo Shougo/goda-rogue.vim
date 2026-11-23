@@ -192,28 +192,44 @@ func TestOrders(t *testing.T) {
 	}
 }
 
-// TestAlliesComeAlong: the allies next to the player or in its room go
-// down the stairs with it, one told to wait following again; one in
-// another room stays behind.
+// TestAlliesComeAlong: the allies next to the player, in its room or at
+// an entrance of it go down the stairs with it, one told to wait
+// following again; one farther stays behind.
 func TestAlliesComeAlong(t *testing.T) {
 	g, r := roomGame(t, 12, 3)
 	g.Monsters = nil
 	near := place(g, kind("nezumi1"), Point{r.X + 1, r.Y})
 	far := place(g, kind("nezumi2"), Point{r.X + 10, r.Y + 2})
 	far.Order = OrderWait
-	var out Point
+	// A tile at an entrance of the room, and one farther out.
+	room := g.Level.RoomAt(g.Player)
+	door, out := Point{-1, -1}, Point{-1, -1}
 	for i, tile := range g.Level.Tiles {
 		p := Point{i % g.Level.W, i / g.Level.W}
-		if tile.Walkable() && g.Level.RoomAt(p) != g.Level.RoomAt(g.Player) {
+		if !tile.Walkable() || g.Level.RoomAt(p) == room {
+			continue
+		}
+		by := false
+		for _, d := range around {
+			by = by || g.Level.RoomAt(p.Add(d)) == room && g.clearFrom(p, d)
+		}
+		if by {
+			door = p
+		} else {
 			out = p
 		}
 	}
+	if door.X < 0 || out.X < 0 {
+		t.Fatalf("no entrance (%v) or no tile farther (%v)", door, out)
+	}
+	entering := place(g, kind("nezumi1"), door)
 	left := place(g, kind("nezumi3"), out)
-	near.Ally, far.Ally, left.Ally = true, true, true
+	near.Ally, far.Ally, entering.Ally, left.Ally = true, true, true, true
+	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.MaxAllies = 4 })
 	g.descend()
 	as := g.allies()
-	if len(as) != 2 || !slices.Contains(as, near) || !slices.Contains(as, far) {
-		t.Fatalf("%d allies came along, want the two of the room", len(as))
+	if len(as) != 3 || !slices.Contains(as, near) || !slices.Contains(as, far) || !slices.Contains(as, entering) {
+		t.Fatalf("%d allies came along, want the two of the room and the one at its entrance", len(as))
 	}
 	for _, a := range as {
 		if chebyshev(a.Pos, g.Player) != 1 || a.order() != OrderFollow {
