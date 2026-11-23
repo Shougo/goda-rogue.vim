@@ -20,6 +20,9 @@ type ShopDef struct {
 	// how many: from, to.
 	Guard  *MonsterDef
 	Guards [2]int
+	// Goods is how many goods it sells: from, to (shops.txt 品数; 0 to 0,
+	// as without the column, for the whole room).
+	Goods [2]int
 }
 
 // Shop is the shop of a floor.
@@ -99,19 +102,29 @@ func (g *Game) openShop(rng *rand.Rand, rooms []int, start int) {
 	}
 
 	// The goods: on the tiles of the room, but next to the doors (the way
-	// in).
+	// in). With a number of goods, on the tiles nearest to the middle of
+	// the room: a block (three by three for nine).
+	var tiles []Point
 	for y := r.Y; y < r.Y+r.H; y++ {
 		for x := r.X; x < r.X+r.W; x++ {
 			p := Point{x, y}
-			if !g.free(p) || slices.ContainsFunc(doors, func(d Point) bool { return chebyshev(d, p) <= 1 }) {
-				continue
+			if g.free(p) && !slices.ContainsFunc(doors, func(d Point) bool { return chebyshev(d, p) <= 1 }) {
+				tiles = append(tiles, p)
 			}
-			it := g.newItemOf(rng, table.pick(rng, d, g.Depth), p)
-			it.ForSale = true
-			// A shop does not sell cursed goods.
-			it.Cursed = false
-			g.Items = append(g.Items, it)
 		}
+	}
+	if def.Goods[1] > 0 {
+		// (Twice the distance to the middle: no halves.)
+		far := func(p Point) int { return max(abs(2*p.X-(2*r.X+r.W-1)), abs(2*p.Y-(2*r.Y+r.H-1))) }
+		slices.SortStableFunc(tiles, func(a, b Point) int { return far(a) - far(b) })
+		tiles = tiles[:min(between(rng, def.Goods[0], def.Goods[1]), len(tiles))]
+	}
+	for _, p := range tiles {
+		it := g.newItemOf(rng, table.pick(rng, d, g.Depth), p)
+		it.ForSale = true
+		// A shop does not sell cursed goods.
+		it.Cursed = false
+		g.Items = append(g.Items, it)
 	}
 }
 

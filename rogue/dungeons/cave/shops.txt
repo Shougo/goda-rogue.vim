@@ -2,9 +2,11 @@
 # item_tables.txt; no money in it); 店主 the shopkeeper (a monster of 種別 店主 in
 # monsters.txt), 店主の数 how many (min-max); 番犬 the guard that comes
 # after a thief (種別 番犬), 番犬の数 how many. The stronger the
-# shopkeepers and their guards, the harder stealing is.
-ID	名前	品表	店主	店主の数	番犬	番犬の数
-yorozu	よろず屋	よろず	shoten1	1	inu1	2-3
-kusa	草屋	草	shoten1	1	inu1	2-3
-bugu	武具屋	武具	shoten2	1-2	inu2	2-3
-ude	腕輪屋	腕輪	shoten3	2	inu3	2-4
+# shopkeepers and their guards, the harder stealing is. 品数 is how many
+# goods it sells (min-max), in the middle of its room: nine make a block
+# of three by three (optional: without the column, the whole room).
+ID	名前	品表	店主	店主の数	番犬	番犬の数	品数
+yorozu	よろず屋	よろず	shoten1	1	inu1	2-3	9
+kusa	草屋	草	shoten1	1	inu1	2-3	9
+bugu	武具屋	武具	shoten2	1-2	inu2	2-3	9
+ude	腕輪屋	腕輪	shoten3	2	inu3	2-4	6

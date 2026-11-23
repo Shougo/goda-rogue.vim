@@ -365,3 +365,44 @@ func TestAllowedForSale(t *testing.T) {
 		t.Error("drinking in a pot of the shop")
 	}
 }
+
+// TestShopGoods: a shop sells as many goods as its kind says, in a block
+// in the middle of its room; without a number, on every tile.
+func TestShopGoods(t *testing.T) {
+	count := func(g *Game) (n int, r Room) {
+		r = g.Level.Rooms[g.Shop.Room]
+		for _, it := range g.Items {
+			if it.ForSale {
+				n++
+				if !r.Contains(it.Pos) {
+					t.Errorf("goods at %v, out of the shop", it.Pos)
+				}
+			}
+		}
+		return n, r
+	}
+	g := shopGame(t, "yorozu")
+	n, r := count(g)
+	if def := g.Shop.Def; n == 0 || n > def.Goods[1] || (n < def.Goods[0] && r.W*r.H >= 30) {
+		t.Fatalf("%d goods in a room of %dx%d, want %d-%d", n, r.W, r.H, def.Goods[0], def.Goods[1])
+	}
+	// In the middle: no farther from it than a tile left free.
+	far := func(p Point) int { return max(abs(2*p.X-(2*r.X+r.W-1)), abs(2*p.Y-(2*r.Y+r.H-1))) }
+	worst := 0
+	for _, it := range g.Items {
+		if it.ForSale {
+			worst = max(worst, far(it.Pos))
+		}
+	}
+	doors := g.doors(g.Shop.Room)
+	for y := r.Y; y < r.Y+r.H; y++ {
+		for x := r.X; x < r.X+r.W; x++ {
+			p := Point{x, y}
+			_, item := g.ItemAt(p)
+			if !item && g.MonsterAt(p) == nil && far(p) < worst &&
+				!slices.ContainsFunc(doors, func(d Point) bool { return chebyshev(d, p) <= 1 }) {
+				t.Errorf("%v is free, nearer to the middle than some goods", p)
+			}
+		}
+	}
+}

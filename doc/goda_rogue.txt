@@ -847,7 +847,9 @@ The built-in dungeons:
 	shops.txt		The shops, a table: 品表 the item table it
 				sells from (no money in it), 店主 the
 				shopkeeper and 店主の数 how many, 番犬 the
-				guard after a thief and 番犬の数 how many.
+				guard after a thief and 番犬の数 how many,
+				品数 how many goods (min-max, in the middle
+				of the room; optional: the whole room).
 	shop_table.txt		Which shops appear on which floors, a table.
 	floors.txt		How many monsters, items and traps (罠の数,
 				optional) a floor starts with (min-max), the

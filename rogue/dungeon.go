@@ -975,6 +975,12 @@ func (l *loader) loadShops() {
 			}
 		}
 		sh.Guards[0], sh.Guards[1] = l.span(row, "番犬の数")
+		if _, ok := row.cols["品数"]; ok {
+			sh.Goods[0], sh.Goods[1] = l.span(row, "品数")
+			if sh.Goods[0] < 1 {
+				l.errorf(row.file, row.n, "品数: at least 1")
+			}
+		}
 		if d.Shop(sh.ID) != nil {
 			l.errorf(row.file, row.n, "the ID %q again", sh.ID)
 		}
