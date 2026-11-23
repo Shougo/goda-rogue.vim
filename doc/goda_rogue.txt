@@ -170,6 +170,11 @@ There are no default mappings: map the actions in the game buffer. >vim
 	  nnoremap <buffer> I <Cmd>call goda_rogue#do('items')<CR>
 	  nnoremap <buffer> M <Cmd>call goda_rogue#do('log')<CR>
 	  nnoremap <buffer> S <Cmd>call goda_rogue#suspend()<CR>
+	  " Watching a replay or a bot: pause, step, ten steps, to the end.
+	  nnoremap <buffer> p <Cmd>call goda_rogue#replay_pause()<CR>
+	  nnoremap <buffer> ] <Cmd>call goda_rogue#replay_step()<CR>
+	  nnoremap <buffer> } <Cmd>call goda_rogue#replay_step(10)<CR>
+	  nnoremap <buffer> G <Cmd>call goda_rogue#replay_step(-1)<CR>
 	endfunction
 
 	call goda_rogue#start()
@@ -205,9 +210,10 @@ goda_rogue#start([{options}])
 		Once a run is over, its result stays on the screen.  An
 		action in the dungeon (a move, say) then asks what comes
 		next: 同じダンジョンに再挑戦する starts a new run in the same
-		dungeon, ダンジョンを選ぶ asks which dungeon, as
-		goda_rogue#start() does, and 結果を見る goes back to the
-		result.
+		dungeon, 同じシードでもう一度 one with the same seed too
+		(the same floors, to play them another way), ダンジョンを選ぶ
+		asks which dungeon, as goda_rogue#start() does, and 結果を見る
+		goes back to the result.
 
                                                        *goda_rogue#dungeons()*
 goda_rogue#dungeons()
@@ -227,10 +233,14 @@ goda_rogue#suspend()
 		same as the action "suspend".
 
                                                     *goda_rogue#save_replay()*
-goda_rogue#save_replay([{name}])
+goda_rogue#save_replay([{name} [, {file}]])
 		Save the replay of the last run as {name} (".replay" is
 		added; default: the date and time) in the directory
 		"replays" of |g:goda_rogue#data_dir|, and return its path.
+		With {file}, that replay is saved instead: the run of a bot,
+		say: >
+			call goda_rogue#save_replay('bot1', goda_rogue#bot_replay())
+<
 
                                                          *goda_rogue#replay()*
 goda_rogue#replay([{file}])
@@ -238,7 +248,8 @@ goda_rogue#replay([{file}])
 		game buffer: it plays by itself, an action every
 		|g:goda_rogue#replay_interval| milliseconds, with how far it
 		is under the screen.  The actions of the game do nothing
-		meanwhile, but "map" and "log".
+		meanwhile, but "map", "items", "log" and "redraw": the
+		mini-map and the items carried can be kept in sight.
 
                                                       *goda_rogue#watch_bot()*
 goda_rogue#watch_bot([{options}])
@@ -248,12 +259,13 @@ goda_rogue#watch_bot([{options}])
 		actions it made under the screen (the answers to the prompts
 		it opens go with the action that opened them).  The run is
 		the bot's: it has no record, and a suspended run is left as
-		it is.  Its replay is written to |goda_rogue#bot_replay()|
-		(the last run of a bot only), to watch it again or to find
-		what went wrong: >
+		it is.  Its replay is written to |goda_rogue#bot_replay()|,
+		to watch it again or to find what went wrong: >
 			call goda_rogue#replay(goda_rogue#bot_replay())
-<		The bots are those that measure the balance of the dungeons
-		(|goda-rogue-dungeons|).
+<		The replays of the runs of bots before are kept beside it
+		(|g:goda_rogue#kept_bot_replays|).  The bots are those that
+		measure the balance of the dungeons (|goda-rogue-dungeons|);
+		the menu of a dungeon asks which one plays.
 		{options} is a |Dictionary|:
 		  dungeon	The ID of the dungeon.  Default: "cave".
 		  seed		As in |goda_rogue#start()|.
@@ -473,6 +485,15 @@ g:goda_rogue#kept_replays
 		not resumed, a bug, the editor killed.  The oldest are
 		removed past this number; 0 keeps none.  Default: 50.
 
+                                             *g:goda_rogue#kept_bot_replays*
+g:goda_rogue#kept_bot_replays
+		How many replays of the runs of bots before are kept
+		(|goda_rogue#watch_bot()|): when a bot starts a run, the
+		replay of the last one is moved to "replays/bot" in
+		|g:goda_rogue#data_dir|, named as those of the player's
+		runs.  The oldest are removed past this number; 0 keeps
+		none.  Default: 10.
+
                                                 *g:goda_rogue#replay_interval*
 g:goda_rogue#replay_interval
 		The milliseconds between two actions of a replay watched
@@ -547,7 +568,8 @@ The top line shows what matters all the time: the floor, the level, HP
 with a bar, the fullness, and the gold.  Then the window shows the part of the floor
 around the player that fits.  Under the map are the status line (the
 attack, the defense and the strength (now / max: poison lowers it
-under its max), the turn and the turns on this
+under its max), the items carried (of how many at most), the turn and
+the turns on this
 floor, the steps, the play time (as of the last action), the direction
 the player faces as an arrow, the seed, and the turns until the next
 wind once it has blown) and the last three messages, those of the

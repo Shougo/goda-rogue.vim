@@ -20,6 +20,15 @@ const keptDir = "replays/auto"
 // killed), for a while. A run without an action is not kept; keep 0 keeps
 // none.
 func keepReplay(path string, keep int) error {
+	return keepReplayIn(path, filepath.Join(filepath.Dir(path), filepath.FromSlash(keptDir)), keep)
+}
+
+// keptBots is where the replays of the runs of the bots are kept, under
+// the directory of the bot's replay file.
+const keptBots = "bot"
+
+// keepReplayIn is keepReplay, into the directory dir.
+func keepReplayIn(path, dir string, keep int) error {
 	if keep <= 0 {
 		return nil
 	}
@@ -37,7 +46,6 @@ func keepReplay(path string, keep int) error {
 	} else if fi, err := os.Stat(path); err == nil {
 		name = fi.ModTime().Format("20060102-150405") + "-" + name
 	}
-	dir := filepath.Join(filepath.Dir(path), filepath.FromSlash(keptDir))
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
 	}

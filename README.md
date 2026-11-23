@@ -68,6 +68,11 @@ function s:goda_rogue_settings() abort
   nnoremap <buffer> I <Cmd>call goda_rogue#do('items')<CR>
   nnoremap <buffer> M <Cmd>call goda_rogue#do('log')<CR>
   nnoremap <buffer> S <Cmd>call goda_rogue#suspend()<CR>
+  " Watching a replay or a bot: pause, step, ten steps, to the end.
+  nnoremap <buffer> p <Cmd>call goda_rogue#replay_pause()<CR>
+  nnoremap <buffer> ] <Cmd>call goda_rogue#replay_step()<CR>
+  nnoremap <buffer> } <Cmd>call goda_rogue#replay_step(10)<CR>
+  nnoremap <buffer> G <Cmd>call goda_rogue#replay_step(-1)<CR>
 endfunction
 ```
 

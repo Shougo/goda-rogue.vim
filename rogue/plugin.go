@@ -26,7 +26,7 @@ const PluginName = "rogue"
 // ScriptVersion is the version of the Vim script (autoload/goda_rogue.vim)
 // this binary goes with (sdk.ScriptVersioner). Bump it with s:version there
 // when they no longer work together.
-const ScriptVersion = 3
+const ScriptVersion = 4
 
 // Plugin serves the game.
 type Plugin struct {
@@ -44,7 +44,7 @@ type Plugin struct {
 
 // The choices at the end of a run (overPrompt), and what the Vim script
 // does for them (Screen.Next).
-var overChoices = []string{"同じダンジョンに再挑戦する", "ダンジョンを選ぶ", "結果を見る"}
+var overChoices = []string{"同じダンジョンに再挑戦する", "同じシードでもう一度", "ダンジョンを選ぶ", "結果を見る"}
 
 const (
 	nextRetry    = "retry"
@@ -74,6 +74,9 @@ func (p *Plugin) overAction(action string, args []string, s *Screen) bool {
 		case "0":
 			s.Next, s.Dungeon = nextRetry, p.game.Dungeon.ID
 		case "1":
+			// The same floors again, to play them another way.
+			s.Next, s.Dungeon, s.Seed = nextRetry, p.game.Dungeon.ID, p.game.Seed
+		case "2":
 			s.Next = nextDungeons
 		}
 	default:
@@ -102,8 +105,17 @@ type BotOptions struct {
 	// Style is how the bot plays (BotStyles); empty for careful.
 	Style string `json:"style"`
 	// Replay is the path of the replay file to write the run to (made
-	// anew: the bot's last run only is kept); empty for none.
+	// anew); empty for none.
 	Replay string `json:"replay"`
+	// Keep is how many replays of the runs of bots before are kept, in
+	// the directory keptBots beside the file; 0 for none.
+	Keep int `json:"keep"`
+}
+
+// botNames are the styles of the bots, as the menu shows them.
+var botNames = map[BotStyle]string{
+	BotCareful:  "慎重な Bot（探索し、休み、危ないときは降りる）",
+	BotReckless: "速攻の Bot（階段を見つけたらすぐ降りる）",
 }
 
 // New returns the plugin, with no game yet.
@@ -352,6 +364,7 @@ func (p *Plugin) watchScreen(size Size) Screen {
 //	return the Screen.
 //	bot(options, size): start a run a bot plays, to be watched, and
 //	return its Screen.
+//	bots(): the bots there are: style, name.
 //	step(n, size): watch n more actions of the replay or of the bot (-1:
 //	to the end), and return {screen, done}.
 //	records(path): the lines that show the records of the file path.
@@ -553,6 +566,10 @@ func (p *Plugin) Handlers() map[string]sdk.Handler {
 			p.stop()
 			g := NewGame(d, opts.Seed)
 			if opts.Replay != "" {
+				dir := filepath.Join(filepath.Dir(opts.Replay), keptBots)
+				if err := keepReplayIn(opts.Replay, dir, opts.Keep); err != nil {
+					return nil, fmt.Errorf("keep the last replay of a bot: %w", err)
+				}
 				rec, err := NewRecorder(opts.Replay, g)
 				if err != nil {
 					return nil, fmt.Errorf("replay: %w", err)
@@ -562,6 +579,13 @@ func (p *Plugin) Handlers() map[string]sdk.Handler {
 			p.game = g
 			p.watching = &watch{bot: NewBot(style, rand.Uint64())}
 			return sdk.Generic(p.watchScreen(size))
+		},
+		"bots": func(ctx context.Context, h sdk.Host, params []any) (any, error) {
+			var list []map[string]any
+			for _, s := range []BotStyle{BotCareful, BotReckless} {
+				list = append(list, map[string]any{"style": s.String(), "name": botNames[s]})
+			}
+			return sdk.Generic(list)
 		},
 		"records": func(ctx context.Context, h sdk.Host, params []any) (any, error) {
 			var path string

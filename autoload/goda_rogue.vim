@@ -6,7 +6,7 @@
 
 " The version of this Vim script that the binary goes with (ScriptVersion of
 " its Go side): goda.vim refuses a binary of another one, and builds it again.
-let s:version = #{version: 3, module: 'github.com/Shougo/goda-rogue.vim'}
+let s:version = #{version: 4, module: 'github.com/Shougo/goda-rogue.vim'}
 
 " The repository: the Go module of the binary.
 let s:root = expand('<sfile>:p:h:h', 1)
@@ -269,7 +269,21 @@ function! s:dungeon_menu(options, dungeon) abort
         \ ['冒険に出る', '説明を見る', 'Bot の冒険を見る', 'やめる'],
         \ {idx -> idx == 1 ? s:start_game(options)
         \       : idx == 2 ? s:describe_dungeon(a:options, a:dungeon)
-        \       : idx == 3 ? goda_rogue#watch_bot(options) : 0})
+        \       : idx == 3 ? s:choose_bot(options) : 0})
+endfunction
+
+" Ask which bot plays, and watch it.
+function! s:choose_bot(options) abort
+  try
+    let bots = goda#request('rogue', 'bots')
+  catch
+    call s:print_error(v:exception)
+    return
+  endtry
+  call s:select('Bot', map(copy(bots), {_, b -> b.name}),
+        \ {idx -> idx > 0
+        \   ? goda_rogue#watch_bot(extend(copy(a:options), #{style: bots[idx - 1].style}))
+        \   : 0})
 endfunction
 
 " Show the description of {dungeon}, then its menu again.
@@ -351,9 +365,10 @@ endfunction
 
 " Save the replay of the last run as {name} (default: the date and time)
 " in the directory of the replays, and return its path ('' if it could not
-" be saved).
-function! goda_rogue#save_replay(name = '') abort
-  let src = goda_rogue#last_replay()
+" be saved).  {file} is the replay to save instead of that of the last run:
+" goda_rogue#bot_replay(), say.
+function! goda_rogue#save_replay(name = '', file = '') abort
+  let src = empty(a:file) ? goda_rogue#last_replay() : expand(a:file, 1)
   if !filereadable(src)
     call s:print_error('no replay: play a run first')
     return ''
@@ -364,6 +379,10 @@ function! goda_rogue#save_replay(name = '') abort
   endif
   call mkdir(s:replay_dir(), 'p')
   let dst = s:replay_dir() . '/' . name
+  if fnamemodify(dst, ':p') ==# fnamemodify(src, ':p')
+    call s:print_error('the replay is ' . dst . ' already: another name')
+    return ''
+  endif
   if writefile(readfile(src, 'b'), dst, 'b') != 0
     call s:print_error('could not write ' . dst)
     return ''
@@ -418,7 +437,8 @@ endfunction
 " it plays by itself, an action every g:goda_rogue#replay_interval
 " milliseconds; goda_rogue#replay_pause() and goda_rogue#replay_step() pause
 " and step it.  The run is the bot's: it has no record, its replay goes to
-" goda_rogue#bot_replay(), and a suspended run is left as it is.  {options}:
+" goda_rogue#bot_replay() (those of the runs before are kept beside it, in
+" "bot"), and a suspended run is left as it is.  {options}:
 "   dungeon	The ID of the dungeon.  Default: "cave".
 "   seed	As in goda_rogue#start().
 "   style	How the bot plays: "careful" (the default) or "reckless".
@@ -431,6 +451,7 @@ function! goda_rogue#watch_bot(options = {}) abort
     endif
   endfor
   let options.replay = goda_rogue#bot_replay()
+  let options.keep = get(g:, 'goda_rogue#kept_bot_replays', 10)
   call s:open_buffer()
   try
     let screen = goda#request('rogue', 'bot', options, s:size())
@@ -530,7 +551,11 @@ function! goda_rogue#do(action, ...) abort
   " The run is over, and the player chose what comes next.
   let next = get(screen, 'next', '')
   if next ==# 'retry'
-    call goda_rogue#start(#{dungeon: screen.dungeon})
+    let options = #{dungeon: screen.dungeon}
+    if has_key(screen, 'seed')
+      let options.seed = screen.seed
+    endif
+    call goda_rogue#start(options)
   elseif next ==# 'dungeons'
     call goda_rogue#start()
   endif

@@ -995,8 +995,9 @@ func (g *Game) visibleEnemies() []*Monster {
 
 // Status is the status line, under the map.
 func (g *Game) Status() string {
-	s := fmt.Sprintf("攻撃 %d  防御 %d  ちから %d/%d  ターン %d（この階 %d）  歩数 %d  時間 %s  向き %s  シード %s",
-		g.Attack(), g.Defense(), g.CurrentStrength(), g.MaxStrength+g.braceletStrength(), g.Turn, g.FloorTurns, g.Steps,
+	s := fmt.Sprintf("攻撃 %d  防御 %d  ちから %d/%d  持ち物 %d/%d  ターン %d（この階 %d）  歩数 %d  時間 %s  向き %s  シード %s",
+		g.Attack(), g.Defense(), g.CurrentStrength(), g.MaxStrength+g.braceletStrength(),
+		len(g.Inventory), g.Dungeon.Rules.Capacity, g.Turn, g.FloorTurns, g.Steps,
 		playTime(g.PlayTime()), directionArrows[g.Facing], g.Seed)
 	if w := g.Dungeon.Rules.WindTurns; g.Wind > 0 && g.Wind < len(w) {
 		s += fmt.Sprintf("  次の風まで %d", w[g.Wind]-g.FloorTurns)

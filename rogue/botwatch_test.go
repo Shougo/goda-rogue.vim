@@ -68,6 +68,17 @@ func TestWatchBot(t *testing.T) {
 		t.Error("the run of a bot has a record")
 	}
 
+	// The next run of a bot keeps this replay beside the new one.
+	request(t, p, "bot", map[string]any{"dungeon": "cave", "seed": "watch2", "replay": path, "keep": 10}, size)
+	p.stop()
+	if es, err := os.ReadDir(filepath.Join(filepath.Dir(path), keptBots)); err != nil || len(es) != 1 {
+		t.Errorf("kept %v (%v), want the replay of the run before", es, err)
+	}
+	list, err := p.Handlers()["bots"](context.Background(), nil, nil)
+	if l, _ := list.([]any); err != nil || len(l) != 2 {
+		t.Errorf("bots %v (%v)", list, err)
+	}
+
 	if _, err := p.Handlers()["bot"](context.Background(), nil, []any{map[string]any{"style": "wise"}, size}); err == nil {
 		t.Error("an unknown style")
 	}
@@ -92,13 +103,13 @@ func TestOverPrompt(t *testing.T) {
 	}
 	s := do("wait")
 	pr, _ := s["prompt"].(map[string]any)
-	if pr == nil || pr["title"] != "冒険は終わった（力尽きた）" || len(pr["choices"].([]any)) != 3 {
+	if pr == nil || pr["title"] != "冒険は終わった（力尽きた）" || len(pr["choices"].([]any)) != 4 {
 		t.Fatalf("prompt %v", s["prompt"])
 	}
 	if s = do("redraw"); s["prompt"] == nil {
 		t.Error("a redraw drops the prompt")
 	}
-	if s = do("choose", "2"); s["prompt"] != nil || s["next"] != nil {
+	if s = do("choose", "3"); s["prompt"] != nil || s["next"] != nil {
 		t.Errorf("the result: prompt %v, next %v", s["prompt"], s["next"])
 	}
 	// Not asked: a choice is nothing.
@@ -110,11 +121,15 @@ func TestOverPrompt(t *testing.T) {
 		t.Errorf("cancelled: prompt %v, next %v", s["prompt"], s["next"])
 	}
 	do("attack")
-	if s = do("choose", "0"); s["next"] != "retry" || s["dungeon"] != "cave" {
-		t.Errorf("retry: next %v, dungeon %v", s["next"], s["dungeon"])
+	if s = do("choose", "0"); s["next"] != "retry" || s["dungeon"] != "cave" || s["seed"] != nil {
+		t.Errorf("retry: next %v, dungeon %v, seed %v", s["next"], s["dungeon"], s["seed"])
 	}
 	do("attack")
-	if s = do("choose", "1"); s["next"] != "dungeons" {
+	if s = do("choose", "1"); s["next"] != "retry" || s["dungeon"] != "cave" || s["seed"] != "over" {
+		t.Errorf("the same seed: next %v, dungeon %v, seed %v", s["next"], s["dungeon"], s["seed"])
+	}
+	do("attack")
+	if s = do("choose", "2"); s["next"] != "dungeons" {
 		t.Errorf("dungeons: next %v", s["next"])
 	}
 }
