@@ -304,11 +304,8 @@ func (g *Game) populate(rng *rand.Rand, rooms []int, start int) {
 	}
 	// The guaranteed items: free, so not in the shop.
 	for _, id := range g.guaranteed[g.Depth] {
-		for range 100 {
-			if pos := g.spot(rng, rooms); g.free(pos) && !g.inShop(pos) {
-				g.Items = append(g.Items, g.newItemOf(rng, d.Item(id), pos))
-				break
-			}
+		if pos, ok := g.find(func() Point { return g.spot(rng, rooms) }, needFree|needNoShop); ok {
+			g.Items = append(g.Items, g.newItemOf(rng, d.Item(id), pos))
 		}
 	}
 	g.placeTraps(rng, rooms)
@@ -340,21 +337,10 @@ func (g *Game) bringAllies(along []*Monster) {
 // randomTile returns a free tile of the room i.
 func (g *Game) randomTile(rng *rand.Rand, i int) Point {
 	r := g.Level.Rooms[i]
-	for range 100 {
-		p := Point{r.X + rng.IntN(r.W), r.Y + rng.IntN(r.H)}
-		if g.free(p) {
-			return p
-		}
+	if p, ok := g.find(func() Point { return Point{r.X + rng.IntN(r.W), r.Y + rng.IntN(r.H)} }, needFree); ok {
+		return p
 	}
 	return Point{r.X, r.Y}
-}
-
-// free says whether nothing stands or lies on p.
-func (g *Game) free(p Point) bool {
-	if p == g.Player || g.stairsAt(p) || g.MonsterAt(p) != nil {
-		return false
-	}
-	return !slices.ContainsFunc(g.Items, func(it *Item) bool { return it.Pos == p })
 }
 
 // freeNeighbor returns a free walkable tile next to p.
@@ -806,18 +792,15 @@ func (g *Game) linger() {
 // spawn puts a new monster of the kind def on a free tile out of the
 // player's sight, and returns it (nil if there is no room).
 func (g *Game) spawn(def *MonsterDef) *Monster {
-	for range 100 {
-		p := g.wanderTarget()
-		if !g.Level.At(p).Walkable() || g.occupied(p) || g.sees(g.Player, p) || chebyshev(p, g.Player) <= 4 {
-			continue
-		}
-		m := newMonster(def)
-		m.Pos = p
-		m.Spawned = true
-		g.Monsters = append(g.Monsters, m)
-		return m
+	p, ok := g.find(g.wanderTarget, needNoCreature|needUnseen)
+	if !ok {
+		return nil
 	}
-	return nil
+	m := newMonster(def)
+	m.Pos = p
+	m.Spawned = true
+	g.Monsters = append(g.Monsters, m)
+	return m
 }
 
 // end ends the run, for why.

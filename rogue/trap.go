@@ -83,10 +83,7 @@ func (g *Game) placeTraps(rng *rand.Rand, rooms []int) {
 // the entrance of a room (a tile of it next to a corridor: as in Shiren,
 // the way in and out is never trapped), and no pit on the last floor.
 func (g *Game) trapSpot(p Point, def *TrapDef) bool {
-	if p == g.Player || g.stairsAt(p) || g.TrapAt(p) != nil || def.Effect == TrapPit && g.Depth >= g.Dungeon.Floors {
-		return false
-	}
-	if _, ok := g.ItemAt(p); ok {
+	if p == g.Player || g.blocked(p, needNoStairs|needNoTrap|needNoItem) || def.Effect == TrapPit && g.Depth >= g.Dungeon.Floors {
 		return false
 	}
 	// Under a monster is fine: monsters do not set traps off.
@@ -240,19 +237,16 @@ func (g *Game) warp() {
 			rooms = append(rooms, i)
 		}
 	}
-	for range 100 {
-		p := g.randomTile(g.rng, rooms[g.rng.IntN(len(rooms))])
-		if !g.free(p) || g.TrapAt(p) != nil {
-			continue
-		}
-		from := g.Level.RoomAt(g.Player)
-		g.Player = p
-		if room := g.Level.RoomAt(p); room != from {
-			g.wake(from)
-			g.wake(room)
-		}
-		g.look()
-		g.markSafe(p)
+	p, ok := g.find(func() Point { return g.randomTile(g.rng, rooms[g.rng.IntN(len(rooms))]) }, needFree|needNoTrap)
+	if !ok {
 		return
 	}
+	from := g.Level.RoomAt(g.Player)
+	g.Player = p
+	if room := g.Level.RoomAt(p); room != from {
+		g.wake(from)
+		g.wake(room)
+	}
+	g.look()
+	g.markSafe(p)
 }

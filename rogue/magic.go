@@ -118,13 +118,7 @@ func (s Speed) faster() Speed {
 // freeTile returns a walkable tile of the floor with no creature on it,
 // at random.
 func (g *Game) freeTile() (Point, bool) {
-	for range 100 {
-		p := g.wanderTarget()
-		if g.Level.At(p).Walkable() && !g.occupied(p) && p != g.Player {
-			return p, true
-		}
-	}
-	return Point{}, false
+	return g.find(g.wanderTarget, needNoCreature)
 }
 
 // levelDown takes n levels from the player (not below 1): its EXP becomes

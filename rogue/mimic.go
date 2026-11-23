@@ -76,20 +76,17 @@ func (g *Game) hideMimics(rng *rand.Rand, rooms []int) {
 // another tile, if pos is taken). It says whether it did.
 func (g *Game) hide(rng *rand.Rand, rooms []int, def *MonsterDef, pos Point, a Ability) bool {
 	roll := rng.IntN(100)
-	clear := func(p Point) bool {
-		return g.Level.At(p).Walkable() && g.free(p) && g.TrapAt(p) == nil && g.decoyAt(p) < 0 && !g.inShop(p)
-	}
+	spot := func() Point { return g.spot(rng, rooms) }
 	switch {
 	case roll < a.Values[1]:
 		// Stairs, not in the room the player arrives in.
-		for range 100 {
-			p := g.spot(rng, rooms)
-			if clear(p) && (len(rooms) == 1 || g.Level.RoomAt(p) != g.Level.RoomAt(g.Player)) {
-				g.Decoys = append(g.Decoys, Decoy{Pos: p, Def: def})
-				return true
-			}
+		p, ok := g.find(spot, needHidden, func(p Point) bool {
+			return len(rooms) == 1 || g.Level.RoomAt(p) != g.Level.RoomAt(g.Player)
+		})
+		if ok {
+			g.Decoys = append(g.Decoys, Decoy{Pos: p, Def: def})
 		}
-		return false
+		return ok
 	case roll < a.Values[1]+a.Values[2] && g.Shop != nil:
 		// One of the goods of the shop.
 		var goods []*Item
@@ -103,13 +100,13 @@ func (g *Game) hide(rng *rand.Rand, rooms []int, def *MonsterDef, pos Point, a A
 			return true
 		}
 	}
-	for range 100 {
-		if clear(pos) {
-			return g.hideAsItem(rng, def, pos, a)
+	if !g.fits(pos, needHidden) {
+		var ok bool
+		if pos, ok = g.find(spot, needHidden); !ok {
+			return false
 		}
-		pos = g.spot(rng, rooms)
 	}
-	return false
+	return g.hideAsItem(rng, def, pos, a)
 }
 
 // hideAsItem hides a mimic of the kind def as an item of the floor's
@@ -132,16 +129,8 @@ func (g *Game) hideAsItem(rng *rand.Rand, def *MonsterDef, pos Point, a Ability)
 // began as an item out of the player's sight; it gives no rewards, as
 // the monsters spawned.
 func (g *Game) spawnHidden(def *MonsterDef, a Ability) {
-	for range 100 {
-		p := g.wanderTarget()
-		if !g.Level.At(p).Walkable() || !g.free(p) || g.TrapAt(p) != nil || g.decoyAt(p) >= 0 || g.inShop(p) ||
-			g.sees(g.Player, p) || chebyshev(p, g.Player) <= 4 {
-			continue
-		}
-		if g.hideAsItem(g.rng, def, p, a) {
-			g.Items[len(g.Items)-1].spawned = true
-		}
-		return
+	if p, ok := g.find(g.wanderTarget, needHidden|needUnseen); ok && g.hideAsItem(g.rng, def, p, a) {
+		g.Items[len(g.Items)-1].spawned = true
 	}
 }
 

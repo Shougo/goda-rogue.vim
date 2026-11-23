@@ -104,11 +104,8 @@ func (g *Game) stir(m *Monster) {
 // floor: in one of the rooms, or anywhere in a maze.
 func (g *Game) spot(rng *rand.Rand, rooms []int) Point {
 	if g.Level.Maze {
-		for range 100 {
-			p := Point{rng.IntN(g.Level.W), rng.IntN(g.Level.H)}
-			if g.Level.At(p).Walkable() && g.free(p) {
-				return p
-			}
+		if p, ok := g.find(func() Point { return Point{rng.IntN(g.Level.W), rng.IntN(g.Level.H)} }, needFree); ok {
+			return p
 		}
 	}
 	return g.randomTile(rng, rooms[rng.IntN(len(rooms))])
