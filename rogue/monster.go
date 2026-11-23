@@ -385,7 +385,7 @@ func (g *Game) workOutDistances(to Point) []int {
 // hitPlayer is an attack of m on the player.
 func (g *Game) hitPlayer(m *Monster) {
 	r := g.Dungeon.Rules
-	if !hits(g.rng, r.MonsterHitRate) {
+	if !hits(g.rng, max(r.MonsterHitRate-g.sealStrength(SealDodge), 0)) {
 		g.say(m.Name + "の攻撃は外れた。")
 		return
 	}

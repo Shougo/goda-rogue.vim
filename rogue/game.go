@@ -654,12 +654,29 @@ func (g *Game) attack() bool {
 		}
 		return true
 	}
+	g.strike(m)
+	if g.sealed(SealThree) {
+		// The two tiles beside it, ahead: the enemies there too.
+		i := slices.Index(clockwise, g.Facing)
+		for _, turn := range []int{len(clockwise) - 1, 1} {
+			sd := Directions[clockwise[(i+turn)%len(clockwise)]]
+			if o := g.MonsterAt(g.Player.Add(sd)); o != nil && !o.Ally && g.clearFrom(g.Player, sd) && g.Over == "" {
+				g.strike(o)
+			}
+		}
+	}
+	return true
+}
+
+// strike is a blow of the player on the monster m: it may miss; a hit
+// may be a critical one, and gives HP back with a seal of drain.
+func (g *Game) strike(m *Monster) {
 	m.Dozing = false
 	g.provoke(m)
 	r := g.Dungeon.Rules
 	if !g.sealed(SealSure) && !hits(g.rng, r.PlayerHitRate) {
 		g.say(m.Name + "にかわされた。")
-		return true
+		return
 	}
 	n := damage(g.rng, g.Attack(), m.Defense, r.DefenseK)
 	if c := g.sealStrength(SealCrit); c > 0 && g.rng.IntN(100) < c {
@@ -667,8 +684,15 @@ func (g *Game) attack() bool {
 		g.say("会心の一撃！")
 	}
 	g.use(EffectStrength)
+	// (What it takes: no more than the monster had.)
+	dealt := min(n, m.HP)
 	m.HP -= n
 	g.say(fmt.Sprintf("%sに%dのダメージ。", m.Name, n))
+	if p := g.sealStrength(SealDrain); p > 0 && dealt > 0 && g.HP < g.MaxHP {
+		heal := min(max(dealt*p/100, 1), g.MaxHP-g.HP)
+		g.HP += heal
+		g.say(fmt.Sprintf("HP を%d吸い取った。", heal))
+	}
 	if m.HP > 0 {
 		g.wounded(m)
 		g.split(m)
@@ -676,7 +700,6 @@ func (g *Game) attack() bool {
 	if m.HP <= 0 {
 		g.kill(m, nil, true, true)
 	}
-	return true
 }
 
 // endTurn ends a turn of the player: walking or waiting restores HP (other

@@ -31,9 +31,21 @@ const (
 	SealCounter  SealEffect = "反撃"
 	SealNoRust   SealEffect = "サビよけ"
 	SealNoHunger SealEffect = "ハラヘラズ"
+	// SealDrain: a blow gives the player so many percent of its damage
+	// back as HP (1 at least).
+	SealDrain SealEffect = "ドレイン"
+	// SealThree: a blow also strikes the two tiles beside the one the
+	// player faces, ahead of it.
+	SealThree SealEffect = "三方向"
+	// SealNoTheft: nothing is stolen from the player.
+	SealNoTheft SealEffect = "盗みよけ"
+	// SealDodge: the blows of the monsters hit so many percent less
+	// often.
+	SealDodge SealEffect = "見切り"
 )
 
-var sealEffects = []SealEffect{SealAttack, SealDefense, SealCrit, SealSure, SealCounter, SealNoRust, SealNoHunger}
+var sealEffects = []SealEffect{SealAttack, SealDefense, SealCrit, SealSure, SealCounter, SealNoRust, SealNoHunger,
+	SealDrain, SealThree, SealNoTheft, SealDodge}
 
 // sealsLabel shows the seals of it, if any: "【会必】".
 func sealsLabel(it *Item) string {
