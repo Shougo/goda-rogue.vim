@@ -75,6 +75,11 @@ func run(t *testing.T, env []string, name string, args ...string) {
 		t.Fatalf("no result (%v): %v\n%s", err, rerr, out)
 	}
 	lines := strings.Split(strings.TrimRight(string(b), "\n"), "\n")
+	if ctx.Err() != nil {
+		// The checks may have passed, but the editor did not quit: a
+		// prompt left waiting for an answer, say.
+		t.Errorf("%s did not quit in time", name)
+	}
 	for _, l := range lines {
 		if l == "ok" {
 			return

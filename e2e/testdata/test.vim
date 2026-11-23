@@ -172,8 +172,12 @@ function! s:items() abort
     call goda_rogue#start(#{dungeon: 'cave', seed: 'items' . seed})
     for n in range(100)
       call goda_rogue#do('dash', dirs[n % len(dirs)])
+      " (Over: no more actions, which would ask what comes next.)
+      if search('^  結果 ', 'nw') > 0
+        break
+      endif
       call goda_rogue#do('pickup')
-      if join(s:messages()) =~# 'を拾った。\|冒険は終わった'
+      if join(s:messages()) =~# 'を拾った。' || search('^  結果 ', 'nw') > 0
         break
       endif
     endfor
