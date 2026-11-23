@@ -198,3 +198,6 @@
 15	30	bake2	2
 6	16	doro1	2
 17	30	doro2	2
+# The monster of synthesis: rare, over many floors.
+6	15	gou1	1
+16	30	gou2	1

@@ -176,6 +176,12 @@ func (g *Game) abilityText(a Ability) string {
 		return fmt.Sprintf("殴ると%d%%で分裂する", v[0])
 	case AbilityRot:
 		return rotText(v)
+	case AbilitySynthesis:
+		s := fmt.Sprintf("投げた道具を%d個まで飲み込んで合成し、倒すと落とす", v[0])
+		if v[1] > 0 {
+			s += fmt.Sprintf("。隣にいると%d%%で、持っている武器か盾を吸い込む（装備中のものも）", v[1])
+		}
+		return s
 	case AbilitySteal:
 		what := "お金を盗み"
 		if v[1] == stealItems {

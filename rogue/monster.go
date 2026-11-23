@@ -100,6 +100,10 @@ type Monster struct {
 	// is what it took.
 	Fled   bool
 	stolen []*Item
+	// belly is what a monster of synthesis holds, merged; swallowed is
+	// how many items it took in (synth.go).
+	belly     []*Item
+	swallowed int
 }
 
 func newMonster(def *MonsterDef) *Monster {
@@ -193,6 +197,9 @@ func (g *Game) act(m *Monster) bool {
 				return true
 			}
 			if a, ok := m.ability(AbilityRot); ok && g.spoil(m, a) {
+				return true
+			}
+			if g.suck(m) {
 				return true
 			}
 			g.hitPlayer(m)
@@ -442,6 +449,7 @@ func (g *Game) kill(m, by *Monster, byPlayer, shown bool) {
 		g.defeated(m)
 	}
 	g.dropStolen(m)
+	g.dropBelly(m)
 	if by != nil && !byPlayer {
 		g.rankUpBy(by, shown)
 	}

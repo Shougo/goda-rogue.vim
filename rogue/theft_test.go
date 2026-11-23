@@ -110,9 +110,14 @@ func TestStolenBumped(t *testing.T) {
 	if !slices.Contains(m.stolen, grass) {
 		t.Fatalf("stolen %v", m.stolen)
 	}
-	m.HP = 1
-	g.fling(m, Point{1, 0}, false)
-	g.fling(m, Point{1, 0}, false)
+	// (From where it was, whatever the floor: it warped away.)
+	m.HP, m.Pos = 1, g.Player.Add(Point{1, 0})
+	for range 10 {
+		if !slices.Contains(g.Monsters, m) {
+			break
+		}
+		g.fling(m, Point{1, 0}, false)
+	}
 	if slices.Contains(g.Monsters, m) || !slices.Contains(g.Items, grass) {
 		t.Errorf("monsters %v, items %v: want the thief dead and the grass on the floor", g.Monsters, g.Items)
 	}

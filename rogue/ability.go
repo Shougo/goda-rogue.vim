@@ -62,6 +62,13 @@ const (
 	// 1 last, it turns an item that is no equipment into a rotten
 	// onigiri (mud.go).
 	AbilityRot AbilityName = "腐らせる"
+	// AbilitySynthesis: it swallows the items the player throws at it,
+	// so many, and merges them in its belly as a pot of synthesis does,
+	// and a material into a weapon or a shield too (異種合成); next to
+	// the player, by a chance (a percent, 0 for never), it sucks a
+	// weapon or a shield the player carries in instead of a blow, an
+	// equipped one too. Defeated, it drops what it holds (synth.go).
+	AbilitySynthesis AbilityName = "合成"
 )
 
 // MagicEffect is an effect of the bolt of AbilityMagic.
@@ -118,17 +125,18 @@ type abilityDef struct {
 }
 
 var abilityDefs = map[AbilityName]abilityDef{
-	AbilityAnger:    {[]string{"HP %", "attack %"}, []int{1, 100}, []int{99, 1000}, 0},
-	AbilityCritical: {[]string{"chance %", "damage %"}, []int{1, 100}, []int{100, 1000}, 0},
-	AbilityErratic:  {[]string{"chance %"}, []int{1}, []int{100}, 0},
-	AbilityCharge:   {[]string{"reach", "damage"}, []int{2, 0}, []int{maxReach, 999}, 0},
-	AbilityPull:     {[]string{"reach", "chance %", "hit"}, []int{0, 1, 0}, []int{maxReach, 100, 1}, 0},
-	AbilityShoot:    {[]string{"reach", "chance %", "arrow", "pierce"}, []int{2, 1, 0, 0}, []int{maxReach, 100, 0, 1}, 3},
-	AbilityMagic:    {[]string{"reach", "chance %", "effects"}, []int{2, 1, 0}, []int{maxReach, 100, 0}, 3},
-	AbilityMimic:    {[]string{"depth", "stairs %", "shop %"}, []int{mimicShallow, 0, 0}, []int{mimicDeep, 100, 100}, 0},
-	AbilitySplit:    {[]string{"chance %"}, []int{1}, []int{100}, 0},
-	AbilityRot:      {[]string{"chance %", "onigiri", "any item"}, []int{1, 1, 0}, []int{100, 5, 1}, 0},
-	AbilitySteal:    {[]string{"chance %", "what", "items", "equipped"}, []int{1, stealGold, 0, 0}, []int{100, stealItems, 5, 1}, 0},
+	AbilityAnger:     {[]string{"HP %", "attack %"}, []int{1, 100}, []int{99, 1000}, 0},
+	AbilityCritical:  {[]string{"chance %", "damage %"}, []int{1, 100}, []int{100, 1000}, 0},
+	AbilityErratic:   {[]string{"chance %"}, []int{1}, []int{100}, 0},
+	AbilityCharge:    {[]string{"reach", "damage"}, []int{2, 0}, []int{maxReach, 999}, 0},
+	AbilityPull:      {[]string{"reach", "chance %", "hit"}, []int{0, 1, 0}, []int{maxReach, 100, 1}, 0},
+	AbilityShoot:     {[]string{"reach", "chance %", "arrow", "pierce"}, []int{2, 1, 0, 0}, []int{maxReach, 100, 0, 1}, 3},
+	AbilityMagic:     {[]string{"reach", "chance %", "effects"}, []int{2, 1, 0}, []int{maxReach, 100, 0}, 3},
+	AbilityMimic:     {[]string{"depth", "stairs %", "shop %"}, []int{mimicShallow, 0, 0}, []int{mimicDeep, 100, 100}, 0},
+	AbilitySplit:     {[]string{"chance %"}, []int{1}, []int{100}, 0},
+	AbilityRot:       {[]string{"chance %", "onigiri", "any item"}, []int{1, 1, 0}, []int{100, 5, 1}, 0},
+	AbilitySynthesis: {[]string{"items", "suck %"}, []int{1, 0}, []int{9, 100}, 0},
+	AbilitySteal:     {[]string{"chance %", "what", "items", "equipped"}, []int{1, stealGold, 0, 0}, []int{100, stealItems, 5, 1}, 0},
 }
 
 // maxReach is the farthest reach of an ability along a line.
@@ -136,7 +144,7 @@ const maxReach = 20
 
 // abilityNames are the abilities in a fixed order, for the error that
 // lists them.
-var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot}
+var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot, AbilitySynthesis}
 
 // lineAbilities are the abilities that reach the player from afar along
 // a line, their reach their first number.

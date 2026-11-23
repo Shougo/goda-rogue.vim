@@ -651,6 +651,22 @@ The built-in dungeons:
 				             stealing again.  Defeated, it
 				             drops what it stole, not its
 				             落とし物
+				  合成:N:C  it swallows the items the player
+				             throws at it, N of them, and
+				             merges them as a pot of
+				             synthesis does, and a material
+				             into a weapon or a shield
+				             swallowed before it too (its
+				             seal, items.txt 印), which no
+				             pot does.  With C above 0, next
+				             to the player, C% of its blows
+				             suck a weapon or a shield the
+				             player carries in instead, an
+				             equipped one too (they count in
+				             N).  Full, or with its abilities
+				             sealed, it is hit by a thrown
+				             item as any monster.  Defeated,
+				             it drops what it holds
 				  擬態:D:S:K  on a new floor it hides as
 				             an item of the floor's table,
 				             or (S%) as stairs, or (K%, with

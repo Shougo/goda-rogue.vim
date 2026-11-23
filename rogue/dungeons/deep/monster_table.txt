@@ -360,3 +360,7 @@
 38	38	inoshishi2	1
 39	39	inoshishi3	1
 40	50	inoshishi3	2
+# The monster of synthesis: rare, over many floors.
+6	15	gou1	1
+16	32	gou2	1
+33	50	gou3	1

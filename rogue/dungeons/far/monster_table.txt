@@ -459,3 +459,8 @@
 78	78	inoshishi3	1
 79	79	inoshishi4	1
 80	99	inoshishi4	2
+# The monster of synthesis: rare, over many floors.
+6	18	gou1	1
+19	44	gou2	1
+45	72	gou3	1
+73	99	gou4	1

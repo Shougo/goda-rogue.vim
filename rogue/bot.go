@@ -744,7 +744,8 @@ func (b *Bot) shoot(g *Game) (string, []string) {
 		return "", nil
 	}
 	for _, m := range g.visibleEnemies() {
-		if arrows.Count < plentyArrows && !b.worthArrows(g, m) {
+		if arrows.Count < plentyArrows && !b.worthArrows(g, m) || m.room() > 0 {
+			// (One of synthesis swallows the arrow.)
 			continue
 		}
 		d := m.Pos.Sub(g.Player)

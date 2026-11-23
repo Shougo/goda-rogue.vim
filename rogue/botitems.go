@@ -94,7 +94,8 @@ func drinkDeath(g *Game, ms []*Monster, def *ItemDef) float64 {
 func throwDeath(g *Game, ms []*Monster, m *Monster, def *ItemDef) float64 {
 	miss := fightDeath(g, ms, g.HP, 1)
 	e := MagicEffect(def.Effect)
-	if !castable(CategoryGrass, e) || e == MagicHaste {
+	if !castable(CategoryGrass, e) || e == MagicHaste || m.room() > 0 {
+		// (One of synthesis swallows it.)
 		return miss
 	}
 	hit := float64(g.Dungeon.Rules.PlayerThrowRate) / 100

@@ -44,6 +44,13 @@
 #              1, equipped ones too); then it warps away and keeps away
 #              from the player, never stealing again. Defeated, it drops
 #              what it stole, not its 落とし物
+#   合成:N:C   it swallows the items the player throws at it, N of them,
+#              and merges them as a pot of synthesis does, and also a
+#              material into a weapon or a shield swallowed before it
+#              (異種合成: the seal of the material, items.txt 印); with C
+#              above 0, next to the player, C% of its blows suck a weapon
+#              or a shield the player carries in instead, an equipped one
+#              too (they count in N). Defeated, it drops what it holds
 #   擬態:D:S:K  on a new floor it hides as an item of the floor's table, or
 #              (S%) as stairs, or (K%, with a shop) as one of the shop's
 #              goods. D 1: trying to pick it up shows it, and so do a
@@ -152,3 +159,7 @@ shoten4	商	大豪商	4	900	120	60	0	倍速	店主	-	-	-	-
 inu1	犬	番犬	2	40	15	10	0	倍速	番犬	-	-	-	-
 inu2	犬	猛犬	3	80	30	20	0	倍速	番犬	-	-	-	-
 inu3	犬	地獄の番犬	4	160	50	30	0	倍速	番犬	-	-	-	-
+gou1	合	混ぜ虫	1	24	8	6	10	通常	-	合成:2:0	-	なし	-
+gou2	合	大混ぜ虫	2	48	15	11	30	通常	-	合成:3:0	-	なし	-
+gou3	合	混ぜ主	3	77	22	16	90	通常	-	合成:4:25	-	なし	-
+gou4	合	混ぜ王	4	115	30	22	220	通常	-	合成:5:50	-	なし	-
