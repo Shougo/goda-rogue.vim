@@ -31,9 +31,6 @@ const (
 	SealCounter  SealEffect = "反撃"
 	SealNoRust   SealEffect = "サビよけ"
 	SealNoHunger SealEffect = "ハラヘラズ"
-	// SealDrain: a blow gives the player so many percent of its damage
-	// back as HP (1 at least).
-	SealDrain SealEffect = "ドレイン"
 	// SealThree: a blow also strikes the two tiles beside the one the
 	// player faces, ahead of it.
 	SealThree SealEffect = "三方向"
@@ -45,7 +42,12 @@ const (
 )
 
 var sealEffects = []SealEffect{SealAttack, SealDefense, SealCrit, SealSure, SealCounter, SealNoRust, SealNoHunger,
-	SealDrain, SealThree, SealNoTheft, SealDodge}
+	SealThree, SealNoTheft, SealDodge}
+
+// No seal heals: not on a blow given, not on a blow taken. Such seals
+// (弟 and 回 of Shiren 2 and Asuka, stacked) make trading blows pay, and a
+// run is then hard until they are made and easy after: a cliff, not a
+// curve (claude/rogue-seal-stacking-2026-11-20.md).
 
 // sealsLabel shows the seals of it, if any: "【会必】".
 func sealsLabel(it *Item) string {

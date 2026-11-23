@@ -20,7 +20,6 @@
 床	1	99	mamori	1
 床	8	99	tekkou	1
 床	15	99	ootate	1
-床	5	99	drain	1
 床	5	99	mikazuki	1
 床	1	99	nusumiyoke	1
 床	5	99	mikiri	1
@@ -78,7 +77,6 @@
 よろず	1	99	mamori	2
 よろず	8	99	tekkou	2
 よろず	15	99	ootate	1
-よろず	5	99	drain	2
 よろず	5	99	mikazuki	2
 よろず	1	99	nusumiyoke	2
 よろず	5	99	mikiri	2
@@ -149,7 +147,6 @@
 武具	1	99	mamori	2
 武具	8	99	tekkou	3
 武具	15	99	ootate	2
-武具	5	99	drain	2
 武具	5	99	mikazuki	2
 武具	1	99	nusumiyoke	2
 武具	5	99	mikiri	2

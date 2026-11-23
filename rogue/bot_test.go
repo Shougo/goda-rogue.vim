@@ -53,12 +53,18 @@ func TestBotsPlay(t *testing.T) {
 // counted.
 func TestPlayBot(t *testing.T) {
 	d := cave()
-	// (Its first actions: whole runs are long now that the bots go deep.)
-	a, err := PlayBot(d, "same", NewBot(BotReckless, 7), 1500)
-	if err != nil {
-		t.Fatal(err)
+	// (Its first actions: whole runs are long now that the bots go deep.
+	// A seed whose run gets past 1F, whatever the floors are now.)
+	var a BotRun
+	var err error
+	seed := ""
+	for i := 0; i < 10 && a.Depth < 2; i++ {
+		seed = fmt.Sprint("same", i)
+		if a, err = PlayBot(d, seed, NewBot(BotReckless, 7), 1500); err != nil {
+			t.Fatal(err)
+		}
 	}
-	b, err := PlayBot(d, "same", NewBot(BotReckless, 7), 1500)
+	b, err := PlayBot(d, seed, NewBot(BotReckless, 7), 1500)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -669,7 +669,7 @@ func (g *Game) attack() bool {
 }
 
 // strike is a blow of the player on the monster m: it may miss; a hit
-// may be a critical one, and gives HP back with a seal of drain.
+// may be a critical one.
 func (g *Game) strike(m *Monster) {
 	m.Dozing = false
 	g.provoke(m)
@@ -684,15 +684,8 @@ func (g *Game) strike(m *Monster) {
 		g.say("会心の一撃！")
 	}
 	g.use(EffectStrength)
-	// (What it takes: no more than the monster had.)
-	dealt := min(n, m.HP)
 	m.HP -= n
 	g.say(fmt.Sprintf("%sに%dのダメージ。", m.Name, n))
-	if p := g.sealStrength(SealDrain); p > 0 && dealt > 0 && g.HP < g.MaxHP {
-		heal := min(max(dealt*p/100, 1), g.MaxHP-g.HP)
-		g.HP += heal
-		g.say(fmt.Sprintf("HP を%d吸い取った。", heal))
-	}
 	if m.HP > 0 {
 		g.wounded(m)
 		g.split(m)

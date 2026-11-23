@@ -8,7 +8,6 @@
 #             back to the attacker
 #   サビよけ  the weapon and the shield do not rust
 #   ハラヘラズ  the player gets hungry half as fast
-#   ドレイン  a blow gives 強さ % of its damage back as HP (1 at least)
 #   三方向    a blow also strikes the two tiles beside the one the player
 #             faces, ahead of it
 #   盗みよけ  nothing is stolen from the player
@@ -27,7 +26,6 @@
 腹	ハラヘラズの印	ハラヘラズ	0	盾
 力	力の印	攻撃	2	武器
 力	力の印	反撃	15	盾
-吸	ドレインの印	ドレイン	20	武器
 三	三方向の印	三方向	0	武器
 盗	盗みよけの印	盗みよけ	0	盾
 避	見切りの印	見切り	15	盾

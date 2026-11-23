@@ -39,7 +39,6 @@ var sealTexts = map[SealEffect]string{
 	SealCounter:  "%d%% の確率で受けたダメージを相手に返す。",
 	SealNoRust:   "武器と盾がサビない。",
 	SealNoHunger: "お腹が減る速さが半分になる。",
-	SealDrain:    "与えたダメージの %d%% だけ HP が回復する。",
 	SealThree:    "正面と、その左右の斜め前の 3 方向を同時に攻撃する。",
 	SealNoTheft:  "道具もお金も盗まれない。",
 	SealDodge:    "敵の攻撃が当たる確率が %d%% 下がる。",

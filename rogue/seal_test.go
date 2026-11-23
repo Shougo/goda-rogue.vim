@@ -19,37 +19,6 @@ func sealGame(t *testing.T, weapon, shield []string) (*Game, Room) {
 	return g, r
 }
 
-// TestSealDrain: a blow gives a share of its damage back as HP, not
-// above the max, and no more than the monster had.
-func TestSealDrain(t *testing.T) {
-	g, _ := sealGame(t, []string{"吸"}, nil)
-	m := place(g, kind("nezumi4"), g.Player.Add(Point{1, 0}))
-	m.HP, m.MaxHP, m.Asleep = 9999, 9999, 99
-	g.HP, g.MaxHP = 10, 200
-	if err := g.Do("attack", nil); err != nil {
-		t.Fatal(err)
-	}
-	dealt := 9999 - m.HP
-	if want := max(dealt*20/100, 1); dealt == 0 || g.HP != 10+want || !strings.Contains(g.Message, "吸い取った。") {
-		t.Fatalf("dealt %d, HP %d, want %d more: %q", dealt, g.HP, want, g.Message)
-	}
-	g.HP = g.MaxHP
-	if err := g.Do("attack", nil); err != nil {
-		t.Fatal(err)
-	}
-	if g.HP != g.MaxHP || strings.Contains(g.Message, "吸い取った。") {
-		t.Errorf("at full HP: %d/%d, %q", g.HP, g.MaxHP, g.Message)
-	}
-	// A weak one: what it had, not what the blow could do.
-	g.HP, m.HP = 10, 5
-	if err := g.Do("attack", nil); err != nil {
-		t.Fatal(err)
-	}
-	if !strings.Contains(g.Message, "HP を1吸い取った。") {
-		t.Errorf("a blow on a monster of 5 HP: %q, want 1 HP back", g.Message)
-	}
-}
-
 // TestSealThree: a blow strikes the tile ahead and the two beside it,
 // not an ally there, nor the tiles at the sides.
 func TestSealThree(t *testing.T) {
