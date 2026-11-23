@@ -21,10 +21,10 @@ func TestGrass(t *testing.T) {
 	g.HP, g.MaxHP = 10, 100
 	turn := g.Turn
 	use(t, g, "yakusou")
-	if g.HP != 35 || g.Turn != turn+1 || len(g.Inventory) != 0 {
+	if g.HP != 60 || g.Turn != turn+1 || len(g.Inventory) != 0 {
 		t.Errorf("HP %d, turn %d, inventory %v", g.HP, g.Turn, g.Inventory)
 	}
-	if !strings.Contains(g.Message, "薬草を飲んだ。HPが25回復した。") {
+	if !strings.Contains(g.Message, "薬草を飲んだ。HPが50回復した。") {
 		t.Errorf("message %q", g.Message)
 	}
 	use(t, g, "otogiri")

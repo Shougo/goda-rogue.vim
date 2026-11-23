@@ -68,7 +68,7 @@ func TestUseIdentifies(t *testing.T) {
 		t.Errorf("label %q", g.Label(it))
 	}
 	command(t, g, it, commandDrink)
-	want := fake + "を飲んだ。" + fake + "は薬草だった。HPが25回復した。"
+	want := fake + "を飲んだ。" + fake + "は薬草だった。HPが50回復した。"
 	if g.Message != want {
 		t.Errorf("message %q, want %q", g.Message, want)
 	}

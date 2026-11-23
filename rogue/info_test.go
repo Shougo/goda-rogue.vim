@@ -34,7 +34,7 @@ func TestInfo(t *testing.T) {
 		id   string
 		want string
 	}{
-		{"yakusou", "飲むと、HP が 25 回復する。HP が満タンなら最大 HP が上がる。"},
+		{"yakusou", "飲むと、HP が 50 回復する。HP が満タンなら最大 HP が上がる。"},
 		{"akari", "読むと、フロア全体が明るくなり、地形と道具と敵が見える。"},
 		{"onigiri", "食べると、満腹度が 50 回復する。"},
 	} {
