@@ -142,3 +142,21 @@ func TestBigRoomHouse(t *testing.T) {
 		t.Errorf("%d asleep, then %d", before, after)
 	}
 }
+
+// TestBigHouse: the monster house of a big room holds several times what
+// that of a room does: monsters, items and traps.
+func TestBigHouse(t *testing.T) {
+	g := specialGame(t, "bighouse", func(c *FloorCounts) { c.House, c.BigRoom = 100, 100 })
+	if g.House < 0 || len(g.Level.Rooms) != 1 {
+		t.Fatalf("house %d, %d rooms", g.House, len(g.Level.Rooms))
+	}
+	house := 0
+	for _, m := range g.Monsters {
+		if m.House {
+			house++
+		}
+	}
+	if house < 24 || house > houseMonsters || len(g.Items) < 24 || len(g.Traps) < 12 {
+		t.Errorf("%d monsters of the house, %d items, %d traps", house, len(g.Items), len(g.Traps))
+	}
+}

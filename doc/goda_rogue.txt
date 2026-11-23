@@ -68,7 +68,8 @@ Some floors are special: one big room; a maze of corridors, with things
 anywhere in it; and a monster house, a room full of sleeping monsters
 and items, who all wake up when the player comes in.  In a big room, the
 house is the whole floor: its monsters wake up one by one, and when the
-player comes near.
+player comes near.  The bigger the room of a monster house, the more it
+holds: a big room has some 40 monsters, 35 items and 20 traps.
 
                                                             *goda-rogue-shops*
 Some floors have a shop: a room of items for sale, with their prices,

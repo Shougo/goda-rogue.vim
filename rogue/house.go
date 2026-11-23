@@ -33,7 +33,9 @@ func (g *Game) newItemOf(rng *rand.Rand, def *ItemDef, pos Point) *Item {
 // fillHouse makes a room of the floor a monster house: many monsters,
 // asleep, items, and more traps (as in Shiren: a danger, and a help to a
 // player who knows it). It is not the room where the player starts,
-// unless it is the only one (a big room).
+// unless it is the only one (a big room). The bigger the room, the more
+// of each, up to a most: a big room holds some 40 monsters, 35 items and
+// 20 traps with those of the floor.
 func (g *Game) fillHouse(rng *rand.Rand, rooms []int, start int) {
 	var candidates []int
 	for _, i := range rooms {
@@ -48,7 +50,7 @@ func (g *Game) fillHouse(rng *rand.Rand, rooms []int, start int) {
 	r := g.Level.Rooms[g.House]
 	area := r.W * r.H
 	d := g.Dungeon
-	for range min(max(area/5, 5), 24) {
+	for range min(max(area/5, 5), houseMonsters) {
 		p := g.randomTile(rng, g.House)
 		if !g.free(p) || chebyshev(p, g.Player) <= 2 {
 			continue
@@ -57,14 +59,16 @@ func (g *Game) fillHouse(rng *rand.Rand, rooms []int, start int) {
 		m.Pos, m.Dozing, m.House = p, true, true
 		g.Monsters = append(g.Monsters, m)
 	}
-	for range min(max(area/10, 3), 12) {
+	for range min(max(area/8, 4), houseItems) {
 		p := g.randomTile(rng, g.House)
 		if g.free(p) {
 			g.Items = append(g.Items, g.newItem(rng, p))
 		}
 	}
 	c := d.counts(g.Depth)
-	n := between(rng, c.MinHouseTrap, c.MaxHouseTrap)
+	// (The traps of floors.txt are those of a room; a big room has
+	// several times as many.)
+	n := between(rng, c.MinHouseTrap, c.MaxHouseTrap) * min(max(area/houseTrapArea, 1), houseTrapTimes)
 	// A few tries a trap: its traps are the point of a monster house.
 	for tries := 4 * n; n > 0 && tries > 0; tries-- {
 		p := g.randomTile(rng, g.House)
@@ -76,6 +80,16 @@ func (g *Game) fillHouse(rng *rand.Rand, rooms []int, start int) {
 		n--
 	}
 }
+
+// The most a monster house adds to its room: monsters and items; and its
+// traps, those of a room for every houseTrapArea tiles, houseTrapTimes
+// times at most.
+const (
+	houseMonsters  = 36
+	houseItems     = 30
+	houseTrapArea  = 100
+	houseTrapTimes = 4
+)
 
 // enterHouse tells the player it is in the monster house, the first time.
 func (g *Game) enterHouse() {
