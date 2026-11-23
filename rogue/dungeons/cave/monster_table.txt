@@ -10,7 +10,9 @@
 # 山犬 waits for 3F. The charging 猪 comes later than the other strong
 # ones: rank 1 from 15F, rank 2 only on 27-30F, and fewer. The archer 射
 # shoots from afar: rank 1 on 6-18F, rank 2 from 22F. The mage 魔 waves
-# its staff from afar: rank 1 on 5-16F, rank 2 from 19F.
+# its staff from afar: rank 1 on 5-16F, rank 2 from 19F. The mimic 化
+# hides as an item: ranks 1-2 (found out when picked up) on 4-20F, ranks
+# 3-4 (carried, or stairs) from 21F.
 開始	終了	ID	頻度
 1	6	nezumi1	4
 1	6	hebi1	4
@@ -188,3 +190,7 @@
 13	16	mahou1	1
 19	20	mahou2	1
 21	30	mahou2	2
+4	12	bake1	2
+13	20	bake2	2
+21	26	bake3	2
+27	30	bake4	2

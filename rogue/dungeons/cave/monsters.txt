@@ -27,6 +27,15 @@
 #              drinking, reading or talking on the floor; a monster: no
 #              abilities), HP1/2, HP1/4, レベル-1, レベル-3 (a monster:
 #              ranks)
+#   擬態:D:S:K  on a new floor it hides as an item of the floor's table, or
+#              (S%) as stairs, or (K%, with a shop) as one of the shop's
+#              goods. D 1: trying to pick it up shows it, and so do a
+#              sensing bracelet in reach and eye drops (目薬). D 2: it is
+#              picked up and carried; using it in any way (throwing and
+#              putting down too) shows it, and so does the next floor;
+#              identified, it is listed as the monster. Shown, it appears
+#              next to the player and strikes first; defeated, what it
+#              drops is the item it looked like
 # 眠り: the share asleep on a new floor, a percent (- for a third).
 # 落とし物: what it drops when the player kills it, and how often: 道具:P
 # (P% an item of the floor's table), お金:P, a kind of items:P (矢:P, an
@@ -107,6 +116,10 @@ mahou1	魔	魔術師	1	12	3	2	10	通常	-	魔法:10:50:ワープ,倍速,吹き�
 mahou2	魔	魔導士	2	26	6	5	30	通常	-	魔法:10:50:混乱,鈍足,レベル-1	-	杖:4	-
 mahou3	魔	大魔導	3	48	10	9	80	通常	-	魔法:10:50:睡眠,封印,HP1/2	-	杖:6	-
 mahou4	魔	魔人	4	84	14	13	220	通常	-	魔法:10:50:レベル-3,HP1/4,睡眠,封印	-	杖:8	-
+bake1	化	化け子	1	14	5	3	12	通常	-	擬態:1:0:25	-	道具:50	-
+bake2	化	化け物	2	30	9	6	35	通常	-	擬態:1:0:25	-	道具:50	-
+bake3	化	大化け物	3	52	13	10	90	通常	-	擬態:2:25:0	-	道具:50	-
+bake4	化	化け主	4	90	18	14	240	通常	-	擬態:2:25:0	-	道具:50	-
 yoroi1	鎧	古鎧	1	22	7	7	5	通常	-	-	-	道具:4	-
 yoroi2	鎧	鉄鎧	2	44	13	12	16	通常	-	-	-	道具:6	-
 yoroi3	鎧	鬼鎧	3	82	20	21	50	通常	-	-	-	道具:9	-

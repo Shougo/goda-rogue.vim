@@ -125,7 +125,7 @@ func (g *Game) land(it *Item, p Point) {
 		for y := -r; y <= r; y++ {
 			for x := -r; x <= r; x++ {
 				q := p.Add(Point{x, y})
-				if chebyshev(p, q) != r || !g.Level.At(q).Walkable() || q == g.Stairs {
+				if chebyshev(p, q) != r || !g.Level.At(q).Walkable() || g.stairsAt(q) {
 					continue
 				}
 				if _, ok := g.ItemAt(q); ok {

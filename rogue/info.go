@@ -74,6 +74,13 @@ func withStrength(t string, n int) string {
 // info returns the lines that describe it: what it is, its numbers, and
 // what it does, as far as the player knows.
 func (g *Game) info(it *Item) []string {
+	if it.Unmasked {
+		return []string{
+			it.Mimic.Name + "（道具に化けた魔物）",
+			"使う、投げる、置くと、隣に現れて襲ってくる。",
+			"次のフロアに持って行っても現れる。",
+		}
+	}
 	def := it.Def
 	lines := []string{fmt.Sprintf("%s（%s）", g.describe(it), def.Category)}
 	if !g.identified[def.ID] {

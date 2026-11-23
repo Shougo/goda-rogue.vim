@@ -66,6 +66,8 @@ type Game struct {
 	Dark bool
 	// Traps are the traps of the floor.
 	Traps []*Trap
+	// Decoys are the mimics that look like the stairs.
+	Decoys []Decoy
 	// House is the room of the monster house of the floor (-1 for none);
 	// houseFound says whether the player has entered it.
 	House      int
@@ -234,6 +236,7 @@ func (g *Game) descend() {
 	g.Monsters = nil
 	g.Items = nil
 	g.Traps = nil
+	g.Decoys = nil
 	g.Stuck = 0
 
 	var rooms []int
@@ -282,6 +285,7 @@ func (g *Game) descend() {
 		}
 	}
 	g.placeTraps(rng, rooms)
+	g.hideMimics(rng, rooms)
 
 	if g.Depth == 1 && d.Rules.FirstAlly != "" {
 		ally := newMonster(d.Monster(d.Rules.FirstAlly))
@@ -303,6 +307,7 @@ func (g *Game) descend() {
 	g.markSafe(g.Player)
 	g.say(fmt.Sprintf("%dF に着いた。", g.Depth))
 	g.enterHouse()
+	g.arriveWithMimics()
 }
 
 // randomTile returns a free tile of the room i.
@@ -319,7 +324,7 @@ func (g *Game) randomTile(rng *rand.Rand, i int) Point {
 
 // free says whether nothing stands or lies on p.
 func (g *Game) free(p Point) bool {
-	if p == g.Player || p == g.Stairs || g.MonsterAt(p) != nil {
+	if p == g.Player || g.stairsAt(p) || g.MonsterAt(p) != nil {
 		return false
 	}
 	return !slices.ContainsFunc(g.Items, func(it *Item) bool { return it.Pos == p })
@@ -576,6 +581,11 @@ func (g *Game) Do(action string, args []string) error {
 		return g.debug(args)
 	case "stairs":
 		g.beginAction()
+		if i := g.decoyAt(g.Player); i >= 0 {
+			g.unmaskDecoy(i, true)
+			g.endTurn(false)
+			return nil
+		}
 		if g.Player != g.Stairs {
 			g.say("ここに階段はない。")
 			return nil
@@ -722,6 +732,7 @@ func (g *Game) tick(rest bool) {
 	}
 	g.monstersAct()
 	g.sense()
+	g.showSensed()
 	if g.Over == "" {
 		g.FloorTurns++
 		g.linger()
@@ -734,7 +745,12 @@ func (g *Game) linger() {
 	d := g.Dungeon
 	r := d.Rules
 	if g.FloorTurns%r.SpawnTurns == 0 && len(g.Monsters) < r.MaxMonsters {
-		g.spawn(d.Monster(pick(g.rng, d.MonsterRows, g.Depth)))
+		def := d.Monster(pick(g.rng, d.MonsterRows, g.Depth))
+		if a, ok := mimicOf(def); ok {
+			g.spawnHidden(def, a)
+		} else {
+			g.spawn(def)
+		}
 	}
 	if g.Wind >= len(r.WindTurns) || g.FloorTurns < r.WindTurns[g.Wind] {
 		return
@@ -881,6 +897,9 @@ func (g *Game) step(d Point, pick bool) bool {
 	}
 	if to == g.Stairs {
 		g.say("階段がある。")
+	}
+	if i := g.decoyAt(to); i >= 0 {
+		g.unmaskDecoy(i, true)
 	}
 	return true
 }

@@ -65,6 +65,13 @@ type Item struct {
 	Known bool
 	// used says whether a bracelet had its effect on this floor.
 	used bool
+	// Mimic is the kind of monster that looks like this item (mimic.go;
+	// nil for an item); Unmasked says whether the player knows (it is
+	// then listed as the monster); spawned whether it came after the
+	// floor began.
+	Mimic    *MonsterDef
+	Unmasked bool
+	spawned  bool
 }
 
 // equipment says whether the item is worn: a weapon, a shield or a
@@ -105,6 +112,9 @@ func (g *Game) Entry(it *Item) string {
 
 // describe is the label of it without its icon.
 func (g *Game) describe(it *Item) string {
+	if it.Unmasked {
+		return it.Mimic.Name
+	}
 	s := g.Name(it)
 	if !g.identified[it.Def.ID] {
 		s += "?"
@@ -289,6 +299,10 @@ func (g *Game) pickUp(walked bool) bool {
 		return false
 	}
 	it := g.Items[i]
+	if it.shallow() {
+		g.unmask(it, true)
+		return true
+	}
 	if it.Def.Category == CategoryMoney && walked {
 		g.toPurse(it)
 		return true
@@ -472,6 +486,15 @@ func (g *Game) swap(it *Item) bool {
 	if foot == nil || !g.canSwap() {
 		return false
 	}
+	// A mimic put down, or a shallow one picked up, shows itself.
+	switch {
+	case it.Mimic != nil:
+		g.unmask(it, true)
+		return true
+	case foot.shallow():
+		g.unmask(foot, true)
+		return true
+	}
 	if it.Equipped {
 		g.unequip(it)
 	}
@@ -560,6 +583,10 @@ func (g *Game) choose(arg string) (bool, error) {
 		return g.doInPot(p.item, p.items[0], p.Choices[n]), nil
 	case promptIdentify:
 		it := g.item(p.items[n])
+		if it.Mimic != nil {
+			g.label(it)
+			return false, nil
+		}
 		g.learn(it)
 		g.say(g.describe(it) + "を識別した。")
 		return false, nil
@@ -577,6 +604,10 @@ func (g *Game) choose(arg string) (bool, error) {
 	case promptItem:
 		it := g.Inventory[p.item]
 		switch c := p.Choices[n]; {
+		case it.Mimic != nil && c != commandInfo:
+			// Whatever is done with a mimic, it shows itself.
+			g.unmask(it, true)
+			return true, nil
 		case it.ForSale && c != commandDrop && c != commandEquip && c != commandUnequip:
 			g.say("店主「お代を払ってからにしてください。」")
 			return false, nil
@@ -630,6 +661,10 @@ func (g *Game) doAtFoot(c string) bool {
 	case commandPickUp:
 		return g.pickUp(false)
 	case commandPurse:
+		if it.Mimic != nil {
+			g.unmask(it, true)
+			return true
+		}
 		g.toPurse(it)
 		return false
 	case commandSwap:
@@ -638,6 +673,10 @@ func (g *Game) doAtFoot(c string) bool {
 	case commandInfo:
 		g.showInfo(it)
 		return false
+	}
+	if it.Mimic != nil {
+		g.unmask(it, true)
+		return true
 	}
 	if it.ForSale {
 		g.say("店主「お代を払ってからにしてください。」")
@@ -661,7 +700,7 @@ func (g *Game) doAtFoot(c string) bool {
 // says whether it did (and the turn passes).
 func (g *Game) drop(i int) bool {
 	it := g.Inventory[i]
-	if _, ok := g.ItemAt(g.Player); ok || g.Player == g.Stairs {
+	if _, ok := g.ItemAt(g.Player); ok || g.stairsAt(g.Player) {
 		g.say("ここには置けない。")
 		return false
 	}

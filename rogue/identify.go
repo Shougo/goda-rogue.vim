@@ -32,6 +32,9 @@ func (g *Game) nameItems() {
 // Name is the name of the item as the player knows it: its fake name until
 // its kind is identified.
 func (g *Game) Name(it *Item) string {
+	if it.Unmasked {
+		return it.Mimic.Name
+	}
 	if it.Def.Category == CategoryMoney {
 		return fmt.Sprintf("%dG", it.Amount)
 	}
@@ -60,6 +63,9 @@ func (g *Game) learn(it *Item) {
 
 // unknown says whether there is something to identify about it.
 func (g *Game) unknown(it *Item) bool {
+	if it.Unmasked {
+		return false
+	}
 	if !g.identified[it.Def.ID] {
 		return true
 	}

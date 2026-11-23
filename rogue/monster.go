@@ -91,6 +91,11 @@ type Monster struct {
 	// wanders to.
 	target    Point
 	hasTarget bool
+	// loot is the item a mimic looked like, which it may drop; waits
+	// says whether it waits its next action out (after its first
+	// strike).
+	loot  *Item
+	waits bool
 }
 
 func newMonster(def *MonsterDef) *Monster {
@@ -138,6 +143,10 @@ func (g *Game) sees(a, b Point) bool {
 func (g *Game) monstersAct() {
 	// A copy: monsters may die while others act.
 	for _, m := range slices.Clone(g.Monsters) {
+		if m.waits {
+			m.waits = false
+			continue
+		}
 		for range m.States.actions(m.Speed.actions(g.Turn), g.Turn) {
 			if g.Over != "" || !slices.Contains(g.Monsters, m) {
 				break
@@ -492,6 +501,12 @@ func (g *Game) dropFrom(m *Monster) {
 		what, rate = m.Def.Drop.What, m.Def.Drop.Rate
 	}
 	if what == DropNone || rate == 0 || g.rng.IntN(100) >= rate {
+		return
+	}
+	if it := m.loot; it != nil {
+		// A mimic: the item it looked like (the shop's, in the shop).
+		it.ForSale = it.ForSale && g.inShop(m.Pos)
+		g.land(it, m.Pos)
 		return
 	}
 	var def *ItemDef

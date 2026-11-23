@@ -595,6 +595,23 @@ floors once the files change.
 				             the first one it meets, or
 				             every one with P 1 (and then
 				             never falls)
+				  擬態:D:S:K  on a new floor it hides as
+				             an item of the floor's table,
+				             or (S%) as stairs, or (K%, with
+				             a shop) as one of the shop's
+				             goods.  D 1: trying to pick it
+				             up shows it, and so do a
+				             sensing bracelet in reach and
+				             eye drops (目薬).  D 2: it is
+				             picked up and carried; using it
+				             in any way (throwing and
+				             putting down too) shows it, and
+				             so does the next floor;
+				             identified, it is listed as the
+				             monster.  Shown, it appears
+				             next to the player and strikes
+				             first; defeated, what it drops
+				             is the item it looked like
 				  魔法:R:C:E  with the player in sight on
 				             one of its lines, 2 to R tiles
 				             away, C% of its actions wave a
@@ -642,7 +659,7 @@ floors once the files change.
 				by its kind (the comments of the built-in
 				items.txt tell what each does):
 				  腕輪: ちから 回復 気配察知 道具感知
-				  草: HP回復 ちから
+				  草: HP回復 ちから 目薬
 				  巻物: あかり 識別
 				  杖: 吹き飛ばし 仲間
 				  食料: 満腹

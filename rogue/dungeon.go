@@ -235,6 +235,7 @@ const (
 	EffectIdentify   Effect = "識別"
 	EffectBlowAway   Effect = "吹き飛ばし"
 	EffectRecruit    Effect = "仲間"
+	EffectEyeDrops   Effect = "目薬"
 	EffectFood       Effect = "満腹"
 	EffectKeep       Effect = "保存"
 	EffectSynthesis  Effect = "合成"
@@ -243,7 +244,7 @@ const (
 // effects are the effects the items of each category can have.
 var effects = map[Category][]Effect{
 	CategoryBracelet: {EffectStrength, EffectRegen, EffectSenseEnemy, EffectSenseItem},
-	CategoryGrass:    {EffectHeal, EffectStrength},
+	CategoryGrass:    {EffectHeal, EffectStrength, EffectEyeDrops},
 	CategoryScroll:   {EffectLight, EffectIdentify},
 	CategoryStaff:    {EffectBlowAway, EffectRecruit},
 	CategoryFood:     {EffectFood},

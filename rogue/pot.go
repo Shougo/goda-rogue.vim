@@ -69,6 +69,10 @@ func (g *Game) askPutIn(i int) bool {
 // putIn puts it in pot: it is kept, or merged with what is in a pot of
 // synthesis.
 func (g *Game) putIn(pot, it *Item) {
+	if it.Mimic != nil {
+		g.unmask(it, true)
+		return
+	}
 	g.Inventory = slices.DeleteFunc(g.Inventory, func(x *Item) bool { return x == it })
 	it.Equipped, it.used = false, false
 	g.say(g.Name(it) + "を" + g.Name(pot) + "に入れた。")

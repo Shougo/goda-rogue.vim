@@ -21,6 +21,7 @@
 床	1	30	yakusou	6
 床	1	30	otogiri	3
 床	1	30	chikarakusa	2
+床	1	30	megusuri	2
 床	1	30	shikibetsu	3
 床	1	30	akari	2
 床	1	30	fukitobashi	2
@@ -52,6 +53,7 @@
 よろず	1	30	otogiri	3
 よろず	1	9	chikarakusa	1
 よろず	10	30	chikarakusa	3
+よろず	1	30	megusuri	2
 よろず	1	30	shikibetsu	4
 よろず	1	30	akari	2
 よろず	1	30	fukitobashi	2
@@ -65,6 +67,7 @@
 草	1	30	otogiri	3
 草	1	9	chikarakusa	1
 草	10	30	chikarakusa	3
+草	1	30	megusuri	2
 武具	1	30	bokutou	2
 武具	1	30	tetsuken	3
 武具	1	9	katana	1

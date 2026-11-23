@@ -355,7 +355,7 @@ func (g *Game) miniGlyph(p Point) (byte, string) {
 	if _, ok := g.ItemAt(p); ok {
 		return miniItem, ""
 	}
-	if p == g.Stairs {
+	if g.stairsAt(p) {
 		return miniStairs, hlStairs
 	}
 	if g.foundTrapAt(p) != nil {
@@ -400,7 +400,7 @@ func (g *Game) glyph(p Point) (string, string) {
 	if it, ok := g.ItemAt(p); ok {
 		return it.Glyph, ""
 	}
-	if p == g.Stairs {
+	if g.stairsAt(p) {
 		return glyphStairs, hlStairs
 	}
 	if g.foundTrapAt(p) != nil {
@@ -441,6 +441,9 @@ func (g *Game) revealed() []string {
 	for _, it := range g.Inventory {
 		c := *it
 		c.Known = true
+		if c.Mimic != nil {
+			c.Unmasked, c.Glyph = true, c.Mimic.Glyph
+		}
 		entries = append(entries, all.Entry(&c))
 	}
 	return entries

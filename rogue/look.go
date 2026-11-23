@@ -172,6 +172,11 @@ func (g *Game) abilityText(a Ability) string {
 			es[i] = string(e)
 		}
 		return line(v[0]) + fmt.Sprintf("%d%%で杖を振る（%s）", v[1], strings.Join(es, "、"))
+	case AbilityMimic:
+		if v[0] == mimicDeep {
+			return "道具や階段に化け、持ち物の中でも気づかれない（使うか、次のフロアで正体を現す。識別で見破れる）"
+		}
+		return "道具や店の品に化ける（拾おうとすると正体を現す。気配察知や目薬で見破れる）"
 	}
 	return string(a.Name)
 }

@@ -43,6 +43,10 @@ const (
 	// percent): a magic bolt of one of its effects (MagicEffect), at
 	// random, which takes the first creature it meets.
 	AbilityMagic AbilityName = "魔法"
+	// AbilityMimic: on a new floor it hides as an item, as stairs (by a
+	// chance, a percent) or as goods of a shop (by another), until it
+	// is found out: how, its depth says (mimic.go).
+	AbilityMimic AbilityName = "擬態"
 )
 
 // MagicEffect is an effect of the bolt of AbilityMagic.
@@ -106,6 +110,7 @@ var abilityDefs = map[AbilityName]abilityDef{
 	AbilityPull:     {[]string{"reach", "chance %", "hit"}, []int{0, 1, 0}, []int{maxReach, 100, 1}, 0},
 	AbilityShoot:    {[]string{"reach", "chance %", "arrow", "pierce"}, []int{2, 1, 0, 0}, []int{maxReach, 100, 0, 1}, 3},
 	AbilityMagic:    {[]string{"reach", "chance %", "effects"}, []int{2, 1, 0}, []int{maxReach, 100, 0}, 3},
+	AbilityMimic:    {[]string{"depth", "stairs %", "shop %"}, []int{mimicShallow, 0, 0}, []int{mimicDeep, 100, 100}, 0},
 }
 
 // maxReach is the farthest reach of an ability along a line.
@@ -113,7 +118,7 @@ const maxReach = 20
 
 // abilityNames are the abilities in a fixed order, for the error that
 // lists them.
-var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic}
+var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic}
 
 // lineAbilities are the abilities that reach the player from afar along
 // a line, their reach their first number.

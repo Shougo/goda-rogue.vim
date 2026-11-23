@@ -82,7 +82,7 @@ func (g *Game) placeTraps(rng *rand.Rand, rooms []int) {
 // the entrance of a room (a tile of it next to a corridor: as in Shiren,
 // the way in and out is never trapped), and no pit on the last floor.
 func (g *Game) trapSpot(p Point, def *TrapDef) bool {
-	if p == g.Player || p == g.Stairs || g.TrapAt(p) != nil || def.Effect == TrapPit && g.Depth >= g.Dungeon.Floors {
+	if p == g.Player || g.stairsAt(p) || g.TrapAt(p) != nil || def.Effect == TrapPit && g.Depth >= g.Dungeon.Floors {
 		return false
 	}
 	if _, ok := g.ItemAt(p); ok {

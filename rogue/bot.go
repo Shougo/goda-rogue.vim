@@ -106,7 +106,7 @@ func (b *Bot) Next(g *Game) (string, []string) {
 			return action, args
 		}
 	}
-	if g.IsSeen(g.Stairs) {
+	if b.seesStairs(g) {
 		if action, args := b.toStairs(g); action != "" {
 			return action, args
 		}
@@ -606,8 +606,8 @@ func (b *Bot) danger(g *Game) (string, []string) {
 			answers = append(answers, botAnswer{0, oneByOneDeath(g, ms, g.HP), nil, "move " + d, nil})
 		}
 	}
-	if g.IsSeen(g.Stairs) {
-		if step, dist, ok := b.route(g, func(p Point) bool { return p == g.Stairs }); ok && g.MonsterAt(step) == nil {
+	if b.seesStairs(g) {
+		if step, dist, ok := b.route(g, func(p Point) bool { return b.stairs(g, p) }); ok && g.MonsterAt(step) == nil {
 			cost := 0.0
 			if b.Style == BotCareful {
 				cost = leaveCost
@@ -815,7 +815,7 @@ func (b *Bot) boost(g *Game) (string, []string) {
 // light reads a known scroll of light when the stairs are not found and
 // the floor is explored as far as it can.
 func (b *Bot) light(g *Game) (string, []string) {
-	if g.IsSeen(g.Stairs) || g.Lit {
+	if b.seesStairs(g) || g.Lit {
 		return "", nil
 	}
 	if action, _ := b.explore(g); action != "" {
@@ -1136,7 +1136,7 @@ func (b *Bot) windNear(g *Game) bool {
 // nothing to eat, it sees an enemy it would likely lose to, or the floor is
 // a dangerous one.
 func (b *Bot) leave(g *Game) (string, []string) {
-	if !g.IsSeen(g.Stairs) || (b.Style == BotCareful && !b.windNear(g) && !b.hungry(g) &&
+	if !b.seesStairs(g) || (b.Style == BotCareful && !b.windNear(g) && !b.hungry(g) &&
 		!b.threatened(g) && !b.dangerousFloor(g) && !b.costlyFloor(g) && !b.exploredEnough(g)) {
 		return "", nil
 	}
@@ -1148,7 +1148,22 @@ func (b *Bot) toStairs(g *Game) (string, []string) {
 	if g.Player == g.Stairs {
 		return "stairs", nil
 	}
-	return b.walk(g, func(p Point) bool { return p == g.Stairs })
+	return b.walk(g, func(p Point) bool { return b.stairs(g, p) })
+}
+
+// stairs says whether p looks like stairs to the bot: the stairs or a
+// mimic that looks like them, seen (it cannot tell them apart).
+func (b *Bot) stairs(g *Game, p Point) bool {
+	return g.stairsAt(p) && g.IsSeen(p)
+}
+
+// seesStairs says whether the bot has seen stairs, or what looks like
+// them.
+func (b *Bot) seesStairs(g *Game) bool {
+	if g.IsSeen(g.Stairs) {
+		return true
+	}
+	return slices.ContainsFunc(g.Decoys, func(d Decoy) bool { return g.IsSeen(d.Pos) })
 }
 
 // pick walks to the nearest item seen that it can take: not for sale, and
@@ -1237,7 +1252,7 @@ const exploreReach = 12
 // stairs known, and no item it wants nor tile to explore worth the steps
 // (the article "シレン5で上達するための思考法": no step without a reason).
 func (b *Bot) exploredEnough(g *Game) bool {
-	if !g.IsSeen(g.Stairs) {
+	if !b.seesStairs(g) {
 		return false
 	}
 	reach := b.reach(g)
