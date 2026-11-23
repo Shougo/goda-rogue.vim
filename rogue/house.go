@@ -34,7 +34,7 @@ func (g *Game) newItemOf(rng *rand.Rand, def *ItemDef, pos Point) *Item {
 // asleep, items, and more traps (as in Shiren: a danger, and a help to a
 // player who knows it). It is not the room where the player starts,
 // unless it is the only one (a big room). The bigger the room, the more
-// of each, up to a most: a big room holds some 40 monsters, 35 items and
+// of each, up to a most: a big room holds some 20 monsters, 35 items and
 // 20 traps with those of the floor.
 func (g *Game) fillHouse(rng *rand.Rand, rooms []int, start int) {
 	var candidates []int
@@ -85,10 +85,10 @@ func (g *Game) fillHouse(rng *rand.Rand, rooms []int, start int) {
 // traps, those of a room for every houseTrapArea tiles, houseTrapTimes
 // times at most.
 const (
-	houseMonsters  = 36
+	houseMonsters  = 14
 	houseItems     = 30
 	houseTrapArea  = 100
-	houseTrapTimes = 4
+	houseTrapTimes = 3
 )
 
 // enterHouse tells the player it is in the monster house, the first time.

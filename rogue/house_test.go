@@ -156,7 +156,7 @@ func TestBigHouse(t *testing.T) {
 			house++
 		}
 	}
-	if house < 24 || house > houseMonsters || len(g.Items) < 24 || len(g.Traps) < 12 {
+	if house < 10 || house > houseMonsters || len(g.Items) < 24 || len(g.Traps) < 12 {
 		t.Errorf("%d monsters of the house, %d items, %d traps", house, len(g.Items), len(g.Traps))
 	}
 }
