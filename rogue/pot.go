@@ -178,15 +178,13 @@ func (g *Game) askInPot(i, n int) {
 func (g *Game) doInPot(i, n int, c string) bool {
 	pot := g.Inventory[i]
 	it := pot.Contents[n]
-	if c == commandInfo {
-		g.showInfo(it)
-		return false
-	}
-	if pot.ForSale && c != commandTakeOut {
-		g.say("店主「お代を払ってからにしてください。」")
-		return false
+	if ok, turn := g.allowed(it, pot, placePot, c); !ok {
+		return turn
 	}
 	switch c {
+	case commandInfo:
+		g.showInfo(it)
+		return false
 	case commandTakeOut:
 		if pot.Def.Effect == EffectSynthesis {
 			g.learn(pot)
@@ -198,9 +196,6 @@ func (g *Game) doInPot(i, n int, c string) bool {
 		g.throwItem(it)
 		return true
 	case commandDrink, commandRead, commandWave, commandEat:
-		if g.mouthBlocks(c) {
-			return false
-		}
 		g.useItem(it)
 		return true
 	}

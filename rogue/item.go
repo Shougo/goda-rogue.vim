@@ -610,14 +610,8 @@ func (g *Game) choose(arg string) (bool, error) {
 		return false, nil
 	case promptItem:
 		it := g.Inventory[p.item]
-		switch c := p.Choices[n]; {
-		case it.Mimic != nil && c != commandInfo:
-			// Whatever is done with a mimic, it shows itself.
-			g.unmask(it, true)
-			return true, nil
-		case it.ForSale && c != commandDrop && c != commandEquip && c != commandUnequip:
-			g.say("店主「お代を払ってからにしてください。」")
-			return false, nil
+		if ok, turn := g.allowed(it, nil, placeCarried, p.Choices[n]); !ok {
+			return turn, nil
 		}
 		switch p.Choices[n] {
 		// Arrows are equipped and taken off without a turn, as in Shiren.
@@ -647,9 +641,6 @@ func (g *Game) choose(arg string) (bool, error) {
 			g.throwItem(g.Inventory[p.item])
 			return true, nil
 		case commandDrink, commandRead, commandWave, commandEat:
-			if g.mouthBlocks(p.Choices[n]) {
-				return false, nil
-			}
 			g.useItem(g.Inventory[p.item])
 			return true, nil
 		}
@@ -664,14 +655,13 @@ func (g *Game) doAtFoot(c string) bool {
 	if it == nil {
 		return false
 	}
+	if ok, turn := g.allowed(it, nil, placeFoot, c); !ok {
+		return turn
+	}
 	switch c {
 	case commandPickUp:
 		return g.pickUp(false)
 	case commandPurse:
-		if it.Mimic != nil {
-			g.unmask(it, true)
-			return true
-		}
 		g.toPurse(it)
 		return false
 	case commandSwap:
@@ -680,22 +670,9 @@ func (g *Game) doAtFoot(c string) bool {
 	case commandInfo:
 		g.showInfo(it)
 		return false
-	}
-	if it.Mimic != nil {
-		g.unmask(it, true)
-		return true
-	}
-	if it.ForSale {
-		g.say("店主「お代を払ってからにしてください。」")
-		return false
-	}
-	switch c {
 	case commandThrow:
 		g.throwItem(it)
 	case commandDrink, commandRead, commandWave, commandEat:
-		if g.mouthBlocks(c) {
-			return false
-		}
 		g.useItem(it)
 	default:
 		return false

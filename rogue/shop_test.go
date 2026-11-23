@@ -342,3 +342,26 @@ func TestShopPrices(t *testing.T) {
 		t.Errorf("%s", info)
 	}
 }
+
+// TestAllowedForSale: an item of the shop not paid for may be read about
+// (説明), put down and equipped, not used; in a pot of the shop, its
+// items may be taken out only.
+func TestAllowedForSale(t *testing.T) {
+	g, _ := roomGame(t, 6, 3)
+	it := carry(g, "yakusou", 0)
+	it.ForSale = true
+	for c, want := range map[string]bool{commandInfo: true, commandDrop: true, commandDrink: false, commandThrow: false} {
+		if ok, _ := g.allowed(it, nil, placeCarried, c); ok != want {
+			t.Errorf("%s: allowed %v, want %v", c, ok, want)
+		}
+	}
+	pot := carry(g, "hozon", 0)
+	pot.ForSale = true
+	in := &Item{Def: g.Dungeon.Item("yakusou")}
+	if ok, _ := g.allowed(in, pot, placePot, commandTakeOut); !ok {
+		t.Error("taking out of a pot of the shop")
+	}
+	if ok, _ := g.allowed(in, pot, placePot, commandDrink); ok {
+		t.Error("drinking in a pot of the shop")
+	}
+}
