@@ -96,6 +96,10 @@ type Monster struct {
 	// strike).
 	loot  *Item
 	waits bool
+	// Fled says whether it is a thief that stole, keeping away; stolen
+	// is what it took.
+	Fled   bool
+	stolen []*Item
 }
 
 func newMonster(def *MonsterDef) *Monster {
@@ -179,9 +183,15 @@ func (g *Game) act(m *Monster) bool {
 		return false
 	}
 
-	// Attack the player first, then an ally.
+	if m.Fled && g.flee(m) {
+		return false
+	}
+	// Attack the player first (or steal from it), then an ally.
 	for _, d := range around {
 		if m.Pos.Add(d) == g.Player && g.clearFrom(m.Pos, d) {
+			if a, ok := m.ability(AbilitySteal); ok && g.thieve(m, a) {
+				return true
+			}
 			g.hitPlayer(m)
 			return true
 		}
@@ -424,10 +434,15 @@ func (g *Game) hitMonster(a, m *Monster) {
 func (g *Game) defeated(m *Monster) {
 	g.Kills++
 	g.event("kill %s", m.Def.ID)
+	// A thief drops what it stole instead (even one spawned).
+	stole := len(m.stolen) > 0
+	g.dropStolen(m)
 	if m.Spawned || m.EXP == 0 {
 		return
 	}
-	g.dropFrom(m)
+	if !stole {
+		g.dropFrom(m)
+	}
 	g.EXP += m.EXP
 	growth := g.Dungeon.Growth[g.Dungeon.Rules.Growth]
 	for g.PlayerLevel-1 < len(growth) && g.EXP >= growth[g.PlayerLevel-1].EXP {

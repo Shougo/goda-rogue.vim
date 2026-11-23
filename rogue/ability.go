@@ -47,6 +47,12 @@ const (
 	// chance, a percent) or as goods of a shop (by another), until it
 	// is found out: how, its depth says (mimic.go).
 	AbilityMimic AbilityName = "擬態"
+	// AbilitySteal: next to the player, by a chance (a percent), it
+	// steals instead of a blow: money (0: half the purse) or items (1:
+	// so many, carried, and with 1 last, equipped ones too). Then it
+	// warps away and flees, and never steals again; defeated, it drops
+	// what it stole (theft.go).
+	AbilitySteal AbilityName = "盗み"
 )
 
 // MagicEffect is an effect of the bolt of AbilityMagic.
@@ -111,6 +117,7 @@ var abilityDefs = map[AbilityName]abilityDef{
 	AbilityShoot:    {[]string{"reach", "chance %", "arrow", "pierce"}, []int{2, 1, 0, 0}, []int{maxReach, 100, 0, 1}, 3},
 	AbilityMagic:    {[]string{"reach", "chance %", "effects"}, []int{2, 1, 0}, []int{maxReach, 100, 0}, 3},
 	AbilityMimic:    {[]string{"depth", "stairs %", "shop %"}, []int{mimicShallow, 0, 0}, []int{mimicDeep, 100, 100}, 0},
+	AbilitySteal:    {[]string{"chance %", "what", "items", "equipped"}, []int{1, stealGold, 0, 0}, []int{100, stealItems, 5, 1}, 0},
 }
 
 // maxReach is the farthest reach of an ability along a line.
@@ -118,7 +125,7 @@ const maxReach = 20
 
 // abilityNames are the abilities in a fixed order, for the error that
 // lists them.
-var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic}
+var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal}
 
 // lineAbilities are the abilities that reach the player from afar along
 // a line, their reach their first number.
@@ -476,8 +483,10 @@ func (g *Game) shootAt(m *Monster, a Ability) bool {
 	return true
 }
 
-// killed is the monster m defeating f: an enemy of the floors ranks up.
+// killed is the monster m defeating f: what a thief stole falls, and an
+// enemy of the floors ranks up.
 func (g *Game) killed(m, f *Monster, shown bool) {
+	g.dropStolen(f)
 	if m.Ally || m.Def.Kind != "" {
 		return
 	}

@@ -80,11 +80,13 @@ func (g *Game) askIdentify() bool {
 		if g.unknown(it) {
 			p.Choices = append(p.Choices, g.Entry(it))
 			p.items = append(p.items, i)
+			p.targets = append(p.targets, it)
 		}
 	}
 	if foot := g.foot(); foot != nil && g.unknown(foot) {
 		p.Choices = append(p.Choices, g.footEntry(foot))
 		p.items = append(p.items, footIndex)
+		p.targets = append(p.targets, foot)
 	}
 	if len(p.Choices) == 0 {
 		return false

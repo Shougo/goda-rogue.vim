@@ -185,6 +185,9 @@ type Prompt struct {
 	kind  string
 	item  int
 	items []int
+	// targets are the items of a prompt that stays open while the turn
+	// passes (identify: a thief may take one meanwhile).
+	targets []*Item
 }
 
 // chooseMany answers the prompt p with the choices of arg, separated by
@@ -582,7 +585,11 @@ func (g *Game) choose(arg string) (bool, error) {
 	case promptInPot:
 		return g.doInPot(p.item, p.items[0], p.Choices[n]), nil
 	case promptIdentify:
-		it := g.item(p.items[n])
+		it := p.targets[n]
+		if !slices.Contains(g.Inventory, it) && g.foot() != it {
+			g.say("それはもう手元にない。")
+			return false, nil
+		}
 		if it.Mimic != nil {
 			g.label(it)
 			return false, nil

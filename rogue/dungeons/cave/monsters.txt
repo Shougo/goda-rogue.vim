@@ -27,6 +27,11 @@
 #              drinking, reading or talking on the floor; a monster: no
 #              abilities), HP1/2, HP1/4, レベル-1, レベル-3 (a monster:
 #              ranks)
+#   盗み:C:W:N:E  next to the player, C% of its blows are thefts instead:
+#              W 0 half the money of the purse, W 1 N carried items (with E
+#              1, equipped ones too); then it warps away and keeps away
+#              from the player, never stealing again. Defeated, it drops
+#              what it stole, not its 落とし物
 #   擬態:D:S:K  on a new floor it hides as an item of the floor's table, or
 #              (S%) as stairs, or (K%, with a shop) as one of the shop's
 #              goods. D 1: trying to pick it up shows it, and so do a
@@ -76,10 +81,10 @@ ryu1	竜	小竜	1	20	8	6	5	通常	-	-	-	道具:8	-
 ryu2	竜	竜	2	42	14	10	16	通常	-	-	-	道具:12	-
 ryu3	竜	火竜	3	78	22	18	50	通常	-	-	-	道具:16	-
 ryu4	竜	竜王	4	140	32	28	150	通常	-	-	-	道具:16	-
-touzoku1	盗	盗人	1	6	3	1	3	通常	-	-	-	お金:100	-
-touzoku2	盗	盗賊	2	15	6	4	10	通常	-	-	-	道具:100	-
-touzoku3	盗	大盗賊	3	30	11	8	30	通常	-	-	-	道具:100	-
-touzoku4	盗	盗賊王	4	60	18	14	90	通常	-	-	-	道具:100	-
+touzoku1	盗	盗人	1	6	3	1	3	通常	-	盗み:100:0:0:0	-	お金:100	-
+touzoku2	盗	盗賊	2	15	6	4	10	通常	-	盗み:100:1:1:0	-	道具:100	-
+touzoku3	盗	大盗賊	3	30	11	8	30	倍速	-	盗み:100:1:2:0	-	道具:100	-
+touzoku4	盗	盗賊王	4	60	18	14	90	倍速	-	盗み:100:1:2:1	-	道具:100	-
 kani1	蟹	子蟹	1	10	4	6	4	通常	-	-	-	道具:3	-
 kani2	蟹	大蟹	2	22	8	12	13	通常	-	-	-	道具:4	-
 kani3	蟹	鋼蟹	3	42	12	22	40	通常	-	-	-	道具:6	-

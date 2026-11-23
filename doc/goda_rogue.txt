@@ -595,6 +595,16 @@ floors once the files change.
 				             the first one it meets, or
 				             every one with P 1 (and then
 				             never falls)
+				  盗み:C:W:N:E  next to the player, C% of
+				             its blows are thefts instead:
+				             W 0 half the money of the
+				             purse, W 1 N carried items
+				             (with E 1, equipped ones too);
+				             then it warps away and keeps
+				             away from the player, never
+				             stealing again.  Defeated, it
+				             drops what it stole, not its
+				             落とし物
 				  擬態:D:S:K  on a new floor it hides as
 				             an item of the floor's table,
 				             or (S%) as stairs, or (K%, with
