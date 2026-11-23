@@ -10,6 +10,15 @@
 床	1	30	kitate	3
 床	1	30	tetsutate	2
 床	1	30	seidou	1
+床	1	30	seidoutachi	2
+床	1	30	hicchuu	1
+床	1	30	seme	1
+床	8	30	doutanuki	1
+床	15	30	oodachi	1
+床	1	30	hangeki	1
+床	1	30	mamori	1
+床	8	30	tekkou	1
+床	15	30	ootate	1
 床	1	30	kintate	1
 床	1	30	kawa	1
 床	1	30	chikara	1
@@ -53,6 +62,15 @@
 よろず	1	30	kitate	2
 よろず	1	30	tetsutate	3
 よろず	1	30	seidou	2
+よろず	1	30	seidoutachi	2
+よろず	1	30	hicchuu	2
+よろず	1	30	seme	2
+よろず	8	30	doutanuki	2
+よろず	15	30	oodachi	1
+よろず	1	30	hangeki	2
+よろず	1	30	mamori	2
+よろず	8	30	tekkou	2
+よろず	15	30	ootate	1
 よろず	1	30	kintate	2
 よろず	1	30	kawa	2
 よろず	1	30	chikara	1
@@ -111,6 +129,15 @@
 武具	1	30	seidou	2
 武具	1	30	kintate	2
 武具	1	30	kawa	2
+武具	1	30	seidoutachi	2
+武具	1	30	hicchuu	2
+武具	1	30	seme	2
+武具	8	30	doutanuki	3
+武具	15	30	oodachi	2
+武具	1	30	hangeki	2
+武具	1	30	mamori	2
+武具	8	30	tekkou	3
+武具	15	30	ootate	2
 # The bracelet shop: rarer bracelets.
 腕輪	1	30	chikara	1
 腕輪	1	30	kaifuku	1
