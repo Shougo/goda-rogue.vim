@@ -1128,10 +1128,12 @@ func (b *Bot) windNear(g *Game) bool {
 
 // leave goes to the stairs and down: the reckless bot as soon as it knows
 // where they are, the careful one when the wind is near, it is hungry with
-// nothing to eat, it sees an enemy it would likely lose to, or the floor is
-// a dangerous one.
+// nothing to eat, it sees an enemy it would likely lose to, the floor is
+// a dangerous one, or it is the last one (nothing found there is of any
+// use: the stairs clear the dungeon).
 func (b *Bot) leave(g *Game) (string, []string) {
-	if !b.seesStairs(g) || (b.Style == BotCareful && !b.windNear(g) && !b.hungry(g) &&
+	last := g.Depth >= g.Dungeon.Floors
+	if !b.seesStairs(g) || (b.Style == BotCareful && !last && !b.windNear(g) && !b.hungry(g) &&
 		!b.threatened(g) && !b.dangerousFloor(g) && !b.costlyFloor(g) && !b.exploredEnough(g)) {
 		return "", nil
 	}
@@ -1162,9 +1164,19 @@ func (b *Bot) seesStairs(g *Game) bool {
 }
 
 // pick walks to the nearest item seen that it can take: not for sale, and
-// with room in the inventory (money always).
+// with room in the inventory (money always). The careful bot that knows
+// the stairs leaves one too far to be worth the walk, as exploredEnough
+// counts it: else it would walk toward the item, find the floor explored
+// enough a step farther from the rest of it, turn to the stairs, and so
+// on, back and forth.
 func (b *Bot) pick(g *Game) (string, []string) {
-	return b.approach(g, func(p Point) bool { return wanted(g, p) })
+	want := func(p Point) bool { return wanted(g, p) }
+	if b.Style == BotCareful && b.seesStairs(g) {
+		if _, n, ok := b.route(g, want); !ok || n > 2*b.reach(g) {
+			return "", nil
+		}
+	}
+	return b.approach(g, want)
 }
 
 // wanted says whether an item the bots would pick up lies on p (seen, not

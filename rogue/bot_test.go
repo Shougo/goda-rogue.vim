@@ -486,3 +486,60 @@ func TestBotThreats(t *testing.T) {
 		t.Errorf("a dozing one counts: %d", len(ms))
 	}
 }
+
+// TestBotNoPacing: the careful bot does not walk back and forth between
+// two tiles, as it did between an item far away and the stairs (some 8
+// times a run).
+func TestBotNoPacing(t *testing.T) {
+	d := cave()
+	paced := 0
+	for i := range 4 {
+		g := NewGame(d, fmt.Sprint("pace", i))
+		b := NewBot(BotCareful, uint64(i))
+		var pos []Point
+		for n := 0; n < 60000 && g.Over == ""; n++ {
+			a, args := b.Next(g)
+			if err := g.Do(a, args); err != nil {
+				t.Fatal(err)
+			}
+			if a != "move" && a != "dash" {
+				pos = nil
+				continue
+			}
+			pos = append(pos, g.Player)
+			// Seven steps on two tiles.
+			if k := len(pos); k >= 7 && pos[k-1] != pos[k-2] && pos[k-1] == pos[k-3] && pos[k-1] == pos[k-5] &&
+				pos[k-1] == pos[k-7] && pos[k-2] == pos[k-4] && pos[k-2] == pos[k-6] {
+				paced++
+				pos = nil
+			}
+		}
+	}
+	if paced > 6 {
+		t.Errorf("paced %d times in 4 runs", paced)
+	}
+}
+
+// TestBotLastFloor: on the last floor, the careful bot goes to the stairs
+// it sees, whatever lies around; on another, it does not yet.
+func TestBotLastFloor(t *testing.T) {
+	g, r := roomGame(t, 8, 3)
+	g.Stairs = Point{r.X + 6, r.Y + 1}
+	g.Player = Point{r.X + 2, r.Y + 1}
+	g.Items = append(g.Items, &Item{Def: g.Dungeon.Item("yakusou"), Glyph: "草", Pos: Point{r.X, r.Y + 1}})
+	g.look()
+	b := NewBot(BotCareful, 1)
+	if a, args := b.leave(g); a != "" {
+		t.Fatalf("on %dF it leaves already: %s %v", g.Depth, a, args)
+	}
+	g.Depth = g.Dungeon.Floors
+	for range 4 {
+		a, args := b.Next(g)
+		if err := g.Do(a, args); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if g.Player != g.Stairs {
+		t.Errorf("on the last floor: at %v after 4 actions, the stairs at %v", g.Player, g.Stairs)
+	}
+}
