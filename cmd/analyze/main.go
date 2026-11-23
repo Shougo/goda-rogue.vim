@@ -32,7 +32,22 @@ func main() {
 	actions := flag.Int("actions", 50000, "the most actions of a run")
 	jobs := flag.Int("j", runtime.NumCPU(), "the runs played at once")
 	tsv := flag.Bool("tsv", false, "print one line a run, tab-separated, instead of the summary")
+	compare := flag.String("compare", "", "a replay file: print where the first of the bots would have done another kind of thing than its player, instead of playing")
 	flag.Parse()
+	if *compare != "" {
+		style, ok := rogue.BotStyles[strings.Split(*bots, ",")[0]]
+		if !ok {
+			fmt.Fprintf(os.Stderr, "analyze: unknown bot %q\n", *bots)
+			os.Exit(2)
+		}
+		lines, err := rogue.CompareReport(*compare, style)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "analyze:", err)
+			os.Exit(1)
+		}
+		fmt.Println(strings.Join(lines, "\n"))
+		return
+	}
 
 	d, err := rogue.LoadBuiltin(*dungeon)
 	if err != nil {

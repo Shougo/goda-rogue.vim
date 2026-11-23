@@ -26,7 +26,7 @@ const PluginName = "rogue"
 // ScriptVersion is the version of the Vim script (autoload/goda_rogue.vim)
 // this binary goes with (sdk.ScriptVersioner). Bump it with s:version there
 // when they no longer work together.
-const ScriptVersion = 4
+const ScriptVersion = 5
 
 // Plugin serves the game.
 type Plugin struct {
@@ -365,6 +365,8 @@ func (p *Plugin) watchScreen(size Size) Screen {
 //	bot(options, size): start a run a bot plays, to be watched, and
 //	return its Screen.
 //	bots(): the bots there are: style, name.
+//	compare(path, style): the lines of the comparison of the replay
+//	file with a bot (compare.go).
 //	step(n, size): watch n more actions of the replay or of the bot (-1:
 //	to the end), and return {screen, done}.
 //	records(path): the lines that show the records of the file path.
@@ -579,6 +581,24 @@ func (p *Plugin) Handlers() map[string]sdk.Handler {
 			p.game = g
 			p.watching = &watch{bot: NewBot(style, rand.Uint64())}
 			return sdk.Generic(p.watchScreen(size))
+		},
+		"compare": func(ctx context.Context, h sdk.Host, params []any) (any, error) {
+			var path, name string
+			if err := sdk.DecodeArgs(params, &path, &name); err != nil {
+				return nil, err
+			}
+			if name == "" {
+				name = BotCareful.String()
+			}
+			style, ok := BotStyles[name]
+			if !ok {
+				return nil, fmt.Errorf("compare: unknown style %q", name)
+			}
+			lines, err := CompareReport(path, style)
+			if err != nil {
+				return nil, fmt.Errorf("compare %s: %w", path, err)
+			}
+			return sdk.Generic(lines)
 		},
 		"bots": func(ctx context.Context, h sdk.Host, params []any) (any, error) {
 			var list []map[string]any

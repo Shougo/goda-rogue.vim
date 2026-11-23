@@ -42,6 +42,8 @@ type Bot struct {
 	// plan is what to answer to the prompts it opened: an item of the
 	// inventory, then a command.
 	plan []botStep
+	// rule is the name of the rule that gave the last action (botRules).
+	rule string
 	// leaving is the floor it turned to the stairs on, and until which
 	// turn it keeps going to them (leave).
 	leaving struct{ depth, until int }
@@ -119,23 +121,33 @@ func (b *Bot) Next(g *Game) (string, []string) {
 	}
 	if b.stuck > 30 {
 		// Going round in circles: a random step.
-		b.stuck = 0
+		b.stuck, b.rule = 0, "迷った"
 		return "move", []string{clockwise[b.rng.IntN(len(clockwise))]}
 	}
-	for _, rule := range []func(*Game) (string, []string){
+	for i, rule := range []func(*Game) (string, []string){
 		b.heal, b.danger, b.shoot, b.fight, b.chase, b.eat, b.boost, b.equip, b.identify, b.light,
 		b.tidy, b.trade, b.rest, b.leave, b.pick, b.explore,
 	} {
 		if action, args := rule(g); action != "" {
+			b.rule = botRules[i]
 			return action, args
 		}
 	}
 	if b.seesStairs(g) {
 		if action, args := b.toStairs(g); action != "" {
+			b.rule = "階段へ向かう"
 			return action, args
 		}
 	}
+	b.rule = "することがない"
 	return "wait", nil
+}
+
+// botRules are the names of the rules of Next, in their order: what the
+// bot is doing, for a reader (compare.go).
+var botRules = []string{
+	"回復する", "危険に答える", "矢を撃つ", "戦う", "射手や魔法使いを追う", "食べる", "強化する", "装備する",
+	"識別する", "あかりを使う", "不要品を置く", "入れ替える", "休む", "階段へ向かう", "拾いに行く", "探索する",
 }
 
 // answer answers the prompt of g by the plan, or cancels it.

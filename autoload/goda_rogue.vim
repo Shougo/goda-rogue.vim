@@ -6,7 +6,7 @@
 
 " The version of this Vim script that the binary goes with (ScriptVersion of
 " its Go side): goda.vim refuses a binary of another one, and builds it again.
-let s:version = #{version: 4, module: 'github.com/Shougo/goda-rogue.vim'}
+let s:version = #{version: 5, module: 'github.com/Shougo/goda-rogue.vim'}
 
 " The repository: the Go module of the binary.
 let s:root = expand('<sfile>:p:h:h', 1)
@@ -412,6 +412,32 @@ function! goda_rogue#records() abort
   call setline(1, lines)
   setlocal nomodifiable nowrap
   setlocal filetype=goda-rogue-records
+endfunction
+
+" Compare the replay {file} (default: the last run) with a bot of {style}
+" (default: "careful"), in the buffer "goda-rogue://compare": the decisions
+" where the bot would have done another kind of thing than the player (a
+" step in another direction is the same kind), how often each, and each
+" one with the state it was taken in.
+function! goda_rogue#compare_bot(file = '', style = '') abort
+  let file = empty(a:file) ? goda_rogue#last_replay() : expand(a:file, 1)
+  try
+    let lines = goda#request('rogue', 'compare', file, a:style)
+  catch
+    call s:print_error(v:exception)
+    return
+  endtry
+  let bufnr = bufadd('goda-rogue://compare')
+  call setbufvar(bufnr, '&buftype', 'nofile')
+  call setbufvar(bufnr, '&bufhidden', 'hide')
+  call setbufvar(bufnr, '&swapfile', 0)
+  call setbufvar(bufnr, '&buflisted', 0)
+  call bufload(bufnr)
+  execute 'buffer' bufnr
+  setlocal modifiable
+  silent %delete _
+  call setline(1, lines)
+  setlocal nomodifiable nowrap
 endfunction
 
 " Watch the replay {file} (default: the last run) in the current window: it

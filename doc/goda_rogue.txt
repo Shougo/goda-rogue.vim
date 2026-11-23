@@ -251,6 +251,25 @@ goda_rogue#replay([{file}])
 		meanwhile, but "map", "items", "log" and "redraw": the
 		mini-map and the items carried can be kept in sight.
 
+                                                    *goda_rogue#compare_bot()*
+goda_rogue#compare_bot([{file} [, {style}]])
+		Compare the replay {file} (default: the last run) with a bot
+		of {style} ("careful", the default, or "reckless"), in the
+		buffer "goda-rogue://compare".  At every decision of the
+		player (an action that takes a turn, with the answers to its
+		prompts), the bot is asked what it would do there; where it
+		is a thing of another kind (the player threw a grass and
+		the bot would fight, the player went down and the bot would
+		explore; a step in another direction is the same kind) the
+		decision is listed, with the floor, the turn, HP, the
+		enemies in sight and next to the player, the items carried,
+		and the rule of the bot that chose.  Before the list: how
+		often each pair of kinds came.  It tells where a bot plays
+		another way than a player, to make the bots better; the
+		replay must be of this version of the dungeon.  The same
+		from a shell: >
+			go run ./cmd/analyze -compare {file} -bots careful
+<
                                                       *goda_rogue#watch_bot()*
 goda_rogue#watch_bot([{options}])
 		Watch a bot play a new run in the game buffer, as a replay

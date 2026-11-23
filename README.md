@@ -87,6 +87,8 @@ call goda_rogue#start(#{dungeon: 'cave', seed: 'vim'})
 call goda_rogue#replay(goda_rogue#save_replay())
 " Watch a bot play (also from the menu of a dungeon).
 call goda_rogue#watch_bot(#{dungeon: 'cave'})
+" Where would a bot have played the last run another way?
+call goda_rogue#compare_bot()
 " The records of the finished runs, the best first.
 call goda_rogue#records()
 ```

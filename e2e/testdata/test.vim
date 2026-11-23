@@ -382,6 +382,14 @@ function! s:replays() abort
   call goda_rogue#replay_step(-1)
   call s:check('bot run over', search('^  結果 ', 'nw') > 0, 1)
   call s:check('bot left the replay', readfile(goda_rogue#last_replay()), readfile(saved))
+  " The run of the bot, compared with what a bot would have done.
+  call goda_rogue#compare_bot(goda_rogue#bot_replay())
+  call s:check('compare buffer', bufname('%'), 'goda-rogue://compare')
+  call s:check('compare title', getline(1) =~# '^リプレイと Bot（careful）の比較  はじまりの洞窟  シード bot$', 1)
+  call s:check('compare counts', getline(2) =~# '^判断 \d\+ 回のうち、', 1)
+  call goda_rogue#compare_bot(goda_rogue#bot_replay(), 'reckless')
+  call s:check('compare title of a style', getline(1) =~# 'Bot（reckless）', 1)
+
   " Its replay can be saved under a name, and the run of a bot before is
   " kept beside the next one.
   let botsaved = goda_rogue#save_replay('e2e-bot', goda_rogue#bot_replay())
