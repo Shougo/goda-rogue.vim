@@ -204,10 +204,26 @@ func (g *Game) descend() {
 
 	g.Depth++
 	g.event("floor %d", g.Depth)
+	// (One generator for the floor: the steps below draw from it in this
+	// order, which the seed of a run depends on.)
+	rng := g.floorRNG(g.Depth)
+	g.newLevel(rng)
+	rooms, start := g.placeStairs(rng)
+	g.populate(rng, rooms, start)
+	g.bringAllies(along)
+	g.look()
+	g.markSafe(g.Player)
+	g.say(fmt.Sprintf("%dF に着いた。", g.Depth))
+	g.enterHouse()
+	g.arriveWithMimics()
+}
+
+// newLevel makes the map of a new floor (big room, maze or rooms, as
+// floors.txt says), and leaves the state of the last floor behind.
+func (g *Game) newLevel(rng *rand.Rand) {
 	g.FloorTurns, g.Wind, g.Lit, g.Dark = 0, 0, false, false
 	// (The seal of the mouth is for the floor.)
 	g.Sealed = false
-	rng := g.floorRNG(g.Depth)
 	c := g.Dungeon.counts(g.Depth)
 	switch n := c.BigRoom + c.Maze; {
 	case n == 0:
@@ -227,7 +243,7 @@ func (g *Game) descend() {
 	g.Shop, g.selling = nil, nil
 	g.Seen = make([]bool, len(g.Level.Tiles))
 	g.Safe = make([]bool, len(g.Level.Tiles))
-	switch d := g.Dungeon.counts(g.Depth).Brightness; {
+	switch d := c.Brightness; {
 	case d == BrightnessBright:
 		g.light()
 	default:
@@ -238,14 +254,18 @@ func (g *Game) descend() {
 	g.Traps = nil
 	g.Decoys = nil
 	g.Stuck = 0
+}
 
-	var rooms []int
+// placeStairs puts the player in a room of the new floor and the stairs
+// in another (if there is another), and returns the rooms (not dummies)
+// and the player's.
+func (g *Game) placeStairs(rng *rand.Rand) (rooms []int, start int) {
 	for i, r := range g.Level.Rooms {
 		if !r.Dummy {
 			rooms = append(rooms, i)
 		}
 	}
-	start := rooms[rng.IntN(len(rooms))]
+	start = rooms[rng.IntN(len(rooms))]
 	g.Player = g.randomTile(rng, start)
 	stairsRoom := start
 	if len(rooms) > 1 {
@@ -254,8 +274,15 @@ func (g *Game) descend() {
 		}
 	}
 	g.Stairs = g.randomTile(rng, stairsRoom)
+	return rooms, start
+}
 
+// populate puts the monsters, items, monster house, shop, guaranteed
+// items, traps and mimics of the new floor; none dozes in start, the
+// player's room.
+func (g *Game) populate(rng *rand.Rand, rooms []int, start int) {
 	d := g.Dungeon
+	c := d.counts(g.Depth)
 	for range between(rng, c.MinMonster, c.MaxMonster) {
 		pos := g.spot(rng, rooms)
 		m := newMonster(d.Monster(pick(rng, d.MonsterRows, g.Depth)))
@@ -286,7 +313,12 @@ func (g *Game) descend() {
 	}
 	g.placeTraps(rng, rooms)
 	g.hideMimics(rng, rooms)
+}
 
+// bringAllies puts the allies that came along (and the first one, on
+// the first floor) next to the player.
+func (g *Game) bringAllies(along []*Monster) {
+	d := g.Dungeon
 	if g.Depth == 1 && d.Rules.FirstAlly != "" {
 		ally := newMonster(d.Monster(d.Rules.FirstAlly))
 		ally.Ally = true
@@ -303,11 +335,6 @@ func (g *Game) descend() {
 			g.Monsters = append(g.Monsters, ally)
 		}
 	}
-	g.look()
-	g.markSafe(g.Player)
-	g.say(fmt.Sprintf("%dF に着いた。", g.Depth))
-	g.enterHouse()
-	g.arriveWithMimics()
 }
 
 // randomTile returns a free tile of the room i.

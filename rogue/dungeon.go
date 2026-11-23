@@ -356,6 +356,9 @@ type loader struct {
 	d    *Dungeon
 	errs []error
 	h    []byte
+	// rules are the lines of rules.txt by key, for the checks of the
+	// files read after it.
+	rules map[string]line
 }
 
 func (l *loader) errorf(file string, line int, format string, args ...any) {
@@ -504,6 +507,25 @@ func (l *loader) glyph(r row, c string) string {
 var speeds = map[string]Speed{"鈍足": SpeedSlow, "通常": SpeedNormal, "倍速": SpeedDouble, "移動倍速": SpeedMoveDouble}
 
 func (l *loader) load() {
+	l.loadHeader()
+	l.loadRules()
+	l.loadGrowth()
+	l.loadMonsters()
+	l.loadSeals()
+	l.loadItems()
+	l.loadFakeNames()
+	l.loadTables()
+	l.loadTraps()
+	l.loadShops()
+	l.loadFloors()
+	l.checkFloors()
+
+	sum := sha256.Sum256(l.h)
+	l.d.Hash = fmt.Sprintf("%x", sum[:4])
+}
+
+// loadHeader reads the header: the name, the description and the floors.
+func (l *loader) loadHeader() {
 	d := l.d
 	h := l.keys("header.txt", []string{"名前", "説明", "階数"})
 	if ln, ok := h["名前"]; ok {
@@ -515,13 +537,18 @@ func (l *loader) load() {
 		d.Description = ln.fields[1]
 	}
 	d.Floors = l.keyInt("header.txt", h, "階数", 1)
+}
 
+// loadRules reads the rules.
+func (l *loader) loadRules() {
+	d := l.d
 	rk := l.keys("rules.txt", []string{
 		"最大HP", "ちから", "回復ターン", "湧きターン", "最大モンスター数",
 		"風1", "風2", "風3", "防御K", "主の命中", "敵の命中", "成長", "最初の仲間", "強敵ランク差",
 		"持ち物の数", "ひびの段階", "腕輪の傷みやすさ", "満腹度", "腹減りターン", "見つけた罠", "デバッグ",
 		"お金投げ", "落とし物", "仲間の命中", "主の投擲命中", "敵の投擲命中", "仲間の上限",
 	})
+	l.rules = rk
 	r := &d.Rules
 	r.PlayerHP = l.keyInt("rules.txt", rk, "最大HP", 1)
 	r.Strength = l.keyInt("rules.txt", rk, "ちから", 0)
@@ -606,7 +633,12 @@ func (l *loader) load() {
 			l.errorf("rules.txt", ln.n, "デバッグ: want 可 or 不可, not %q", ln.fields[1])
 		}
 	}
+}
 
+// loadGrowth reads the growth tables.
+func (l *loader) loadGrowth() {
+	d := l.d
+	r := &d.Rules
 	for _, row := range l.table("growth.txt", "名前", "レベル", "経験値", "HP", "攻撃", "防御") {
 		name := row.cols["名前"]
 		g := GrowthRow{
@@ -622,9 +654,14 @@ func (l *loader) load() {
 		d.Growth[name] = append(rows, g)
 	}
 	if _, ok := d.Growth[r.Growth]; !ok && r.Growth != "" {
-		l.errorf("rules.txt", rk["成長"].n, "no growth table %q", r.Growth)
+		l.errorf("rules.txt", l.rules["成長"].n, "no growth table %q", r.Growth)
 	}
+}
 
+// loadMonsters reads the monsters.
+func (l *loader) loadMonsters() {
+	d := l.d
+	r := &d.Rules
 	ids := map[string]bool{}
 	for _, row := range l.table("monsters.txt", "ID", "字", "名前", "ランク", "HP", "攻撃", "防御", "経験値", "速度") {
 		m := &MonsterDef{
@@ -679,9 +716,13 @@ func (l *loader) load() {
 		d.Monsters = append(d.Monsters, m)
 	}
 	if r.FirstAlly != "" && d.Monster(r.FirstAlly) == nil {
-		l.errorf("rules.txt", rk["最初の仲間"].n, "no monster %q", r.FirstAlly)
+		l.errorf("rules.txt", l.rules["最初の仲間"].n, "no monster %q", r.FirstAlly)
 	}
+}
 
+// loadSeals reads the seals.
+func (l *loader) loadSeals() {
+	d := l.d
 	for _, row := range l.table("seals.txt", "印", "名前", "効果", "強さ") {
 		s := &SealDef{Glyph: row.cols["印"], Name: row.cols["名前"], Effect: SealEffect(row.cols["効果"])}
 		if len([]rune(s.Glyph)) != 1 {
@@ -707,7 +748,11 @@ func (l *loader) load() {
 		}
 		d.Seals = append(d.Seals, s)
 	}
+}
 
+// loadItems reads the items.
+func (l *loader) loadItems() {
+	d := l.d
 	for _, row := range l.table("items.txt", "ID", "字", "名前", "種類") {
 		it := &ItemDef{ID: row.cols["ID"], Glyph: l.glyph(row, "字"), Name: row.cols["名前"]}
 		c := Category(row.cols["種類"])
@@ -771,7 +816,11 @@ func (l *loader) load() {
 		}
 		d.Items = append(d.Items, it)
 	}
+}
 
+// loadFakeNames reads the fake names of the kinds not identified.
+func (l *loader) loadFakeNames() {
+	d := l.d
 	d.FakeNames = map[Category][]string{}
 	for _, row := range l.table("fake_names.txt", "種類", "名前") {
 		c, name := Category(row.cols["種類"]), row.cols["名前"]
@@ -800,7 +849,12 @@ func (l *loader) load() {
 			l.errorf("fake_names.txt", 0, "too few names: %d for the %d items of %s", len(names), n, c)
 		}
 	}
+}
 
+// loadTables reads the tables of the monsters and items by floor, checks
+// the drops, and reads the guaranteed items.
+func (l *loader) loadTables() {
+	d := l.d
 	// Shopkeepers and guards are not monsters of the floors.
 	d.MonsterRows = l.appearance("monster_table.txt", func(id string) bool { m := d.Monster(id); return m != nil && m.Kind == "" })
 	l.loadItemTables(d)
@@ -815,7 +869,11 @@ func (l *loader) load() {
 			d.Guaranteed = append(d.Guaranteed, r)
 		}
 	}
+}
 
+// loadTraps reads the traps and their table.
+func (l *loader) loadTraps() {
+	d := l.d
 	for _, row := range l.table("traps.txt", "ID", "名前", "効果", "強さ") {
 		t := &TrapDef{ID: row.cols["ID"], Name: row.cols["名前"], Effect: TrapEffect(row.cols["効果"])}
 		if !slices.Contains(trapEffects, t.Effect) {
@@ -828,7 +886,11 @@ func (l *loader) load() {
 		d.Traps = append(d.Traps, t)
 	}
 	d.TrapRows = l.appearance("trap_table.txt", func(id string) bool { return d.Trap(id) != nil })
+}
 
+// loadShops reads the shops and their table.
+func (l *loader) loadShops() {
+	d := l.d
 	for _, row := range l.table("shops.txt", "ID", "名前", "品表", "店主", "店主の数", "番犬", "番犬の数") {
 		sh := &ShopDef{ID: row.cols["ID"], Name: row.cols["名前"], Table: row.cols["品表"]}
 		if d.ItemTable(sh.Table) == nil {
@@ -853,6 +915,11 @@ func (l *loader) load() {
 		d.Shops = append(d.Shops, sh)
 	}
 	d.ShopRows = l.appearance("shop_table.txt", func(id string) bool { return d.Shop(id) != nil })
+}
+
+// loadFloors reads the floors.
+func (l *loader) loadFloors() {
+	d := l.d
 	for _, row := range l.table("floors.txt", "開始", "終了", "敵の数", "道具の数") {
 		c := FloorCounts{}
 		c.First, c.Last = l.floors(row)
@@ -897,7 +964,11 @@ func (l *loader) load() {
 		}
 		d.FloorRows = append(d.FloorRows, c)
 	}
+}
 
+// checkFloors checks that every floor has its monsters, items and counts.
+func (l *loader) checkFloors() {
+	d := l.d
 	// Every floor needs its monsters, items and counts.
 	for f := 1; f <= d.Floors; f++ {
 		if !slices.ContainsFunc(d.MonsterRows, func(r FloorRow) bool { return r.First <= f && f <= r.Last }) {
@@ -926,9 +997,6 @@ func (l *loader) load() {
 			l.errorf("floors.txt", 0, "no counts for %dF", f)
 		}
 	}
-
-	sum := sha256.Sum256(l.h)
-	d.Hash = fmt.Sprintf("%x", sum[:4])
 }
 
 // appearance reads an appearance table; known says whether an ID exists.
