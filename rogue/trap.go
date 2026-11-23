@@ -27,9 +27,10 @@ const (
 	TrapWarp   TrapEffect = "ワープ"
 	TrapHunger TrapEffect = "腹減り"
 	TrapRust   TrapEffect = "サビ"
+	TrapRot    TrapEffect = "腐り"
 )
 
-var trapEffects = []TrapEffect{TrapPit, TrapMine, TrapSnare, TrapPoison, TrapSleep, TrapWarp, TrapHunger, TrapRust}
+var trapEffects = []TrapEffect{TrapPit, TrapMine, TrapSnare, TrapPoison, TrapSleep, TrapWarp, TrapHunger, TrapRust, TrapRot}
 
 // Trap is a trap on the floor; Found says whether the player knows it.
 type Trap struct {
@@ -131,6 +132,7 @@ var trapTexts = map[TrapEffect]string{
 	TrapWarp:   "フロアのどこかへ飛ばされる。",
 	TrapHunger: "お腹が減る。",
 	TrapRust:   "装備している武器と盾がさびる。",
+	TrapRot:    "持っているおにぎりがすべて腐る（壺の中は無事）。",
 }
 
 // commandStep steps on the trap under the player on purpose.
@@ -210,6 +212,8 @@ func (g *Game) spring(t *Trap, force bool) bool {
 		if !rusted {
 			g.say("何も起こらなかった。")
 		}
+	case TrapRot:
+		g.rotTrap()
 	}
 	return true
 }

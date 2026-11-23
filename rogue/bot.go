@@ -1000,8 +1000,14 @@ func (b *Bot) eat(g *Game) (string, []string) {
 	if g.Fullness*100 > g.Dungeon.Rules.Fullness*15 {
 		return "", nil
 	}
-	if it := carried(g, func(it *Item) bool { return it.Def.Category == CategoryFood }); it != nil {
-		return b.use(it, commandEat)
+	var foods []*Item
+	for _, it := range g.Inventory {
+		if it.Def.Category == CategoryFood && !it.ForSale {
+			foods = append(foods, it)
+		}
+	}
+	if foods = keepOnigiri(foods); len(foods) > 0 {
+		return b.use(foods[0], commandEat)
 	}
 	return "", nil
 }

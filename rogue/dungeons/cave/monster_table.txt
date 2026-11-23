@@ -13,6 +13,8 @@
 # its staff from afar: rank 1 on 5-16F, rank 2 from 19F. The mimic 化
 # hides as an item, found out when picked up: rank 1 on 4-14F, rank 2
 # from 15F.
+# The mud 泥 splits when hit: rank 1 on 6-16F; rank 2, which also rots
+# onigiri, from 17F.
 # Ranks 3 and 4 are for dungeons of 50 floors or more: here they come
 # only by ranking up (a monster that defeats another, Kron's wind).
 開始	終了	ID	頻度
@@ -194,3 +196,5 @@
 21	30	mahou2	2
 4	14	bake1	2
 15	30	bake2	2
+6	16	doro1	2
+17	30	doro2	2

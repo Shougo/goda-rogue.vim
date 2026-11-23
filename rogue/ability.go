@@ -53,6 +53,15 @@ const (
 	// warps away and flees, and never steals again; defeated, it drops
 	// what it stole (theft.go).
 	AbilitySteal AbilityName = "盗み"
+	// AbilitySplit: a blow of the player that leaves it with 2 HP or
+	// more splits it by a chance (a percent): its HP halves, and another
+	// with that HP appears next to it (mud.go).
+	AbilitySplit AbilityName = "分裂"
+	// AbilityRot: next to the player, by a chance (a percent), it rots
+	// so many of the onigiri carried instead of a blow; with none, and
+	// 1 last, it turns an item that is no equipment into a rotten
+	// onigiri (mud.go).
+	AbilityRot AbilityName = "腐らせる"
 )
 
 // MagicEffect is an effect of the bolt of AbilityMagic.
@@ -117,6 +126,8 @@ var abilityDefs = map[AbilityName]abilityDef{
 	AbilityShoot:    {[]string{"reach", "chance %", "arrow", "pierce"}, []int{2, 1, 0, 0}, []int{maxReach, 100, 0, 1}, 3},
 	AbilityMagic:    {[]string{"reach", "chance %", "effects"}, []int{2, 1, 0}, []int{maxReach, 100, 0}, 3},
 	AbilityMimic:    {[]string{"depth", "stairs %", "shop %"}, []int{mimicShallow, 0, 0}, []int{mimicDeep, 100, 100}, 0},
+	AbilitySplit:    {[]string{"chance %"}, []int{1}, []int{100}, 0},
+	AbilityRot:      {[]string{"chance %", "onigiri", "any item"}, []int{1, 1, 0}, []int{100, 5, 1}, 0},
 	AbilitySteal:    {[]string{"chance %", "what", "items", "equipped"}, []int{1, stealGold, 0, 0}, []int{100, stealItems, 5, 1}, 0},
 }
 
@@ -125,7 +136,7 @@ const maxReach = 20
 
 // abilityNames are the abilities in a fixed order, for the error that
 // lists them.
-var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal}
+var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot}
 
 // lineAbilities are the abilities that reach the player from afar along
 // a line, their reach their first number.

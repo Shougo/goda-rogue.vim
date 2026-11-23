@@ -595,6 +595,20 @@ floors once the files change.
 				             the first one it meets, or
 				             every one with P 1 (and then
 				             never falls)
+				  分裂:C     a blow of the player that
+				             leaves it with 2 HP or more
+				             splits it C% of the time: its
+				             HP halves, and another with
+				             that HP appears next to it
+				             (which gives nothing)
+				  腐らせる:C:N:X  next to the player, C%
+				             of its blows rot N of the
+				             onigiri carried instead (not
+				             those in pots); with none and
+				             X 1, an item that is no
+				             equipment turns into a rotten
+				             onigiri (an item of the effect
+				             腐った)
 				  盗み:C:W:N:E  next to the player, C% of
 				             its blows are thefts instead:
 				             W 0 half the money of the
@@ -672,7 +686,7 @@ floors once the files change.
 				  草: HP回復 ちから 目薬 最大HP
 				  巻物: あかり 識別 武器強化 盾強化
 				  杖: 吹き飛ばし 仲間 場所替え
-				  食料: 満腹
+				  食料: 満腹 腐った
 				  壺: 保存 合成
 				A grass, a scroll or a staff can also have
 				an effect of the bolts of monsters (能力

@@ -8,6 +8,7 @@
 #   ワープ    the player is sent somewhere on the floor
 #   腹減り    the fullness goes down by 強さ
 #   サビ      the upgrade values of the weapon and the shield go down by 1
+#   腐り      every onigiri the player carries rots (not those in pots)
 ID	名前	効果	強さ
 otoshiana	落とし穴	落とし穴	5
 jirai	地雷	地雷	0
@@ -17,3 +18,4 @@ suimin	睡眠ガスの罠	睡眠	5
 warp	ワープの罠	ワープ	0
 harahe	腹減りの罠	腹減り	10
 sabi	サビの罠	サビ	0
+kusari	腐りの罠	腐り	0

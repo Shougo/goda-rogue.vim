@@ -77,6 +77,8 @@ func (g *Game) useItem(it *Item) {
 		g.Fullness = min(g.Fullness+n, g.Dungeon.Rules.Fullness)
 		g.hunger = 0
 		g.say("お腹がふくれた。")
+	case EffectRotten:
+		g.eatRotten(n)
 	case EffectMaxHP:
 		g.MaxHP += n
 		g.HP += n

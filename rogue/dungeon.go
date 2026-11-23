@@ -241,6 +241,7 @@ const (
 	EffectUpShield   Effect = "盾強化"
 	EffectSwap       Effect = "場所替え"
 	EffectFood       Effect = "満腹"
+	EffectRotten     Effect = "腐った"
 	EffectKeep       Effect = "保存"
 	EffectSynthesis  Effect = "合成"
 )
@@ -251,7 +252,7 @@ var effects = map[Category][]Effect{
 	CategoryGrass:    {EffectHeal, EffectStrength, EffectEyeDrops, EffectMaxHP},
 	CategoryScroll:   {EffectLight, EffectIdentify, EffectUpWeapon, EffectUpShield},
 	CategoryStaff:    {EffectBlowAway, EffectRecruit, EffectSwap},
-	CategoryFood:     {EffectFood},
+	CategoryFood:     {EffectFood, EffectRotten},
 	CategoryPot:      {EffectKeep, EffectSynthesis},
 }
 
@@ -1102,6 +1103,9 @@ func (l *loader) drop(row row) *Drop {
 func (l *loader) checkDrops(d *Dungeon) {
 	for _, m := range d.Monsters {
 		for _, a := range m.Abilities {
+			if a.Name == AbilityRot && d.rotted() == nil {
+				l.errorf(a.file, a.line, "能力: %s: no rotten onigiri (an item of the effect %s)", a.Name, EffectRotten)
+			}
 			if a.Item == "" {
 				continue
 			}

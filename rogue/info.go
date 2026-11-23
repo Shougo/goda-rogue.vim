@@ -23,6 +23,7 @@ var effectTexts = map[Effect]string{
 	EffectIdentify:   "持ち物を 1 つ識別する。",
 	EffectBlowAway:   "魔法弾が当たった敵を 10 マス吹き飛ばす。",
 	EffectFood:       "満腹度が %d 回復する。",
+	EffectRotten:     "満腹度が %d 回復するが、混乱、鈍足、睡眠のどれかになる。",
 	EffectKeep:       "入れた道具をしまっておける。「見る」で中の道具を使える。",
 	EffectSynthesis: "武器と盾は、先に入れた同じ種類のものに印と修正値が合成される。" +
 		"同じ腕輪を入れるとひびが直る。中のものは出せない。",

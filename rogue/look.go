@@ -172,6 +172,10 @@ func (g *Game) abilityText(a Ability) string {
 			es[i] = string(e)
 		}
 		return line(v[0]) + fmt.Sprintf("%d%%で杖を振る（%s）", v[1], strings.Join(es, "、"))
+	case AbilitySplit:
+		return fmt.Sprintf("殴ると%d%%で分裂する", v[0])
+	case AbilityRot:
+		return rotText(v)
 	case AbilitySteal:
 		what := "お金を盗み"
 		if v[1] == stealItems {

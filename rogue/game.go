@@ -656,6 +656,7 @@ func (g *Game) attack() bool {
 	g.say(fmt.Sprintf("%sに%dのダメージ。", m.Name, n))
 	if m.HP > 0 {
 		g.wounded(m)
+		g.split(m)
 	}
 	if m.HP <= 0 {
 		g.remove(m)

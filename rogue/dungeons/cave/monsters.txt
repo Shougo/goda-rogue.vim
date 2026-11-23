@@ -27,6 +27,13 @@
 #              drinking, reading or talking on the floor; a monster: no
 #              abilities), HP1/2, HP1/4, レベル-1, レベル-3 (a monster:
 #              ranks)
+#   分裂:C     a blow of the player that leaves it with 2 HP or more
+#              splits it C% of the time: its HP halves, and another with
+#              that HP appears next to it (it gives nothing when defeated)
+#   腐らせる:C:N:X  next to the player, C% of its blows rot N of the
+#              onigiri carried instead (not those in pots); with none
+#              and X 1, an item that is no equipment turns into a rotten
+#              onigiri
 #   盗み:C:W:N:E  next to the player, C% of its blows are thefts instead:
 #              W 0 half the money of the purse, W 1 N carried items (with E
 #              1, equipped ones too); then it warps away and keeps away
@@ -125,6 +132,10 @@ bake1	化	化け子	1	14	5	3	12	通常	-	擬態:1:0:25	-	道具:50	-
 bake2	化	化け物	2	30	9	6	35	通常	-	擬態:1:0:25	-	道具:50	-
 bake3	化	大化け物	3	52	13	10	90	通常	-	擬態:2:25:0	-	道具:50	-
 bake4	化	化け主	4	90	18	14	240	通常	-	擬態:2:25:0	-	道具:50	-
+doro1	泥	泥	1	14	4	1	5	通常	-	分裂:25	-	道具:3	-
+doro2	泥	大泥	2	30	8	3	16	通常	-	分裂:25 腐らせる:25:1:0	-	道具:4	-
+doro3	泥	腐泥	3	56	12	6	50	通常	-	分裂:25 腐らせる:25:2:0	-	道具:6	-
+doro4	泥	泥王	4	100	18	10	150	通常	-	分裂:25 腐らせる:25:2:1	-	道具:8	-
 yoroi1	鎧	古鎧	1	22	7	7	5	通常	-	-	-	道具:4	-
 yoroi2	鎧	鉄鎧	2	44	13	12	16	通常	-	-	-	道具:6	-
 yoroi3	鎧	鬼鎧	3	82	20	21	50	通常	-	-	-	道具:9	-

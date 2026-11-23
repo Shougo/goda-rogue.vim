@@ -31,7 +31,10 @@
 #   at; a scroll on the enemies of the room (next to the player, in a
 #   corridor); a staff on the monster its bolt hits
 #   食料, eaten:
-#     満腹      restores 強さ of fullness
+#     満腹      restores 強さ of fullness (an onigiri: it may rot)
+#     腐った    restores 強さ of fullness, and brings confusion, slowness
+#               or sleep (the rotten onigiri; mud and the trap of rot
+#               make it)
 # ひび is how easily a bracelet cracks (a percent, 0 for never): leaving
 # a floor where it had its effect, it cracks with ひび x (cracks + 1) %
 # (times 腕輪の傷みやすさ in rules.txt), and breaks with too many cracks
@@ -94,4 +97,5 @@ hozon	壺	保存の壺	壺	0	保存	0	3-5	-	0	300
 gousei	壺	合成の壺	壺	0	合成	0	2-3	-	0	1000
 onigiri	食	おにぎり	食料	50	満腹	0	-	-	0	100
 ookiionigiri	食	大きなおにぎり	食料	100	満腹	0	-	-	0	200
+kusatta	食	腐ったおにぎり	食料	30	腐った	0	-	-	0	10
 okane	金	お金	お金	0	-	0	-	-	0	0

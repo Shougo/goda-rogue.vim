@@ -192,6 +192,9 @@ func (g *Game) act(m *Monster) bool {
 			if a, ok := m.ability(AbilitySteal); ok && g.thieve(m, a) {
 				return true
 			}
+			if a, ok := m.ability(AbilityRot); ok && g.spoil(m, a) {
+				return true
+			}
 			g.hitPlayer(m)
 			return true
 		}
