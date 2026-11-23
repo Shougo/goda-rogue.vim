@@ -39,7 +39,7 @@
 床	1	30	donsoku	1
 床	1	30	fuuin	1
 床	1	30	fukou	1
-床	1	30	hozon	2
+床	1	30	hozon	3
 床	2	30	gousei	1
 床	1	30	onigiri	1
 床	1	30	ookiionigiri	2

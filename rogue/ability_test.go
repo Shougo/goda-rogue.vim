@@ -147,6 +147,12 @@ func TestAsleep(t *testing.T) {
 func TestCharge(t *testing.T) {
 	g, r := roomGame(t, 12, 1)
 	g.HP, g.MaxHP = 999, 999
+	// A row with rock on the left of the room (not a doorway): the room
+	// is the first wide enough, and its doorways change with the data.
+	for g.Level.At(Point{r.X - 1, r.Y}).Walkable() {
+		r.Y++
+	}
+	g.Player = Point{r.X, r.Y}
 	b := place(g, kind("inoshishi1"), Point{r.X + 4, r.Y})
 	g.act(b)
 	if b.Pos != (Point{r.X + 1, r.Y}) {

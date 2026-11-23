@@ -11,8 +11,10 @@
 # ones: rank 1 from 15F, rank 2 only on 27-30F, and fewer. The archer 射
 # shoots from afar: rank 1 on 6-18F, rank 2 from 22F. The mage 魔 waves
 # its staff from afar: rank 1 on 5-16F, rank 2 from 19F. The mimic 化
-# hides as an item: ranks 1-2 (found out when picked up) on 4-20F, ranks
-# 3-4 (carried, or stairs) from 21F.
+# hides as an item, found out when picked up: rank 1 on 4-14F, rank 2
+# from 15F.
+# Ranks 3 and 4 are for dungeons of 50 floors or more: here they come
+# only by ranking up (a monster that defeats another, Kron's wind).
 開始	終了	ID	頻度
 1	6	nezumi1	4
 1	6	hebi1	4
@@ -167,10 +169,10 @@
 24	24	ookami2	1
 24	24	rei2	1
 24	24	touzoku2	1
-24	30	ryu2	4
-24	30	kuma2	4
-24	30	kame2	4
-24	30	yoroi2	4
+24	30	ryu2	5
+24	30	kuma2	5
+24	30	kame2	5
+24	30	yoroi2	5
 15	15	inoshishi1	1
 16	16	inoshishi1	2
 17	17	inoshishi1	3
@@ -190,7 +192,5 @@
 13	16	mahou1	1
 19	20	mahou2	1
 21	30	mahou2	2
-4	12	bake1	2
-13	20	bake2	2
-21	26	bake3	2
-27	30	bake4	2
+4	14	bake1	2
+15	30	bake2	2

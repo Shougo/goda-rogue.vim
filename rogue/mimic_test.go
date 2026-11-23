@@ -175,8 +175,8 @@ func TestMimicStairs(t *testing.T) {
 }
 
 // TestMimicsHide: on the floors of the cave the mimics hide: none walks
-// about on a new floor, the deep ones are no money nor arrows, and some
-// are stairs or goods of a shop.
+// about on a new floor, and some are goods of a shop (the cave has no
+// mimics of ranks 3 and 4, which may be stairs: TestMimicHidesAsStairs).
 func TestMimicsHide(t *testing.T) {
 	d := cave()
 	items, decoys, goods := 0, 0, 0
@@ -207,7 +207,37 @@ func TestMimicsHide(t *testing.T) {
 			}
 		}
 	}
-	if items == 0 || decoys == 0 || goods == 0 {
-		t.Errorf("%d items, %d decoys, %d goods: want some of each", items, decoys, goods)
+	if items == 0 || decoys != 0 || goods == 0 {
+		t.Errorf("%d items, %d decoys, %d goods: want items and goods, no decoy", items, decoys, goods)
+	}
+}
+
+// TestMimicHidesAsStairs: a deep mimic hides as stairs by its chance,
+// away from the real ones, and as an item that is no money nor arrows.
+func TestMimicHidesAsStairs(t *testing.T) {
+	g := NewGame(cave(), "decoy")
+	rooms := make([]int, len(g.Level.Rooms))
+	for i := range rooms {
+		rooms[i] = i
+	}
+	def := kind("bake3")
+	always := Ability{Name: AbilityMimic, Values: []int{mimicDeep, 100, 0}}
+	if !g.hide(g.rng, rooms, def, g.Stairs, always) || len(g.Decoys) != 1 {
+		t.Fatalf("decoys %v", g.Decoys)
+	}
+	if p := g.Decoys[0].Pos; p == g.Stairs || !g.Level.At(p).Walkable() || g.Level.RoomAt(p) == g.Level.RoomAt(g.Player) {
+		t.Errorf("the decoy at %v (the stairs %v, the player %v)", p, g.Stairs, g.Player)
+	}
+	never := Ability{Name: AbilityMimic, Values: []int{mimicDeep, 0, 0}}
+	for range 200 {
+		n := len(g.Items)
+		if !g.hide(g.rng, rooms, def, g.Stairs, never) {
+			continue
+		}
+		it := g.Items[n]
+		if c := it.Def.Category; it.Mimic != def || c == CategoryMoney || c == CategoryArrow {
+			t.Fatalf("a deep mimic looks like %s", it.Def.Name)
+		}
+		g.Items = g.Items[:n]
 	}
 }
