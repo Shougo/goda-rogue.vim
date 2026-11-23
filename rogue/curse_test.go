@@ -88,33 +88,35 @@ func TestUncurse(t *testing.T) {
 	}
 }
 
-// TestCurseRoll: by the chance of the dungeon, weapons, shields and
-// bracelets are cursed, with no upgrade value above 0; nothing else is,
-// nor anything without a chance.
+// TestCurseRoll: one in so many weapons and shields, and one in so many
+// bracelets, are cursed, with no upgrade value above 0; nothing else is,
+// nor anything with no chance.
 func TestCurseRoll(t *testing.T) {
 	g, _ := roomGame(t, 4, 3)
 	rng := rand.New(rand.NewPCG(1, 2))
-	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.CurseRate = 50 })
-	cursed := 0
-	for range 400 {
+	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.CurseGear, r.CurseBracelet = 4, 2 })
+	cursed := map[string]int{}
+	for range 800 {
 		for _, id := range []string{"bokutou", "kitate", "chikara", "yakusou", "hozon"} {
 			it := g.newItemOf(rng, g.Dungeon.Item(id), Point{})
 			if !it.Cursed {
 				continue
 			}
-			cursed++
+			cursed[id]++
 			if !it.cursable() || it.Upgrade > 0 {
 				t.Fatalf("%s cursed, %+d", id, it.Upgrade)
 			}
 		}
 	}
-	if cursed < 500 || cursed > 700 {
-		t.Errorf("%d cursed of 1200 at 50%%", cursed)
+	for id, want := range map[string]int{"bokutou": 200, "kitate": 200, "chikara": 400} {
+		if n := cursed[id]; n < want*3/4 || n > want*5/4 {
+			t.Errorf("%s: %d cursed of 800, want about %d", id, n, want)
+		}
 	}
-	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.CurseRate = 0 })
+	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.CurseGear, r.CurseBracelet = 0, 0 })
 	for range 100 {
-		if g.newItemOf(rng, g.Dungeon.Item("bokutou"), Point{}).Cursed {
-			t.Fatal("cursed without a chance")
+		if g.newItemOf(rng, g.Dungeon.Item("bokutou"), Point{}).Cursed || g.newItemOf(rng, g.Dungeon.Item("chikara"), Point{}).Cursed {
+			t.Fatal("cursed with no chance")
 		}
 	}
 }

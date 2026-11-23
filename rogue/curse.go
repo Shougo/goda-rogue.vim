@@ -3,7 +3,7 @@ package rogue
 import "math/rand/v2"
 
 // Curses. A weapon, a shield or a bracelet found in the dungeon may be
-// cursed (rules.txt 呪い): once equipped it does not come off, so nothing
+// cursed (rules.txt 武具の呪い, 腕輪の呪い): once equipped it does not come off, so nothing
 // else of its kind can be equipped, and it cannot be put down, swapped,
 // thrown nor put in a pot. A cursed weapon or shield never has an upgrade
 // value above 0. The player knows the curse by equipping the item or
@@ -25,8 +25,14 @@ func (it *Item) curseKnown() bool {
 // rollCurse curses the new item it, by the chance of the dungeon (no roll
 // without one: the floors of a dungeon without curses stay as they were).
 func (g *Game) rollCurse(rng *rand.Rand, it *Item) {
-	rate := g.Dungeon.Rules.CurseRate
-	if rate == 0 || !it.cursable() || rng.IntN(100) >= rate {
+	if !it.cursable() {
+		return
+	}
+	in := g.Dungeon.Rules.CurseGear
+	if it.Def.Category == CategoryBracelet {
+		in = g.Dungeon.Rules.CurseBracelet
+	}
+	if in == 0 || rng.IntN(in) != 0 {
 		return
 	}
 	it.Cursed = true

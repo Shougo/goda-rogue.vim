@@ -569,10 +569,10 @@ The built-in dungeons:
 				regeneration, fullness, spawning, Kron's wind,
 				combat constants, the growth table of the
 				player, the first ally, how many allies at
-				most (仲間の上限, optional, default 3), the
-				chance, a percent, that a weapon, a shield or
-				a bracelet found is cursed (呪い, optional,
-				default 0),
+				most (仲間の上限, optional, default 3), how
+				rarely a weapon or a shield, and a bracelet,
+				found are cursed, one in so many (武具の呪い
+				and 腕輪の呪い, optional, default 0: never),
 				whether a trap the
 				player has found goes off (見つけた罠: 安全 or
 				発動), and, optional, whether runs may use

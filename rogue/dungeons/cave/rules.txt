@@ -36,11 +36,13 @@
 最初の仲間	nezumi1
 # How many allies the player has at most (optional: 3 if missing).
 仲間の上限	3
-# The chance, a percent, that a weapon, a shield or a bracelet found in
-# the dungeon (not in a shop) is cursed: once equipped, it does not come
-# off, and a cursed weapon or shield has no upgrade value above 0
-# (optional: 0 if missing).
-呪い	8
+# How rarely a weapon or a shield (武具の呪い), and a bracelet (腕輪の呪い),
+# found in the dungeon (not in a shop) are cursed: one in so many. Once
+# equipped, a cursed item does not come off, and a cursed weapon or
+# shield has no upgrade value above 0 (optional: 0, as if missing, for
+# never).
+武具の呪い	16
+腕輪の呪い	8
 # The chance, a percent, that a monster the player kills drops an item of
 # the floor's item table (monsters.txt 落とし物 may say otherwise). The
 # cave gives each family its own rate (stronger ones drop more); this low
