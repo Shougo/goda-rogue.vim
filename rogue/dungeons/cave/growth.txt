@@ -1,35 +1,35 @@
 # The growth tables: the total EXP for each level from 2, and what the level adds.
 # The player gains HP (its attack comes from its level); allies gain all three.
-# 普通 needs about the same EXP for each level from 5 (90), so that a player
+# 普通 needs about the same EXP for each level from 6 (90), so that a player
 # who explores and fights levels well above one who goes down at once, and
 # the deep floors are hard for a low level.
 名前	レベル	経験値	HP	攻撃	防御
-普通	2	15	6	1	1
-普通	3	60	6	1	1
-普通	4	130	6	1	1
-普通	5	270	6	1	1
-普通	6	360	6	1	1
-普通	7	450	6	1	1
-普通	8	540	6	1	1
-普通	9	630	6	1	1
-普通	10	720	6	1	1
-普通	11	810	6	1	1
-普通	12	900	6	1	1
-普通	13	990	6	1	1
-普通	14	1080	6	1	1
-普通	15	1170	6	1	1
-普通	16	1260	6	1	1
-普通	17	1350	6	1	1
-普通	18	1440	6	1	1
-普通	19	1530	6	1	1
-普通	20	1620	6	1	1
-普通	21	1710	6	1	1
-普通	22	1800	6	1	1
-普通	23	1890	6	1	1
-普通	24	1980	6	1	1
-普通	25	2070	6	1	1
-普通	26	2160	6	1	1
-普通	27	2250	6	1	1
-普通	28	2340	6	1	1
-普通	29	2430	6	1	1
-普通	30	2520	6	1	1
+普通	2	12	6	1	1
+普通	3	45	6	1	1
+普通	4	100	6	1	1
+普通	5	190	6	1	1
+普通	6	280	6	1	1
+普通	7	370	6	1	1
+普通	8	460	6	1	1
+普通	9	550	6	1	1
+普通	10	640	6	1	1
+普通	11	730	6	1	1
+普通	12	820	6	1	1
+普通	13	910	6	1	1
+普通	14	1000	6	1	1
+普通	15	1090	6	1	1
+普通	16	1180	6	1	1
+普通	17	1270	6	1	1
+普通	18	1360	6	1	1
+普通	19	1450	6	1	1
+普通	20	1540	6	1	1
+普通	21	1630	6	1	1
+普通	22	1720	6	1	1
+普通	23	1810	6	1	1
+普通	24	1900	6	1	1
+普通	25	1990	6	1	1
+普通	26	2080	6	1	1
+普通	27	2170	6	1	1
+普通	28	2260	6	1	1
+普通	29	2350	6	1	1
+普通	30	2440	6	1	1
