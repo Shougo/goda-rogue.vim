@@ -543,3 +543,85 @@ func TestBotLastFloor(t *testing.T) {
 		t.Errorf("on the last floor: at %v after 4 actions, the stairs at %v", g.Player, g.Stairs)
 	}
 }
+
+// full fills the inventory of g with grasses of confusion, and returns
+// one of them.
+func full(g *Game) *Item {
+	var it *Item
+	for len(g.Inventory) < g.Dungeon.Rules.Capacity {
+		it = carry(g, "konran", 0)
+	}
+	return it
+}
+
+// TestBotTrade: with no room left, the bot does not walk past food: it
+// walks to it, and on it eats it if none is wasted, else swaps what it
+// values least for it; it gives an empty staff up first, and nothing for
+// what is worth no more than what it carries.
+func TestBotTrade(t *testing.T) {
+	setup := func() (*Game, *Bot, *Item) {
+		g, r := roomGame(t, 8, 3)
+		g.Player = Point{r.X + 1, r.Y + 1}
+		food := &Item{Def: g.Dungeon.Item("ookiionigiri"), Glyph: "食", Pos: Point{r.X + 3, r.Y + 1}}
+		g.Items = append(g.Items, food)
+		full(g)
+		g.look()
+		return g, NewBot(BotCareful, 1), food
+	}
+	step := func(g *Game, b *Bot) string {
+		t.Helper()
+		a, args := b.Next(g)
+		if err := g.Do(a, args); err != nil {
+			t.Fatal(err)
+		}
+		for g.Prompt != nil {
+			pa, pargs := b.Next(g)
+			if err := g.Do(pa, pargs); err != nil {
+				t.Fatal(err)
+			}
+		}
+		return a
+	}
+
+	// Hungry enough: it walks to the food and eats it where it lies.
+	g, b, food := setup()
+	g.Fullness = g.Dungeon.Rules.Fullness - food.Def.Strength
+	for range 3 {
+		step(g, b)
+	}
+	if slices.Contains(g.Items, food) || g.Fullness < g.Dungeon.Rules.Fullness-1 || len(g.Inventory) != g.Dungeon.Rules.Capacity {
+		t.Fatalf("food on the floor %v, fullness %d, %d carried", slices.Contains(g.Items, food), g.Fullness, len(g.Inventory))
+	}
+
+	// Full: it swaps an empty staff for it, before any grass.
+	g, b, food = setup()
+	staff := g.Inventory[len(g.Inventory)-1]
+	*staff = Item{Def: g.Dungeon.Item("fukitobashi"), Glyph: "杖", Known: true}
+	g.sortInventory()
+	for range 3 {
+		step(g, b)
+	}
+	if !slices.Contains(g.Inventory, food) || !slices.Contains(g.Items, staff) || len(g.Inventory) != g.Dungeon.Rules.Capacity {
+		t.Fatalf("carried food %v, staff on the floor %v", slices.Contains(g.Inventory, food), slices.Contains(g.Items, staff))
+	}
+	// Nothing more: the staff it stands on is worth nothing.
+	if a, _ := b.trade(g); a != "" {
+		t.Errorf("it trades again: %s", a)
+	}
+
+	// With grasses only, one of them goes.
+	g, b, food = setup()
+	for range 3 {
+		step(g, b)
+	}
+	if !slices.Contains(g.Inventory, food) {
+		t.Error("no grass given up for the food")
+	}
+
+	// Another grass of the kind it is full of is not worth a trade.
+	g, b, food = setup()
+	*food = Item{Def: g.Dungeon.Item("konran"), Glyph: "草", Pos: food.Pos}
+	if b.wants(g, food.Pos) || b.least(g, food) != nil {
+		t.Error("it wants one more grass of confusion for one of them")
+	}
+}

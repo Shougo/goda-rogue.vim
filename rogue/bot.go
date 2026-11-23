@@ -42,6 +42,9 @@ type Bot struct {
 	// plan is what to answer to the prompts it opened: an item of the
 	// inventory, then a command.
 	plan []botStep
+	// leaving is the floor it turned to the stairs on, and until which
+	// turn it keeps going to them (leave).
+	leaving struct{ depth, until int }
 	// deciding says whether the bot is deciding on an action (Next): the
 	// game does not change meanwhile, so the ways from the player
 	// (searched) and the lines of the enemies (enemyLines) are worked out
@@ -111,7 +114,7 @@ func (b *Bot) Next(g *Game) (string, []string) {
 	}
 	for _, rule := range []func(*Game) (string, []string){
 		b.heal, b.danger, b.shoot, b.fight, b.chase, b.eat, b.boost, b.equip, b.identify, b.light,
-		b.tidy, b.rest, b.leave, b.pick, b.explore,
+		b.tidy, b.trade, b.rest, b.leave, b.pick, b.explore,
 	} {
 		if action, args := rule(g); action != "" {
 			return action, args
@@ -690,6 +693,11 @@ func (b *Bot) itemCost(g *Game, it *Item, kinds []*ItemDef) float64 {
 		}
 		cost *= 2 / float64(n+1)
 	}
+	if len(g.Inventory) >= g.Dungeon.Rules.Capacity {
+		// With no room left, what it carries keeps the next find out:
+		// using it is cheaper.
+		cost /= 2
+	}
 	d := g.Dungeon.Floors
 	return cost * (0.25 + 0.75*float64(d-g.Depth)/float64(max(d-1, 1)))
 }
@@ -841,9 +849,131 @@ func (b *Bot) tidy(g *Game) (string, []string) {
 	return b.use(junk, commandDrop)
 }
 
+// The trades of a full inventory. A player with no room does not walk
+// past an onigiri with four grasses of confusion in its bag: it eats or
+// drinks on the spot what can be used at once, or swaps what it values
+// least for what lies there.
+
+// tradeMargin is how much more than the least it carries an item on the
+// floor must be worth to the bot to be swapped for it.
+const tradeMargin = 1.25
+
+// worth returns what it is worth to the bot: what giving it up costs.
+// Food is worth several times its price (hunger ends runs), a rotten
+// onigiri little; equipment in use, or better than that in use, is never
+// given up; what it has no use for is worth nothing; the rest, what using
+// it costs (itemCost: the less the more of the kind it carries). extra
+// counts it as one more of its kind (an item on the floor).
+func (b *Bot) worth(g *Game, it *Item, extra bool) float64 {
+	if it.Equipped {
+		return math.Inf(1)
+	}
+	if useless(g, it) {
+		return 0
+	}
+	switch it.Def.Category {
+	case CategoryWeapon, CategoryShield, CategoryBracelet:
+		return math.Inf(1)
+	case CategoryFood:
+		if it.Def.Effect == EffectRotten {
+			return float64(it.Def.Price) / 2
+		}
+		return float64(it.Def.Price) * 5
+	case CategoryArrow:
+		return float64(it.Def.Price * it.Count)
+	}
+	kinds := b.mayBe(g, it)
+	w := b.itemCost(g, it, kinds)
+	if extra && it.Def.Category != CategoryStaff {
+		// itemCost counted those carried only.
+		n := 0
+		for _, o := range g.Inventory {
+			if !o.ForSale && o.Def == it.Def {
+				n++
+			}
+		}
+		w *= float64(n+1) / float64(n+2)
+	}
+	return w
+}
+
+// least returns the item carried that the bot values least, to give up
+// for the item foot on the floor, if foot is worth more by tradeMargin;
+// nil if none.
+func (b *Bot) least(g *Game, foot *Item) *Item {
+	if foot.ForSale || foot.Def.Category == CategoryMoney || useless(g, foot) {
+		return nil
+	}
+	var low *Item
+	lw := math.Inf(1)
+	for _, it := range g.Inventory {
+		if it.ForSale || it.Equipped || it.Cursed {
+			continue
+		}
+		if w := b.worth(g, it, false); w < lw {
+			low, lw = it, w
+		}
+	}
+	if low == nil || lw*tradeMargin >= b.worth(g, foot, true) {
+		return nil
+	}
+	return low
+}
+
+// wants says whether the bot walks to the item on p: one it would pick
+// up (wanted), or, with a full inventory, one worth a trade.
+func (b *Bot) wants(g *Game, p Point) bool {
+	if wanted(g, p) {
+		return true
+	}
+	it, ok := g.ItemAt(p)
+	return ok && g.IsSeen(p) && p != g.Player && len(g.Inventory) >= g.Dungeon.Rules.Capacity &&
+		!g.inShop(p) && b.least(g, it) != nil
+}
+
+// fits says whether eating the food it now wastes none of it.
+func fits(g *Game, it *Item) bool {
+	return it.Def.Effect != EffectRotten && g.Fullness+it.Def.Strength <= g.Dungeon.Rules.Fullness
+}
+
+// trade is the bot standing on an item with a full inventory: it eats
+// the food there if none of it is wasted, drinks an unknown grass there
+// at full HP (as it does one it carries), eats the food it would give up,
+// or swaps what it values least for the item. Not in a shop. (An enemy
+// next to it is fought first, by the rules before this one; one farther
+// does not keep it from a swap: walking off and back would cost more.)
+func (b *Bot) trade(g *Game) (string, []string) {
+	foot := g.foot()
+	if foot == nil || foot.ForSale || len(g.Inventory) < g.Dungeon.Rules.Capacity || !g.canSwap() {
+		return "", nil
+	}
+	atFoot := func(command string) (string, []string) {
+		b.plan = []botStep{{label: command}}
+		return "foot", nil
+	}
+	switch {
+	case foot.Def.Category == CategoryFood && fits(g, foot):
+		return atFoot(commandEat)
+	case foot.Def.Category == CategoryGrass && !g.identified[foot.Def.ID] && g.HP == g.MaxHP &&
+		len(g.visibleEnemies()) == 0:
+		return atFoot(commandDrink)
+	}
+	low := b.least(g, foot)
+	switch {
+	case low == nil:
+		return "", nil
+	case low.Def.Category == CategoryFood && fits(g, low):
+		return b.use(low, commandEat)
+	}
+	// (Not use: nothing is used up.)
+	b.plan = []botStep{{item: low}, {label: commandSwap}}
+	return "inventory", nil
+}
+
 // useless says whether the bots have no use for it (not equipped): a
 // weapon or a shield not stronger than the one equipped, a bracelet when
-// one is worn, an empty pot (they do not use pots).
+// one is worn, an empty pot (they do not use pots), a staff with no
+// charge left.
 func useless(g *Game, it *Item) bool {
 	switch c := it.Def.Category; c {
 	case CategoryWeapon, CategoryShield:
@@ -854,6 +984,9 @@ func useless(g *Game, it *Item) bool {
 		return worn != nil && worn != it
 	case CategoryPot:
 		return len(it.Contents) == 0
+	case CategoryStaff:
+		// Waved empty.
+		return it.Known && it.Charges <= 0
 	}
 	return false
 }
@@ -1133,12 +1266,26 @@ func (b *Bot) windNear(g *Game) bool {
 // use: the stairs clear the dungeon).
 func (b *Bot) leave(g *Game) (string, []string) {
 	last := g.Depth >= g.Dungeon.Floors
-	if !b.seesStairs(g) || (b.Style == BotCareful && !last && !b.windNear(g) && !b.hungry(g) &&
-		!b.threatened(g) && !b.dangerousFloor(g) && !b.costlyFloor(g) && !b.exploredEnough(g)) {
+	if !b.seesStairs(g) {
 		return "", nil
+	}
+	// Once on its way, it keeps on for a few turns: a reason that holds
+	// on one tile and not on the next (an enemy in sight from there)
+	// would send it back and forth.
+	going := b.leaving.depth == g.Depth && g.Turn < b.leaving.until
+	if b.Style == BotCareful && !going && !last && !b.windNear(g) && !b.hungry(g) &&
+		!b.threatened(g) && !b.dangerousFloor(g) && !b.costlyFloor(g) && !b.exploredEnough(g) {
+		return "", nil
+	}
+	if !going {
+		b.leaving.depth, b.leaving.until = g.Depth, g.Turn+leaveTurns
 	}
 	return b.toStairs(g)
 }
+
+// leaveTurns is for how many turns a bot that turned to the stairs keeps
+// going to them.
+const leaveTurns = 10
 
 // toStairs goes to the stairs, and down them.
 func (b *Bot) toStairs(g *Game) (string, []string) {
@@ -1170,7 +1317,7 @@ func (b *Bot) seesStairs(g *Game) bool {
 // enough a step farther from the rest of it, turn to the stairs, and so
 // on, back and forth.
 func (b *Bot) pick(g *Game) (string, []string) {
-	want := func(p Point) bool { return wanted(g, p) }
+	want := func(p Point) bool { return b.wants(g, p) }
 	if b.Style == BotCareful && b.seesStairs(g) {
 		if _, n, ok := b.route(g, want); !ok || n > 2*b.reach(g) {
 			return "", nil
@@ -1263,7 +1410,7 @@ func (b *Bot) exploredEnough(g *Game) bool {
 		return false
 	}
 	reach := b.reach(g)
-	if _, n, ok := b.route(g, func(p Point) bool { return wanted(g, p) }); ok && n <= 2*reach {
+	if _, n, ok := b.route(g, func(p Point) bool { return b.wants(g, p) }); ok && n <= 2*reach {
 		return false
 	}
 	_, n, ok := b.route(g, func(p Point) bool { return frontier(g, p) })

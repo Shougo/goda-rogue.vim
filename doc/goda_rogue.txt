@@ -895,6 +895,11 @@ leaves a floor whose fights cost more answers than it gave.  Out of a fight they
 monsters of the floor could take in two turns (the careful one rests in
 a room, not in a corridor), and they wait for an
 enemy coming at them rather than step next to it, to strike first.
+With no room left in the inventory they do not walk past what is worth
+more than the least they carry: standing on it, they eat food that is
+not wasted, drink an unknown grass at full HP, or swap what they value
+least for it (food is worth several times its price, an empty staff
+nothing); and what they carry is cheaper to use while there is no room.
 It prints how many cleared, where and why they fell (by monster, trap,
 hunger or the wind; deaths from full HP in one action or just after
 arriving count as unfair), the HP on arriving on each floor, the turns
