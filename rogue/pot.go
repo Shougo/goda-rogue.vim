@@ -66,8 +66,8 @@ func (g *Game) askPutIn(i int) bool {
 	return false
 }
 
-// putIn puts it in pot: it is kept, or merged with what is in a pot of
-// synthesis.
+// putIn puts it in pot: it is kept, merged with what is in a pot of
+// synthesis, or paid to a pot of healing.
 func (g *Game) putIn(pot, it *Item) {
 	if it.Mimic != nil {
 		g.unmask(it, true)
@@ -87,6 +87,14 @@ func (g *Game) putIn(pot, it *Item) {
 				return
 			}
 		}
+	}
+	if pot.Def.Effect == EffectHealPot {
+		// The item is gone, and its room with it: the pot heals as many
+		// times as it holds, whatever is put in it.
+		pot.Charges--
+		g.HP = g.MaxHP
+		g.say(g.Name(it) + "は消えて、HPが全部回復した。")
+		return
 	}
 	pot.Contents = append(pot.Contents, it)
 }

@@ -415,7 +415,9 @@ inventory                                               *goda-rogue-inventory*
 		put in takes room, the merged ones too.  A
 		material (an item with a seal, as a grass) is not
 		merged in it: mixed synthesis (異種合成) is a monster's,
-		as in Shiren.
+		as in Shiren.  A pot of healing (回復の壺) restores all
+		HP for each item put in it: the item is gone, and its
+		room in the pot with it.
 
 choose {index}                                             *goda-rogue-choose*
 cancel                                                     *goda-rogue-cancel*

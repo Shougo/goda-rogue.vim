@@ -254,6 +254,7 @@ const (
 	EffectRotten     Effect = "腐った"
 	EffectKeep       Effect = "保存"
 	EffectSynthesis  Effect = "合成"
+	EffectHealPot    Effect = "全回復"
 	EffectUncurse    Effect = "おはらい"
 )
 
@@ -264,7 +265,7 @@ var effects = map[Category][]Effect{
 	CategoryScroll:   {EffectLight, EffectIdentify, EffectUpWeapon, EffectUpShield, EffectUncurse},
 	CategoryStaff:    {EffectBlowAway, EffectRecruit, EffectSwap},
 	CategoryFood:     {EffectFood, EffectRotten},
-	CategoryPot:      {EffectKeep, EffectSynthesis},
+	CategoryPot:      {EffectKeep, EffectSynthesis, EffectHealPot},
 }
 
 // FloorRow is a row of an appearance table: id appears on the floors

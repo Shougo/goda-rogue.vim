@@ -336,3 +336,29 @@ func TestPutInMany(t *testing.T) {
 		t.Errorf("error %v, contents %v", err, q.Contents)
 	}
 }
+
+func TestHealingPot(t *testing.T) {
+	g, _ := roomGame(t, 4, 3)
+	p := pot(g, "kaifukutsubo", 2)
+	g.identified[p.Def.ID], p.Known = true, true
+	grass := carry(g, "yakusou", 0)
+	g.HP, g.MaxHP = 3, 80
+	command(t, g, p, commandPutIn)
+	chooseLabel(t, g, g.Entry(grass))
+	if g.HP != 80 || p.Charges != 1 || len(p.Contents) != 0 || slices.Contains(g.Inventory, grass) {
+		t.Errorf("HP %d, holds %d, contents %v, inventory %v", g.HP, p.Charges, p.Contents, g.Inventory)
+	}
+	if g.Label(p) != "壺 回復の壺[1]" {
+		t.Errorf("label %q", g.Label(p))
+	}
+	if !strings.Contains(g.Message, "HPが全部回復した。") {
+		t.Errorf("message %q", g.Message)
+	}
+	// Used up, it takes no more.
+	p.Charges = 0
+	carry(g, "yakusou", 0)
+	command(t, g, p, commandPutIn)
+	if g.Prompt != nil || !strings.Contains(g.Message, "いっぱいだ") {
+		t.Errorf("prompt %v, message %q", g.Prompt, g.Message)
+	}
+}

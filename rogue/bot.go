@@ -1067,6 +1067,10 @@ func useless(g *Game, it *Item) bool {
 		worn := g.equipped(c)
 		return worn != nil && worn != it
 	case CategoryPot:
+		if it.Def.Effect == EffectHealPot {
+			// Nothing stays in it: it is used up when it holds no more.
+			return it.Known && it.Charges <= 0
+		}
 		return len(it.Contents) == 0
 	case CategoryStaff:
 		// Waved empty.

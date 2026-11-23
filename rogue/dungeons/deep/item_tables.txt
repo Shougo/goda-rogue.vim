@@ -57,6 +57,7 @@
 床	1	50	fukou	1
 床	1	50	hozon	3
 床	2	50	gousei	1
+床	3	50	kaifukutsubo	1
 床	1	50	onigiri	1
 床	1	50	ookiionigiri	2
 床	1	50	okane	6
@@ -116,6 +117,7 @@
 よろず	1	50	hozon	2
 よろず	2	9	gousei	1
 よろず	10	50	gousei	3
+よろず	3	50	kaifukutsubo	1
 よろず	1	50	onigiri	1
 よろず	1	50	ookiionigiri	2
 草	1	50	yakusou	5

@@ -47,6 +47,8 @@
 #     合成      merges them: a weapon or a shield with one of its kind
 #               (in the pot first) gets its seals and upgrade value, a
 #               bracelet with the same bracelet is mended
+#     全回復    restores all HP for each thing put in, which is gone
+#               with its room in the pot
 # 回数 is how many times a staff can be waved, how many arrows there are,
 # how many items a pot holds (min-max; - for others).
 # 印 is the seal a weapon or a shield is born with (seals.txt; - for
@@ -110,6 +112,7 @@ fuuin	杖	封印の杖	杖	0	封印	0	4-6	-	0	500
 fukou	杖	不幸の杖	杖	0	レベル-1	0	3-5	-	0	600
 hozon	壺	保存の壺	壺	0	保存	0	3-5	-	0	300
 gousei	壺	合成の壺	壺	0	合成	0	2-3	-	0	1000
+kaifukutsubo	壺	回復の壺	壺	0	全回復	0	2-3	-	0	800
 onigiri	食	おにぎり	食料	50	満腹	0	-	-	0	100
 ookiionigiri	食	大きなおにぎり	食料	100	満腹	0	-	-	0	200
 kusatta	食	腐ったおにぎり	食料	30	腐った	0	-	-	0	10

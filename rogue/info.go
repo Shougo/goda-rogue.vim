@@ -28,6 +28,7 @@ var effectTexts = map[Effect]string{
 	EffectKeep:       "入れた道具をしまっておける。「見る」で中の道具を使える。",
 	EffectSynthesis: "武器と盾は、先に入れた同じ種類のものに印と修正値が合成される。" +
 		"同じ腕輪を入れるとひびが直る。中のものは出せない。",
+	EffectHealPot: "道具を入れると HP が全部回復する。入れた道具はなくなり、壺の容量も 1 つ減る。",
 }
 
 // sealTexts say what each seal does ("%d" is its strength).
