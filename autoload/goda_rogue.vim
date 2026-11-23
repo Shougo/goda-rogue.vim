@@ -25,20 +25,6 @@ let s:float_bufs = {}
 " ---------------------------------------------------------------------------
 " Setup
 
-" The binary is machine specific: it is built into a cache directory.
-function! s:cache_dir() abort
-  if has('nvim')
-    let base = stdpath('cache')
-  elseif !empty($XDG_CACHE_HOME)
-    let base = $XDG_CACHE_HOME . '/vim'
-  elseif has('win32') && !empty($LOCALAPPDATA)
-    let base = $LOCALAPPDATA . '/vim'
-  else
-    let base = expand('~/.cache/vim', 1)
-  endif
-  return base . '/goda-rogue'
-endfunction
-
 " The runs are kept in a data directory: the replay file of the last run
 " (also the suspended run), the replays saved by goda_rogue#save_replay(),
 " and those of the runs before (replays/auto).
@@ -72,50 +58,22 @@ function! s:replay_dir() abort
   return s:data_dir() . '/replays'
 endfunction
 
-function! s:default_bin() abort
-  if exists('g:goda_rogue#binary')
-    " (Not 'wildignore': '*.exe' in it on Windows made it "".)
-    return expand(g:goda_rogue#binary, 1)
-  endif
-  return s:cache_dir() . '/goda-rogue' . (has('win32') ? '.exe' : '')
-endfunction
-
-" The options of goda#register(): the version, and how to build the binary
-" when there is none or it is of another version. Not for the binary of
-" g:goda_rogue#binary: the user builds it.
-function! s:register_opts() abort
-  if exists('g:goda_rogue#binary')
-    return s:version
-  endif
-  return extend(#{build: function('s:build_binary'), bin: s:default_bin()}, s:version)
-endfunction
-
-function! s:build_binary() abort
-  call goda#build(#{name: 'rogue', dir: s:root, bin: s:default_bin()})
-endfunction
+" The binary is built from this repository by goda.vim, into the cache
+" directory, when there is none or it is of another version; with
+" g:goda_rogue#binary the user builds it, and g:goda_rogue#config_dir is a
+" copy of the repository to build instead (other dungeons, say). The binary
+" has no "status" to ask: it has no configuration that can be invalid.
+let s:goda = goda#configured#new('rogue',
+      \ extend(#{dir: s:root, status: v:false}, s:version))
 
 " Build the binary again (after an update of this plugin, say). The running
 " one is stopped, and the new one starts with the next request.
 function! goda_rogue#build() abort
-  call s:build_binary()
-  call goda#register('rogue', function('s:start'), s:register_opts())
+  call s:goda.build()
+  call s:goda.register()
 endfunction
 
-function! s:start() abort
-  let bin = s:default_bin()
-  if !executable(bin)
-    throw 'goda-rogue: ' . bin . ' does not exist yet; build it with: call goda_rogue#build()'
-  endif
-  let plugins = goda#start(bin)
-  if index(plugins, 'rogue') < 0
-    if !empty(plugins)
-      call goda#stop(plugins[0])
-    endif
-    throw 'goda-rogue: ' . bin . ' does not contain the "rogue" plugin'
-  endif
-endfunction
-
-call goda#register('rogue', function('s:start'), s:register_opts())
+call s:goda.register()
 
 " ---------------------------------------------------------------------------
 " Highlights: the groups of the Go side. Ranks are colors, and an ally is

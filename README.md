@@ -36,7 +36,8 @@ their rank is their color.
 
 - Vim 9.1 or Neovim 0.11
 - Go 1.26 (to build the binary)
-- [goda.vim](https://github.com/Shougo/goda.vim)
+- [goda.vim](https://github.com/Shougo/goda.vim) (one with the `dir`
+  option of `goda#configured#new()`)
 
 ## Usage
 

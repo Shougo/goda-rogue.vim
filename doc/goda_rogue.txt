@@ -136,9 +136,10 @@ It needs Vim 9.1 or Neovim 0.11, Go 1.26 and goda.vim:
 
 https://github.com/Shougo/goda.vim
 
-The binary is built on the first start, into a cache directory: "goda-rogue"
-under |stdpath()| "cache" in Neovim, $XDG_CACHE_HOME/vim or ~/.cache/vim in
-Vim.  Build it again with |goda_rogue#build()|.
+The binary is built on the first start, by goda.vim (|goda#configured#new()|,
+with "dir": a goda.vim that has it is needed), into a cache directory: the
+directory "goda-rogue" under |stdpath()| "cache" in Neovim, $XDG_CACHE_HOME/vim
+or ~/.cache/vim in Vim.  Build it again with |goda_rogue#build()|.
 
 ==============================================================================
 EXAMPLES                                                 *goda-rogue-examples*
@@ -477,6 +478,12 @@ VARIABLES                                               *goda-rogue-variables*
 g:goda_rogue#binary
 		The binary to start, instead of the one built in the cache
 		directory.  It is not built then: build it yourself.
+
+                                                     *g:goda_rogue#config_dir*
+g:goda_rogue#config_dir
+		The Go module the binary is built from, instead of this
+		plugin as it is installed: a copy of this repository with
+		other dungeons, say (|goda-rogue-dungeons|).
 
                                                           *g:goda_rogue#debug*
 g:goda_rogue#debug
