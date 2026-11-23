@@ -26,7 +26,7 @@ const PluginName = "rogue"
 // ScriptVersion is the version of the Vim script (autoload/goda_rogue.vim)
 // this binary goes with (sdk.ScriptVersioner). Bump it with s:version there
 // when they no longer work together.
-const ScriptVersion = 2
+const ScriptVersion = 3
 
 // Plugin serves the game.
 type Plugin struct {
@@ -34,14 +34,73 @@ type Plugin struct {
 	game *Game
 	// rec writes the replay file of the game, if it has one.
 	rec *Recorder
-	// watching is the replay being watched, if any (then game is its run).
+	// watching is the replay or the bot being watched, if any (then game
+	// is its run).
 	watching *watch
+	// asking says whether the game, over, is asking what to do next
+	// (overPrompt).
+	asking bool
 }
 
-// watch is a replay being watched: its run is after next actions.
+// The choices at the end of a run (overPrompt), and what the Vim script
+// does for them (Screen.Next).
+var overChoices = []string{"同じダンジョンに再挑戦する", "ダンジョンを選ぶ", "結果を見る"}
+
+const (
+	nextRetry    = "retry"
+	nextDungeons = "dungeons"
+)
+
+// overAction is an action on a run that is over: the keys that would act
+// in the dungeon ask what to do next, and the answer goes to the Vim
+// script, which starts the next run. It says whether it took the action.
+func (p *Plugin) overAction(action string, args []string, s *Screen) bool {
+	switch action {
+	case "redraw", "log", "map", "items":
+		// Keep asking over a redraw.
+		if !p.asking || action != "redraw" {
+			p.asking = false
+			return false
+		}
+	case "cancel":
+		p.asking = false
+	case "choose":
+		if !p.asking || len(args) != 1 {
+			p.asking = false
+			break
+		}
+		p.asking = false
+		switch args[0] {
+		case "0":
+			s.Next, s.Dungeon = nextRetry, p.game.Dungeon.ID
+		case "1":
+			s.Next = nextDungeons
+		}
+	default:
+		p.asking = true
+	}
+	if p.asking {
+		s.Prompt = &Prompt{Title: "冒険は終わった（" + p.game.Over + "）", Choices: overChoices}
+	}
+	return true
+}
+
+// watch is a replay being watched: its run is after next actions. Or it
+// is a bot playing, to be watched (replay is nil): next is how many
+// actions it made.
 type watch struct {
 	replay *Replay
 	next   int
+	bot    *Bot
+}
+
+// BotOptions are the options of a run a bot plays, to be watched.
+type BotOptions struct {
+	// Dungeon and Seed are as in StartOptions.
+	Dungeon string `json:"dungeon"`
+	Seed    string `json:"seed"`
+	// Style is how the bot plays (BotStyles); empty for careful.
+	Style string `json:"style"`
 }
 
 // New returns the plugin, with no game yet.
@@ -155,7 +214,7 @@ func (p *Plugin) stop() {
 		p.rec.Close()
 		p.rec = nil
 	}
-	p.game, p.watching = nil, nil
+	p.game, p.watching, p.asking = nil, nil, false
 }
 
 // do runs an action of the game, and writes it to the replay file.
@@ -209,6 +268,9 @@ func (p *Plugin) suspend() error {
 // says whether the replay is over.
 func (p *Plugin) step(n int) (bool, error) {
 	w := p.watching
+	if w.bot != nil {
+		return p.botStep(n)
+	}
 	for ; n != 0 && w.next < len(w.replay.Actions); n-- {
 		a := w.replay.Actions[w.next]
 		w.next++
@@ -222,12 +284,45 @@ func (p *Plugin) step(n int) (bool, error) {
 	return w.next >= len(w.replay.Actions), nil
 }
 
-// watchScreen is the screen of the replay watched: no prompt to answer,
-// and how far it is under it.
+// botStep lets the bot watched make n more actions (to the end of its run
+// for n < 0); it says whether the run is over. The answers to the prompts
+// the bot opens go with the action that opened them: one step is one
+// thing done.
+func (p *Plugin) botStep(n int) (over bool, err error) {
+	w, g := p.watching, p.game
+	defer func() {
+		if r := recover(); r != nil {
+			over, err = true, fmt.Errorf("a bug of goda-rogue: %v (%s, seed %s, after %d actions of the %s bot)",
+				r, g.Dungeon.ID, g.Seed, w.next, w.bot.Style)
+			p.stop()
+		}
+	}()
+	for ; n != 0 && g.Over == ""; n-- {
+		for {
+			action, args := w.bot.Next(g)
+			if err := g.Do(action, args); err != nil {
+				return true, err
+			}
+			g.takeEvents()
+			if g.Prompt == nil || g.Over != "" {
+				break
+			}
+		}
+		w.next++
+	}
+	return g.Over != "", nil
+}
+
+// watchScreen is the screen of the replay or of the bot watched: no
+// prompt to answer, and how far it is under it.
 func (p *Plugin) watchScreen(size Size) Screen {
 	s := p.game.Render(Size{size.Width, size.Height - 1})
 	s.Prompt = nil
 	w := p.watching
+	if w.bot != nil {
+		s.Lines = append(s.Lines, fmt.Sprintf("Bot（%s）  %d 手", w.bot.Style, w.next))
+		return s
+	}
 	s.Lines = append(s.Lines, fmt.Sprintf("リプレイ  %d/%d", w.next, len(w.replay.Actions)))
 	return s
 }
@@ -244,8 +339,10 @@ func (p *Plugin) watchScreen(size Size) Screen {
 //	path, and return its Screen.
 //	watch(path, size): watch the replay file path from its start, and
 //	return the Screen.
-//	step(n, size): watch n more actions of the replay (-1: to its end),
-//	and return {screen, done}.
+//	bot(options, size): start a run a bot plays, to be watched, and
+//	return its Screen.
+//	step(n, size): watch n more actions of the replay or of the bot (-1:
+//	to the end), and return {screen, done}.
 //	records(path): the lines that show the records of the file path.
 func (p *Plugin) Handlers() map[string]sdk.Handler {
 	return map[string]sdk.Handler{
@@ -312,7 +409,7 @@ func (p *Plugin) Handlers() map[string]sdk.Handler {
 				switch action {
 				case "redraw", "map", "items", "log":
 				default:
-					return nil, fmt.Errorf("a replay is being watched: start a game with goda_rogue#start()")
+					return nil, fmt.Errorf("a replay or a bot is being watched: start a game with goda_rogue#start()")
 				}
 				switch action {
 				case "map":
@@ -328,6 +425,12 @@ func (p *Plugin) Handlers() map[string]sdk.Handler {
 			}
 			if action == replaySuspend {
 				return nil, p.suspend()
+			}
+			if p.game.Over != "" {
+				screen := p.game.Render(size)
+				if p.overAction(action, args, &screen) {
+					return sdk.Generic(screen)
+				}
 			}
 			if err := p.do(action, args); err != nil {
 				return nil, err
@@ -409,6 +512,38 @@ func (p *Plugin) Handlers() map[string]sdk.Handler {
 			p.game, p.watching = g, &watch{replay: rp}
 			return sdk.Generic(p.watchScreen(size))
 		},
+		"bot": func(ctx context.Context, h sdk.Host, params []any) (any, error) {
+			var opts BotOptions
+			var size Size
+			if err := sdk.DecodeArgs(params, &opts, &size); err != nil {
+				return nil, err
+			}
+			if opts.Seed == "" {
+				opts.Seed = fmt.Sprint(rand.N(100000000))
+			}
+			if opts.Dungeon == "" {
+				opts.Dungeon = DefaultDungeon
+			}
+			if opts.Style == "" {
+				opts.Style = BotCareful.String()
+			}
+			style, ok := BotStyles[opts.Style]
+			if !ok {
+				return nil, fmt.Errorf("bot: unknown style %q", opts.Style)
+			}
+			p.mu.Lock()
+			defer p.mu.Unlock()
+			d, err := LoadBuiltin(opts.Dungeon)
+			if err != nil {
+				return nil, fmt.Errorf("dungeon %q: %w", opts.Dungeon, err)
+			}
+			// No replay file and no record: the run is the bot's, not
+			// the player's.
+			p.stop()
+			p.game = NewGame(d, opts.Seed)
+			p.watching = &watch{bot: NewBot(style, rand.Uint64())}
+			return sdk.Generic(p.watchScreen(size))
+		},
 		"records": func(ctx context.Context, h sdk.Host, params []any) (any, error) {
 			var path string
 			if err := sdk.DecodeArgs(params, &path); err != nil {
@@ -435,7 +570,7 @@ func (p *Plugin) Handlers() map[string]sdk.Handler {
 			p.mu.Lock()
 			defer p.mu.Unlock()
 			if p.watching == nil {
-				return nil, fmt.Errorf("step: no replay is being watched")
+				return nil, fmt.Errorf("step: no replay nor bot is being watched")
 			}
 			done, err := p.step(n)
 			if err != nil {

@@ -184,7 +184,11 @@ goda_rogue#start([{options}])
 		  dungeon	The ID of the dungeon (see
 				|goda_rogue#dungeons()|).
 				Default: ask which, with the
-				selection UI (|goda-rogue-prompts|).
+				selection UI (|goda-rogue-prompts|),
+				and then what to do with it: 冒険に出る
+				(play it), 説明を見る (its description),
+				Bot の冒険を見る (watch a bot play it,
+				|goda_rogue#watch_bot()|) or やめる.
 		  seed		A string or a number.  The same seed
 				makes the same floors in the same
 				dungeon, whatever the player does on
@@ -196,6 +200,13 @@ goda_rogue#start([{options}])
 		A suspended run (|goda-rogue-replays|) is offered to be
 		resumed first.  Called while a run is played, it starts
 		another one: suspend it first to keep it.
+
+		Once a run is over, its result stays on the screen.  An
+		action in the dungeon (a move, say) then asks what comes
+		next: 同じダンジョンに再挑戦する starts a new run in the same
+		dungeon, ダンジョンを選ぶ asks which dungeon, as
+		goda_rogue#start() does, and 結果を見る goes back to the
+		result.
 
                                                        *goda_rogue#dungeons()*
 goda_rogue#dungeons()
@@ -228,14 +239,30 @@ goda_rogue#replay([{file}])
 		is under the screen.  The actions of the game do nothing
 		meanwhile, but "map" and "log".
 
+                                                      *goda_rogue#watch_bot()*
+goda_rogue#watch_bot([{options}])
+		Watch a bot play a new run in the game buffer, as a replay
+		is watched: it plays by itself, an action every
+		|g:goda_rogue#replay_interval| milliseconds, with how many
+		actions it made under the screen (the answers to the prompts
+		it opens go with the action that opened them).  The run is
+		the bot's: it has no replay file and no record, and a
+		suspended run is left as it is.  The bots are those that
+		measure the balance of the dungeons (|goda-rogue-dungeons|).
+		{options} is a |Dictionary|:
+		  dungeon	The ID of the dungeon.  Default: "cave".
+		  seed		As in |goda_rogue#start()|.
+		  style		How the bot plays: "careful" (the
+				default) or "reckless".
+
                                                    *goda_rogue#replay_pause()*
 goda_rogue#replay_pause()
-		Pause the replay being watched, or play it again.
+		Pause the replay or the bot being watched, or play it again.
 
                                                     *goda_rogue#replay_step()*
 goda_rogue#replay_step([{n}])
-		Step the replay being watched {n} actions (default 1; -1:
-		to its end).
+		Step the replay or the bot being watched {n} actions
+		(default 1; -1: to its end).
 
                                                         *goda_rogue#records()*
 goda_rogue#records()

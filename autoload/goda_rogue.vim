@@ -6,7 +6,7 @@
 
 " The version of this Vim script that the binary goes with (ScriptVersion of
 " its Go side): goda.vim refuses a binary of another one, and builds it again.
-let s:version = #{version: 2, module: 'github.com/Shougo/goda-rogue.vim'}
+let s:version = #{version: 3, module: 'github.com/Shougo/goda-rogue.vim'}
 
 " The repository: the Go module of the binary.
 let s:root = expand('<sfile>:p:h:h', 1)
@@ -251,9 +251,28 @@ function! s:choose_dungeon(options) abort
     return
   endtry
   let choices = map(copy(dungeons),
-        \ {_, d -> printf('%s（%dF）  %s', d.name, d.floors, d.description)})
+        \ {_, d -> printf('%s（%dF）', d.name, d.floors)})
   call s:select('ダンジョン', choices,
-        \ {idx -> idx > 0 ? s:start_game(extend(options, #{dungeon: dungeons[idx - 1].id})) : 0})
+        \ {idx -> idx > 0 ? s:dungeon_menu(options, dungeons[idx - 1]) : 0})
+endfunction
+
+" What to do with the dungeon {dungeon} (an entry of goda_rogue#dungeons()):
+" play it, read its description, watch a bot play it, or leave it.
+function! s:dungeon_menu(options, dungeon) abort
+  let options = extend(copy(a:options), #{dungeon: a:dungeon.id})
+  call s:select(printf('%s（%dF）', a:dungeon.name, a:dungeon.floors),
+        \ ['冒険に出る', '説明を見る', 'Bot の冒険を見る', 'やめる'],
+        \ {idx -> idx == 1 ? s:start_game(options)
+        \       : idx == 2 ? s:describe_dungeon(a:options, a:dungeon)
+        \       : idx == 3 ? goda_rogue#watch_bot(options) : 0})
+endfunction
+
+" Show the description of {dungeon}, then its menu again.
+function! s:describe_dungeon(options, dungeon) abort
+  call s:select(printf('%s（%dF）： %s',
+        \ a:dungeon.name, a:dungeon.floors, a:dungeon.description),
+        \ ['戻る'],
+        \ {idx -> s:dungeon_menu(a:options, a:dungeon)})
 endfunction
 
 " Show the game buffer in the current window.
@@ -390,7 +409,37 @@ function! goda_rogue#replay(file = '') abort
   call s:play_replay()
 endfunction
 
-" The replay being watched: its buffer, whether it is over, and its timer.
+" Watch a bot play a new run in the current window, as a replay is watched:
+" it plays by itself, an action every g:goda_rogue#replay_interval
+" milliseconds; goda_rogue#replay_pause() and goda_rogue#replay_step() pause
+" and step it.  The run is the bot's: it has no replay file and no record,
+" and a suspended run is left as it is.  {options}:
+"   dungeon	The ID of the dungeon.  Default: "cave".
+"   seed	As in goda_rogue#start().
+"   style	How the bot plays: "careful" (the default) or "reckless".
+function! goda_rogue#watch_bot(options = {}) abort
+  let options = {}
+  for key in ['dungeon', 'seed', 'style']
+    if has_key(a:options, key)
+      let options[key] = type(a:options[key]) == v:t_number
+            \ ? string(a:options[key]) : a:options[key]
+    endif
+  endfor
+  call s:open_buffer()
+  try
+    let screen = goda#request('rogue', 'bot', options, s:size())
+  catch
+    call s:print_error(v:exception)
+    return
+  endtry
+  call s:draw(screen)
+  let s:watching = #{bufnr: bufnr('%'), done: v:false}
+  autocmd goda-rogue BufLeave <buffer> call s:stop_watching()
+  call s:play_replay()
+endfunction
+
+" The replay or the bot being watched: its buffer, whether it is over, and
+" its timer.
 let s:watching = {}
 let s:replay_timer = -1
 
@@ -472,6 +521,13 @@ function! goda_rogue#do(action, ...) abort
     return
   endtry
   call s:draw(screen)
+  " The run is over, and the player chose what comes next.
+  let next = get(screen, 'next', '')
+  if next ==# 'retry'
+    call goda_rogue#start(#{dungeon: screen.dungeon})
+  elseif next ==# 'dungeons'
+    call goda_rogue#start()
+  endif
 endfunction
 
 " ---------------------------------------------------------------------------

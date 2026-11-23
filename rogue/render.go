@@ -70,6 +70,10 @@ type Screen struct {
 	Log []string `json:"log,omitempty"`
 	// Prompt is a choice to ask the player for.
 	Prompt *Prompt `json:"prompt,omitempty"`
+	// Next is what the Vim script does after this screen, the run over:
+	// "retry" starts a new run in Dungeon, "dungeons" asks which dungeon.
+	Next    string `json:"next,omitempty"`
+	Dungeon string `json:"dungeon,omitempty"`
 }
 
 // Minimap is the floor, reduced: one half-width ASCII character a tile.

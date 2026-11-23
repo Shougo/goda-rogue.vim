@@ -105,7 +105,16 @@ function! s:start() abort
   let s:asked = {}
   call goda_rogue#start(#{seed: 'e2e'})
   call s:check('dungeon prompt', get(s:asked, 'title', ''), 'ダンジョン')
-  call s:check('dungeon choice', get(s:asked, 'choices', [''])[0] =~# '^はじまりの洞窟（30F）', 1)
+  call s:check('dungeon choice', get(s:asked, 'choices', [''])[0], 'はじまりの洞窟（30F）')
+  call s:answer(1)
+  " Then what to do with it: its description, and back.
+  call s:check('dungeon menu', get(s:asked, 'title', ''), 'はじまりの洞窟（30F）')
+  call s:check('dungeon menu choices', get(s:asked, 'choices', []),
+        \ ['冒険に出る', '説明を見る', 'Bot の冒険を見る', 'やめる'])
+  call s:answer(2)
+  call s:check('dungeon description', get(s:asked, 'title', '') =~# '^はじまりの洞窟（30F）： .', 1)
+  call s:answer(1)
+  call s:check('dungeon menu again', get(s:asked, 'choices', [''])[0], '冒険に出る')
   call s:answer(1)
   unlet g:goda_rogue#prompt_func
   call s:check('filetype', &filetype, 'goda-rogue')
@@ -357,7 +366,18 @@ function! s:replays() abort
   call s:check('watched', getline('$') =~# '^リプレイ  \(\d\+\)/\1$', 1)
   call s:check('watched status', s:timeless(getline(line('$') - 4)), status)
   call goda_rogue#do('wait')
-  call s:check('no action while watching', execute('messages') =~# 'a replay is being watched', 1)
+  call s:check('no action while watching', execute('messages') =~# 'a replay or a bot is being watched', 1)
+
+  " A bot plays, watched the same way; the suspended run stays.
+  call goda_rogue#watch_bot(#{dungeon: 'cave', seed: 'bot'})
+  call goda_rogue#replay_pause()
+  call s:check('bot', getline('$'), 'Bot（careful）  0 手')
+  call s:check('bot floor', getline(1) =~# '^1F ', 1)
+  call goda_rogue#replay_step(3)
+  call s:check('bot stepped', getline('$'), 'Bot（careful）  3 手')
+  call goda_rogue#replay_step(-1)
+  call s:check('bot run over', search('^  結果 ', 'nw') > 0, 1)
+  call s:check('bot left the replay', readfile(goda_rogue#last_replay()), readfile(saved))
 
   " A new run keeps the replay of the one before, not over here.
   let g:goda_rogue#prompt_func = function('s:fake_prompt')
@@ -420,6 +440,22 @@ function! s:records() abort
     call goda_rogue#do('wait')
   endfor
   call s:check('a run over', search('冒険の結果', 'nw') > 0, 1)
+
+  " Over, a key asks what comes next: the same dungeon again.
+  let g:goda_rogue#prompt_func = function('s:fake_prompt')
+  let s:asked = {}
+  call goda_rogue#do('wait')
+  call s:check('over prompt', get(s:asked, 'title', '') =~# '^冒険は終わった（', 1)
+  call s:check('over choices', get(s:asked, 'choices', []),
+        \ ['同じダンジョンに再挑戦する', 'ダンジョンを選ぶ', '結果を見る'])
+  call s:answer(3)
+  call s:check('the result stays', search('冒険の結果', 'nw') > 0, 1)
+  call goda_rogue#do('wait')
+  call s:answer(1)
+  call s:check('retried', getline(1) =~# '^1F ', 1)
+  call s:check('retried: a new run', search('冒険の結果', 'nw'), 0)
+  call s:check('retried: the same dungeon', s:messages(), ['1F に着いた。'])
+  unlet g:goda_rogue#prompt_func
   call goda_rogue#records()
   call s:check('records buffer', bufname('%'), 'goda-rogue://records')
   call s:check('records', getline(1), '自己ベスト')
