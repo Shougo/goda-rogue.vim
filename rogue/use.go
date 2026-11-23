@@ -2,6 +2,7 @@ package rogue
 
 import (
 	"fmt"
+	"slices"
 )
 
 // useItem uses it: drinks a grass, reads a scroll, waves a staff, eats
@@ -76,9 +77,103 @@ func (g *Game) useItem(it *Item) {
 		g.Fullness = min(g.Fullness+n, g.Dungeon.Rules.Fullness)
 		g.hunger = 0
 		g.say("お腹がふくれた。")
+	case EffectMaxHP:
+		g.MaxHP += n
+		g.HP += n
+		g.say(fmt.Sprintf("最大HPが%d上がった。", n))
+	case EffectUpWeapon:
+		g.upgrade(CategoryWeapon, n)
+	case EffectUpShield:
+		g.upgrade(CategoryShield, n)
+	case EffectSwap:
+		g.swapPlaces()
 	default:
+		if e := MagicEffect(it.Def.Effect); castable(it.Def.Category, e) {
+			g.cast(it.Def.Category, e)
+			return
+		}
 		g.say("何も起こらなかった。")
 	}
+}
+
+// castable says whether an item of the category c can have the effect e
+// of a bolt (monsters.txt 魔法): a grass has it on who drinks it or on
+// the monster it is thrown at, a scroll on the enemies of the room, a
+// staff on the monster its bolt hits. Only a staff blows away.
+func castable(c Category, e MagicEffect) bool {
+	switch c {
+	case CategoryGrass, CategoryScroll:
+		return e != MagicBlow && slices.Contains(magicEffects, e)
+	case CategoryStaff:
+		return slices.Contains(magicEffects, e)
+	}
+	return false
+}
+
+// cast is the effect e of a bolt, of an item of the category c the
+// player uses.
+func (g *Game) cast(c Category, e MagicEffect) {
+	d := Directions[g.Facing]
+	switch c {
+	case CategoryGrass:
+		g.magicOnPlayer(e, d, nil)
+	case CategoryStaff:
+		if m := g.bolt(); m != nil {
+			g.provoke(m)
+			g.magicOn(m, e, d)
+		}
+	case CategoryScroll:
+		ms := g.enemiesAround()
+		if len(ms) == 0 {
+			g.say("何も起こらなかった。")
+		}
+		for _, m := range ms {
+			g.magicOn(m, e, d)
+		}
+	}
+}
+
+// enemiesAround returns the enemies a scroll reaches: those of the
+// player's room, or those next to it in a corridor.
+func (g *Game) enemiesAround() []*Monster {
+	room := g.Level.RoomAt(g.Player)
+	var ms []*Monster
+	for _, m := range g.Monsters {
+		if !m.hostile() {
+			continue
+		}
+		if room >= 0 && g.Level.RoomAt(m.Pos) == room || chebyshev(m.Pos, g.Player) <= 1 {
+			ms = append(ms, m)
+		}
+	}
+	return ms
+}
+
+// upgrade raises the upgrade value of the equipped weapon or shield by n.
+func (g *Game) upgrade(c Category, n int) {
+	it := g.equipped(c)
+	if it == nil {
+		g.say("何も起こらなかった。")
+		return
+	}
+	it.Upgrade += n
+	it.Known = true
+	g.say(fmt.Sprintf("%sが強くなった。", g.describe(it)))
+}
+
+// swapPlaces sends a bolt that makes the player and the monster it hits
+// change places.
+func (g *Game) swapPlaces() {
+	m := g.bolt()
+	if m == nil {
+		return
+	}
+	m.Dozing = false
+	g.provoke(m)
+	to := m.Pos
+	m.Pos = g.Player
+	g.say(m.Name + "と場所が入れ替わった。")
+	g.shove(to)
 }
 
 // bolt sends a magic bolt from the player to its front, and returns the

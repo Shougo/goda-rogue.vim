@@ -11,17 +11,19 @@
 # onigiri twice as common as onigiri). Deeper floors have fewer items
 # (floors.txt), so food takes a larger share of them, to keep about one
 # onigiri a floor.
+# Grasses, scrolls and staffs have many kinds: their weights keep the
+# healing grasses about as common as with few kinds.
 床	1	30	武器	6
 床	1	30	盾	7
 床	1	30	腕輪	4
 床	1	30	矢	4
-床	1	30	草	7
-床	1	30	巻物	5
-床	1	30	杖	2
+床	1	30	草	11
+床	1	30	巻物	7
+床	1	30	杖	3
 床	1	30	壺	3
-床	1	8	食料	8
-床	9	18	食料	9
-床	19	30	食料	11
+床	1	8	食料	9
+床	9	18	食料	10
+床	19	30	食料	12
 床	1	30	お金	6
 # The general store sells a bit of everything; deeper, more bracelets,
 # arrows and pots.
@@ -31,9 +33,9 @@
 よろず	15	30	腕輪	8
 よろず	1	4	矢	2
 よろず	5	30	矢	4
-よろず	1	30	草	10
-よろず	1	30	巻物	6
-よろず	1	30	杖	2
+よろず	1	30	草	13
+よろず	1	30	巻物	8
+よろず	1	30	杖	3
 よろず	1	9	壺	3
 よろず	10	30	壺	5
 よろず	1	30	食料	4

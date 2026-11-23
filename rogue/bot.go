@@ -804,10 +804,20 @@ func (b *Bot) shoot(g *Game) (string, []string) {
 	return "", nil
 }
 
-// boost drinks the known grasses that only do good (strength).
+// boost drinks the known grasses that only do good (strength, max HP),
+// and reads the known scrolls that make the equipped weapon or shield
+// stronger.
 func (b *Bot) boost(g *Game) (string, []string) {
-	if it := carried(g, func(it *Item) bool { return b.known(g, it, EffectStrength) && it.Def.Category == CategoryGrass }); it != nil {
+	if it := carried(g, func(it *Item) bool {
+		return it.Def.Category == CategoryGrass && !it.ForSale && (b.known(g, it, EffectStrength) || b.known(g, it, EffectMaxHP))
+	}); it != nil {
 		return b.use(it, commandDrink)
+	}
+	if it := carried(g, func(it *Item) bool {
+		return !it.ForSale && (b.known(g, it, EffectUpWeapon) && g.equipped(CategoryWeapon) != nil ||
+			b.known(g, it, EffectUpShield) && g.equipped(CategoryShield) != nil)
+	}); it != nil {
+		return b.use(it, commandRead)
 	}
 	return "", nil
 }

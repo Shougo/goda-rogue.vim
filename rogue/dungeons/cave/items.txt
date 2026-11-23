@@ -14,13 +14,22 @@
 #               (not above the max); at it, adds 強さ to both
 #     目薬      shows the traps of the floor, and the mimics hidden as
 #               items that a sensing bracelet would show
+#     最大HP    raises the max HP by 強さ
 #   巻物, read:
 #     あかり    lights the floor: its map, items and monsters
 #     識別      identifies an item (nothing to identify yet)
+#     武器強化  raises the upgrade value of the equipped weapon by 強さ
+#     盾強化    raises the upgrade value of the equipped shield by 強さ
 #   杖, waved (a magic bolt to the front):
 #     吹き飛ばし  blows the monster it hits 10 tiles away
 #     仲間      makes the monster it hits an ally (not a shopkeeper or a
 #               guard, and not past rules.txt 仲間の上限)
+#     場所替え  the player and the monster it hits change places
+#   草, 巻物 and 杖 can also have an effect of the bolts of monsters
+#   (monsters.txt 魔法: ワープ 倍速 混乱 鈍足 睡眠 封印 HP1/2 HP1/4 レベル-1
+#   レベル-3): a grass on who drinks it, or on the monster it is thrown
+#   at; a scroll on the enemies of the room (next to the player, in a
+#   corridor); a staff on the monster its bolt hits
 #   食料, eaten:
 #     満腹      restores 強さ of fullness
 # ひび is how easily a bracelet cracks (a percent, 0 for never): leaving
@@ -64,10 +73,23 @@ yakusou	草	薬草	草	25	HP回復	0	-	-	0	50
 otogiri	草	弟切草	草	100	HP回復	0	-	-	0	200
 chikarakusa	草	ちからの草	草	1	ちから	0	-	力	0	500
 megusuri	草	目薬草	草	0	目薬	0	-	-	0	100
+inochi	草	命の草	草	5	最大HP	0	-	-	0	300
+takatobi	草	高飛び草	草	0	ワープ	0	-	-	0	100
+subayasa	草	すばやさ草	草	0	倍速	0	-	-	0	150
+konran	草	混乱草	草	0	混乱	0	-	-	0	100
+suimin	草	睡眠草	草	0	睡眠	0	-	-	0	150
 shikibetsu	巻	識別の巻物	巻物	0	識別	0	-	-	0	100
 akari	巻	あかりの巻物	巻物	0	あかり	0	-	-	0	200
+ten	巻	天の恵みの巻物	巻物	1	武器強化	0	-	-	0	500
+chi	巻	地の恵みの巻物	巻物	1	盾強化	0	-	-	0	500
+konranmaki	巻	混乱の巻物	巻物	0	混乱	0	-	-	0	300
+bakusui	巻	バクスイの巻物	巻物	0	睡眠	0	-	-	0	400
 fukitobashi	杖	吹き飛ばしの杖	杖	0	吹き飛ばし	0	4-6	-	0	500
 nakama	杖	仲間の杖	杖	0	仲間	0	1-2	-	0	1500
+bashogae	杖	場所替えの杖	杖	0	場所替え	0	4-6	-	0	400
+donsoku	杖	鈍足の杖	杖	0	鈍足	0	4-6	-	0	400
+fuuin	杖	封印の杖	杖	0	封印	0	4-6	-	0	500
+fukou	杖	不幸の杖	杖	0	レベル-1	0	3-5	-	0	600
 hozon	壺	保存の壺	壺	0	保存	0	3-5	-	0	300
 gousei	壺	合成の壺	壺	0	合成	0	2-3	-	0	1000
 onigiri	食	おにぎり	食料	50	満腹	0	-	-	0	100

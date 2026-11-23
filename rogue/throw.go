@@ -83,8 +83,20 @@ func (g *Game) hitBy(it *Item, m *Monster) bool {
 			m.HP += healed
 			g.say(fmt.Sprintf("%sのHPが%d回復した。", m.Name, healed))
 			g.identify(it)
+		case EffectMaxHP:
+			m.MaxHP += it.Def.Strength
+			m.HP += it.Def.Strength
+			g.say(m.Name + "の最大HPが上がった。")
+			g.identify(it)
 		default:
-			g.say("何も起こらなかった。")
+			e := MagicEffect(it.Def.Effect)
+			if !castable(CategoryGrass, e) {
+				g.say("何も起こらなかった。")
+				break
+			}
+			g.provoke(m)
+			g.magicOn(m, e, Directions[g.Facing])
+			g.identify(it)
 		}
 		return true
 	}

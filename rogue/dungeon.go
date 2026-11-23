@@ -236,6 +236,10 @@ const (
 	EffectBlowAway   Effect = "吹き飛ばし"
 	EffectRecruit    Effect = "仲間"
 	EffectEyeDrops   Effect = "目薬"
+	EffectMaxHP      Effect = "最大HP"
+	EffectUpWeapon   Effect = "武器強化"
+	EffectUpShield   Effect = "盾強化"
+	EffectSwap       Effect = "場所替え"
 	EffectFood       Effect = "満腹"
 	EffectKeep       Effect = "保存"
 	EffectSynthesis  Effect = "合成"
@@ -244,9 +248,9 @@ const (
 // effects are the effects the items of each category can have.
 var effects = map[Category][]Effect{
 	CategoryBracelet: {EffectStrength, EffectRegen, EffectSenseEnemy, EffectSenseItem},
-	CategoryGrass:    {EffectHeal, EffectStrength, EffectEyeDrops},
-	CategoryScroll:   {EffectLight, EffectIdentify},
-	CategoryStaff:    {EffectBlowAway, EffectRecruit},
+	CategoryGrass:    {EffectHeal, EffectStrength, EffectEyeDrops, EffectMaxHP},
+	CategoryScroll:   {EffectLight, EffectIdentify, EffectUpWeapon, EffectUpShield},
+	CategoryStaff:    {EffectBlowAway, EffectRecruit, EffectSwap},
 	CategoryFood:     {EffectFood},
 	CategoryPot:      {EffectKeep, EffectSynthesis},
 }
@@ -714,8 +718,8 @@ func (l *loader) load() {
 			it.Strength = l.int(row, "強さ", 0)
 		}
 		if e, ok := row.cols["効果"]; ok && e != "-" && e != "" {
-			if !slices.Contains(effects[c], Effect(e)) {
-				l.errorf(row.file, row.n, "効果: %s has no effect %q, want one of %v", c, e, effects[c])
+			if !slices.Contains(effects[c], Effect(e)) && !castable(c, MagicEffect(e)) {
+				l.errorf(row.file, row.n, "効果: %s has no effect %q, want one of %v, or an effect of a bolt (monsters.txt 魔法)", c, e, effects[c])
 			}
 			it.Effect = Effect(e)
 		}
