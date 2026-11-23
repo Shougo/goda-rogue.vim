@@ -101,6 +101,9 @@ type BotOptions struct {
 	Seed    string `json:"seed"`
 	// Style is how the bot plays (BotStyles); empty for careful.
 	Style string `json:"style"`
+	// Replay is the path of the replay file to write the run to (made
+	// anew: the bot's last run only is kept); empty for none.
+	Replay string `json:"replay"`
 }
 
 // New returns the plugin, with no game yet.
@@ -294,6 +297,9 @@ func (p *Plugin) botStep(n int) (over bool, err error) {
 		if r := recover(); r != nil {
 			over, err = true, fmt.Errorf("a bug of goda-rogue: %v (%s, seed %s, after %d actions of the %s bot)",
 				r, g.Dungeon.ID, g.Seed, w.next, w.bot.Style)
+			if p.rec != nil {
+				err = fmt.Errorf("%w (its replay: %s)", err, p.rec.Path)
+			}
 			p.stop()
 		}
 	}()
@@ -303,7 +309,12 @@ func (p *Plugin) botStep(n int) (over bool, err error) {
 			if err := g.Do(action, args); err != nil {
 				return true, err
 			}
-			g.takeEvents()
+			events := g.takeEvents()
+			if p.rec != nil && recorded(action) {
+				if err := p.rec.Action(g.PlayTime(), action, args, events); err != nil {
+					return true, fmt.Errorf("replay %s: %w", p.rec.Path, err)
+				}
+			}
 			if g.Prompt == nil || g.Over != "" {
 				break
 			}
@@ -537,10 +548,18 @@ func (p *Plugin) Handlers() map[string]sdk.Handler {
 			if err != nil {
 				return nil, fmt.Errorf("dungeon %q: %w", opts.Dungeon, err)
 			}
-			// No replay file and no record: the run is the bot's, not
-			// the player's.
+			// No record, and a replay file of its own: the run is the
+			// bot's, not the player's.
 			p.stop()
-			p.game = NewGame(d, opts.Seed)
+			g := NewGame(d, opts.Seed)
+			if opts.Replay != "" {
+				rec, err := NewRecorder(opts.Replay, g)
+				if err != nil {
+					return nil, fmt.Errorf("replay: %w", err)
+				}
+				p.rec = rec
+			}
+			p.game = g
 			p.watching = &watch{bot: NewBot(style, rand.Uint64())}
 			return sdk.Generic(p.watchScreen(size))
 		},

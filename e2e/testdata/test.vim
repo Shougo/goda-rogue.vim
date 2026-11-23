@@ -378,6 +378,12 @@ function! s:replays() abort
   call goda_rogue#replay_step(-1)
   call s:check('bot run over', search('^  結果 ', 'nw') > 0, 1)
   call s:check('bot left the replay', readfile(goda_rogue#last_replay()), readfile(saved))
+  " Its own replay is kept, and can be watched.
+  call goda_rogue#replay(goda_rogue#bot_replay())
+  call goda_rogue#replay_pause()
+  call goda_rogue#replay_step(-1)
+  call s:check('bot replay watched', getline('$') =~# '^リプレイ  \(\d\+\)/\1$', 1)
+  call s:check('bot replay over', search('^  結果 ', 'nw') > 0, 1)
 
   " A new run keeps the replay of the one before, not over here.
   let g:goda_rogue#prompt_func = function('s:fake_prompt')

@@ -2,6 +2,8 @@ package rogue
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -32,8 +34,10 @@ func last(s map[string]any) string {
 // action of the player goes to it.
 func TestWatchBot(t *testing.T) {
 	p := New()
+	t.Cleanup(p.stop)
+	path := filepath.Join(t.TempDir(), "bot.replay")
 	size := map[string]any{"width": 80, "height": 24}
-	s := request(t, p, "bot", map[string]any{"dungeon": "cave", "seed": "watch", "style": "reckless"}, size)
+	s := request(t, p, "bot", map[string]any{"dungeon": "cave", "seed": "watch", "style": "reckless", "replay": path}, size)
 	if last(s) != "Bot（reckless）  0 手" || s["prompt"] != nil {
 		t.Fatalf("last line %q, prompt %v", last(s), s["prompt"])
 	}
@@ -52,6 +56,16 @@ func TestWatchBot(t *testing.T) {
 	n := p.watching.next
 	if s = request(t, p, "step", 3, size); p.watching.next != n || s["done"] != true {
 		t.Errorf("stepped on to %d", p.watching.next)
+	}
+
+	// Its replay plays the same run, with no record of it.
+	over, turn := p.game.Over, p.game.Turn
+	p.stop()
+	if _, g, err := replayGame(path); err != nil || g.Over != over || g.Turn != turn {
+		t.Errorf("replay: %v, over %q turn %d, want %q %d", err, g.Over, g.Turn, over, turn)
+	}
+	if _, err := os.Stat(filepath.Join(filepath.Dir(path), recordsFile)); err == nil {
+		t.Error("the run of a bot has a record")
 	}
 
 	if _, err := p.Handlers()["bot"](context.Background(), nil, []any{map[string]any{"style": "wise"}, size}); err == nil {

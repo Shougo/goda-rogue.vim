@@ -63,6 +63,11 @@ function! goda_rogue#last_replay() abort
   return s:data_dir() . '/last.replay'
 endfunction
 
+" The replay file of the last run a bot played (goda_rogue#watch_bot()).
+function! goda_rogue#bot_replay() abort
+  return s:replay_dir() . '/bot.replay'
+endfunction
+
 function! s:replay_dir() abort
   return s:data_dir() . '/replays'
 endfunction
@@ -412,8 +417,8 @@ endfunction
 " Watch a bot play a new run in the current window, as a replay is watched:
 " it plays by itself, an action every g:goda_rogue#replay_interval
 " milliseconds; goda_rogue#replay_pause() and goda_rogue#replay_step() pause
-" and step it.  The run is the bot's: it has no replay file and no record,
-" and a suspended run is left as it is.  {options}:
+" and step it.  The run is the bot's: it has no record, its replay goes to
+" goda_rogue#bot_replay(), and a suspended run is left as it is.  {options}:
 "   dungeon	The ID of the dungeon.  Default: "cave".
 "   seed	As in goda_rogue#start().
 "   style	How the bot plays: "careful" (the default) or "reckless".
@@ -425,6 +430,7 @@ function! goda_rogue#watch_bot(options = {}) abort
             \ ? string(a:options[key]) : a:options[key]
     endif
   endfor
+  let options.replay = goda_rogue#bot_replay()
   call s:open_buffer()
   try
     let screen = goda#request('rogue', 'bot', options, s:size())

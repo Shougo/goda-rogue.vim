@@ -246,14 +246,24 @@ goda_rogue#watch_bot([{options}])
 		|g:goda_rogue#replay_interval| milliseconds, with how many
 		actions it made under the screen (the answers to the prompts
 		it opens go with the action that opened them).  The run is
-		the bot's: it has no replay file and no record, and a
-		suspended run is left as it is.  The bots are those that
-		measure the balance of the dungeons (|goda-rogue-dungeons|).
+		the bot's: it has no record, and a suspended run is left as
+		it is.  Its replay is written to |goda_rogue#bot_replay()|
+		(the last run of a bot only), to watch it again or to find
+		what went wrong: >
+			call goda_rogue#replay(goda_rogue#bot_replay())
+<		The bots are those that measure the balance of the dungeons
+		(|goda-rogue-dungeons|).
 		{options} is a |Dictionary|:
 		  dungeon	The ID of the dungeon.  Default: "cave".
 		  seed		As in |goda_rogue#start()|.
 		  style		How the bot plays: "careful" (the
 				default) or "reckless".
+
+                                                     *goda_rogue#bot_replay()*
+goda_rogue#bot_replay()
+		The replay file of the last run a bot played
+		(|goda_rogue#watch_bot()|): "replays/bot.replay" in
+		|g:goda_rogue#data_dir|.
 
                                                    *goda_rogue#replay_pause()*
 goda_rogue#replay_pause()
