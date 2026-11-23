@@ -795,6 +795,19 @@ func (b *Bot) shoot(g *Game) (string, []string) {
 		if !clear || !g.clearFrom(m.Pos.Sub(step), step) {
 			continue
 		}
+		// An arrow that misses flies on: not with a shopkeeper or an
+		// ally behind the enemy (a shopkeeper hit calls it a thief).
+		behind := false
+		for p, i := m.Pos, n; i < throwRange && g.clearFrom(p, step) && g.Level.At(p.Add(step)).Walkable(); i++ {
+			p = p.Add(step)
+			if o := g.MonsterAt(p); o != nil && !o.hostile() {
+				behind = true
+				break
+			}
+		}
+		if behind {
+			continue
+		}
 		if name := directionName(step); g.Facing != name {
 			return "turn", []string{name}
 		}
