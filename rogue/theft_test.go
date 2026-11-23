@@ -27,10 +27,10 @@ func TestStealGold(t *testing.T) {
 		t.Fatalf("gold %d, fled %v, %q", g.Gold, m.Fled, g.Message)
 	}
 	// Away, and it keeps away.
+	// (Where it can: in a corner it has no step away.)
 	d := chebyshev(m.Pos, g.Player)
-	g.act(m)
-	if n := chebyshev(m.Pos, g.Player); n < d && d > 1 {
-		t.Errorf("it came closer: %d to %d", d, n)
+	if g.flee(m) && chebyshev(m.Pos, g.Player) <= d {
+		t.Errorf("it did not get away: %d to %d", d, chebyshev(m.Pos, g.Player))
 	}
 	g.remove(m)
 	g.defeated(m)

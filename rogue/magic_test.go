@@ -194,3 +194,23 @@ func TestParseMagic(t *testing.T) {
 		t.Errorf("error %v", err)
 	}
 }
+
+// TestMagicOnShopkeeper: the bolt of a monster does not take a calm
+// shopkeeper out of its shop.
+func TestMagicOnShopkeeper(t *testing.T) {
+	g, r := roomGame(t, 6, 3)
+	m := place(g, kind("oni1"), Point{r.X + 3, r.Y + 1})
+	m.Keeper = true
+	at := m.Pos
+	for _, e := range []MagicEffect{MagicWarp, MagicBlow} {
+		g.magicOn(m, e, Point{1, 0})
+		if m.Pos != at {
+			t.Fatalf("%s moved it to %v", e, m.Pos)
+		}
+	}
+	m.Angry = true
+	g.magicOn(m, MagicBlow, Point{1, 0})
+	if m.Pos == at {
+		t.Error("an angry one is not blown away")
+	}
+}

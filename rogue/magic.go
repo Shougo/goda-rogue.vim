@@ -58,6 +58,12 @@ func (g *Game) magicOn(f *Monster, e MagicEffect, d Point) {
 			g.say(f.Name + s)
 		}
 	}
+	if f.Keeper && !f.Angry && (e == MagicWarp || e == MagicBlow) {
+		// A shopkeeper keeps its shop: the bolt of a monster does not
+		// take it away (the player's makes it angry first).
+		say("には効かなかった。")
+		return
+	}
 	switch e {
 	case MagicWarp:
 		if p, ok := g.freeTile(); ok {
