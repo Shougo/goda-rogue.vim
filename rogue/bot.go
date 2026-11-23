@@ -42,6 +42,14 @@ type Bot struct {
 	// plan is what to answer to the prompts it opened: an item of the
 	// inventory, then a command.
 	plan []botStep
+	// deciding says whether the bot is deciding on an action (Next): the
+	// game does not change meanwhile, so the ways from the player
+	// (searched) and the lines of the enemies (enemyLines) are worked out
+	// once for all its rules.
+	deciding   bool
+	searched   [2]botWays
+	enemyLines map[Point]bool
+	hasLines   bool
 	// stuck counts the actions without moving, to get out of a loop.
 	last  Point
 	stuck int
@@ -82,6 +90,9 @@ func (b *Bot) Next(g *Game) (string, []string) {
 		return b.answer(g)
 	}
 	b.plan = nil
+	b.deciding, b.hasLines = true, false
+	b.searched[0].done, b.searched[1].done = false, false
+	defer func() { b.deciding = false }()
 	b.track(g)
 	if b.lastRisk = deathChance(g, b.adjacent(g)); b.lastRisk == 0 {
 		b.fightRisk = 0
@@ -1277,12 +1288,24 @@ func (b *Bot) walk(g *Game, goal func(Point) bool) (string, []string) {
 func (b *Bot) route(g *Game, goal func(Point) bool) (Point, int, bool) {
 	// Around the lines of an enemy that charges, pulls or shoots, if
 	// there is a way: on one, it reaches the player from afar.
-	if lines := reachLines(g); len(lines) > 0 {
+	lines := b.lines(g)
+	if len(lines) > 0 {
 		if p, n, ok := b.routeAvoiding(g, goal, lines); ok {
 			return p, n, true
 		}
 	}
 	return b.routeAvoiding(g, goal, nil)
+}
+
+// lines is reachLines, worked out once an action.
+func (b *Bot) lines(g *Game) map[Point]bool {
+	if !b.deciding {
+		return reachLines(g)
+	}
+	if !b.hasLines {
+		b.enemyLines, b.hasLines = reachLines(g), true
+	}
+	return b.enemyLines
 }
 
 // reachLines returns the tiles from where the enemies in sight, awake,
@@ -1317,43 +1340,75 @@ func reachLines(g *Game) map[Point]bool {
 	return lines
 }
 
-// routeAvoiding is route, not through the tiles avoid.
-func (b *Bot) routeAvoiding(g *Game, goal func(Point) bool, avoid map[Point]bool) (Point, int, bool) {
-	// from is the tile each tile is reached from, by its index (-1: not
-	// reached); the directions go clockwise from up, as clockwise.
-	l := g.Level
-	from := make([]int, len(l.Tiles))
-	for i := range from {
-		from[i] = -1
+// botWays are the ways from the player to every tile the bot can walk
+// to: the tiles in the order a search from the player reaches them
+// (nearest first), and the tile each is reached from, by index (-1: not
+// reached).
+type botWays struct {
+	order, from []int
+	start       int
+	done        bool
+}
+
+// ways returns the ways from the player, not through the tiles avoid.
+// The search does not depend on where the bot wants to go, so while it
+// decides on an action (Next) there is one search for all its rules,
+// and another around the lines of the enemies (which: 1 with avoid).
+func (b *Bot) ways(g *Game, avoid map[Point]bool) *botWays {
+	w := &botWays{}
+	if b.deciding {
+		w = &b.searched[min(len(avoid), 1)]
+		if w.done {
+			return w
+		}
 	}
+	l := g.Level
+	if cap(w.from) < len(l.Tiles) {
+		w.from = make([]int, len(l.Tiles))
+	}
+	w.from = w.from[:len(l.Tiles)]
+	for i := range w.from {
+		w.from[i] = -1
+	}
+	w.order, w.done = w.order[:0], true
 	start, ok := g.index(g.Player)
 	if !ok {
-		return Point{}, 0, false
+		return w
 	}
-	from[start] = start
-	queue := []Point{g.Player}
-	for len(queue) > 0 {
-		p := queue[0]
-		queue = queue[1:]
-		if goal(p) {
-			n := 1
-			i, _ := g.index(p)
-			for from[i] != start {
-				i = from[i]
-				n++
-			}
-			return Point{i % l.W, i / l.W}, n, true
-		}
-		pi, _ := g.index(p)
+	// The directions go clockwise from up, as clockwise.
+	w.start = start
+	w.from[start] = start
+	w.order = append(w.order, start)
+	for n := 0; n < len(w.order); n++ {
+		pi := w.order[n]
+		p := Point{pi % l.W, pi / l.W}
 		for _, d := range around {
 			q := p.Add(d)
 			qi, ok := g.index(q)
-			if !ok || from[qi] >= 0 || (len(avoid) > 0 && avoid[q]) || !b.passable(g, q) || !g.clearFrom(p, d) {
+			if !ok || w.from[qi] >= 0 || (len(avoid) > 0 && avoid[q]) || !b.passable(g, q) || !g.clearFrom(p, d) {
 				continue
 			}
-			from[qi] = pi
-			queue = append(queue, q)
+			w.from[qi] = pi
+			w.order = append(w.order, qi)
 		}
+	}
+	return w
+}
+
+// routeAvoiding is route, not through the tiles avoid.
+func (b *Bot) routeAvoiding(g *Game, goal func(Point) bool, avoid map[Point]bool) (Point, int, bool) {
+	l := g.Level
+	w := b.ways(g, avoid)
+	for _, i := range w.order {
+		if !goal(Point{i % l.W, i / l.W}) {
+			continue
+		}
+		n := 1
+		for w.from[i] != w.start {
+			i = w.from[i]
+			n++
+		}
+		return Point{i % l.W, i / l.W}, n, true
 	}
 	return Point{}, 0, false
 }
