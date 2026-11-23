@@ -1,0 +1,12 @@
+# As the cave's, to the 50th floor.
+# Which traps appear on which floors, by weight (頻度).
+開始	終了	ID	頻度
+1	99	otoshiana	3
+3	99	jirai	2
+1	99	torabasami	3
+1	99	dokuya	3
+1	99	suimin	2
+1	99	warp	3
+1	99	harahe	2
+5	99	sabi	2
+10	99	kusari	2

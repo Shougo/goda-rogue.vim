@@ -90,9 +90,10 @@ directory. See `:help goda-rogue` for everything else.
 
 Dungeons are data: tab-separated text files in `rogue/dungeons/{id}/`
 (monsters, which floors they appear on, items, rules, growth tables).
-There are two: `cave` (はじまりの洞窟, 30 floors) and `deep` (奈落の洞窟, 50 floors,
-with the monsters of the higher ranks); a dungeon can be based on another
-and have only the files that differ.
+There are three: `cave` (はじまりの洞窟, 30 floors), `deep` (奈落の洞窟, 50
+floors, with the monsters of the higher ranks) and `far` (果ての洞窟, 99
+floors, not balanced yet); a dungeon can be based on another and have
+only the files that differ.
 See `:help goda-rogue-dungeons`.
 
 To see how a dungeon plays, let bots play it many times:

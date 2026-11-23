@@ -1,0 +1,22 @@
+# As the cave's to 18F; then 4-6 items to the end, and more monsters
+# from 31F (6-9), from 41F (7-10) and from 71F (8-11).
+# How many monsters, items and traps a floor starts with (min-max), how
+# much of it the player sees (明るさ): 通常 its room, 明るい all of it,
+# 暗い only around; and the chances (percent) of a floor of one big room
+# (大部屋), of a maze (迷路), and of a monster house (モンスターハウス: in
+# a room, or in the big room), and of a shop (店). 道具表 is the item
+# table the items of the floor come from (category_tables.txt). ハウスの罠
+# are the traps a monster house adds in its room (optional). Deeper
+# floors have fewer items: stronger monsters drop more, and shops make up
+# for the rest.
+# The last floors have more monsters: the cave gets harder at its end,
+# not at its start.
+開始	終了	敵の数	道具の数	道具表	罠の数	ハウスの罠	明るさ	大部屋	迷路	モンスターハウス	店
+1	2	5-8	6-10	床	2-5	3-6	通常	0	0	0	10
+3	4	5-8	6-10	床	2-5	3-6	通常	5	5	0	12
+5	8	5-8	6-10	床	2-5	3-6	通常	5	5	8	12
+9	18	5-8	5-8	床	2-5	3-6	通常	5	5	8	12
+19	30	5-8	4-6	床	2-5	3-6	通常	5	5	8	12
+31	40	6-9	4-6	床	2-5	3-6	通常	5	5	8	12
+41	70	7-10	4-6	床	2-5	3-6	通常	5	5	8	12
+71	99	8-11	4-6	床	2-5	3-6	通常	5	5	8	12

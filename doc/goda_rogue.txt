@@ -541,6 +541,10 @@ The built-in dungeons:
 	deep	奈落の洞窟: 50 floors, based on the cave.  The deep floors
 		are made of rank 3; rank 4 is only the weak families, on the
 		last floors.  Its ranks 3 and 4 are gentler than the cave's.
+	far	果ての洞窟: 99 floors, based on the cave.  All four ranks,
+		each for about thirty floors; ranks 3 and 4 as in "deep".
+		A trial of where the monsters appear: it is not balanced
+		yet (no bot clears it).
 
 	header.txt		The name (名前), the description (説明) and
 				the number of floors (階数): key<TAB>value.

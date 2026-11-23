@@ -1,0 +1,6 @@
+# The longest dive: the cave over 99 floors, with all four ranks of the
+# monsters. The files not here are the cave's (元).
+名前	果ての洞窟
+説明	99階を目指す、持ち込みなしの素潜りダンジョン。4つのランクすべての魔物が出る。
+階数	99
+元	cave

@@ -1,0 +1,20 @@
+# Items that surely appear: each row puts the item (ID) on one floor of
+# 開始 to 終了 (which one, the seed decides), on top of the items of the
+# floor. A safety net: e.g. a scroll the player will need early.
+# Two big onigiri early: no run starves on the first floors by bad luck.
+開始	終了	ID
+1	3	shikibetsu
+1	2	ookiionigiri
+5	7	ookiionigiri
+# The way is long: a big onigiri every eight floors or so from 15F.
+15	18	ookiionigiri
+23	26	ookiionigiri
+31	34	ookiionigiri
+39	42	ookiionigiri
+47	50	ookiionigiri
+55	58	ookiionigiri
+63	66	ookiionigiri
+71	74	ookiionigiri
+79	82	ookiionigiri
+87	90	ookiionigiri
+95	98	ookiionigiri
