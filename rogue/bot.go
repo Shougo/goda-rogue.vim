@@ -306,21 +306,26 @@ func fightDeath(g *Game, ms []*Monster, hp, delay int) float64 {
 	if len(ms) == 0 {
 		return 0
 	}
+	// An enemy is there to be killed from its arrival, and attacks from
+	// then, or, asleep or confused, once that is over (the player may
+	// have killed it by then).
+	ms = slices.Clone(ms)
+	slices.SortStableFunc(ms, func(a, c *Monster) int {
+		if x, y := arrival(g, a), arrival(g, c); x != y {
+			return x - y
+		}
+		return cmpFloat(killTurns(g, a), killTurns(g, c))
+	})
 	foes := make([]foe, len(ms))
+	t := float64(delay)
 	for i, m := range ms {
 		a := arrival(g, m)
-		foes[i] = foe{hitDamages(g, m), a + 1, 0, m}
-	}
-	slices.SortStableFunc(foes, func(a, c foe) int {
-		if a.first != c.first {
-			return a.first - c.first
+		first := a + 1
+		if held := max(m.Asleep, m.Confused); held > 0 {
+			first = max(a, delay+held) + 1
 		}
-		return cmpFloat(killTurns(g, a.m), killTurns(g, c.m))
-	})
-	t := float64(delay)
-	for i := range foes {
-		t = max(t, float64(foes[i].first-1)) + killTurns(g, foes[i].m)
-		foes[i].last = min(int(math.Ceil(t)), riskTurns)
+		t = max(t, float64(a)) + killTurns(g, m)
+		foes[i] = foe{hitDamages(g, m), first, min(int(math.Ceil(t)), riskTurns), m}
 	}
 	return deathDP(g, hp, foes)
 }
@@ -494,9 +499,9 @@ type riskKey struct {
 // danger answers enemies next to the player that would kill it at the
 // chance the bot accepts or more, by the cheapest answer that is enough
 // (the article "シレン5で上達するための思考法": the cheapest move that is
-// enough, not always the best one): the stairs under it, a healing grass,
-// a staff of blowing away (or an unknown grass or staff, for what it may
-// be), walking away to the stairs. The cost of an item is its price (the
+// enough, not always the best one): the stairs under it, a grass drunk
+// or thrown, a scroll, a staff (an unknown one, for what it may be: what
+// each does to the fight, botitems.go), walking away to the stairs. The cost of an item is its price (the
 // mean of the kinds it may be); a wave, a quarter of a staff's price;
 // leaving the floor, flatly costly for the careful bot. With no answer
 // enough, the one that leaves the least chance of dying, if it beats
@@ -521,83 +526,35 @@ func (b *Bot) danger(g *Game) (string, []string) {
 			continue
 		}
 		seen[it.Def] = true
+		kinds := b.mayBe(g, it)
+		if len(kinds) == 0 {
+			continue
+		}
+		cost := b.itemCost(g, it, kinds)
 		switch it.Def.Category {
 		case CategoryGrass:
-			kinds := b.mayBe(g, it)
-			var chance float64
-			for _, def := range kinds {
-				if def.Effect == EffectHeal {
-					chance += fightDeath(g, ms, min(g.HP+def.Strength, g.MaxHP), 1)
-				} else {
-					chance += fightDeath(g, ms, g.HP, 1)
+			chance := meanOf(kinds, func(def *ItemDef) float64 { return drinkDeath(g, ms, def) })
+			answers = append(answers, botAnswer{cost, chance, it, commandDrink, nil})
+			// A known grass that is better thrown.
+			if g.identified[it.Def.ID] {
+				if target, chance := b.best(near, func(m *Monster) float64 { return throwDeath(g, ms, m, it.Def) }); target != nil {
+					answers = append(answers, botAnswer{cost, chance, it, commandThrow, target})
 				}
 			}
-			if len(kinds) > 0 {
-				answers = append(answers, botAnswer{b.itemCost(g, it, kinds), chance / float64(len(kinds)), it, commandDrink, nil})
-			}
+		case CategoryScroll:
+			chance := meanOf(kinds, func(def *ItemDef) float64 { return readDeath(g, ms, def) })
+			answers = append(answers, botAnswer{cost, chance, it, commandRead, nil})
 		case CategoryStaff:
 			if it.Known && it.Charges == 0 {
 				continue
 			}
-			kinds := b.mayBe(g, it)
-			// Blow away the enemy next to it whose leaving helps
-			// most.
-			if len(near) == 0 {
-				continue
-			}
-			var target *Monster
-			away := fight
-			for _, m := range near {
-				// One that hits a wall or a monster at once
-				// stays next to the player, or comes back
-				// at once: it only takes the bump.
-				if blowAwayFlight(g, m) < minFlight {
-					continue
-				}
-				rest := slices.DeleteFunc(slices.Clone(ms), func(o *Monster) bool { return o == m })
-				if c := fightDeath(g, rest, g.HP, 1); target == nil || c < away {
-					target, away = m, c
-				}
-			}
-			if target == nil {
-				// Nothing to send away: it would not help
-				// (and the cheapest answer must not pick it
-				// for its chance with the enemy still there).
-				away = fightDeath(g, ms, g.HP, 1)
-			}
-			// A recruiting staff takes the enemy out of the fight
-			// for good: the one blown away, else the one whose
-			// leaving helps most.
-			joins := fightDeath(g, ms, g.HP, 1)
-			if len(g.allies()) < g.Dungeon.Rules.MaxAllies {
-				without := func(m *Monster) float64 {
-					rest := slices.DeleteFunc(slices.Clone(ms), func(o *Monster) bool { return o == m })
-					return fightDeath(g, rest, g.HP, 1)
-				}
-				recruitable := func(m *Monster) bool { return !m.Keeper && m.Def.Kind == "" }
-				if target != nil && recruitable(target) {
-					joins = without(target)
-				} else if target == nil {
-					for _, m := range near {
-						if c := without(m); recruitable(m) && c < joins {
-							target, joins = m, c
-						}
-					}
-				}
-			}
-			var chance float64
-			for _, def := range kinds {
-				switch def.Effect {
-				case EffectBlowAway:
-					chance += away
-				case EffectRecruit:
-					chance += joins
-				default:
-					chance += fightDeath(g, ms, g.HP, 1)
-				}
-			}
-			if len(kinds) > 0 {
-				answers = append(answers, botAnswer{b.itemCost(g, it, kinds), chance / float64(len(kinds)), it, commandWave, target})
+			// At the enemy next to it on which it helps most, for
+			// what the staff may be.
+			target, chance := b.best(near, func(m *Monster) float64 {
+				return meanOf(kinds, func(def *ItemDef) float64 { return waveDeath(g, ms, m, def) })
+			})
+			if target != nil {
+				answers = append(answers, botAnswer{cost, chance, it, commandWave, target})
 			}
 		}
 	}
