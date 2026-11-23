@@ -774,12 +774,18 @@ func (b *Bot) shoot(g *Game) (string, []string) {
 
 // boost drinks the known grasses that only do good (strength, max HP),
 // and reads the known scrolls that make the equipped weapon or shield
-// stronger.
+// stronger, or that take a curse it knows of away.
 func (b *Bot) boost(g *Game) (string, []string) {
 	if it := carried(g, func(it *Item) bool {
 		return it.Def.Category == CategoryGrass && !it.ForSale && (b.known(g, it, EffectStrength) || b.known(g, it, EffectMaxHP))
 	}); it != nil {
 		return b.use(it, commandDrink)
+	}
+	if it := carried(g, func(it *Item) bool {
+		return !it.ForSale && b.known(g, it, EffectUncurse) &&
+			slices.ContainsFunc(g.Inventory, func(x *Item) bool { return x.curseKnown() })
+	}); it != nil {
+		return b.use(it, commandRead)
 	}
 	if it := carried(g, func(it *Item) bool {
 		return !it.ForSale && (b.known(g, it, EffectUpWeapon) && g.equipped(CategoryWeapon) != nil ||
@@ -1029,6 +1035,10 @@ func (b *Bot) eat(g *Game) (string, []string) {
 func (b *Bot) equip(g *Game) (string, []string) {
 	for _, c := range []Category{CategoryWeapon, CategoryShield, CategoryBracelet, CategoryArrow} {
 		worn := g.equipped(c)
+		if worn != nil && worn.Cursed {
+			// It does not come off.
+			continue
+		}
 		it := carried(g, func(it *Item) bool {
 			if it.Def.Category != c || it.Equipped {
 				return false

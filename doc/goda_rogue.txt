@@ -44,6 +44,15 @@ Weapons and shields can have seals (印), one kanji each, shown in the
 inventory (鉄の剣+2【会必】): they work while the weapon or the shield is
 equipped, as many as it has room for.
 
+A weapon, a shield or a bracelet found in the dungeon may be cursed: once
+equipped, it does not come off (木刀-1（呪）).  Nothing else of its kind
+can be equipped, and it cannot be put down, thrown nor put in a pot.  A
+cursed weapon or shield has no upgrade value above 0.  The curse shows
+when the item is equipped or identified.  A scroll of おはらい takes the
+curses of everything carried away; the scrolls that upgrade a weapon or a
+shield take that of what they upgrade.  Synthesis carries a curse over,
+and shops do not sell cursed goods.
+
 Grasses, scrolls, staffs, bracelets and pots are unidentified at first:
 they go by names such as 赤い草 (with a "?" in the inventory), different
 in each run.  Using one tells what its kind is; a bracelet tells it when
@@ -560,7 +569,10 @@ The built-in dungeons:
 				regeneration, fullness, spawning, Kron's wind,
 				combat constants, the growth table of the
 				player, the first ally, how many allies at
-				most (仲間の上限, optional, default 3),
+				most (仲間の上限, optional, default 3), the
+				chance, a percent, that a weapon, a shield or
+				a bracelet found is cursed (呪い, optional,
+				default 0),
 				whether a trap the
 				player has found goes off (見つけた罠: 安全 or
 				発動), and, optional, whether runs may use
@@ -704,7 +716,7 @@ The built-in dungeons:
 				items.txt tell what each does):
 				  腕輪: ちから 回復 気配察知 道具感知
 				  草: HP回復 ちから 目薬 最大HP
-				  巻物: あかり 識別 武器強化 盾強化
+				  巻物: あかり 識別 武器強化 盾強化 おはらい
 				  杖: 吹き飛ばし 仲間 場所替え
 				  食料: 満腹 腐った
 				  壺: 保存 合成

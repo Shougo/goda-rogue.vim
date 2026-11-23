@@ -20,6 +20,8 @@
 #     識別      identifies an item (nothing to identify yet)
 #     武器強化  raises the upgrade value of the equipped weapon by 強さ
 #     盾強化    raises the upgrade value of the equipped shield by 強さ
+#               (both take the curse of what they upgrade away)
+#     おはらい  takes the curses of everything carried away
 #   杖, waved (a magic bolt to the front):
 #     吹き飛ばし  blows the monster it hits 10 tiles away
 #     仲間      makes the monster it hits an ally (not a shopkeeper or a
@@ -83,6 +85,7 @@ konran	草	混乱草	草	0	混乱	0	-	-	0	100
 suimin	草	睡眠草	草	0	睡眠	0	-	-	0	150
 shikibetsu	巻	識別の巻物	巻物	0	識別	0	-	-	0	100
 akari	巻	あかりの巻物	巻物	0	あかり	0	-	-	0	200
+oharai	巻	おはらいの巻物	巻物	0	おはらい	0	-	-	0	300
 ten	巻	天の恵みの巻物	巻物	1	武器強化	0	-	-	0	500
 chi	巻	地の恵みの巻物	巻物	1	盾強化	0	-	-	0	500
 konranmaki	巻	混乱の巻物	巻物	0	混乱	0	-	-	0	300

@@ -63,6 +63,9 @@ type Item struct {
 	// Known says whether the player knows the upgrade value of a weapon
 	// or a shield, the charges of a staff.
 	Known bool
+	// Cursed says whether it is cursed: once equipped, it does not come
+	// off (curse.go). The player knows by equipping or identifying it.
+	Cursed bool
 	// used says whether a bracelet had its effect on this floor.
 	used bool
 	// Mimic is the kind of monster that looks like this item (mimic.go;
@@ -146,6 +149,9 @@ func (g *Game) describe(it *Item) string {
 	}
 	if it.Cracks > 0 {
 		s += fmt.Sprintf(" [ひび%d]", it.Cracks)
+	}
+	if it.curseKnown() {
+		s += "（呪）"
 	}
 	if it.ForSale {
 		s += fmt.Sprintf(" %dG", price(it))
@@ -486,7 +492,7 @@ func (g *Game) canSwap() bool { return !g.inShop(g.Player) }
 // item that was there, in one turn (as in Shiren).
 func (g *Game) swap(it *Item) bool {
 	foot := g.foot()
-	if foot == nil || !g.canSwap() {
+	if foot == nil || !g.canSwap() || g.curseBlocks(it, commandSwap) {
 		return false
 	}
 	// A mimic put down, or a shallow one picked up, shows itself.
@@ -716,6 +722,9 @@ func (g *Game) equip(it *Item) {
 	}
 	it.Equipped = true
 	g.say(g.Name(it) + "を装備した。")
+	if it.Cursed {
+		g.say(g.Name(it) + "は呪われていた！")
+	}
 	// Wearing a weapon or a shield tells its upgrade value; a bracelet
 	// tells what it is only when its effect shows (use).
 	if it.Def.Category != CategoryBracelet {

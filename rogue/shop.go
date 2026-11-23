@@ -108,6 +108,8 @@ func (g *Game) openShop(rng *rand.Rand, rooms []int, start int) {
 			}
 			it := g.newItemOf(rng, table.pick(rng, d, g.Depth), p)
 			it.ForSale = true
+			// A shop does not sell cursed goods.
+			it.Cursed = false
 			g.Items = append(g.Items, it)
 		}
 	}

@@ -30,6 +30,7 @@
 床	1	99	suimin	2
 床	1	99	shikibetsu	3
 床	1	99	akari	2
+床	1	99	oharai	2
 床	1	20	ten	1
 床	21	99	ten	3
 床	1	20	chi	1
@@ -77,6 +78,7 @@
 よろず	1	99	suimin	2
 よろず	1	99	shikibetsu	4
 よろず	1	99	akari	2
+よろず	1	99	oharai	2
 よろず	1	99	ten	1
 よろず	1	99	chi	1
 よろず	1	99	konranmaki	1

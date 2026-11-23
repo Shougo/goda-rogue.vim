@@ -89,6 +89,8 @@ func (g *Game) useItem(it *Item) {
 		g.upgrade(CategoryShield, n)
 	case EffectSwap:
 		g.swapPlaces()
+	case EffectUncurse:
+		g.uncurse()
 	default:
 		if e := MagicEffect(it.Def.Effect); castable(it.Def.Category, e) {
 			g.cast(it.Def.Category, e)
@@ -160,7 +162,13 @@ func (g *Game) upgrade(c Category, n int) {
 	}
 	it.Upgrade += n
 	it.Known = true
+	// The blessing takes the curse away too.
+	cursed := it.Cursed
+	it.Cursed = false
 	g.say(fmt.Sprintf("%sが強くなった。", g.describe(it)))
+	if cursed {
+		g.say(g.Name(it) + "の呪いが解けた。")
+	}
 }
 
 // swapPlaces sends a bolt that makes the player and the monster it hits

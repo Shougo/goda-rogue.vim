@@ -32,7 +32,7 @@ func (g *Game) thieve(m *Monster, a Ability) bool {
 		for range a.Values[2] {
 			var can []*Item
 			for _, it := range g.Inventory {
-				if !it.Equipped || a.Values[3] == 1 {
+				if !it.Equipped || a.Values[3] == 1 && !it.Cursed {
 					can = append(can, it)
 				}
 			}

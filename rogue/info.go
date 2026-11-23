@@ -20,6 +20,7 @@ var effectTexts = map[Effect]string{
 	EffectSenseItem:  "フロアの道具の場所が分かる。",
 	EffectHeal:       "HP が %d 回復する。HP が満タンなら最大 HP が上がる。",
 	EffectLight:      "フロア全体が明るくなり、地形と道具と敵が見える。",
+	EffectUncurse:    "持ち物すべての呪いを解く。",
 	EffectIdentify:   "持ち物を 1 つ識別する。",
 	EffectBlowAway:   "魔法弾が当たった敵を 10 マス吹き飛ばす。",
 	EffectFood:       "満腹度が %d 回復する。",
@@ -100,6 +101,9 @@ func (g *Game) info(it *Item) []string {
 			lines = append(lines, fmt.Sprintf("%s %d+?（修正値は装備するか識別すると分かる）", what, def.Strength))
 		}
 		lines = append(lines, fmt.Sprintf("印 %d/%d", len(it.Seals), def.Slots))
+		if it.curseKnown() {
+			lines = append(lines, "呪われている（装備すると外せない）")
+		}
 		for _, s := range it.Seals {
 			sd := g.Dungeon.SealOn(s, def.Category)
 			if sd == nil {
@@ -111,6 +115,9 @@ func (g *Game) info(it *Item) []string {
 		lines = append(lines, fmt.Sprintf("攻撃力 %d。%d 本。装備すると撃てる。", def.Strength, it.Count))
 	case CategoryBracelet:
 		lines = append(lines, effectText(def))
+		if it.curseKnown() {
+			lines = append(lines, "呪われている（装備すると外せない）")
+		}
 		switch {
 		case def.Crack == 0:
 			lines = append(lines, "ひびは入らない。")

@@ -117,6 +117,10 @@ type Rules struct {
 	// MaxAllies is how many allies the player has at most (rules.txt
 	// 仲間の上限, 3 without it).
 	MaxAllies int
+	// CurseRate is the chance, a percent, that a weapon, a shield or a
+	// bracelet found in the dungeon is cursed (rules.txt 呪い, 0 without
+	// it; curse.go).
+	CurseRate int
 	// StrongerBy is how many ranks above the floor's the monster of the
 	// second wind is.
 	StrongerBy int
@@ -249,13 +253,14 @@ const (
 	EffectRotten     Effect = "腐った"
 	EffectKeep       Effect = "保存"
 	EffectSynthesis  Effect = "合成"
+	EffectUncurse    Effect = "おはらい"
 )
 
 // effects are the effects the items of each category can have.
 var effects = map[Category][]Effect{
 	CategoryBracelet: {EffectStrength, EffectRegen, EffectSenseEnemy, EffectSenseItem},
 	CategoryGrass:    {EffectHeal, EffectStrength, EffectEyeDrops, EffectMaxHP},
-	CategoryScroll:   {EffectLight, EffectIdentify, EffectUpWeapon, EffectUpShield},
+	CategoryScroll:   {EffectLight, EffectIdentify, EffectUpWeapon, EffectUpShield, EffectUncurse},
 	CategoryStaff:    {EffectBlowAway, EffectRecruit, EffectSwap},
 	CategoryFood:     {EffectFood, EffectRotten},
 	CategoryPot:      {EffectKeep, EffectSynthesis},
@@ -600,7 +605,7 @@ func (l *loader) loadRules() {
 		"最大HP", "ちから", "回復ターン", "湧きターン", "最大モンスター数",
 		"風1", "風2", "風3", "防御K", "主の命中", "敵の命中", "成長", "最初の仲間", "強敵ランク差",
 		"持ち物の数", "ひびの段階", "腕輪の傷みやすさ", "満腹度", "腹減りターン", "見つけた罠", "デバッグ",
-		"お金投げ", "落とし物", "仲間の命中", "主の投擲命中", "敵の投擲命中", "仲間の上限",
+		"お金投げ", "落とし物", "仲間の命中", "主の投擲命中", "敵の投擲命中", "仲間の上限", "呪い",
 	})
 	l.rules = rk
 	r := &d.Rules
@@ -676,6 +681,12 @@ func (l *loader) loadRules() {
 	r.MaxAllies = 3
 	if _, ok := rk["仲間の上限"]; ok {
 		r.MaxAllies = l.keyInt("rules.txt", rk, "仲間の上限", 1)
+	}
+	if ln, ok := rk["呪い"]; ok {
+		r.CurseRate = l.keyInt("rules.txt", rk, "呪い", 0)
+		if r.CurseRate > 100 {
+			l.errorf("rules.txt", ln.n, "呪い: %d above 100", r.CurseRate)
+		}
 	}
 	// Optional: most dungeons have no debug mode.
 	if ln, ok := rk["デバッグ"]; ok {

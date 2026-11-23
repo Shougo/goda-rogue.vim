@@ -32,7 +32,8 @@ var mimicSafe = map[itemPlace][]string{
 
 // allowed checks, before the command c is done with it (at where; in the
 // pot pot, for inPot), what may stop it: a mimic shows itself, the shop
-// wants its money, a sealed mouth cannot eat, drink nor read. It says
+// wants its money, a sealed mouth cannot eat, drink nor read, a cursed
+// item does not come off. It says
 // whether to go on, and if not, whether the turn passes. Every command on
 // an item comes here first.
 func (g *Game) allowed(it, pot *Item, where itemPlace, c string) (ok, turn bool) {
@@ -45,7 +46,7 @@ func (g *Game) allowed(it, pot *Item, where itemPlace, c string) (ok, turn bool)
 		g.say("店主「お代を払ってからにしてください。」")
 		return false, false
 	}
-	if g.mouthBlocks(c) {
+	if g.mouthBlocks(c) || g.curseBlocks(it, c) {
 		return false, false
 	}
 	return true, false

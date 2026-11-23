@@ -51,9 +51,9 @@ func (g *Game) askPutIn(i int) bool {
 	}
 	p := &Prompt{Title: g.Name(pot) + "に入れる", Multi: true, kind: promptPutIn, item: i}
 	// Not the goods not paid for: in the pot, they would be the
-	// player's.
+	// player's; nor what a curse keeps on the player.
 	for j, it := range g.Inventory {
-		if it.Def.Category != CategoryPot && !it.ForSale {
+		if it.Def.Category != CategoryPot && !it.ForSale && !(it.Equipped && it.Cursed) {
 			p.Choices = append(p.Choices, g.Entry(it))
 			p.items = append(p.items, j)
 		}
@@ -107,6 +107,8 @@ func (g *Game) merge(base, it *Item, mixed bool) bool {
 			g.addSeal(base, s)
 		}
 		base.Known = base.Known && it.Known
+		// A curse comes along with the rest.
+		base.Cursed = base.Cursed || it.Cursed
 		g.say(g.Name(base) + "と" + g.Name(it) + "が合成された！")
 		return true
 	case mixed && (c == CategoryWeapon || c == CategoryShield) && it.Def.Category != CategoryWeapon &&
