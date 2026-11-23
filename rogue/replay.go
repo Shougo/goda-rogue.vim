@@ -44,7 +44,7 @@ import (
 // replaying makes, and can be read without replaying (analysis).
 
 // ReplayFormat is the version of the format of the replay files.
-const ReplayFormat = 1
+const ReplayFormat = 2
 
 // replaySuspend is the line of the action that suspends a run.
 const replaySuspend = "suspend"

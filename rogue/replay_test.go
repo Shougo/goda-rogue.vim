@@ -160,7 +160,7 @@ func TestReplayFile(t *testing.T) {
 	lines := strings.Split(string(b), "\n")
 	d := p.game.Dungeon
 	head := []string{
-		"# goda-rogue replay", "format\t1", "dungeon\tcave", "hash\t" + d.Hash, "seed\tfile",
+		"# goda-rogue replay", fmt.Sprintf("format\t%d", ReplayFormat), "dungeon\tcave", "hash\t" + d.Hash, "seed\tfile",
 	}
 	if !slices.Equal(lines[:len(head)], head) {
 		t.Errorf("header %q", lines[:len(head)])

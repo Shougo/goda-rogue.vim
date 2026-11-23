@@ -1,8 +1,9 @@
 package rogue
 
 import (
+	"crypto/sha256"
+	"encoding/binary"
 	"fmt"
-	"hash/fnv"
 	"math"
 	"math/rand/v2"
 	"slices"
@@ -181,11 +182,12 @@ func (g *Game) floorRNG(depth int) *rand.Rand {
 
 // seedHash is the seed of the random sources: the seed, in the dungeon as
 // it is defined (the same seed with another definition makes other
-// floors).
+// floors). A hash that mixes well: with FNV, seeds alike ("1", "2", "3")
+// made runs alike (the share of clears of 300 runs of a bot went from 44%
+// to 57% from a set of such seeds to another, twice what chance gives).
 func seedHash(d *Dungeon, seed string) uint64 {
-	h := fnv.New64a()
-	h.Write([]byte(d.ID + "\x00" + d.Hash + "\x00" + seed))
-	return h.Sum64()
+	sum := sha256.Sum256([]byte(d.ID + "\x00" + d.Hash + "\x00" + seed))
+	return binary.LittleEndian.Uint64(sum[:8])
 }
 
 // descend makes the next floor. The allies next to the player or in its
