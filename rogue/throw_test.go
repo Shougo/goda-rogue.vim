@@ -90,7 +90,7 @@ func TestThrow(t *testing.T) {
 	g.Facing = "right"
 	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.PlayerThrowRate = 100 })
 	m := place(g, kind("nezumi4"), Point{r.X + 2, r.Y})
-	m.HP = 50
+	m.HP = m.MaxHP - 10
 
 	// A grass has its effect on the monster.
 	command(t, g, carry(g, "yakusou", 0), commandThrow)
