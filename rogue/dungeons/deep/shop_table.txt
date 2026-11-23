@@ -1,0 +1,7 @@
+# As the cave's, to the 50th floor.
+# Which shops appear on which floors, by weight (頻度).
+開始	終了	ID	頻度
+1	50	yorozu	6
+2	50	kusa	2
+4	50	bugu	2
+10	50	ude	1

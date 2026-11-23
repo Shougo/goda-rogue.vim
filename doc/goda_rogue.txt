@@ -534,8 +534,24 @@ start with "#" are comments.  Change them and build the binary again
 (|goda_rogue#build()|) to change the dungeon.  The same seed makes other
 floors once the files change.
 
+The built-in dungeons:
+
+	cave	はじまりの洞窟: 30 floors.  Monsters of ranks 1 and 2 (the higher
+		ranks come only by a rank-up).
+	deep	奈落の洞窟: 50 floors, based on the cave.  The deep floors
+		are made of rank 3; rank 4 is only the weak families, on the
+		last floors.  Its ranks 3 and 4 are gentler than the cave's.
+
 	header.txt		The name (名前), the description (説明) and
 				the number of floors (階数): key<TAB>value.
+				Optional: its base (元), the ID of another
+				built-in dungeon.  The files the dungeon does
+				not have are the base's: a dungeon may be
+				only a header.txt and the files that differ
+				("deep" has its own tables, monsters and
+				growth, and the cave's items, traps, shops
+				and rules).  A file replaces the base's
+				whole file.
 	rules.txt		The rules: the player at the start, HP
 				regeneration, fullness, spawning, Kron's wind,
 				combat constants, the growth table of the

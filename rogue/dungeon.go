@@ -17,6 +17,8 @@ import (
 // dungeon, and its rules. Lines starting with "#" are comments.
 //
 //	header.txt         name, description, floors (key<TAB>value)
+//	                   and, for a built-in dungeon, its base (元): the
+//	                   dungeon whose files it uses for those it lacks
 //	rules.txt          the rules of the run (key<TAB>value)
 //	monsters.txt       the monsters (a table)
 //	monster_table.txt  which monsters appear on which floors (a table)
@@ -58,6 +60,9 @@ type Dungeon struct {
 	Name        string
 	Description string
 	Floors      int
+	// Base is the dungeon it is based on (header.txt 元; "" for none):
+	// the files it does not have are the base's.
+	Base        string
 	Rules       Rules
 	Monsters    []*MonsterDef
 	MonsterRows []FloorRow
@@ -331,13 +336,59 @@ func BuiltinDungeons() []string {
 	return ids
 }
 
-// LoadBuiltin loads the dungeon id of the binary.
+// LoadBuiltin loads the dungeon id of the binary. A dungeon with a base
+// (header.txt 元) reads the files it does not have from the base's.
 func LoadBuiltin(id string) (*Dungeon, error) {
-	sub, err := fs.Sub(builtinFS, path.Join("dungeons", id))
+	fsys, err := dungeonFiles(builtinFS, id, nil)
 	if err != nil {
 		return nil, err
 	}
-	return LoadDungeon(sub, id)
+	return LoadDungeon(fsys, id)
+}
+
+// dungeonFiles returns the files of the dungeon id of root (a directory
+// "dungeons" of dungeons), over those of its base, if it has one (seen
+// are the dungeons on the way: a base may not lead back to one of them).
+func dungeonFiles(root fs.FS, id string, seen []string) (fs.FS, error) {
+	sub, err := fs.Sub(root, path.Join("dungeons", id))
+	if err != nil {
+		return nil, err
+	}
+	b, err := fs.ReadFile(sub, "header.txt")
+	if err != nil {
+		return nil, &DungeonError{"header.txt", 0, fmt.Sprintf("dungeon %q: %v", id, err)}
+	}
+	for _, ln := range strings.Split(strings.ReplaceAll(string(b), "\r\n", "\n"), "\n") {
+		key, base, ok := strings.Cut(ln, "\t")
+		if !ok || strings.TrimSpace(key) != headerBase {
+			continue
+		}
+		base = strings.TrimSpace(base)
+		if base == id || slices.Contains(seen, base) {
+			return nil, &DungeonError{"header.txt", 0, fmt.Sprintf("%s: %q is based on itself", headerBase, base)}
+		}
+		under, err := dungeonFiles(root, base, append(seen, id))
+		if err != nil {
+			return nil, err
+		}
+		return overlayFS{sub, under}, nil
+	}
+	return sub, nil
+}
+
+// headerBase is the key of header.txt for the dungeon a dungeon is based
+// on.
+const headerBase = "元"
+
+// overlayFS is the files of top, and under them those of base.
+type overlayFS struct{ top, base fs.FS }
+
+func (o overlayFS) Open(name string) (fs.File, error) {
+	f, err := o.top.Open(name)
+	if errors.Is(err, fs.ErrNotExist) {
+		return o.base.Open(name)
+	}
+	return f, err
 }
 
 // LoadDungeon loads the dungeon id from the files of fsys, and checks it.
@@ -527,7 +578,7 @@ func (l *loader) load() {
 // loadHeader reads the header: the name, the description and the floors.
 func (l *loader) loadHeader() {
 	d := l.d
-	h := l.keys("header.txt", []string{"名前", "説明", "階数"})
+	h := l.keys("header.txt", []string{"名前", "説明", "階数", headerBase})
 	if ln, ok := h["名前"]; ok {
 		d.Name = ln.fields[1]
 	} else {
@@ -537,6 +588,9 @@ func (l *loader) loadHeader() {
 		d.Description = ln.fields[1]
 	}
 	d.Floors = l.keyInt("header.txt", h, "階数", 1)
+	if ln, ok := h[headerBase]; ok {
+		d.Base = ln.fields[1]
+	}
 }
 
 // loadRules reads the rules.

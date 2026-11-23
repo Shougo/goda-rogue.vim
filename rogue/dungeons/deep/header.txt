@@ -1,0 +1,6 @@
+# A deep dive: the cave over 50 floors, with the monsters of ranks 3 and
+# 4. The files not here are the cave's (元).
+名前	奈落の洞窟
+説明	50階を目指す、持ち込みなしの素潜りダンジョン。深い階にはランク3・4の魔物が出る。
+階数	50
+元	cave

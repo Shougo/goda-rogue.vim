@@ -1,0 +1,47 @@
+# As the cave's, to the 50th floor.
+# The item tables pick an item in two stages: first its kind (種類) by
+# weight (頻度), here, then an item of that kind by weight, in
+# item_tables.txt. So adding items of a kind does not crowd out the other
+# kinds: each kind keeps its share. 表 is the name of a table: floors.txt
+# says which table the items of the floors come from (道具表), shops.txt
+# which table a shop sells from (品表).
+表	開始	終了	種類	頻度
+# The items lying on the floors. Food is about a seventh of them, mostly
+# big onigiri (item_tables.txt): as much fullness as before with fewer
+# items, which leaves room in the inventory (as Shiren 2: food 9%, big
+# onigiri twice as common as onigiri). Deeper floors have fewer items
+# (floors.txt), so food takes a larger share of them, to keep about one
+# onigiri a floor.
+# Grasses, scrolls and staffs have many kinds: their weights keep the
+# healing grasses about as common as with few kinds.
+床	1	50	武器	6
+床	1	50	盾	7
+床	1	50	腕輪	4
+床	1	50	矢	4
+床	1	50	草	11
+床	1	50	巻物	7
+床	1	50	杖	3
+床	1	50	壺	4
+床	1	8	食料	9
+床	9	18	食料	10
+床	19	50	食料	12
+床	1	50	お金	6
+# The general store sells a bit of everything; deeper, more bracelets,
+# arrows and pots.
+よろず	1	50	武器	9
+よろず	1	50	盾	9
+よろず	1	14	腕輪	4
+よろず	15	50	腕輪	8
+よろず	1	4	矢	2
+よろず	5	50	矢	4
+よろず	1	50	草	13
+よろず	1	50	巻物	8
+よろず	1	50	杖	3
+よろず	1	9	壺	3
+よろず	10	50	壺	5
+よろず	1	50	食料	4
+# The specialist shops.
+草	1	50	草	1
+武具	1	50	武器	1
+武具	1	50	盾	1
+腕輪	1	50	腕輪	1

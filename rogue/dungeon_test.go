@@ -25,6 +25,75 @@ func TestBuiltinDungeons(t *testing.T) {
 	}
 }
 
+// A dungeon with a base has the files of the base it lacks, and its own
+// over them.
+func TestBaseDungeon(t *testing.T) {
+	cave := copyFS(t)
+	root := fstest.MapFS{}
+	for name, f := range cave {
+		root["dungeons/cave/"+name] = f
+	}
+	root["dungeons/long/header.txt"] = &fstest.MapFile{Data: []byte("名前\t別の洞窟\n階数\t30\n元\tcave\n")}
+	fsys, err := dungeonFiles(root, "long", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	d, err := LoadDungeon(fsys, "long")
+	if err != nil {
+		t.Fatal(err)
+	}
+	base, err := LoadBuiltin(DefaultDungeon)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if d.Name != "別の洞窟" || d.Floors != 30 || d.Base != "cave" {
+		t.Errorf("header: %q, %d floors, base %q", d.Name, d.Floors, d.Base)
+	}
+	if len(d.Monsters) != len(base.Monsters) || len(d.Items) != len(base.Items) {
+		t.Errorf("%d monsters and %d items, the base has %d and %d",
+			len(d.Monsters), len(d.Items), len(base.Monsters), len(base.Items))
+	}
+	if d.Hash == base.Hash {
+		t.Error("the same hash as the base")
+	}
+
+	// A base that leads back, and one that is not there.
+	root["dungeons/a/header.txt"] = &fstest.MapFile{Data: []byte("名前\tA\n階数\t1\n元\tb\n")}
+	root["dungeons/b/header.txt"] = &fstest.MapFile{Data: []byte("名前\tB\n階数\t1\n元\ta\n")}
+	root["dungeons/c/header.txt"] = &fstest.MapFile{Data: []byte("名前\tC\n階数\t1\n元\tnone\n")}
+	for _, id := range []string{"a", "c"} {
+		var de *DungeonError
+		if _, err := dungeonFiles(root, id, nil); !errors.As(err, &de) {
+			t.Errorf("%s: %v", id, err)
+		}
+	}
+}
+
+// Monsters of rank 3 and above come by themselves only in dungeons of 50
+// floors or more (in the others, by a rank-up).
+func TestDeepRanks(t *testing.T) {
+	deep := false
+	for _, id := range BuiltinDungeons() {
+		d, err := LoadBuiltin(id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		top := 0
+		for _, r := range d.MonsterRows {
+			top = max(top, d.Monster(r.ID).Rank)
+		}
+		if d.Floors < 50 && top > 2 {
+			t.Errorf("%s (%d floors): rank %d in its table", id, d.Floors, top)
+		}
+		if d.Floors >= 50 && top > 2 {
+			deep = true
+		}
+	}
+	if !deep {
+		t.Error("no dungeon of 50 floors with rank 3 or above")
+	}
+}
+
 // copyFS returns the files of the built-in dungeon, to change in tests.
 func copyFS(t *testing.T) fstest.MapFS {
 	t.Helper()
