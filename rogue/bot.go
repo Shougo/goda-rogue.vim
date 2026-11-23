@@ -130,6 +130,15 @@ func (b *Bot) Next(g *Game) (string, []string) {
 	} {
 		if action, args := rule(g); action != "" {
 			b.rule = botRules[i]
+			if i == ruleDanger && action == "move" {
+				// It steps away from a danger: it does not walk back
+				// into it the next turn, as the rules below would,
+				// to what lies beyond (and then away again).
+				if b.shut == nil {
+					b.shut = map[Point]int{}
+				}
+				b.shut[g.Player] = g.Turn + shutTurns
+			}
 			return action, args
 		}
 	}
@@ -142,6 +151,9 @@ func (b *Bot) Next(g *Game) (string, []string) {
 	b.rule = "することがない"
 	return "wait", nil
 }
+
+// ruleDanger is the place of the rule danger in the rules of Next.
+const ruleDanger = 1
 
 // botRules are the names of the rules of Next, in their order: what the
 // bot is doing, for a reader (compare.go).
@@ -1133,7 +1145,7 @@ func (b *Bot) track(g *Game) {
 }
 
 // shutTurns is for how many turns the bot keeps off the tiles it walked
-// back and forth between.
+// back and forth between, or stepped away from a danger on.
 const shutTurns = 50
 
 // pacing notes where the bot stands, and when it has walked back and

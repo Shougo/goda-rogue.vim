@@ -945,8 +945,9 @@ times its price below 200, less and less to 300, next to nothing
 beyond); and what they carry is cheaper to use while there is no room.
 They walk straight where a straight way is as short, leave the
 corridors that can lead to no room not seen yet (a floor is three by
-three sections, a room at most in each), and keep off two tiles for a
-while after walking back and forth between them.
+three sections, a room at most in each), and keep off for a while the
+tile they stepped away from a danger on, and two tiles they walked back
+and forth between.
 It prints how many cleared, where and why they fell (by monster, trap,
 hunger or the wind; deaths from full HP in one action or just after
 arriving count as unfair), the HP on arriving on each floor, the turns
