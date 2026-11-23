@@ -625,3 +625,115 @@ func TestBotTrade(t *testing.T) {
 		t.Error("it wants one more grass of confusion for one of them")
 	}
 }
+
+// TestFoodWorth: food is worth more to the bot the less fullness it
+// holds, in its belly, its bag and its pots: a lot below 200, little
+// above 300.
+func TestFoodWorth(t *testing.T) {
+	g, _ := roomGame(t, 4, 3)
+	big := &Item{Def: g.Dungeon.Item("ookiionigiri")}
+	g.Fullness = 50
+	hungry := foodWorth(g, big)
+	carry(g, "ookiionigiri", 0)
+	some := foodWorth(g, big) // 150
+	p := pot(g, "hozon", 3)
+	p.Contents = []*Item{{Def: g.Dungeon.Item("ookiionigiri")}}
+	base := foodWorth(g, big) // 250
+	carry(g, "ookiionigiri", 0)
+	plenty := foodWorth(g, big) // 350
+	if !(hungry > some && some > 5 && base < 5 && base > 1 && plenty == foodSpare) {
+		t.Errorf("worth %.2f at 50, %.2f at 150, %.2f at 250, %.2f at 350", hungry, some, base, plenty)
+	}
+	// What it carries is worth what it would hold without it.
+	own := g.Inventory[slices.IndexFunc(g.Inventory, func(it *Item) bool { return it.Def.Category == CategoryFood })]
+	if w := foodWorth(g, own); w != base {
+		t.Errorf("an onigiri carried at 350: %.2f, want %.2f (250 without it)", w, base)
+	}
+	// With plenty, it does not give a grass up for one more.
+	g.Fullness = g.Dungeon.Rules.Fullness
+	full(g)
+	b := NewBot(BotCareful, 1)
+	if b.least(g, big) != nil {
+		t.Error("with 400 of fullness it trades for one more onigiri")
+	}
+}
+
+// TestBotStraight: of the ways of a same length, the bot takes a
+// straight one.
+func TestBotStraight(t *testing.T) {
+	g, r := roomGame(t, 8, 3)
+	g.Player = Point{r.X + 1, r.Y + 1}
+	g.Stairs = Point{r.X + 5, r.Y + 1}
+	g.look()
+	g.Depth = g.Dungeon.Floors
+	b := NewBot(BotCareful, 1)
+	for range 4 {
+		a, args := b.Next(g)
+		if a != "move" || args[0] != "right" {
+			t.Fatalf("%s %v, want four steps to the right", a, args)
+		}
+		if err := g.Do(a, args); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+// TestBotPromising: a corridor is worth exploring while a room of its
+// section or of one next to it is not seen; in a room, always.
+func TestBotPromising(t *testing.T) {
+	g := find(t, func(g *Game) bool { return !g.Level.Maze && len(g.Level.Rooms) >= 8 })
+	b := NewBot(BotCareful, 1)
+	var corridor Point
+	for i, tile := range g.Level.Tiles {
+		if tile == TileCorridor {
+			corridor = Point{i % g.Level.W, i / g.Level.W}
+			break
+		}
+	}
+	if !b.promising(g, corridor) {
+		t.Fatal("a corridor of a floor just arrived on is not promising")
+	}
+	for i := range g.Level.Tiles {
+		g.markSeen(Point{i % g.Level.W, i / g.Level.W})
+	}
+	// Every room seen: with no section without a room around, nothing.
+	dummy := map[int]bool{}
+	for s := range gridCols * gridRows {
+		dummy[s] = true
+	}
+	for _, r := range g.Level.Rooms {
+		delete(dummy, section(Point{r.X, r.Y}))
+	}
+	near := false
+	s := section(corridor)
+	for _, d := range []int{0, 1, -1, gridCols, -gridCols} {
+		near = near || dummy[s+d]
+	}
+	if got := b.promising(g, corridor); got != near {
+		t.Errorf("all seen: promising %v, a section without a room around %v", got, near)
+	}
+	r := g.Level.Rooms[0]
+	if !b.promising(g, Point{r.X, r.Y}) {
+		t.Error("a tile of a room is not promising")
+	}
+}
+
+// TestBotPacingShut: after walking back and forth between two tiles, the
+// bot keeps off both for a while.
+func TestBotPacingShut(t *testing.T) {
+	g, r := roomGame(t, 8, 3)
+	g.look()
+	b := NewBot(BotCareful, 1)
+	a, c := Point{r.X + 1, r.Y + 1}, Point{r.X + 2, r.Y + 1}
+	for i := range 7 {
+		g.Player = []Point{a, c}[i%2]
+		b.pacing(g)
+	}
+	if b.passable(g, a) || b.passable(g, c) {
+		t.Fatalf("shut %v: the tiles are still open", b.shut)
+	}
+	g.Turn += shutTurns
+	if !b.passable(g, a) {
+		t.Error("the tiles stay shut")
+	}
+}

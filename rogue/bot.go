@@ -45,6 +45,15 @@ type Bot struct {
 	// leaving is the floor it turned to the stairs on, and until which
 	// turn it keeps going to them (leave).
 	leaving struct{ depth, until int }
+	// seenRooms are the sections whose room it has seen, worked out once
+	// an action (promising).
+	seenRooms [gridCols * gridRows]bool
+	hasRooms  bool
+	// trail are the last tiles it stood on, and shut the tiles it walked
+	// back and forth between, with the turn until which it keeps off
+	// them (pacing).
+	trail []Point
+	shut  map[Point]int
 	// deciding says whether the bot is deciding on an action (Next): the
 	// game does not change meanwhile, so the ways from the player
 	// (searched) and the lines of the enemies (enemyLines) are worked out
@@ -93,10 +102,11 @@ func (b *Bot) Next(g *Game) (string, []string) {
 		return b.answer(g)
 	}
 	b.plan = nil
-	b.deciding, b.hasLines = true, false
+	b.deciding, b.hasLines, b.hasRooms = true, false, false
 	b.searched[0].done, b.searched[1].done = false, false
 	defer func() { b.deciding = false }()
 	b.track(g)
+	b.pacing(g)
 	if b.lastRisk = deathChance(g, b.adjacent(g)); b.lastRisk == 0 {
 		b.fightRisk = 0
 	} else if b.fightRisk == 0 {
@@ -859,8 +869,8 @@ func (b *Bot) tidy(g *Game) (string, []string) {
 const tradeMargin = 1.25
 
 // worth returns what it is worth to the bot: what giving it up costs.
-// Food is worth several times its price (hunger ends runs), a rotten
-// onigiri little; equipment in use, or better than that in use, is never
+// Food is worth several times its price while the bot holds little of it
+// (foodWorth: hunger ends runs), a rotten onigiri little; equipment in use, or better than that in use, is never
 // given up; what it has no use for is worth nothing; the rest, what using
 // it costs (itemCost: the less the more of the kind it carries). extra
 // counts it as one more of its kind (an item on the floor).
@@ -878,7 +888,7 @@ func (b *Bot) worth(g *Game, it *Item, extra bool) float64 {
 		if it.Def.Effect == EffectRotten {
 			return float64(it.Def.Price) / 2
 		}
-		return float64(it.Def.Price) * 5
+		return float64(it.Def.Price) * foodWorth(g, it)
 	case CategoryArrow:
 		return float64(it.Def.Price * it.Count)
 	}
@@ -895,6 +905,43 @@ func (b *Bot) worth(g *Game, it *Item, extra bool) float64 {
 		w *= float64(n+1) / float64(n+2)
 	}
 	return w
+}
+
+// The fullness the bots want to hold, in the belly and in the bag: below
+// foodLow, food is worth a lot; above foodHigh, little.
+const (
+	foodLow   = 200
+	foodHigh  = 300
+	foodSpare = 0.02
+)
+
+// foodWorth returns how many times its price the food it is worth to the
+// bot, by the fullness it holds without it: its own, and that of the
+// food it carries, in pots too. Below foodLow it takes food along,
+// whatever it gives up for it (8 times the price with none, 5 at
+// foodLow); from there to foodHigh food is worth less and less (half its
+// price at foodHigh); beyond, next to nothing (foodSpare): only what it
+// has no use for goes for it.
+func foodWorth(g *Game, it *Item) float64 {
+	total := g.Fullness
+	var count func(its []*Item)
+	count = func(its []*Item) {
+		for _, o := range its {
+			if o != it && !o.ForSale && o.Def.Category == CategoryFood && o.Def.Effect != EffectRotten {
+				total += o.Def.Strength
+			}
+			count(o.Contents)
+		}
+	}
+	count(g.Inventory)
+	switch t := float64(total); {
+	case t < foodLow:
+		return 8 - 3*t/foodLow
+	case t < foodHigh:
+		return 5 - 4.5*(t-foodLow)/(foodHigh-foodLow)
+	default:
+		return foodSpare
+	}
 }
 
 // least returns the item carried that the bot values least, to give up
@@ -1056,6 +1103,35 @@ func (b *Bot) track(g *Game) {
 		}
 		b.depth, b.arrived = g.Depth, g.Turn
 		b.answersIn, b.consumed, b.spent = answersCarried(g), 0, 0
+		b.trail, b.shut = nil, nil
+	}
+}
+
+// shutTurns is for how many turns the bot keeps off the tiles it walked
+// back and forth between.
+const shutTurns = 50
+
+// pacing notes where the bot stands, and when it has walked back and
+// forth between two tiles (seven times on them in a row: two of its
+// rules undo each other there, one stepping away from a danger, say, and
+// the other back to what lies beyond), shuts both for a while: its ways
+// go around them, to something else.
+func (b *Bot) pacing(g *Game) {
+	if n := len(b.trail); n == 0 || b.trail[n-1] != g.Player {
+		b.trail = append(b.trail, g.Player)
+	}
+	n := len(b.trail)
+	if n < 7 {
+		return
+	}
+	b.trail = b.trail[n-7:]
+	t := b.trail
+	if t[0] != t[1] && t[0] == t[2] && t[0] == t[4] && t[0] == t[6] && t[1] == t[3] && t[1] == t[5] {
+		if b.shut == nil {
+			b.shut = map[Point]int{}
+		}
+		b.shut[t[0]], b.shut[t[1]] = g.Turn+shutTurns, g.Turn+shutTurns
+		b.trail = nil
 	}
 }
 
@@ -1335,9 +1411,60 @@ func wanted(g *Game, p Point) bool {
 		(!full || it.Def.Category == CategoryMoney)
 }
 
-// explore walks to the nearest tile seen next to one not seen yet.
+// explore walks to the nearest tile seen next to one not seen yet, that
+// may lead somewhere (promising); with no such tile and no way to the
+// stairs yet, to any.
 func (b *Bot) explore(g *Game) (string, []string) {
+	if action, args := b.approach(g, func(p Point) bool { return b.unexplored(g, p) }); action != "" {
+		return action, args
+	}
+	// (Stairs seen from afar, by a scroll of light say, may have no way
+	// to them yet.)
+	if _, _, ok := b.route(g, func(p Point) bool { return b.stairs(g, p) }); ok {
+		return "", nil
+	}
 	return b.approach(g, func(p Point) bool { return frontier(g, p) })
+}
+
+// unexplored says whether p is a tile to explore from: next to one not
+// seen yet, and promising.
+func (b *Bot) unexplored(g *Game, p Point) bool {
+	return frontier(g, p) && b.promising(g, p)
+}
+
+// promising says whether exploring on from p may find a room: a floor is
+// three by three sections with a room at most each, and a corridor runs
+// between two sections next to each other, so a corridor in a section
+// whose room is seen, with the rooms of the sections around it seen too,
+// leads to nothing new (a player knows the floor has no more rooms
+// there). Any tile is promising in a room, in a maze, in a big room.
+func (b *Bot) promising(g *Game, p Point) bool {
+	l := g.Level
+	if l.Maze || len(l.Rooms) <= 1 || l.At(p) != TileCorridor {
+		return true
+	}
+	if !b.deciding || !b.hasRooms {
+		b.seenRooms = [gridCols * gridRows]bool{}
+		for _, r := range l.Rooms {
+			if g.IsSeen(Point{r.X, r.Y}) || g.IsSeen(Point{r.X + r.W - 1, r.Y + r.H - 1}) || g.IsSeen(Point{r.X + r.W/2, r.Y + r.H/2}) {
+				b.seenRooms[section(Point{r.X, r.Y})] = true
+			}
+		}
+		b.hasRooms = true
+	}
+	s := section(p)
+	for _, d := range []Point{{0, 0}, {1, 0}, {-1, 0}, {0, 1}, {0, -1}} {
+		x, y := s%gridCols+d.X, s/gridCols+d.Y
+		if x >= 0 && y >= 0 && x < gridCols && y < gridRows && !b.seenRooms[y*gridCols+x] {
+			return true
+		}
+	}
+	return false
+}
+
+// section returns the section of the floor p is in.
+func section(p Point) int {
+	return min(p.Y/secHeight, gridRows-1)*gridCols + min(p.X/secWidth, gridCols-1)
 }
 
 // approach walks toward goal as walk does, but waits instead of a step
@@ -1413,7 +1540,7 @@ func (b *Bot) exploredEnough(g *Game) bool {
 	if _, n, ok := b.route(g, func(p Point) bool { return b.wants(g, p) }); ok && n <= 2*reach {
 		return false
 	}
-	_, n, ok := b.route(g, func(p Point) bool { return frontier(g, p) })
+	_, n, ok := b.route(g, func(p Point) bool { return b.unexplored(g, p) })
 	return !ok || n > reach
 }
 
@@ -1545,14 +1672,13 @@ func (b *Bot) ways(g *Game, avoid map[Point]bool) *botWays {
 	if !ok {
 		return w
 	}
-	// The directions go clockwise from up, as clockwise.
 	w.start = start
 	w.from[start] = start
 	w.order = append(w.order, start)
 	for n := 0; n < len(w.order); n++ {
 		pi := w.order[n]
 		p := Point{pi % l.W, pi / l.W}
-		for _, d := range around {
+		for _, d := range straightFirst {
 			q := p.Add(d)
 			qi, ok := g.index(q)
 			if !ok || w.from[qi] >= 0 || (len(avoid) > 0 && avoid[q]) || !b.passable(g, q) || !g.clearFrom(p, d) {
@@ -1564,6 +1690,12 @@ func (b *Bot) ways(g *Game, avoid map[Point]bool) *botWays {
 	}
 	return w
 }
+
+// straightFirst are the directions of the search of the ways: the four
+// straight ones before the diagonals, so that of the ways of a same
+// length the search finds a straight one (four steps to the right, not
+// up-right, right, right, down-right, which is as short and looks lost).
+var straightFirst = []Point{{0, -1}, {1, 0}, {0, 1}, {-1, 0}, {1, -1}, {1, 1}, {-1, 1}, {-1, -1}}
 
 // routeAvoiding is route, not through the tiles avoid.
 func (b *Bot) routeAvoiding(g *Game, goal func(Point) bool, avoid map[Point]bool) (Point, int, bool) {
@@ -1590,6 +1722,9 @@ func (b *Bot) passable(g *Game, p Point) bool {
 		return false
 	}
 	if g.foundTrapAt(p) != nil && !g.Dungeon.Rules.FoundTrapsSafe {
+		return false
+	}
+	if until, ok := b.shut[p]; ok && g.Turn < until {
 		return false
 	}
 	// An enemy is no wall: next to it, the bot fights it (a monster asleep
