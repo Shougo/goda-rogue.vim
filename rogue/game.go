@@ -659,9 +659,7 @@ func (g *Game) attack() bool {
 		g.split(m)
 	}
 	if m.HP <= 0 {
-		g.remove(m)
-		g.say(m.Name + "を倒した。")
-		g.defeated(m)
+		g.kill(m, nil, true, true)
 	}
 	return true
 }

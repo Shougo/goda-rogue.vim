@@ -329,9 +329,7 @@ func (g *Game) charge(m *Monster, a Ability) bool {
 		f.HP -= n
 		g.say(fmt.Sprintf("%sに%dのダメージ。", f.Name, n))
 		if f.HP <= 0 {
-			g.remove(f)
-			g.say(f.Name + "は倒れた。")
-			g.killed(m, f, true)
+			g.kill(f, m, false, true)
 			return true
 		}
 		g.wounded(f)
@@ -478,11 +476,7 @@ func (g *Game) shootAt(m *Monster, a Ability) bool {
 		if f.HP > 0 {
 			g.wounded(f)
 		} else {
-			g.remove(f)
-			if shown {
-				g.say(f.Name + "は倒れた。")
-			}
-			g.killed(m, f, shown)
+			g.kill(f, m, false, shown)
 		}
 		if !pierce {
 			return true
@@ -494,10 +488,9 @@ func (g *Game) shootAt(m *Monster, a Ability) bool {
 	return true
 }
 
-// killed is the monster m defeating f: what a thief stole falls, and an
-// enemy of the floors ranks up.
-func (g *Game) killed(m, f *Monster, shown bool) {
-	g.dropStolen(f)
+// rankUpBy is the monster m ranking up for a defeat, if it is an enemy of
+// the floors.
+func (g *Game) rankUpBy(m *Monster, shown bool) {
 	if m.Ally || m.Def.Kind != "" {
 		return
 	}

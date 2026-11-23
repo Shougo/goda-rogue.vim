@@ -231,15 +231,7 @@ func (g *Game) fling(m *Monster, d Point, byPlayer bool) {
 			g.wounded(m)
 			return
 		}
-		g.remove(m)
-		if !byPlayer {
-			g.say(m.Name + "は倒れた。")
-			return
-		}
-		g.say(m.Name + "を倒した。")
-		if !m.Ally {
-			g.defeated(m)
-		}
+		g.kill(m, nil, byPlayer, true)
 		return
 	}
 }

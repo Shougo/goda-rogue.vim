@@ -60,7 +60,7 @@ func TestStealItems(t *testing.T) {
 		t.Fatalf("inventory %v, stolen %v", g.Inventory, m.stolen)
 	}
 	// Defeated by another monster, it drops it all the same.
-	g.killed(place(g, kind("oni1"), Point{0, 0}), m, false)
+	g.kill(m, place(g, kind("oni1"), Point{0, 0}), false, false)
 	if !slices.Contains(g.Items, grass) {
 		t.Errorf("items %v: want the grass", g.Items)
 	}
@@ -99,4 +99,21 @@ func TestStealWhileIdentifying(t *testing.T) {
 		t.Errorf("identified %v, %q", g.identified["yakusou"], g.Message)
 	}
 	_ = m
+}
+
+// TestStolenBumped: a thief blown into a wall by no one (a charge's
+// fling) still drops what it stole as it dies.
+func TestStolenBumped(t *testing.T) {
+	g, m := thiefGame(t, "touzoku2")
+	grass := carry(g, "yakusou", 0)
+	g.act(m)
+	if !slices.Contains(m.stolen, grass) {
+		t.Fatalf("stolen %v", m.stolen)
+	}
+	m.HP = 1
+	g.fling(m, Point{1, 0}, false)
+	g.fling(m, Point{1, 0}, false)
+	if slices.Contains(g.Monsters, m) || !slices.Contains(g.Items, grass) {
+		t.Errorf("monsters %v, items %v: want the thief dead and the grass on the floor", g.Monsters, g.Items)
+	}
 }

@@ -421,14 +421,29 @@ func (g *Game) hitMonster(a, m *Monster) {
 		g.wounded(m)
 	}
 	if m.HP <= 0 {
-		g.remove(m)
-		if shown {
-			g.say(m.Name + "は倒れた。")
-		}
-		if a.Ally {
-			g.defeated(m)
-		}
-		g.killed(a, m, shown)
+		g.kill(m, a, false, shown)
+	}
+}
+
+// kill is the monster m defeated: by the player (byPlayer), by the
+// monster by, or by nothing (by nil: a bump after a blow of no one). It
+// leaves the floor and says so (by a monster, only if shown); the EXP of
+// an enemy goes to the player and the allies when the player or an ally
+// defeats it; what a thief stole falls; a monster of the floors that
+// defeats another ranks up. Every death of a monster comes here.
+func (g *Game) kill(m, by *Monster, byPlayer, shown bool) {
+	g.remove(m)
+	if byPlayer {
+		g.say(m.Name + "を倒した。")
+	} else if shown {
+		g.say(m.Name + "は倒れた。")
+	}
+	if !m.Ally && (byPlayer || by != nil && by.Ally) {
+		g.defeated(m)
+	}
+	g.dropStolen(m)
+	if by != nil && !byPlayer {
+		g.rankUpBy(by, shown)
 	}
 }
 
