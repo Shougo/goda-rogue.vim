@@ -290,6 +290,9 @@ func TestBotCheapestAnswer(t *testing.T) {
 	staff := carry(g, "fukitobashi", 0)
 	staff.Charges = 3
 	grass := carry(g, "yakusou", 0)
+	// (A player strong enough that the grass heals a third of its HP:
+	// worth less than a wave of the staff.)
+	g.MaxHP = 150
 
 	g.HP = g.MaxHP
 	if a, _ := b.Next(g); a == "inventory" {

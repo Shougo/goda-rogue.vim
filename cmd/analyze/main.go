@@ -294,6 +294,11 @@ func summarizeEnds(w io.Writer, rs []rogue.BotRun) {
 		}
 	}
 
+	fmt.Fprintf(w, "  %-6s %4.1f / %4.1f  (healing grasses and room in pots of healing)\n", "heals",
+		meanOf(cleared, func(r rogue.BotRun) int { return r.HealsLeft }), meanOf(died, func(r rogue.BotRun) int { return r.HealsLeft }))
+	fmt.Fprintf(w, "heals used (mean): %.1f / %.1f\n",
+		meanOf(cleared, func(r rogue.BotRun) int { return r.Heals }), meanOf(died, func(r rogue.BotRun) int { return r.Heals }))
+
 	// The chance of dying at the last choice: a risk taken, or a surprise.
 	var monster []rogue.BotRun
 	for _, r := range died {

@@ -182,7 +182,7 @@ func (b *Bot) answer(g *Game) (string, []string) {
 	b.plan = b.plan[1:]
 	i := -1
 	switch {
-	case step.item != nil && p.kind == promptInventory:
+	case step.item != nil && (p.kind == promptInventory || p.kind == promptPutIn):
 		i = slices.Index(p.items, slices.Index(g.Inventory, step.item))
 	case step.item == nil:
 		i = slices.Index(p.Choices, step.label)
@@ -224,27 +224,23 @@ func spoiled(it *Item) bool {
 	return it.curseKnown() && !it.worn()
 }
 
-// heal drinks the cheapest healing grass known when no enemy is next to
-// the player (danger answers those) and its HP is below what the monsters
-// of the floor could take in two turns at worst, unless the careful bot
-// can rest instead.
+// heal heals when no enemy is next to the player (danger answers those)
+// and its HP is below what the monsters of the floor could take in a few
+// turns at worst (healTurns: fewer the stronger the player is on the
+// floor), unless the careful bot can rest instead: with the healing that
+// fits what is missing best (bestHeal).
 func (b *Bot) heal(g *Game) (string, []string) {
-	if len(b.adjacent(g)) > 0 || g.HP > 2*b.worstTurn(g) {
+	if len(b.adjacent(g)) > 0 || float64(g.HP) > b.healTurns(g)*float64(b.worstTurn(g)) {
 		return "", nil
 	}
 	if b.Style == BotCareful && b.canRest(g) {
 		return "", nil
 	}
-	var best *Item
-	for _, it := range g.Inventory {
-		if !it.ForSale && b.known(g, it, EffectHeal) && (best == nil || it.Def.Price < best.Def.Price) {
-			best = it
-		}
-	}
-	if best == nil {
+	h, ok := b.bestHeal(g)
+	if !ok {
 		return "", nil
 	}
-	return b.use(best, commandDrink)
+	return b.useHeal(h)
 }
 
 // worstTurn returns the most damage a monster of the floor (by the table)
@@ -595,16 +591,21 @@ func (b *Bot) danger(g *Game) (string, []string) {
 		switch it.Def.Category {
 		case CategoryGrass:
 			chance := meanOf(kinds, func(def *ItemDef) float64 { return drinkDeath(g, ms, def) })
-			answers = append(answers, botAnswer{cost, chance, it, commandDrink, nil})
+			answers = append(answers, botAnswer{cost, chance, it, commandDrink, nil, nil})
 			// A known grass that is better thrown.
 			if g.identified[it.Def.ID] {
 				if target, chance := b.best(near, func(m *Monster) float64 { return throwDeath(g, ms, m, it.Def) }); target != nil {
-					answers = append(answers, botAnswer{cost, chance, it, commandThrow, target})
+					answers = append(answers, botAnswer{cost, chance, it, commandThrow, target, nil})
 				}
 			}
 		case CategoryScroll:
 			chance := meanOf(kinds, func(def *ItemDef) float64 { return readDeath(g, ms, def) })
-			answers = append(answers, botAnswer{cost, chance, it, commandRead, nil})
+			answers = append(answers, botAnswer{cost, chance, it, commandRead, nil, nil})
+		case CategoryFood:
+			// At a hungry ghost: it eats it and is gone.
+			if target, chance := b.best(near, func(m *Monster) float64 { return feedDeath(g, ms, m) }); target != nil {
+				answers = append(answers, botAnswer{b.worth(g, it, false), chance, it, commandThrow, target, nil})
+			}
 		case CategoryStaff:
 			if it.Known && it.Charges == 0 {
 				continue
@@ -615,13 +616,16 @@ func (b *Bot) danger(g *Game) (string, []string) {
 				return meanOf(kinds, func(def *ItemDef) float64 { return waveDeath(g, ms, m, def) })
 			})
 			if target != nil {
-				answers = append(answers, botAnswer{cost, chance, it, commandWave, target})
+				answers = append(answers, botAnswer{cost, chance, it, commandWave, target, nil})
 			}
 		}
 	}
+	if pot, fuel, ok := b.healingPot(g); ok {
+		answers = append(answers, botAnswer{b.healPrice(g) + b.worth(g, fuel, false), fightDeath(g, ms, g.MaxHP, 1), pot, commandPutIn, nil, fuel})
+	}
 	if len(ms) > 1 {
 		if d, ok := b.stepBack(g, ms); ok {
-			answers = append(answers, botAnswer{0, oneByOneDeath(g, ms, g.HP), nil, "move " + d, nil})
+			answers = append(answers, botAnswer{0, oneByOneDeath(g, ms, g.HP), nil, "move " + d, nil, nil})
 		}
 	}
 	if b.seesStairs(g) {
@@ -630,7 +634,7 @@ func (b *Bot) danger(g *Game) (string, []string) {
 			if b.Style == BotCareful {
 				cost = leaveCost
 			}
-			answers = append(answers, botAnswer{cost, fleeDeath(g, near, g.HP, dist), nil, "", nil})
+			answers = append(answers, botAnswer{cost, fleeDeath(g, near, g.HP, dist), nil, "", nil, nil})
 		}
 	}
 	var pick *botAnswer
@@ -659,6 +663,9 @@ func (b *Bot) danger(g *Game) (string, []string) {
 		}
 	}
 	b.spent++
+	if pick.fuel != nil {
+		return b.putIn(pick.item, pick.fuel)
+	}
 	return b.use(pick.item, pick.command)
 }
 
@@ -724,7 +731,7 @@ const unknownCharges = 3
 // "原始に続く穴 安定攻略への道": keep what the floors ahead need; an item
 // left at the bottom is worth nothing).
 func (b *Bot) itemCost(g *Game, it *Item, kinds []*ItemDef) float64 {
-	cost := meanPrice(kinds)
+	cost := b.meanPrice(g, kinds)
 	if it.Def.Category == CategoryStaff {
 		charges := unknownCharges
 		if it.Known {
@@ -765,6 +772,8 @@ type botAnswer struct {
 	item         *Item
 	command      string
 	target       *Monster
+	// fuel is what goes in a pot of healing.
+	fuel *Item
 }
 
 // mayBe returns the kinds it may be, as the player knows: its kind when
@@ -782,13 +791,14 @@ func (b *Bot) mayBe(g *Game, it *Item) []*ItemDef {
 	return kinds
 }
 
-// meanPrice returns the mean price of kinds.
-func meanPrice(kinds []*ItemDef) float64 {
-	t := 0
+// meanPrice returns the mean price of kinds, as the bot values them: a
+// healing grass by how much of the max HP it heals (kindPrice).
+func (b *Bot) meanPrice(g *Game, kinds []*ItemDef) float64 {
+	t := 0.0
 	for _, def := range kinds {
-		t += def.Price
+		t += b.kindPrice(g, def)
 	}
-	return float64(t) / float64(max(len(kinds), 1))
+	return t / float64(max(len(kinds), 1))
 }
 
 // shoot shoots arrows at an enemy in a line from the player, not next to
@@ -941,6 +951,14 @@ func (b *Bot) worth(g *Game, it *Item, extra bool) float64 {
 		return float64(it.Def.Price) * foodWorth(g, it)
 	case CategoryArrow:
 		return float64(it.Def.Price * it.Count)
+	case CategoryPot:
+		if b.known(g, it, EffectHealPot) {
+			charges := unknownCharges
+			if it.Known {
+				charges = it.Charges
+			}
+			return b.healPrice(g) * float64(charges)
+		}
 	}
 	kinds := b.mayBe(g, it)
 	w := b.itemCost(g, it, kinds)
@@ -1105,6 +1123,13 @@ const dangerousFloorShare = 0.25
 // share of the monsters (by weight) that would likely beat the player one
 // on one, at its HP now.
 func (b *Bot) dangerousFloor(g *Game) bool {
+	return b.floorDanger(g) >= dangerousFloorShare
+}
+
+// floorDanger is the share of the monsters of the floor (by the weights
+// of its table) that would likely beat the player one on one, at its HP
+// now.
+func (b *Bot) floorDanger(g *Game) float64 {
 	total, bad := 0, 0
 	for _, r := range g.Dungeon.MonsterRows {
 		def := g.Dungeon.Monster(r.ID)
@@ -1116,7 +1141,7 @@ func (b *Bot) dangerousFloor(g *Game) bool {
 			bad += r.Weight
 		}
 	}
-	return total > 0 && float64(bad) >= dangerousFloorShare*float64(total)
+	return float64(bad) / float64(max(total, 1))
 }
 
 // threatened says whether an enemy in sight would likely beat the player
@@ -1819,6 +1844,10 @@ type BotRun struct {
 	Damage       int
 	// Left counts the items carried at the end, by category.
 	Left map[Category]int
+	// Heals counts the heals used: healing grasses drunk, and items put
+	// in a pot of healing; HealsLeft those left at the end (the grasses,
+	// and the room left in pots of healing).
+	Heals, HealsLeft int
 	// Risk is the chance of dying the bot reckoned at its last choice,
 	// of the fight with the enemies next to the player (0 with none: a
 	// death by surprise); FightRisk at the first choice of that fight.
@@ -1847,13 +1876,16 @@ func PlayBot(d *Dungeon, seed string, b *Bot, maxActions int) (BotRun, error) {
 	r := BotRun{Seed: seed, Style: b.Style, Picked: map[Category]int{}, Used: map[Category]int{}}
 	r.Floors = append(r.Floors, newBotFloor(g))
 	for r.Actions < maxActions && g.Over == "" {
-		hp, depth := g.HP, g.Depth
+		hp, depth, pots := g.HP, g.Depth, potHeals(g)
 		action, args := b.Next(g)
 		if err := g.Do(action, args); err != nil {
 			return r, fmt.Errorf("%s %s: action %d %s %v: %w", d.ID, seed, r.Actions, action, args, err)
 		}
 		r.Actions++
 		r.count(d, g.takeEvents())
+		if potHeals(g) < pots {
+			r.Heals++
+		}
 		if g.Depth != depth && g.Over == "" {
 			r.Floors = append(r.Floors, newBotFloor(g))
 		}
@@ -1869,9 +1901,24 @@ func PlayBot(d *Dungeon, seed string, b *Bot, maxActions int) (BotRun, error) {
 	for _, it := range g.Inventory {
 		if !it.ForSale {
 			r.Left[it.Def.Category]++
+			if it.Def.Effect == EffectHeal {
+				r.HealsLeft++
+			}
 		}
 	}
+	r.HealsLeft += potHeals(g)
 	return r, nil
+}
+
+// potHeals is the room left in the pots of healing carried.
+func potHeals(g *Game) int {
+	n := 0
+	for _, it := range g.Inventory {
+		if !it.ForSale && it.Def.Effect == EffectHealPot {
+			n += max(it.Charges-len(it.Contents), 0)
+		}
+	}
+	return n
 }
 
 // count counts the events of an action in r.
@@ -1890,6 +1937,9 @@ func (r *BotRun) count(d *Dungeon, events []string) {
 					counts = r.Picked
 				}
 				counts[it.Category]++
+				if f[0] == "use" && it.Effect == EffectHeal {
+					r.Heals++
+				}
 				if len(r.Floors) > 0 {
 					fl := r.Floors[len(r.Floors)-1]
 					if f[0] == "pickup" {

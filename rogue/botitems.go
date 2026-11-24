@@ -102,9 +102,29 @@ func throwDeath(g *Game, ms []*Monster, m *Monster, def *ItemDef) float64 {
 	return hit*fightDeath(g, affected(g, ms, m, e), g.HP, 1) + (1-hit)*miss
 }
 
+// feedDeath is the chance after throwing food at m next to the player:
+// a hungry ghost hit is gone (feed); another takes a blow of 1 or 2.
+func feedDeath(g *Game, ms []*Monster, m *Monster) float64 {
+	miss := fightDeath(g, ms, g.HP, 1)
+	if _, ok := m.ability(AbilityHunger); !ok || m.room() > 0 {
+		return miss
+	}
+	hit := float64(g.Dungeon.Rules.PlayerThrowRate) / 100
+	without := fightDeath(g, slices.DeleteFunc(slices.Clone(ms), func(o *Monster) bool { return o == m }), g.HP, 1)
+	return hit*without + (1-hit)*miss
+}
+
 // readDeath is the chance after reading a scroll of the kind def: its
 // effect on the enemies of the room, if it has one of a bolt.
 func readDeath(g *Game, ms []*Monster, def *ItemDef) float64 {
+	if def.Effect == EffectUncurse {
+		// The monsters that curse around are gone (exorcise).
+		around := g.enemiesAround()
+		return fightDeath(g, slices.DeleteFunc(slices.Clone(ms), func(m *Monster) bool {
+			_, ok := m.ability(AbilityCurse)
+			return ok && slices.Contains(around, m)
+		}), g.HP, 1)
+	}
 	e := MagicEffect(def.Effect)
 	if !castable(CategoryScroll, e) || e == MagicHaste {
 		return fightDeath(g, ms, g.HP, 1)

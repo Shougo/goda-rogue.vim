@@ -979,13 +979,19 @@ as a player who knows the kinds would) and answer it from 5% (careful)
 or 20% (reckless) by the cheapest answer that is enough (by the prices
 of the items, cheaper the more of a kind they carry and the deeper they
 are; a staff's last wave costs the most): the stairs, a step back into
-a corridor to fight two enemies one by one, a healing grass, a staff,
-walking away to the stairs.  They shoot arrows at enemies worth them (any with ten arrows or
+a corridor to fight two enemies one by one, a healing grass, a pot of
+healing (with what they value least in it), a staff, food thrown at a
+hungry ghost, a scroll of おはらい near a monster that curses, walking
+away to the stairs.  A healing grass is worth to them the share of their
+max HP it heals: 50 HP heal a player of 40 in full, a third of one of
+150.  They shoot arrows at enemies worth them (any with ten arrows or
 more), read unknown scrolls on the stairs, check for traps before
 stepping in a monster house whose monsters sleep, and the careful one
 leaves a floor whose fights cost more answers than it gave.  Out of a fight they heal when their HP is below what the
-monsters of the floor could take in two turns (the careful one rests in
-a room, not in a corridor), and they wait for an
+monsters of the floor could take in two turns (one and a half when none
+of them would likely beat them, three when a quarter would; the careful
+one rests in a room, not in a corridor), with what fits what is missing
+best (the cheapest of what heals it all, else what heals most), and they wait for an
 enemy coming at them rather than step next to it, to strike first.
 With no room left in the inventory they do not walk past what is worth
 more than the least they carry: standing on it, they eat food that is
