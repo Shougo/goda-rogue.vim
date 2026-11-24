@@ -1647,7 +1647,7 @@ func strength(it *Item) int {
 // toShop walks into a shop it has seen, with no enemy in sight, to learn
 // the prices of the kinds it carries and does not know (meet).
 func (b *Bot) toShop(g *Game) (string, []string) {
-	if g.Shop == nil || !g.keepersCalm() || len(g.visibleEnemies()) > 0 {
+	if g.Shop == nil || !g.keepersCalm() || len(b.threats(g)) > 0 {
 		return "", nil
 	}
 	if carried(g, func(it *Item) bool { return b.unsure(g, it) && !g.priced[it.Def.ID] && sellPrice(it) > 0 }) == nil {

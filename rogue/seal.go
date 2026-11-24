@@ -41,10 +41,14 @@ const (
 	// SealDodge: the blows of the monsters hit so many percent less
 	// often.
 	SealDodge SealEffect = "見切り"
+	// SealDodgeThrown: the player dodges an item thrown or shot at it
+	// (not a piercing arrow, nor what a mirror sends back) by a chance of
+	// its %; the item falls at its feet (dodgeThrown).
+	SealDodgeThrown SealEffect = "身躱し"
 )
 
 var sealEffects = []SealEffect{SealAttack, SealDefense, SealCrit, SealSure, SealCounter, SealNoRust, SealNoHunger,
-	SealThree, SealNoTheft, SealDodge}
+	SealThree, SealNoTheft, SealDodge, SealDodgeThrown}
 
 // No seal heals: not on a blow given, not on a blow taken. Such seals
 // (弟 and 回 of Shiren 2 and Asuka, stacked) make trading blows pay, and a

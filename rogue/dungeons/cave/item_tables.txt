@@ -22,6 +22,7 @@
 床	5	30	mikazuki	1
 床	1	30	nusumiyoke	1
 床	5	30	mikiri	1
+床	5	30	mikawashi	1
 床	1	30	kintate	1
 床	1	30	kawa	1
 床	1	30	chikara	1
@@ -82,6 +83,7 @@
 よろず	5	30	mikazuki	2
 よろず	1	30	nusumiyoke	2
 よろず	5	30	mikiri	2
+よろず	5	30	mikawashi	2
 よろず	1	30	kintate	2
 よろず	1	30	kawa	2
 よろず	1	30	chikara	1
@@ -157,6 +159,7 @@
 武具	5	30	mikazuki	2
 武具	1	30	nusumiyoke	2
 武具	5	30	mikiri	2
+武具	5	30	mikawashi	2
 # The bracelet shop: rarer bracelets.
 腕輪	1	30	chikara	1
 腕輪	1	30	kaifuku	1

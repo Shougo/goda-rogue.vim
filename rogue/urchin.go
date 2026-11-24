@@ -97,6 +97,9 @@ func (g *Game) landThrown(it *Item, p Point) {
 // another item hurts a little and falls by the player (a pot breaks).
 func (g *Game) hitPlayerWith(it *Item, m *Monster) {
 	r := g.Dungeon.Rules
+	if g.dodgeThrown(it) {
+		return
+	}
 	g.say(g.Name(it) + "が当たった。")
 	switch {
 	case it.Def.Category == CategoryArrow:
@@ -368,4 +371,25 @@ func (g *Game) rustBy(m *Monster, a Ability) bool {
 func sendsBack(m *Monster, what int) bool {
 	a, ok := m.ability(AbilityReflect)
 	return ok && what <= a.Values[1]
+}
+
+// dodgeThrown is the player dodging the item it thrown or shot at it, by
+// the share of 身躱し (Shougo, 2026-11-25: the shield of 身躱し, 50%; as a
+// seal 25%): it falls at the player's feet, and a trap there goes off. A
+// piercing arrow, and what a mirror sent back, are not dodged (their
+// callers do not ask). It says whether the player dodged.
+func (g *Game) dodgeThrown(it *Item) bool {
+	if !g.sealChance(SealDodgeThrown) {
+		return false
+	}
+	g.say(g.Name(it) + "を身をかわしてよけた！")
+	if it.Def.Category == CategoryPot {
+		g.smash(it, g.Player)
+	} else {
+		g.land(it, g.Player)
+	}
+	if t := g.TrapAt(g.Player); t != nil {
+		g.spring(t, true)
+	}
+	return true
 }

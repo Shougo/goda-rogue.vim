@@ -234,3 +234,35 @@ func TestGuardBracelets(t *testing.T) {
 		t.Errorf("grass carried %v, stolen %v, gold %d", slices.Contains(g.Inventory, grass), stolen, g.Gold)
 	}
 }
+
+// TestDodgeThrown: the shield of 身躱し dodges half of the items thrown
+// at the player (as a seal a quarter); they fall at its feet.
+func TestDodgeThrown(t *testing.T) {
+	for _, c := range []struct {
+		shield   string
+		seals    []string
+		min, max int
+	}{{"mikawashi", nil, 70, 130}, {"tetsutate", []string{"躱"}, 25, 75}, {"tetsutate", nil, 0, 0}} {
+		g, _ := sealGame(t, nil, nil)
+		g.equipped(CategoryShield).Equipped = false
+		carry(g, c.shield, 0).Equipped = true
+		g.equipped(CategoryShield).Seals = c.seals
+		g.HP, g.MaxHP = 99999, 99999
+		m := place(g, kind("warabe1"), g.Player.Add(Point{3, 0}))
+		dodged := 0
+		for range 200 {
+			g.Items = nil
+			hp := g.HP
+			g.hitPlayerWith(item(g, "ishi", Point{-1, -1}), m)
+			if g.HP == hp {
+				dodged++
+				if it, ok := g.ItemAt(g.Player); !ok || it.Def.ID != "ishi" {
+					t.Fatal("not at the player's feet")
+				}
+			}
+		}
+		if dodged < c.min || dodged > c.max {
+			t.Errorf("%s %v: dodged %d of 200, want %d-%d", c.shield, c.seals, dodged, c.min, c.max)
+		}
+	}
+}

@@ -15,6 +15,10 @@
 #             faces, ahead of it, for its % of the damage
 #   盗みよけ  with a chance of its %, nothing is stolen
 #   見切り    the blows of the monsters hit its % less often
+#   身躱し    with a chance of its %, an item thrown or shot at the player
+#             (arrows too; not a piercing arrow, nor what a mirror sends
+#             back) misses it and falls at its feet (a trap there goes
+#             off)
 # The same seal may be there more than once (and with the ability the
 # item is born with): 攻撃 and 防御 add up, the others add up as chances
 # do (two of 50% make 75%), never past 100%.
@@ -35,3 +39,4 @@
 三	三方向の印	三方向	50	25	武器
 盗	盗みよけの印	盗みよけ	100	50	盾
 避	見切りの印	見切り	15	8	盾
+躱	身躱しの印	身躱し	50	25	盾

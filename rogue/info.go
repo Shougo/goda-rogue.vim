@@ -40,16 +40,17 @@ var effectTexts = map[Effect]string{
 
 // sealTexts say what each seal does ("%d" is its strength).
 var sealTexts = map[SealEffect]string{
-	SealAttack:   "攻撃力 +%d。",
-	SealDefense:  "防御力 +%d。",
-	SealCrit:     "%d%% の確率で会心の一撃（2 倍のダメージ）。",
-	SealSure:     "外れるはずの攻撃の %d%% が当たる。",
-	SealCounter:  "%d%% の確率で受けたダメージを相手に返す。",
-	SealNoRust:   "%d%% の確率で武器と盾のサビを防ぐ。",
-	SealNoHunger: "お腹が減る速さが %d%% 遅くなる。",
-	SealThree:    "正面に加えて、左右の斜め前にも %d%% のダメージで攻撃する。",
-	SealNoTheft:  "%d%% の確率で盗みを防ぐ。",
-	SealDodge:    "敵の攻撃が当たる確率が %d%% 下がる。",
+	SealAttack:      "攻撃力 +%d。",
+	SealDefense:     "防御力 +%d。",
+	SealCrit:        "%d%% の確率で会心の一撃（2 倍のダメージ）。",
+	SealSure:        "外れるはずの攻撃の %d%% が当たる。",
+	SealCounter:     "%d%% の確率で受けたダメージを相手に返す。",
+	SealNoRust:      "%d%% の確率で武器と盾のサビを防ぐ。",
+	SealNoHunger:    "お腹が減る速さが %d%% 遅くなる。",
+	SealThree:       "正面に加えて、左右の斜め前にも %d%% のダメージで攻撃する。",
+	SealNoTheft:     "%d%% の確率で盗みを防ぐ。",
+	SealDodge:       "敵の攻撃が当たる確率が %d%% 下がる。",
+	SealDodgeThrown: "飛んできた道具（矢を含む。貫通の矢とはね返されたものは除く）を %d%% の確率でよけ、足元に落とす（足元の罠は発動する）。",
 }
 
 // usePrefixes say when the effect of an item of each category happens.

@@ -573,6 +573,9 @@ func (g *Game) shootAt(m *Monster, a Ability) bool {
 				g.say("矢は当たらなかった。")
 				continue
 			}
+			if !pierce && g.dodgeThrown(&Item{Def: def, Glyph: def.Glyph, Count: 1}) {
+				return true
+			}
 			n := damage(g.rng, attack, g.Defense(), r.DefenseK)
 			g.say(def.Name + "が当たった。")
 			if g.playerHurt(n, m) || !pierce {
