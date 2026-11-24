@@ -47,13 +47,17 @@ const (
 )
 
 // price is the price of it in a shop (arrows: all of them); a cursed
-// item is cheaper, which tells the curse to a player who knows the prices.
+// item is cheaper and a blessed one dearer, which tells them to a player
+// who knows the prices.
 func price(it *Item) int {
 	if it.Def.Category == CategoryArrow {
 		return it.Def.Price * max(it.Count, 1)
 	}
-	if it.Cursed {
+	switch {
+	case it.Cursed:
 		return it.Def.Price * curseRate / 100
+	case it.Blessed:
+		return it.Def.Price * blessRate / 100
 	}
 	return it.Def.Price
 }

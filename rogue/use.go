@@ -11,10 +11,12 @@ func (g *Game) useItem(it *Item) {
 	if g.curseStops(it) {
 		return
 	}
-	if it.Def.Category != CategoryStaff {
+	name := g.Name(it)
+	// (The name before the blessing shows.)
+	blessed := it.Blessed
+	if it.Def.Category != CategoryStaff && !g.kept(it) {
 		g.discard(it)
 	}
-	name := g.Name(it)
 	g.event("use %s", it.Def.ID)
 	switch it.Def.Category {
 	case CategoryGrass:
@@ -29,11 +31,23 @@ func (g *Game) useItem(it *Item) {
 			g.say("何も起こらなかった。")
 			return
 		}
-		it.Charges--
-		it.Waved++
 		it.CurseTold = true
+		if !blessed {
+			it.Charges--
+			it.Waved++
+			break
+		}
+		g.say("祝福の力で回数は減らなかった。")
+		if g.rng.IntN(100) < blessedStaff {
+			it.Blessed = false
+			g.say(name + "の祝福が解けた。")
+		}
 	case CategoryFood:
 		g.say(name + "を食べた。")
+	}
+
+	if blessed && it.Def.Category != CategoryStaff {
+		g.say("祝福の力で" + name + "はなくならなかった。")
 	}
 
 	// Using it tells what it is.

@@ -94,7 +94,7 @@ func TestUncurse(t *testing.T) {
 func TestCurseRoll(t *testing.T) {
 	g, _ := roomGame(t, 4, 3)
 	rng := rand.New(rand.NewPCG(1, 2))
-	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.CurseGear, r.CurseBracelet, r.CurseItem, r.CurseFood = 4, 2, 8, 16 })
+	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.CurseGear, r.CurseBracelet, r.CurseItem, r.CurseFood = 4, 2, 8, 8 })
 	cursed := map[string]int{}
 	for range 800 {
 		for _, id := range []string{"bokutou", "kitate", "chikara", "yakusou", "hozon", "onigiri", "kiya"} {
@@ -108,7 +108,7 @@ func TestCurseRoll(t *testing.T) {
 			}
 		}
 	}
-	for id, want := range map[string]int{"bokutou": 200, "kitate": 200, "chikara": 400, "yakusou": 100, "hozon": 100, "onigiri": 50, "kiya": 0} {
+	for id, want := range map[string]int{"bokutou": 200, "kitate": 200, "chikara": 400, "yakusou": 100, "hozon": 100, "onigiri": 100, "kiya": 0} {
 		if n := cursed[id]; n < want*3/4 || n > want*5/4 {
 			t.Errorf("%s: %d cursed of 800, want about %d", id, n, want)
 		}

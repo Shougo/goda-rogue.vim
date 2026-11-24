@@ -84,6 +84,17 @@ func (g *Game) rollCurse(rng *rand.Rand, it *Item) {
 	}
 }
 
+// curse is a curse coming on it (not at its birth): it takes the
+// blessing of a blessed item away instead; it says whether it is cursed
+// now.
+func (g *Game) curse(it *Item) bool {
+	if !it.cursable() || it.Cursed || g.shielded(it) {
+		return false
+	}
+	it.Cursed = true
+	return true
+}
+
 // curseBlocks says whether a curse stops the command c on the carried
 // item it, and says so: it is cursed and equipped, or it would take the
 // place of a cursed one.

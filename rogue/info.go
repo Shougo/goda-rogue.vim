@@ -150,6 +150,16 @@ func (g *Game) info(it *Item) []string {
 	if it.curseKnown() && !it.worn() {
 		lines = append(lines, "呪われている（使えない）")
 	}
+	if it.blessKnown() {
+		switch def.Category {
+		case CategoryGrass, CategoryScroll, CategoryFood:
+			lines = append(lines, "祝福されている（一度使ってもなくならない。悪い効果を一度防ぐ）")
+		case CategoryStaff:
+			lines = append(lines, "祝福されている（振っても回数が減らない。悪い効果を一度防ぐ）")
+		default:
+			lines = append(lines, "祝福されている（悪い効果を一度防ぐ）")
+		}
+	}
 	lines = append(lines, g.materialInfo(def)...)
 	return append(lines, g.shopInfo(it)...)
 }

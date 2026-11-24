@@ -47,6 +47,13 @@
 腕輪の呪い	8
 道具の呪い	20
 食料の呪い	40
+# How rarely an item that can be cursed is blessed instead: one in so
+# many. A blessing takes a bad effect on the item in its place, once
+# (rust, rot, a curse); a blessed grass, scroll or food is used twice, a
+# blessed staff keeps its charges (and loses the blessing half of the
+# time). A shop sells blessed items at twice their price (optional: 0, as
+# if missing, for never).
+祝福	20
 # The chance, a percent, that a monster the player kills drops an item of
 # the floor's item table (monsters.txt 落とし物 may say otherwise). The
 # cave gives each family its own rate (stronger ones drop more); this low

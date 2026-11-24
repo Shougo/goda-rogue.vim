@@ -47,8 +47,12 @@ func (it *Item) onigiri() bool {
 	return it.Def.Category == CategoryFood && it.Def.Effect == EffectFood
 }
 
-// rot turns the carried item it into a rotten onigiri.
+// rot turns the carried item it into a rotten onigiri, unless a blessing
+// takes it.
 func (g *Game) rot(it *Item, rotten *ItemDef) {
+	if g.shielded(it) {
+		return
+	}
 	name := g.Name(it)
 	*it = Item{Def: rotten, Glyph: rotten.Glyph, ForSale: it.ForSale}
 	g.say(name + "が腐ってしまった！")

@@ -119,8 +119,10 @@ func (g *Game) merge(base, it *Item, mixed bool) bool {
 			g.addSeal(base, s)
 		}
 		base.Known = base.Known && it.Known
-		// A curse comes along with the rest.
-		base.Cursed = base.Cursed || it.Cursed
+		// A curse comes along with the rest, unless a blessing of
+		// either takes it; a blessing does not come along.
+		base.Cursed = (base.Cursed || it.Cursed) && !(base.Blessed || it.Blessed)
+		base.Blessed = false
 		g.say(g.Name(base) + "と" + g.Name(it) + "が合成された！")
 		return true
 	case mixed && (c == CategoryWeapon || c == CategoryShield) && it.Def.Category != CategoryWeapon &&

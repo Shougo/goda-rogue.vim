@@ -76,12 +76,15 @@ func (g *Game) unknown(it *Item) bool {
 	return it.upgradable() || it.Def.Category == CategoryStaff || g.curses(it) && !it.curseTold()
 }
 
-// curses says whether an item like it may be cursed in the dungeon.
+// curses says whether an item like it may be cursed or blessed in the
+// dungeon.
 func (g *Game) curses(it *Item) bool {
 	r := g.Dungeon.Rules
 	switch {
 	case !it.cursable():
 		return false
+	case r.Bless > 0:
+		return true
 	case it.upgradable():
 		return r.CurseGear > 0
 	case it.Def.Category == CategoryBracelet:

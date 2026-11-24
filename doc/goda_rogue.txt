@@ -59,6 +59,16 @@ price, and marks its cursed goods.  A scroll of おはらい takes the curses
 of everything carried away; the scrolls that upgrade a weapon or a shield
 take that of what they upgrade.  Synthesis carries a curse over.
 
+An item that can be cursed may be blessed instead (薬草（祝）), never
+both.  A blessing takes a bad effect on its item in its place, once:
+rust, rot, a curse (not a theft).  A blessed grass, scroll or food is not
+used up: used, or thrown at a monster, it has its effect and loses its
+blessing.  A blessed staff keeps its charges when waved, and loses its
+blessing half of the time.  A blessing shows as a curse does; a shop
+sells and buys a blessed item at twice its price.  Synthesis does not
+carry a blessing over, but the blessing of either item takes the curse of
+the other.
+
 Grasses, scrolls, staffs, bracelets and pots are unidentified at first:
 they go by names such as 赤い草 (with a "?" in the inventory), different
 in each run.  Using one tells what its kind is; a bracelet tells it when
@@ -667,7 +677,9 @@ The built-in dungeons:
 				rarely a weapon or a shield, a bracelet, food
 				and another item are cursed, one in so many
 				(武具の呪い, 腕輪の呪い, 食料の呪い and
-				道具の呪い, optional, default 0: never),
+				道具の呪い, optional, default 0: never), how
+				rarely such an item is blessed (祝福, the
+				same),
 				whether a trap the
 				player has found goes off (見つけた罠: 安全 or
 				発動), and, optional, whether runs may use

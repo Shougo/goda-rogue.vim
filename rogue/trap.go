@@ -201,8 +201,11 @@ func (g *Game) spring(t *Trap, force bool) bool {
 		rusted := false
 		for _, c := range []Category{CategoryWeapon, CategoryShield} {
 			if it := g.equipped(c); it != nil {
-				it.Upgrade--
 				rusted = true
+				if g.shielded(it) {
+					continue
+				}
+				it.Upgrade--
 				g.say(g.Name(it) + "がさびてしまった。")
 			}
 		}

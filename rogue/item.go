@@ -66,9 +66,11 @@ type Item struct {
 	// Cursed says whether it is cursed: once equipped, it does not come
 	// off (curse.go). The player knows by equipping or identifying it.
 	Cursed bool
-	// CurseTold says whether the player knows if it is cursed, without
-	// knowing the rest (Known): it equipped the item or tried to use it
-	// (curse.go).
+	// Blessed says whether it is blessed (bless.go); never with Cursed.
+	Blessed bool
+	// CurseTold says whether the player knows if it is cursed or
+	// blessed, without knowing the rest (Known): it equipped the item
+	// or tried to use it (curse.go).
 	CurseTold bool
 	// used says whether a bracelet had its effect on this floor.
 	used bool
@@ -156,6 +158,9 @@ func (g *Game) describe(it *Item) string {
 	}
 	if it.curseKnown() {
 		s += "（呪）"
+	}
+	if it.blessKnown() {
+		s += "（祝）"
 	}
 	if it.ForSale {
 		s += fmt.Sprintf(" %dG", price(it))

@@ -27,6 +27,7 @@ func (g *Game) newItemOf(rng *rand.Rand, def *ItemDef, pos Point) *Item {
 		it.Count = between(rng, def.Charges[0], def.Charges[1])
 	}
 	g.rollCurse(rng, it)
+	g.rollBless(rng, it)
 	return it
 }
 

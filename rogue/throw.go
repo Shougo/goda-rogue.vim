@@ -105,6 +105,11 @@ func (g *Game) hitBy(it *Item, m *Monster) bool {
 			g.magicOn(m, e, Directions[g.Facing])
 			g.identify(it)
 		}
+		// A blessed grass is not used up: it falls by the monster.
+		if g.kept(it) {
+			g.say("祝福の力で" + g.Name(it) + "はなくならなかった。")
+			return false
+		}
 		return true
 	}
 	if it.Def.Category == CategoryMoney {
