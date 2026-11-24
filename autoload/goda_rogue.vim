@@ -670,13 +670,7 @@ function! s:select_many(title, choices, callback) abort
 endfunction
 
 function! s:input_many(title, choices) abort
-  redraw
-  let width = len(len(a:choices))
-  let lines = [a:title]
-  for i in range(len(a:choices))
-    call add(lines, printf('%' . width . 'd: %s', i + 1, a:choices[i]))
-  endfor
-  let answer = input(join(lines, "\n") . "\n番号（カンマで区切って複数）: ")
+  let answer = s:input_choices(a:title, a:choices, '番号（カンマで区切って複数）: ')
   let idx = []
   for f in split(answer, '\s*,\s*')
     let n = str2nr(trim(f))
@@ -687,6 +681,50 @@ function! s:input_many(title, choices) abort
   call s:selected(idx)
 endfunction
 
+" Show {choices} under {title}, numbered, in a floating window (Neovim) or
+" a popup (Vim), and ask on the command line with {prompt}: the answer
+" typed.  The list stays out of the messages: printed there, a long one
+" scrolled the screen, and a redraw broke it (Shougo, 2026-11-24).
+function! s:input_choices(title, choices, prompt) abort
+  let width = len(len(a:choices))
+  let lines = []
+  for i in range(len(a:choices))
+    call add(lines, printf('%' . width . 'd: %s', i + 1, a:choices[i]))
+  endfor
+  let w = min([max(map(copy(lines), 'strdisplaywidth(v:val)') + [strdisplaywidth(a:title) + 2]), &columns - 4])
+  let h = min([len(lines), &lines - 5])
+  if has('nvim')
+    let buf = nvim_create_buf(v:false, v:true)
+    call nvim_buf_set_lines(buf, 0, -1, v:true, lines)
+    let win = nvim_open_win(buf, v:false, #{relative: 'editor',
+          \ row: max([(&lines - h) / 2 - 1, 0]), col: max([(&columns - w) / 2, 0]),
+          \ width: w, height: h, style: 'minimal', border: 'single',
+          \ title: ' ' . a:title . ' ', title_pos: 'center', focusable: v:false})
+  else
+    let win = popup_create(lines, #{title: ' ' . a:title . ' ', border: [],
+          \ pos: 'center', maxheight: h, minwidth: w})
+  endif
+  redraw
+  try
+    return input(a:prompt)
+  finally
+    if has('nvim')
+      call nvim_win_close(win, v:true)
+      call nvim_buf_delete(buf, #{force: v:true})
+    else
+      call popup_close(win)
+    endif
+    redraw
+  endtry
+endfunction
+
+" Ask to choose one of {choices} on the command line, with the list in a
+" window (s:input_choices): the choice, from 1 (0 for none).
+function! s:input_one(title, choices) abort
+  let n = str2nr(trim(s:input_choices(a:title, a:choices, '番号（q か空でやめる）: ')))
+  return n >= 1 && n <= len(a:choices) ? n : 0
+endfunction
+
 " Ask to choose one of {choices} with the selection UI; {callback} gets the
 " choice, from 1 (0 or less for none).
 function! s:select(title, choices, callback) abort
@@ -694,30 +732,18 @@ function! s:select(title, choices, callback) abort
   if !empty(get(g:, 'goda_rogue#prompt_func', ''))
     call call(g:goda_rogue#prompt_func,
           \ [#{title: a:title, choices: a:choices}, {idx -> s:selected(idx)}])
-  elseif has('nvim')
-    " Ask once the current action is over: an answer comes inside
-    " win_execute(), where inputlist() does not wait for one.  Clear what an
-    " earlier selection left on the command line first.  The default
-    " vim.ui.select() is replaced by an inputlist() with the numbers aligned
-    " (the items are aligned in columns); one set by a plugin is used.
+  elseif has('nvim') && luaeval('not debug.getinfo(vim.ui.select, "S").source:find("vim[/\\]ui%.lua$")')
+    " A vim.ui.select() set by a plugin.  Ask once the current action is
+    " over: an answer comes inside win_execute(), where it does not wait.
     call luaeval('vim.schedule(function()'
-          \ . ' vim.cmd("redraw")'
-          \ . ' local done = vim.fn["goda_rogue#_selected"]'
-          \ . ' local src = debug.getinfo(vim.ui.select, "S").source'
-          \ . ' if not src:find("vim[/\\]ui%.lua$") then'
-          \ . '  vim.ui.select(_A[1], {prompt = _A[2]},'
-          \ . '   function(_, idx) done(idx or 0) end)'
-          \ . '  return'
-          \ . ' end'
-          \ . ' local lines = {_A[2]}'
-          \ . ' local format = "%" .. #tostring(#_A[1]) .. "d: %s"'
-          \ . ' for i, c in ipairs(_A[1]) do'
-          \ . '  lines[#lines + 1] = format:format(i, c)'
-          \ . ' end'
-          \ . ' local idx = vim.fn.inputlist(lines)'
-          \ . ' done((idx >= 1 and idx <= #_A[1]) and idx or 0)'
+          \ . ' vim.ui.select(_A[1], {prompt = _A[2]},'
+          \ . '  function(_, idx) vim.fn["goda_rogue#_selected"](idx or 0) end)'
           \ . ' end)',
           \ [a:choices, a:title])
+  elseif has('nvim')
+    " Once the current action is over, as above.  The default
+    " vim.ui.select() prints the list as messages: a long one broke.
+    call timer_start(0, {-> s:selected(s:input_one(a:title, a:choices))})
   else
     call s:close_prompt()
     let s:prompt = popup_menu(a:choices, #{

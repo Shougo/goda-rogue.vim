@@ -654,13 +654,15 @@ screen shows the turns, the steps and the play time too.
 PROMPTS                                                   *goda-rogue-prompts*
 
 When the game asks for a choice (which item, what to do with it), it is
-shown with the editor's selection UI: |popup_menu()| in Vim,
-|inputlist()| in Neovim, or vim.ui.select() once a plugin replaces it
-there.  Set |g:goda_rogue#prompt_func| to show it another way.
+shown with the editor's selection UI: |popup_menu()| in Vim; in Neovim
+the numbered list in a floating window and the number typed on the
+command line, or vim.ui.select() once a plugin replaces it.  Set
+|g:goda_rogue#prompt_func| to show it another way.
 
 Some prompts take several choices at once (the items to put in a pot):
-the list is shown on the command line, and their numbers are typed
-separated by commas ("1,3,4").  They are done one by one, a turn each.
+the list is shown in a popup (a floating window in Neovim), and their
+numbers are typed on the command line separated by commas ("1,3,4").
+They are done one by one, a turn each.
 
 Lists of items show the icon, "E" for the equipped ones, and the name, in
 columns: >
