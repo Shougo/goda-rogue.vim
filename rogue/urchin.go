@@ -204,7 +204,9 @@ func (g *Game) ruinable(k int) []*Item {
 }
 
 // plainPotDef is the kind of the plain pot (普通の壺, Shougo 2026-11-25):
-// no effect, what is in it neither used nor taken out, until it breaks.
+// no effect, items go in, what is in it is neither used nor taken out
+// until it breaks. On the floors of the hard dungeons only (the deep and
+// the far caves).
 func (g *Game) plainPotDef() *ItemDef {
 	for _, def := range g.Dungeon.Items {
 		if def.Category == CategoryPot && def.Effect == EffectPlain {

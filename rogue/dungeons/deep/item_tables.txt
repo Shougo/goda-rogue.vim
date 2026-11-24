@@ -62,6 +62,7 @@
 床	1	50	hozon	3
 床	2	50	gousei	1
 床	3	50	kaifukutsubo	1
+床	1	50	futsuu	2
 床	1	50	onigiri	1
 床	1	50	ookiionigiri	2
 床	1	50	okane	6

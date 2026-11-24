@@ -56,8 +56,8 @@
 #     全回復    restores all HP for each thing put in, which is gone
 #               with its room in the pot
 #     普通      keeps them, not to use nor take out: they come out when
-#               the pot breaks (a crow makes one of another pot; on no
-#               floor)
+#               the pot breaks (a crow makes one of another pot; on the
+#               floors of the hard dungeons only)
 # 回数 is how many times a staff can be waved, how many arrows there are,
 # how many items a pot holds (min-max; - for others).
 # 印 is the ability a weapon or a shield is born with (素の能力: a seal
