@@ -792,6 +792,22 @@ func TestBotChasesEagle(t *testing.T) {
 	}
 }
 
+// TestBotSealedMouth: with its mouth sealed, the hungry bot does not try
+// to eat, again and again.
+func TestBotSealedMouth(t *testing.T) {
+	g, _ := roomGame(t, 6, 3)
+	carry(g, "ookiionigiri", 0)
+	g.Fullness = 0
+	b := NewBot(BotCareful, 1)
+	if a, _ := b.Next(g); a != "inventory" || b.rule != "食べる" {
+		t.Fatalf("not sealed: %s [%s]", a, b.rule)
+	}
+	g.Sealed = true
+	if a, _ := b.Next(g); a == "inventory" {
+		t.Errorf("sealed: %s [%s] %+v", a, b.rule, b.plan)
+	}
+}
+
 // TestBotRegenBracelet: the bot wears a bracelet of regeneration only to
 // heal, and wears another one the rest of the time.
 func TestBotRegenBracelet(t *testing.T) {

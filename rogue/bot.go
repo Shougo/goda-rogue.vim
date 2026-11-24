@@ -145,6 +145,16 @@ func (b *Bot) Next(g *Game) (string, []string) {
 		b.tidy, b.trade, b.rest, b.leave, b.pick, b.explore,
 	} {
 		if action, args := rule(g); action != "" {
+			if g.Sealed && b.needsMouth() {
+				// A sealed mouth eats, drinks and reads nothing: the
+				// bots tried again and again, and starved on the
+				// floor.
+				if it := b.plan[0].item; it != nil && (it.Def.Category == CategoryGrass || it.Def.Category == CategoryScroll) {
+					b.consumed-- // (counted by use)
+				}
+				b.plan = nil
+				continue
+			}
 			b.rule = botRules[i]
 			if i == ruleDanger && action == "move" {
 				// It steps away from a danger: it does not walk back
@@ -166,6 +176,17 @@ func (b *Bot) Next(g *Game) (string, []string) {
 	}
 	b.rule = "することがない"
 	return "wait", nil
+}
+
+// needsMouth says whether the plan of the bot eats, drinks or reads.
+func (b *Bot) needsMouth() bool {
+	for _, s := range b.plan {
+		switch s.label {
+		case commandEat, commandDrink, commandRead:
+			return true
+		}
+	}
+	return false
 }
 
 // ruleDanger is the place of the rule danger in the rules of Next.
