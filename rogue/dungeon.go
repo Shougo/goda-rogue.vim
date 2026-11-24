@@ -122,6 +122,10 @@ type Rules struct {
 	// (rules.txt 武具の呪い and 腕輪の呪い; 0, as without them, for never;
 	// curse.go).
 	CurseGear, CurseBracelet int
+	// CurseItem and CurseFood are the same for food (食料の呪い) and for
+	// the other items that are used (道具の呪い: grasses, scrolls,
+	// staves, pots).
+	CurseItem, CurseFood int
 	// StrongerBy is how many ranks above the floor's the monster of the
 	// second wind is.
 	StrongerBy int
@@ -607,7 +611,7 @@ func (l *loader) loadRules() {
 		"最大HP", "ちから", "回復ターン", "湧きターン", "最大モンスター数",
 		"風1", "風2", "風3", "防御K", "主の命中", "敵の命中", "成長", "最初の仲間", "強敵ランク差",
 		"持ち物の数", "ひびの段階", "腕輪の傷みやすさ", "満腹度", "腹減りターン", "見つけた罠", "デバッグ",
-		"お金投げ", "落とし物", "仲間の命中", "主の投擲命中", "敵の投擲命中", "仲間の上限", "武具の呪い", "腕輪の呪い",
+		"お金投げ", "落とし物", "仲間の命中", "主の投擲命中", "敵の投擲命中", "仲間の上限", "武具の呪い", "腕輪の呪い", "道具の呪い", "食料の呪い",
 	})
 	l.rules = rk
 	r := &d.Rules
@@ -689,6 +693,12 @@ func (l *loader) loadRules() {
 	}
 	if _, ok := rk["腕輪の呪い"]; ok {
 		r.CurseBracelet = l.keyInt("rules.txt", rk, "腕輪の呪い", 0)
+	}
+	if _, ok := rk["道具の呪い"]; ok {
+		r.CurseItem = l.keyInt("rules.txt", rk, "道具の呪い", 0)
+	}
+	if _, ok := rk["食料の呪い"]; ok {
+		r.CurseFood = l.keyInt("rules.txt", rk, "食料の呪い", 0)
 	}
 	// Optional: most dungeons have no debug mode.
 	if ln, ok := rk["デバッグ"]; ok {

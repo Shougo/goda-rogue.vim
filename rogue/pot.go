@@ -41,9 +41,13 @@ func (g *Game) potLabel(it *Item) string {
 	return s
 }
 
-// askPutIn asks which item to put in the pot it (at index i).
+// askPutIn asks which item to put in the pot it (at index i); it says
+// whether the turn passes (a cursed pot takes nothing).
 func (g *Game) askPutIn(i int) bool {
 	pot := g.Inventory[i]
+	if g.curseStops(pot) {
+		return true
+	}
 	if len(pot.Contents) >= pot.Charges {
 		g.learn(pot)
 		g.say(g.Name(pot) + "はいっぱいだ。")

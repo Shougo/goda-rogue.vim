@@ -94,10 +94,10 @@ func TestUncurse(t *testing.T) {
 func TestCurseRoll(t *testing.T) {
 	g, _ := roomGame(t, 4, 3)
 	rng := rand.New(rand.NewPCG(1, 2))
-	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.CurseGear, r.CurseBracelet = 4, 2 })
+	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.CurseGear, r.CurseBracelet, r.CurseItem, r.CurseFood = 4, 2, 8, 16 })
 	cursed := map[string]int{}
 	for range 800 {
-		for _, id := range []string{"bokutou", "kitate", "chikara", "yakusou", "hozon"} {
+		for _, id := range []string{"bokutou", "kitate", "chikara", "yakusou", "hozon", "onigiri", "kiya"} {
 			it := g.newItemOf(rng, g.Dungeon.Item(id), Point{})
 			if !it.Cursed {
 				continue
@@ -108,14 +108,15 @@ func TestCurseRoll(t *testing.T) {
 			}
 		}
 	}
-	for id, want := range map[string]int{"bokutou": 200, "kitate": 200, "chikara": 400} {
+	for id, want := range map[string]int{"bokutou": 200, "kitate": 200, "chikara": 400, "yakusou": 100, "hozon": 100, "onigiri": 50, "kiya": 0} {
 		if n := cursed[id]; n < want*3/4 || n > want*5/4 {
 			t.Errorf("%s: %d cursed of 800, want about %d", id, n, want)
 		}
 	}
-	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.CurseGear, r.CurseBracelet = 0, 0 })
+	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.CurseGear, r.CurseBracelet, r.CurseItem, r.CurseFood = 0, 0, 0, 0 })
 	for range 100 {
-		if g.newItemOf(rng, g.Dungeon.Item("bokutou"), Point{}).Cursed || g.newItemOf(rng, g.Dungeon.Item("chikara"), Point{}).Cursed {
+		if g.newItemOf(rng, g.Dungeon.Item("bokutou"), Point{}).Cursed || g.newItemOf(rng, g.Dungeon.Item("chikara"), Point{}).Cursed ||
+			g.newItemOf(rng, g.Dungeon.Item("yakusou"), Point{}).Cursed || g.newItemOf(rng, g.Dungeon.Item("onigiri"), Point{}).Cursed {
 			t.Fatal("cursed with no chance")
 		}
 	}
@@ -134,5 +135,81 @@ func TestCurseSynthesis(t *testing.T) {
 	}
 	if !base.Cursed || base.Upgrade != -1 {
 		t.Errorf("base cursed %v, %+d", base.Cursed, base.Upgrade)
+	}
+}
+
+// TestCursedUse: a cursed item that is not worn cannot be used: the turn
+// passes, nothing happens, and the player knows the curse from then on.
+// It can still be put down, thrown (without its effect) and put in a pot.
+func TestCursedUse(t *testing.T) {
+	g, r := roomGame(t, 8, 3)
+	g.HP, g.MaxHP = 10, 100
+	g.Facing = "right"
+	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.PlayerThrowRate = 100 })
+	for id, c := range map[string]string{"yakusou": commandDrink, "akari": commandRead, "fukitobashi": commandWave, "onigiri": commandEat} {
+		it := carry(g, id, 0)
+		it.Cursed, it.Known, it.Charges = true, false, 3
+		if strings.Contains(g.describe(it), "呪") || !g.unknown(it) {
+			t.Errorf("%s: label %q, unknown %v before use", id, g.describe(it), g.unknown(it))
+		}
+		turn, full := g.Turn, g.Fullness
+		command(t, g, it, c)
+		if g.Turn != turn+1 || !slices.Contains(g.Inventory, it) || g.HP != 10 || g.Fullness > full || it.Charges != 3 ||
+			!strings.Contains(g.Message, it.Def.Name+"は呪われていて使えない！") {
+			t.Errorf("%s: turn %d to %d, HP %d, charges %d, %q", id, turn, g.Turn, g.HP, it.Charges, g.Message)
+		}
+		// (The charges of a staff stay unknown.)
+		if !strings.HasSuffix(g.describe(it), "（呪）") || g.unknown(it) != (c == commandWave) || !slices.Contains(g.info(it), "呪われている（使えない）") {
+			t.Errorf("%s: label %q, unknown %v, info %q after use", id, g.describe(it), g.unknown(it), g.info(it))
+		}
+		g.Inventory = nil
+	}
+
+	// A cursed pot takes nothing.
+	p := pot(g, "hozon", 3)
+	p.Cursed, p.Known = true, false
+	grass := carry(g, "yakusou", 0)
+	grass.Cursed = true
+	turn := g.Turn
+	command(t, g, p, commandPutIn)
+	if g.Prompt != nil || g.Turn != turn+1 || len(p.Contents) != 0 || !strings.Contains(g.Message, "保存の壺は呪われていて使えない！") {
+		t.Errorf("cursed pot: prompt %v, turn %d to %d, %q", g.Prompt, turn, g.Turn, g.Message)
+	}
+	// A cursed item goes in a pot as any other.
+	p.Cursed = false
+	command(t, g, p, commandPutIn)
+	chooseLabel(t, g, g.Entry(grass))
+	if !slices.Contains(p.Contents, grass) {
+		t.Errorf("a cursed grass does not go in a pot: %q", g.Message)
+	}
+
+	// Thrown, it does not have its effect: it hurts a little and falls.
+	m := place(g, kind("nezumi4"), Point{r.X + 2, r.Y})
+	m.HP = m.MaxHP - 10
+	thrown := carry(g, "yakusou", 0)
+	thrown.Cursed = true
+	command(t, g, thrown, commandThrow)
+	if m.HP >= m.MaxHP-10 || !slices.Contains(g.Items, thrown) {
+		t.Errorf("thrown: HP %d/%d, items %v, %q", m.HP, m.MaxHP, g.Items, g.Message)
+	}
+}
+
+// TestCursedPrice: a shop sells and buys a cursed item at 87% of its
+// price, and its goods show their curse.
+func TestCursedPrice(t *testing.T) {
+	g, _ := roomGame(t, 4, 3)
+	it := carry(g, "yakusou", 0)
+	it.Known = false
+	full := price(it)
+	it.Cursed = true
+	if price(it) != full*87/100 || sellPrice(it) != full*87/100/2 {
+		t.Errorf("price %d, sold for %d, of %d", price(it), sellPrice(it), full)
+	}
+	if strings.Contains(g.describe(it), "呪") {
+		t.Errorf("label %q", g.describe(it))
+	}
+	it.ForSale = true
+	if !strings.Contains(g.describe(it), "（呪）") {
+		t.Errorf("label of goods %q", g.describe(it))
 	}
 }

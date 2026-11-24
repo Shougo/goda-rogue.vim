@@ -147,6 +147,9 @@ func (g *Game) info(it *Item) []string {
 	default:
 		lines = append(lines, effectText(def))
 	}
+	if it.curseKnown() && !it.worn() {
+		lines = append(lines, "呪われている（使えない）")
+	}
 	lines = append(lines, g.materialInfo(def)...)
 	return append(lines, g.shopInfo(it)...)
 }

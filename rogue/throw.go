@@ -79,6 +79,10 @@ func (g *Game) hitBy(it *Item, m *Monster) bool {
 		g.hurt(m, damage(g.rng, attack, m.Defense, r.DefenseK))
 		return true
 	case CategoryGrass:
+		if it.Cursed {
+			// No effect: it hurts a little, as any other item.
+			break
+		}
 		g.say(g.Name(it) + "が" + m.Name + "に当たった。")
 		switch it.Def.Effect {
 		case EffectHeal:

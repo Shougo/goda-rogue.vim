@@ -2,24 +2,61 @@ package rogue
 
 import "math/rand/v2"
 
-// Curses. A weapon, a shield or a bracelet found in the dungeon may be
-// cursed (rules.txt 武具の呪い, 腕輪の呪い): once equipped it does not come off, so nothing
-// else of its kind can be equipped, and it cannot be put down, swapped,
-// thrown nor put in a pot. A cursed weapon or shield never has an upgrade
-// value above 0. The player knows the curse by equipping the item or
-// identifying it; a scroll (おはらい) takes the curses of everything
-// carried away, the scrolls that upgrade a weapon or a shield those of
-// what they upgrade. Synthesis carries a curse over to the base. Shops do
-// not sell cursed goods.
+// Curses. An item of the dungeon, but arrows and money, may be cursed
+// (rules.txt 武具の呪い, 腕輪の呪い, 道具の呪い, 食料の呪い).
+//
+// A cursed weapon, shield or bracelet does not come off once equipped, so
+// nothing else of its kind can be equipped, and it cannot be put down,
+// swapped, thrown nor put in a pot. A cursed weapon or shield never has
+// an upgrade value above 0.
+//
+// Another cursed item cannot be used: drinking, reading, waving or eating
+// it, or putting something in a cursed pot, takes the turn and does
+// nothing (a staff keeps its charges). Thrown, it does not have its
+// effect. It can be put down, thrown, sold and put in a pot as any other.
+//
+// The player knows the curse by equipping the item, trying to use it,
+// identifying it, or by its price in a shop (curseRate); a scroll
+// (おはらい) takes the curses of everything carried away, the scrolls
+// that upgrade a weapon or a shield those of what they upgrade.
+// Synthesis carries a curse over to the base.
+
+// curseRate is the price of a cursed item, a percent of its price (as
+// Shiren 6).
+const curseRate = 87
+
+// worn says whether it is a weapon, a shield or a bracelet: what a curse
+// keeps on the player; a curse stops the use of another item.
+func (it *Item) worn() bool {
+	return it.upgradable() || it.Def.Category == CategoryBracelet
+}
 
 // cursable says whether it can be cursed.
 func (it *Item) cursable() bool {
-	return it.upgradable() || it.Def.Category == CategoryBracelet
+	return it.Def.Category != CategoryArrow && it.Def.Category != CategoryMoney
+}
+
+// curseTold says whether the player knows if it is cursed: the goods of
+// a shop show it with their price.
+func (it *Item) curseTold() bool {
+	return it.Known || it.Equipped || it.CurseTold || it.ForSale
 }
 
 // curseKnown says whether the player knows that it is cursed.
 func (it *Item) curseKnown() bool {
-	return it.Cursed && (it.Known || it.Equipped)
+	return it.Cursed && it.curseTold()
+}
+
+// curseStops is the player trying to use the cursed item it (not
+// equipment), and says whether the curse stopped it: nothing happens, and
+// the player knows the curse from then on.
+func (g *Game) curseStops(it *Item) bool {
+	if !it.Cursed || it.worn() {
+		return false
+	}
+	it.CurseTold = true
+	g.say(g.Name(it) + "は呪われていて使えない！")
+	return true
 }
 
 // rollCurse curses the new item it, by the chance of the dungeon (no roll
@@ -28,9 +65,15 @@ func (g *Game) rollCurse(rng *rand.Rand, it *Item) {
 	if !it.cursable() {
 		return
 	}
-	in := g.Dungeon.Rules.CurseGear
-	if it.Def.Category == CategoryBracelet {
-		in = g.Dungeon.Rules.CurseBracelet
+	r := g.Dungeon.Rules
+	in := r.CurseItem
+	switch {
+	case it.upgradable():
+		in = r.CurseGear
+	case it.Def.Category == CategoryBracelet:
+		in = r.CurseBracelet
+	case it.Def.Category == CategoryFood:
+		in = r.CurseFood
 	}
 	if in == 0 || rng.IntN(in) != 0 {
 		return

@@ -66,6 +66,10 @@ type Item struct {
 	// Cursed says whether it is cursed: once equipped, it does not come
 	// off (curse.go). The player knows by equipping or identifying it.
 	Cursed bool
+	// CurseTold says whether the player knows if it is cursed, without
+	// knowing the rest (Known): it equipped the item or tried to use it
+	// (curse.go).
+	CurseTold bool
 	// used says whether a bracelet had its effect on this floor.
 	used bool
 	// Mimic is the kind of monster that looks like this item (mimic.go;
@@ -720,7 +724,7 @@ func (g *Game) equip(it *Item) {
 	if old := g.equipped(it.Def.Category); old != nil {
 		old.Equipped = false
 	}
-	it.Equipped = true
+	it.Equipped, it.CurseTold = true, true
 	g.say(g.Name(it) + "を装備した。")
 	if it.Cursed {
 		g.say(g.Name(it) + "は呪われていた！")

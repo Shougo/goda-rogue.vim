@@ -208,7 +208,13 @@ func carried(g *Game, f func(*Item) bool) *Item {
 
 // known says whether the kind of it is identified, with the effect e.
 func (b *Bot) known(g *Game, it *Item, e Effect) bool {
-	return g.identified[it.Def.ID] && it.Def.Effect == e
+	return g.identified[it.Def.ID] && it.Def.Effect == e && !spoiled(it)
+}
+
+// spoiled says whether it is an item the player knows it cannot use: a
+// curse is on it.
+func spoiled(it *Item) bool {
+	return it.curseKnown() && !it.worn()
 }
 
 // heal drinks the cheapest healing grass known when no enemy is next to
@@ -570,7 +576,7 @@ func (b *Bot) danger(g *Game) (string, []string) {
 	var answers []botAnswer
 	seen := map[*ItemDef]bool{}
 	for _, it := range g.Inventory {
-		if it.ForSale || seen[it.Def] {
+		if it.ForSale || seen[it.Def] || spoiled(it) {
 			continue
 		}
 		seen[it.Def] = true
@@ -991,7 +997,7 @@ func (b *Bot) least(g *Game, foot *Item) *Item {
 	var low *Item
 	lw := math.Inf(1)
 	for _, it := range g.Inventory {
-		if it.ForSale || it.Equipped || it.Cursed {
+		if it.ForSale || it.Equipped {
 			continue
 		}
 		if w := b.worth(g, it, false); w < lw {
@@ -1017,7 +1023,7 @@ func (b *Bot) wants(g *Game, p Point) bool {
 
 // fits says whether eating the food it now wastes none of it.
 func fits(g *Game, it *Item) bool {
-	return it.Def.Effect != EffectRotten && g.Fullness+it.Def.Strength <= g.Dungeon.Rules.Fullness
+	return it.Def.Effect != EffectRotten && !spoiled(it) && g.Fullness+it.Def.Strength <= g.Dungeon.Rules.Fullness
 }
 
 // trade is the bot standing on an item with a full inventory: it eats
@@ -1038,7 +1044,7 @@ func (b *Bot) trade(g *Game) (string, []string) {
 	switch {
 	case foot.Def.Category == CategoryFood && fits(g, foot):
 		return atFoot(commandEat)
-	case foot.Def.Category == CategoryGrass && !g.identified[foot.Def.ID] && g.HP == g.MaxHP &&
+	case foot.Def.Category == CategoryGrass && !g.identified[foot.Def.ID] && !spoiled(foot) && g.HP == g.MaxHP &&
 		len(g.visibleEnemies()) == 0:
 		return atFoot(commandDrink)
 	}
@@ -1059,6 +1065,9 @@ func (b *Bot) trade(g *Game) (string, []string) {
 // one is worn, an empty pot (they do not use pots), a staff with no
 // charge left.
 func useless(g *Game, it *Item) bool {
+	if spoiled(it) {
+		return true
+	}
 	switch c := it.Def.Category; c {
 	case CategoryWeapon, CategoryShield:
 		worn := g.equipped(c)
@@ -1270,7 +1279,7 @@ func (b *Bot) eat(g *Game) (string, []string) {
 	}
 	var foods []*Item
 	for _, it := range g.Inventory {
-		if it.Def.Category == CategoryFood && !it.ForSale {
+		if it.Def.Category == CategoryFood && !it.ForSale && !spoiled(it) {
 			foods = append(foods, it)
 		}
 	}
@@ -1325,7 +1334,7 @@ func (b *Bot) identify(g *Game) (string, []string) {
 		return "", nil
 	}
 	unknown := func(c Category) *Item {
-		return carried(g, func(it *Item) bool { return it.Def.Category == c && !g.identified[it.Def.ID] })
+		return carried(g, func(it *Item) bool { return it.Def.Category == c && !g.identified[it.Def.ID] && !spoiled(it) })
 	}
 	if s := carried(g, func(it *Item) bool { return b.known(g, it, EffectIdentify) }); s != nil {
 		if carried(g, func(it *Item) bool { return !g.identified[it.Def.ID] }) != nil {

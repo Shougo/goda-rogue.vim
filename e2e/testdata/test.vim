@@ -177,15 +177,16 @@ function! s:items() abort
         break
       endif
       call goda_rogue#do('pickup')
-      if join(s:messages()) =~# 'を拾った。' || search('^  結果 ', 'nw') > 0
+      " (Not money: it goes to the purse.)
+      if s:status() =~# '持ち物 [1-9]' || search('^  結果 ', 'nw') > 0
         break
       endif
     endfor
-    if join(s:messages()) =~# 'を拾った。'
+    if s:status() =~# '持ち物 [1-9]'
       break
     endif
   endfor
-  call s:check('picked up', join(s:messages()) =~# 'を拾った。', 1)
+  call s:check('picked up', s:status() =~# '持ち物 [1-9]', 1)
 
   let g:goda_rogue#prompt_func = function('s:fake_prompt')
   let s:asked = {}

@@ -8,6 +8,9 @@ import (
 // useItem uses it: drinks a grass, reads a scroll, waves a staff, eats
 // food. All but a staff are used up.
 func (g *Game) useItem(it *Item) {
+	if g.curseStops(it) {
+		return
+	}
 	if it.Def.Category != CategoryStaff {
 		g.discard(it)
 	}
@@ -28,6 +31,7 @@ func (g *Game) useItem(it *Item) {
 		}
 		it.Charges--
 		it.Waved++
+		it.CurseTold = true
 	case CategoryFood:
 		g.say(name + "を食べた。")
 	}

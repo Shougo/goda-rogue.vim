@@ -69,7 +69,27 @@ func (g *Game) unknown(it *Item) bool {
 	if !g.identified[it.Def.ID] {
 		return true
 	}
-	return !it.Known && (it.upgradable() || it.Def.Category == CategoryStaff)
+	if it.Known {
+		return false
+	}
+	// Whether it is cursed, where such items are, unless the player knows.
+	return it.upgradable() || it.Def.Category == CategoryStaff || g.curses(it) && !it.curseTold()
+}
+
+// curses says whether an item like it may be cursed in the dungeon.
+func (g *Game) curses(it *Item) bool {
+	r := g.Dungeon.Rules
+	switch {
+	case !it.cursable():
+		return false
+	case it.upgradable():
+		return r.CurseGear > 0
+	case it.Def.Category == CategoryBracelet:
+		return r.CurseBracelet > 0
+	case it.Def.Category == CategoryFood:
+		return r.CurseFood > 0
+	}
+	return r.CurseItem > 0
 }
 
 // askIdentify asks which item to identify (a scroll), and says whether

@@ -46,10 +46,14 @@ const (
 	sayThief   = "店主「泥棒だ！」"
 )
 
-// price is the price of it in a shop (arrows: all of them).
+// price is the price of it in a shop (arrows: all of them); a cursed
+// item is cheaper, which tells the curse to a player who knows the prices.
 func price(it *Item) int {
 	if it.Def.Category == CategoryArrow {
 		return it.Def.Price * max(it.Count, 1)
+	}
+	if it.Cursed {
+		return it.Def.Price * curseRate / 100
 	}
 	return it.Def.Price
 }
@@ -122,8 +126,6 @@ func (g *Game) openShop(rng *rand.Rand, rooms []int, start int) {
 	for _, p := range tiles {
 		it := g.newItemOf(rng, table.pick(rng, d, g.Depth), p)
 		it.ForSale = true
-		// A shop does not sell cursed goods.
-		it.Cursed = false
 		g.Items = append(g.Items, it)
 	}
 }

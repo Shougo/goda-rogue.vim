@@ -44,14 +44,20 @@ Weapons and shields can have seals (印), one kanji each, shown in the
 inventory (鉄の剣+2【会必】): they work while the weapon or the shield is
 equipped, as many as it has room for.
 
-A weapon, a shield or a bracelet found in the dungeon may be cursed: once
-equipped, it does not come off (木刀-1（呪）).  Nothing else of its kind
-can be equipped, and it cannot be put down, thrown nor put in a pot.  A
-cursed weapon or shield has no upgrade value above 0.  The curse shows
-when the item is equipped or identified.  A scroll of おはらい takes the
-curses of everything carried away; the scrolls that upgrade a weapon or a
-shield take that of what they upgrade.  Synthesis carries a curse over,
-and shops do not sell cursed goods.
+An item of the dungeon, but arrows and money, may be cursed.  A cursed
+weapon, shield or bracelet does not come off once equipped (木刀-1（呪）):
+nothing else of its kind can be equipped, and it cannot be put down,
+thrown nor put in a pot.  A cursed weapon or shield has no upgrade value
+above 0.  Another cursed item cannot be used: drinking, reading, waving
+or eating it, or putting something in a cursed pot, takes the turn and
+does nothing; thrown, it does not have its effect.  It can be put down,
+thrown, sold and put in a pot as any other.  The curse shows when the
+item is equipped, when the player tries to use it, or when it is
+identified (a scroll of identification can be read on an item to learn
+whether it is cursed).  A shop sells and buys a cursed item at 87% of its
+price, and marks its cursed goods.  A scroll of おはらい takes the curses
+of everything carried away; the scrolls that upgrade a weapon or a shield
+take that of what they upgrade.  Synthesis carries a curse over.
 
 Grasses, scrolls, staffs, bracelets and pots are unidentified at first:
 they go by names such as 赤い草 (with a "?" in the inventory), different
@@ -658,9 +664,10 @@ The built-in dungeons:
 				combat constants, the growth table of the
 				player, the first ally, how many allies at
 				most (仲間の上限, optional, default 3), how
-				rarely a weapon or a shield, and a bracelet,
-				found are cursed, one in so many (武具の呪い
-				and 腕輪の呪い, optional, default 0: never),
+				rarely a weapon or a shield, a bracelet, food
+				and another item are cursed, one in so many
+				(武具の呪い, 腕輪の呪い, 食料の呪い and
+				道具の呪い, optional, default 0: never),
 				whether a trap the
 				player has found goes off (見つけた罠: 安全 or
 				発動), and, optional, whether runs may use
