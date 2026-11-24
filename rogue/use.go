@@ -54,6 +54,7 @@ func (g *Game) useItem(it *Item) {
 	g.identify(it)
 
 	n := it.Def.Strength
+	lucky := g.lucky(it, blessed)
 	switch it.Def.Effect {
 	case EffectHeal:
 		if g.HP >= g.MaxHP {
@@ -82,7 +83,9 @@ func (g *Game) useItem(it *Item) {
 		g.light()
 		g.say("フロアが明るくなった。")
 	case EffectIdentify:
-		if !g.askIdentify() {
+		switch {
+		case lucky && g.identifyAll():
+		case !g.askIdentify():
 			g.say("識別するものはなかった。")
 		}
 	case EffectBlowAway:
@@ -102,13 +105,19 @@ func (g *Game) useItem(it *Item) {
 		g.HP += n
 		g.say(fmt.Sprintf("最大HPが%d上がった。", n))
 	case EffectUpWeapon:
-		g.upgrade(CategoryWeapon, n)
+		g.upgrade(CategoryWeapon, n+luckyUpgrade*boolInt(lucky), lucky)
 	case EffectUpShield:
-		g.upgrade(CategoryShield, n)
+		g.upgrade(CategoryShield, n+luckyUpgrade*boolInt(lucky), lucky)
 	case EffectSwap:
 		g.swapPlaces()
 	case EffectUncurse:
-		g.uncurse()
+		switch {
+		case lucky:
+			g.say(sayLucky)
+			g.uncurse()
+		case !g.askUncurse():
+			g.say("何も起こらなかった。")
+		}
 	default:
 		if e := MagicEffect(it.Def.Effect); castable(it.Def.Category, e) {
 			g.cast(it.Def.Category, e)
@@ -171,12 +180,16 @@ func (g *Game) enemiesAround() []*Monster {
 	return ms
 }
 
-// upgrade raises the upgrade value of the equipped weapon or shield by n.
-func (g *Game) upgrade(c Category, n int) {
+// upgrade raises the upgrade value of the equipped weapon or shield by
+// n; lucky says that n is more than the scroll gives (lucky.go).
+func (g *Game) upgrade(c Category, n int, lucky bool) {
 	it := g.equipped(c)
 	if it == nil {
 		g.say("何も起こらなかった。")
 		return
+	}
+	if lucky {
+		g.say(sayLucky)
 	}
 	it.Upgrade += n
 	it.Known = true

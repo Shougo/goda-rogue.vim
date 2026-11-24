@@ -52,8 +52,9 @@ func TestCurse(t *testing.T) {
 	}
 }
 
-// TestUncurse: the scroll takes the curses of everything carried away,
-// in pots too; a blessing that of what it upgrades.
+// TestUncurse: the scroll takes the curse of an item carried away (of
+// everything, in pots too, when lucky); a blessing that of what it
+// upgrades.
 func TestUncurse(t *testing.T) {
 	g, _ := roomGame(t, 4, 3)
 	w := carry(g, "bokutou", -1)
@@ -78,13 +79,28 @@ func TestUncurse(t *testing.T) {
 		t.Error("the weapon does not come off without its curse")
 	}
 
-	used(t, g, "oharai")
-	if s.Cursed || b.Cursed || in.Cursed || !strings.Contains(g.Message, "持ち物の呪いが解けた。") {
-		t.Errorf("scroll: cursed %v %v %v, %q", s.Cursed, b.Cursed, in.Cursed, g.Message)
+	// The scroll takes the curse of the item chosen away, and of what is
+	// in it.
+	sc := carry(g, "oharai", 0)
+	command(t, g, sc, commandRead)
+	if g.Prompt == nil || g.Prompt.Title != "どれの呪いを解く？" {
+		t.Fatalf("prompt %+v", g.Prompt)
 	}
-	used(t, g, "oharai")
-	if !strings.Contains(g.Message, "呪われたものはなかった。") {
+	chooseLabel(t, g, g.Entry(p))
+	if in.Cursed || !s.Cursed || !b.Cursed || !strings.Contains(g.Message, "保存の壺の呪いが解けた。") {
+		t.Errorf("scroll on the pot: cursed %v %v %v, %q", in.Cursed, s.Cursed, b.Cursed, g.Message)
+	}
+	command(t, g, carry(g, "oharai", 0), commandRead)
+	chooseLabel(t, g, g.Entry(p))
+	if !strings.Contains(g.Message, "保存の壺は呪われていなかった。") {
 		t.Errorf("nothing cursed: %q", g.Message)
+	}
+
+	// Lucky, of everything carried.
+	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.Lucky = 1 })
+	used(t, g, "oharai")
+	if s.Cursed || b.Cursed || g.Prompt != nil || !strings.Contains(strings.Join(g.Log, ""), "ラッキー！持ち物の呪いが解けた。") {
+		t.Errorf("lucky scroll: cursed %v %v, %q", s.Cursed, b.Cursed, g.Message)
 	}
 }
 

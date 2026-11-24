@@ -55,9 +55,14 @@ thrown, sold and put in a pot as any other.  The curse shows when the
 item is equipped, when the player tries to use it, or when it is
 identified (a scroll of identification can be read on an item to learn
 whether it is cursed).  A shop sells and buys a cursed item at 87% of its
-price, and marks its cursed goods.  A scroll of おはらい takes the curses
-of everything carried away; the scrolls that upgrade a weapon or a shield
-take that of what they upgrade.  Synthesis carries a curse over.
+price, and marks its cursed goods.  A scroll of おはらい takes the curse
+of an item carried away (and of what is in it, a pot); the scrolls that
+upgrade a weapon or a shield take that of what they upgrade.  Synthesis
+carries a curse over.
+
+Some scrolls do more now and then (ラッキー！), and always when blessed: a
+scroll of identification identifies everything carried, a scroll of
+おはらい takes every curse away, a scroll that upgrades gives 2 more.
 
 An item that can be cursed may be blessed instead (薬草（祝）), never
 both.  A blessing takes a bad effect on its item in its place, once:
@@ -679,7 +684,8 @@ The built-in dungeons:
 				(武具の呪い, 腕輪の呪い, 食料の呪い and
 				道具の呪い, optional, default 0: never), how
 				rarely such an item is blessed (祝福, the
-				same),
+				same), how rarely a scroll is lucky (ラッキー,
+				the same),
 				whether a trap the
 				player has found goes off (見つけた罠: 安全 or
 				発動), and, optional, whether runs may use

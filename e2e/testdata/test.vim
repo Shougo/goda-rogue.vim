@@ -182,11 +182,11 @@ function! s:items() abort
         break
       endif
     endfor
-    if s:status() =~# '持ち物 [1-9]'
+    if s:status() =~# '持ち物 [1-9]' && search('^  結果 ', 'nw') == 0
       break
     endif
   endfor
-  call s:check('picked up', s:status() =~# '持ち物 [1-9]', 1)
+  call s:check('picked up', s:status() =~# '持ち物 [1-9]' && search('^  結果 ', 'nw') == 0, 1)
 
   let g:goda_rogue#prompt_func = function('s:fake_prompt')
   let s:asked = {}

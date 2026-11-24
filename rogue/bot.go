@@ -166,7 +166,14 @@ var botRules = []string{
 func (b *Bot) answer(g *Game) (string, []string) {
 	p := g.Prompt
 	if p.kind == promptIdentify && len(p.Choices) > 0 {
-		return "choose", []string{"0"}
+		// A kind it does not know first; else whether one is cursed.
+		i := max(slices.IndexFunc(p.targets, func(it *Item) bool { return !g.identified[it.Def.ID] }), 0)
+		return "choose", []string{fmt.Sprint(i)}
+	}
+	if p.kind == promptUncurse && len(p.Choices) > 0 {
+		// What it knows to be cursed.
+		i := max(slices.IndexFunc(p.targets, func(it *Item) bool { return it.curseKnown() }), 0)
+		return "choose", []string{fmt.Sprint(i)}
 	}
 	if len(b.plan) == 0 {
 		return "cancel", nil

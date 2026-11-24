@@ -242,6 +242,7 @@ const (
 	promptInventory = "inventory"
 	promptItem      = "item"
 	promptIdentify  = "identify"
+	promptUncurse   = "uncurse"
 	promptFoot      = "foot"
 	promptFootTrap  = "foot trap"
 	promptSwap      = "swap"
@@ -611,6 +612,9 @@ func (g *Game) choose(arg string) (bool, error) {
 		}
 		g.learn(it)
 		g.say(g.describe(it) + "を識別した。")
+		return false, nil
+	case promptUncurse:
+		g.uncurseOne(p.targets[n])
 		return false, nil
 	case promptPay:
 		if n == 0 {

@@ -17,8 +17,9 @@ import "math/rand/v2"
 //
 // The player knows the curse by equipping the item, trying to use it,
 // identifying it, or by its price in a shop (curseRate); a scroll
-// (おはらい) takes the curses of everything carried away, the scrolls
-// that upgrade a weapon or a shield those of what they upgrade.
+// (おはらい) takes the curse of an item carried away (of everything
+// carried when lucky, lucky.go), the scrolls that upgrade a weapon or a
+// shield those of what they upgrade.
 // Synthesis carries a curse over to the base.
 
 // curseRate is the price of a cursed item, a percent of its price (as

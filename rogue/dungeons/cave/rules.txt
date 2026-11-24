@@ -54,6 +54,11 @@
 # time). A shop sells blessed items at twice their price (optional: 0, as
 # if missing, for never).
 祝福	20
+# How rarely a scroll of identification, of おはらい or of upgrade does
+# more: one in so many (always when blessed). Lucky, the first identifies
+# everything carried, the second takes every curse away, the others give
+# 2 more (optional: 0, as if missing, for never unless blessed).
+ラッキー	8
 # The chance, a percent, that a monster the player kills drops an item of
 # the floor's item table (monsters.txt 落とし物 may say otherwise). The
 # cave gives each family its own rate (stronger ones drop more); this low
