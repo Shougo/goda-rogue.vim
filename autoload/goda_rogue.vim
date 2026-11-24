@@ -118,6 +118,7 @@ function! s:highlights() abort
   call s:highlight('GodaRogueFacing', c.facing, '', 'bg')
   highlight default link GodaRogueOldMessage Comment
   highlight default link GodaRogueTitle Title
+  highlight default link GodaRogueHungry WarningMsg
   " The HP bar of the top line: spaces with a background.
   call s:highlight('GodaRogueHP', c.hp, '', 'bg')
   call s:highlight('GodaRogueHPLow', c.hplow, '', 'bg')

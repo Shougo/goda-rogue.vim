@@ -590,6 +590,8 @@ GodaRogueTitle		The title of the result screen.
 GodaRogueHP		The HP bar of the top line (a background): its
 GodaRogueHPLow		filled part, the filled part at a quarter of HP or
 GodaRogueHPEmpty	less, and the rest.
+GodaRogueHungry		The fullness of the top line at 10% or less (with
+			"（空腹！）" at 0%).
 GodaRogueRank1		Enemies of rank 1 to 4: green, blue, purple, red.
 ...
 GodaRogueRank4

@@ -257,3 +257,36 @@ func TestBrightness(t *testing.T) {
 		t.Error("the scroll does not light a dark floor")
 	}
 }
+
+// TestHungerShown: the top line warns at 10% of the fullness or less, and
+// a starving player is told again every starveWarning turns.
+func TestHungerShown(t *testing.T) {
+	g, _ := roomGame(t, 4, 3)
+	g.HP, g.MaxHP = 999, 999
+	hl := map[string][]Span{}
+	g.topLine(hl)
+	if len(hl[hlHungry]) != 0 {
+		t.Errorf("a warning when full: %v", hl[hlHungry])
+	}
+	g.Fullness = 0
+	line := g.topLine(hl)
+	if len(hl[hlHungry]) != 1 || !strings.Contains(line, "満腹 0%（空腹！）") {
+		t.Fatalf("%q, %v", line, hl[hlHungry])
+	}
+	sp := hl[hlHungry][0]
+	if got := line[sp.Col-1 : sp.End-1]; got != "満腹 0%（空腹！）" {
+		t.Errorf("the span covers %q", got)
+	}
+	n := 0
+	for range 3 * starveWarning {
+		g.Message = ""
+		g.Turn++
+		g.getHungry()
+		if strings.Contains(g.Message, "空腹でHPが減っている") {
+			n++
+		}
+	}
+	if n != 3 {
+		t.Errorf("told %d times in %d turns", n, 3*starveWarning)
+	}
+}

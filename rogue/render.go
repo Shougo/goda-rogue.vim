@@ -39,6 +39,8 @@ const (
 	hlHP      = "GodaRogueHP"
 	hlHPLow   = "GodaRogueHPLow"
 	hlHPEmpty = "GodaRogueHPEmpty"
+	// hlHungry is the fullness of the top line at hungryShare or less.
+	hlHungry = "GodaRogueHungry"
 	// hlTitle is the title of the result screen.
 	hlTitle = "GodaRogueTitle"
 )
@@ -272,9 +274,20 @@ func (g *Game) topLine(hl map[string][]Span) string {
 	if filled < hpBarWidth {
 		hl[hlHPEmpty] = append(hl[hlHPEmpty], Span{1, col + filled, col + hpBarWidth})
 	}
-	return head + strings.Repeat(" ", hpBarWidth) +
-		fmt.Sprintf("  満腹 %s  %dG", g.fullnessLabel(), g.Gold)
+	line := head + strings.Repeat(" ", hpBarWidth) + "  "
+	full := "満腹 " + g.fullnessLabel()
+	if g.Fullness*100 <= g.Dungeon.Rules.Fullness*hungryShare {
+		if g.Fullness == 0 {
+			full += "（空腹！）"
+		}
+		hl[hlHungry] = append(hl[hlHungry], Span{1, len(line) + 1, len(line) + len(full) + 1})
+	}
+	return line + full + fmt.Sprintf("  %dG", g.Gold)
 }
+
+// hungryShare is the fullness (a percent of the rule) from which the top
+// line shows it as a warning.
+const hungryShare = 10
 
 // The characters of the mini-map. Walls are left out: the floors show the
 // shapes of the rooms and corridors.

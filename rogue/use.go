@@ -275,6 +275,9 @@ func (g *Game) fling(m *Monster, d Point, byPlayer bool) {
 	}
 }
 
+// starveWarning is every how many turns the starving player is told.
+const starveWarning = 10
+
 // hungerMessages are said as the fullness falls to them.
 var hungerMessages = []struct {
 	fullness int
@@ -290,6 +293,10 @@ var hungerMessages = []struct {
 // a point goes every turn.
 func (g *Game) getHungry() {
 	if g.Fullness == 0 {
+		// Said again now and then: it is easy to miss once.
+		if g.Turn%starveWarning == 0 {
+			g.say("空腹でHPが減っている！　何か食べないと……。")
+		}
 		g.HP--
 		if g.HP <= 0 {
 			g.HP = 0
