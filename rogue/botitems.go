@@ -39,6 +39,11 @@ func affected(g *Game, ms []*Monster, m *Monster, e MagicEffect) []*Monster {
 	case MagicConfuse, MagicSleep, MagicSeal:
 		c.States.take(e)
 	case MagicSlow:
+		if m.Slowed > 0 {
+			// Slowed already: another wave does nothing more (the bots
+			// waved at a slowed tree turn after turn).
+			return ms
+		}
 		// Every other turn: about a speed down.
 		switch c.Speed {
 		case SpeedNormal:

@@ -9,7 +9,9 @@
 #   middle   4-14    14-30    30-50      -
 #   strong   9-18    19-37    36-50      -
 #
-# The first floors are as the cave's. Rank 3 is what the deep floors are
+# The rabbits (兎, a reward the others hunt and rank up by) are rare
+# (weight 1) and come from 5F: on the first floors they made monsters of
+# rank 2 and 3. The first floors are as the cave's. Rank 3 is what the deep floors are
 # made of; rank 4 is only the weak families, on the last floors: 50
 # floors are not the place for all of it (the others reach it by a
 # rank-up). The families of abilities (射 魔 化 泥, and the charging 猪,
@@ -621,31 +623,28 @@
 45	45	ari4	2
 46	46	ari4	3
 47	50	ari4	4
-1	1	usagi1	1
-2	2	usagi1	2
-3	3	usagi1	3
-4	7	usagi1	4
-8	8	usagi1	3
-9	9	usagi1	2
+5	7	usagi1	1
+8	8	usagi1	1
+9	9	usagi1	1
 10	10	usagi1	1
 9	9	usagi2	1
-10	10	usagi2	2
-11	11	usagi2	3
-12	22	usagi2	4
-23	23	usagi2	3
-24	24	usagi2	2
+10	10	usagi2	1
+11	11	usagi2	1
+12	22	usagi2	1
+23	23	usagi2	1
+24	24	usagi2	1
 25	25	usagi2	1
 26	26	usagi3	1
-27	27	usagi3	2
-28	28	usagi3	3
-29	42	usagi3	4
-43	43	usagi3	3
-44	44	usagi3	2
+27	27	usagi3	1
+28	28	usagi3	1
+29	42	usagi3	1
+43	43	usagi3	1
+44	44	usagi3	1
 45	45	usagi3	1
 44	44	usagi4	1
-45	45	usagi4	2
-46	46	usagi4	3
-47	50	usagi4	4
+45	45	usagi4	1
+46	46	usagi4	1
+47	50	usagi4	1
 # 機
 4	4	karakuri1	1
 5	5	karakuri1	2

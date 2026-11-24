@@ -1889,7 +1889,8 @@ func (b *Bot) approach(g *Game, goal func(Point) bool) (string, []string) {
 	}
 	p := g.Player.Add(Directions[args[0]])
 	for _, m := range g.visibleEnemies() {
-		if !m.Dozing && !m.Speed.fast() && chebyshev(m.Pos, g.Player) == 2 && chebyshev(m.Pos, p) == 1 {
+		// (Not for one that never moves: it would wait for ever.)
+		if !m.Dozing && !m.Speed.fast() && !m.still() && chebyshev(m.Pos, g.Player) == 2 && chebyshev(m.Pos, p) == 1 {
 			return "wait", nil
 		}
 	}

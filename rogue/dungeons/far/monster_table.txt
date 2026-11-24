@@ -9,7 +9,9 @@
 #   middle   4-14    14-34    35-66    65-99
 #   strong   9-18    19-42    41-74    73-99
 #
-# The first floors are as the cave's. A rank lasts about thirty floors;
+# The rabbits (兎, a reward the others hunt and rank up by) are rare
+# (weight 1) and come from 5F: on the first floors they made monsters of
+# rank 2 and 3. The first floors are as the cave's. A rank lasts about thirty floors;
 # the last floors are the middle and strong families of rank 4. The
 # families of abilities (射 魔 化 泥, and the charging 猪, later) come at
 # lower weights, a rank about every thirty floors too.
@@ -791,33 +793,30 @@
 86	86	ari4	3
 87	87	ari4	2
 88	88	ari4	1
-1	1	usagi1	1
-2	2	usagi1	2
-3	3	usagi1	3
-4	7	usagi1	4
-8	8	usagi1	3
-9	9	usagi1	2
+5	7	usagi1	1
+8	8	usagi1	1
+9	9	usagi1	1
 10	10	usagi1	1
 9	9	usagi2	1
-10	10	usagi2	2
-11	11	usagi2	3
-12	25	usagi2	4
-26	26	usagi2	3
-27	27	usagi2	2
+10	10	usagi2	1
+11	11	usagi2	1
+12	25	usagi2	1
+26	26	usagi2	1
+27	27	usagi2	1
 28	28	usagi2	1
 29	29	usagi3	1
-30	30	usagi3	2
-31	31	usagi3	3
-32	53	usagi3	4
-54	54	usagi3	3
-55	55	usagi3	2
+30	30	usagi3	1
+31	31	usagi3	1
+32	53	usagi3	1
+54	54	usagi3	1
+55	55	usagi3	1
 56	56	usagi3	1
 55	55	usagi4	1
-56	56	usagi4	2
-57	57	usagi4	3
-58	85	usagi4	4
-86	86	usagi4	3
-87	87	usagi4	2
+56	56	usagi4	1
+57	57	usagi4	1
+58	85	usagi4	1
+86	86	usagi4	1
+87	87	usagi4	1
 88	88	usagi4	1
 # 機
 4	4	karakuri1	1
