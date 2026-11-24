@@ -263,6 +263,7 @@ func (g *Game) showUp(it *Item) {
 // eyeDrops shows the shallow mimics and the traps of the floor.
 func (g *Game) eyeDrops() {
 	g.say("目がよく見えるようになった。")
+	g.Clear = true
 	for _, t := range g.Traps {
 		t.Found = true
 	}

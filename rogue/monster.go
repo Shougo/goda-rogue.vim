@@ -208,7 +208,7 @@ func (g *Game) act(m *Monster) bool {
 	}
 	// Attack the player first (or steal from it), then an ally.
 	for _, d := range around {
-		if m.Pos.Add(d) == g.Player && g.clearFrom(m.Pos, d) {
+		if m.Pos.Add(d) == g.Player && g.clearFrom(m.Pos, d) && g.Level.At(m.Pos).Walkable() {
 			if a, ok := m.ability(AbilitySteal); ok && g.thieve(m, a) {
 				return true
 			}
@@ -238,7 +238,7 @@ func (g *Game) act(m *Monster) bool {
 		return true
 	}
 
-	if m.Hunter || g.sees(m.Pos, g.Player) {
+	if _, walls := m.ability(AbilityWalls); m.Hunter || walls || g.sees(m.Pos, g.Player) {
 		m.target, m.hasTarget = g.Player, true
 	} else if !m.hasTarget || m.Pos == m.target {
 		// Wander: head to a tile of a random room.
@@ -323,7 +323,7 @@ func (g *Game) stepToward(m *Monster, to Point) bool {
 	if m.still() {
 		return false
 	}
-	if g.knightStep(m, to) {
+	if g.knightStep(m, to) || g.throughWalls(m, to) {
 		return true
 	}
 	dist := g.distances(to)
@@ -413,13 +413,14 @@ func (g *Game) workOutDistances(to Point) []int {
 // hitPlayer is an attack of m on the player.
 func (g *Game) hitPlayer(m *Monster) {
 	r := g.Dungeon.Rules
+	name := g.seenName(m)
 	if !hits(g.rng, max(r.MonsterHitRate-g.sealStrength(SealDodge), 0)) {
-		g.say(m.Name + "の攻撃は外れた。")
+		g.say(name + "の攻撃は外れた。")
 		return
 	}
 	n := g.critical(m, damage(g.rng, m.Attack, g.Defense(), r.DefenseK), true)
 	g.HP -= n
-	g.say(fmt.Sprintf("%sの攻撃。%dのダメージ。", m.Name, n))
+	g.say(fmt.Sprintf("%sの攻撃。%dのダメージ。", name, n))
 	g.event("hurt %d %s", n, m.Def.ID)
 	if g.HP <= 0 {
 		g.HP = 0

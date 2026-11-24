@@ -90,6 +90,10 @@
 #   桂馬:D  it moves as a knight of shogi or chess, over what is in the
 #              way; with the player a knight's move away, it swoops on it
 #              for D damage, which defense does not lower
+#   透明  the player does not see it, unless eye drops cleared its
+#              eyes on the floor
+#   壁抜け  it goes through rock toward the player, wherever it is; it
+#              fights only out of rock
 #   擬態:D:S:K  on a new floor it hides as an item of the floor's table, or
 #              (S%) as stairs, or (K%, with a shop) as one of the shop's
 #              goods. D 1: trying to pick it up shows it, and so do a
@@ -278,3 +282,11 @@ washi1	鷲	鷲	1	20	7	3	5	通常	-	桂馬:8	-	道具:4	-
 washi2	鷲	大鷲	2	42	12	6	16	通常	-	桂馬:14	-	道具:6	-
 washi3	鷲	荒鷲	3	67	17	9	48	通常	-	桂馬:20	-	道具:9	-
 washi4	鷲	鷲王	4	101	24	12	144	通常	-	桂馬:28	-	道具:12	-
+kage1	影	影	1	20	7	3	5	通常	-	透明	-	道具:4	-
+kage2	影	濃影	2	42	12	6	16	通常	-	透明	-	道具:6	-
+kage3	影	闇影	3	67	17	9	48	通常	-	透明	-	道具:9	-
+kage4	影	真影	4	101	24	12	144	通常	-	透明	-	道具:12	-
+mei1	冥	冥使	1	24	8	4	6	倍速	-	壁抜け	-	道具:4	-
+mei2	冥	冥兵	2	50	14	7	18	倍速	-	壁抜け	-	道具:6	-
+mei3	冥	冥将	3	80	20	10	54	倍速	-	壁抜け	-	道具:9	-
+mei4	冥	冥王	4	120	28	14	162	倍速	-	壁抜け	-	道具:12	-

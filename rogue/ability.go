@@ -124,6 +124,12 @@ const (
 	// in the way; with the player a knight's move away, it swoops on it
 	// for so much damage, which defense does not lower (reach.go).
 	AbilityKnight AbilityName = "桂馬"
+	// AbilityInvisible: the player does not see it, unless eye drops
+	// cleared its eyes on the floor (shade.go).
+	AbilityInvisible AbilityName = "透明"
+	// AbilityWalls: it goes through rock, straight to the player, wherever
+	// it is (shade.go).
+	AbilityWalls AbilityName = "壁抜け"
 )
 
 // MagicEffect is an effect of the bolt of AbilityMagic.
@@ -201,6 +207,8 @@ var abilityDefs = map[AbilityName]abilityDef{
 	AbilityLong:      {nil, nil, nil, 0},
 	AbilityBlink:     {[]string{"chance %"}, []int{1}, []int{100}, 0},
 	AbilityKnight:    {[]string{"damage"}, []int{1}, []int{999}, 0},
+	AbilityInvisible: {nil, nil, nil, 0},
+	AbilityWalls:     {nil, nil, nil, 0},
 	AbilityTrap:      {[]string{"chance %"}, []int{1}, []int{100}, 0},
 	AbilityRevive:    {[]string{"HP %"}, []int{1}, []int{100}, 0},
 	AbilityExplode:   {[]string{"HP %", "damage %"}, []int{1, 1}, []int{99, 100}, 0},
@@ -214,7 +222,7 @@ const maxReach = 20
 
 // abilityNames are the abilities in a fixed order, for the error that
 // lists them.
-var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot, AbilitySynthesis, AbilityCurse, AbilityHunger, AbilityStill, AbilityHold, AbilityBurn, AbilityHeal, AbilityCheer, AbilityRevive, AbilityExplode, AbilityPack, AbilityFlee, AbilityTrap, AbilityLong, AbilityBlink, AbilityKnight}
+var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot, AbilitySynthesis, AbilityCurse, AbilityHunger, AbilityStill, AbilityHold, AbilityBurn, AbilityHeal, AbilityCheer, AbilityRevive, AbilityExplode, AbilityPack, AbilityFlee, AbilityTrap, AbilityLong, AbilityBlink, AbilityKnight, AbilityInvisible, AbilityWalls}
 
 // lineAbilities are the abilities that reach the player from afar along
 // a line, their reach their first number.

@@ -721,7 +721,9 @@ func TestBotPromising(t *testing.T) {
 	if got := b.promising(g, corridor); got != near {
 		t.Errorf("all seen: promising %v, a section without a room around %v", got, near)
 	}
-	r := g.Level.Rooms[0]
+	// (Not a dummy room: one tile of a corridor.)
+	i := slices.IndexFunc(g.Level.Rooms, func(r Room) bool { return !r.Dummy })
+	r := g.Level.Rooms[i]
 	if !b.promising(g, Point{r.X, r.Y}) {
 		t.Error("a tile of a room is not promising")
 	}

@@ -25,7 +25,7 @@ type sight struct {
 func (g *Game) lookAround() {
 	var sights []sight
 	for _, m := range g.Monsters {
-		if m.Ally || g.Visible(m.Pos) || g.sensesMonster(m.Pos) {
+		if !g.hidden(m) && (m.Ally || g.Visible(m.Pos) || g.sensesMonster(m.Pos)) {
 			sights = append(sights, sight{pos: m.Pos, monster: m})
 		}
 	}
@@ -196,6 +196,10 @@ func (g *Game) abilityText(a Ability) string {
 		return fmt.Sprintf("見えていると%d%%で目の前に現れる", v[0])
 	case AbilityKnight:
 		return fmt.Sprintf("桂馬のように跳んで動く。桂馬の位置から舞い降りて%dのダメージ（防御は効かない）", v[0])
+	case AbilityInvisible:
+		return "姿が見えない。目薬草を飲むと、その階では見える"
+	case AbilityWalls:
+		return "どこにいても、壁の中を通り抜けて向かってくる。壁の中では攻撃しない"
 	case AbilityRevive:
 		return fmt.Sprintf("一度倒しても、最大HPの%d%%で起き上がる", v[0])
 	case AbilityExplode:

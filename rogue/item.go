@@ -814,7 +814,7 @@ func (g *Game) use(e Effect) {
 // show what the player would not see.
 func (g *Game) sense() {
 	for _, m := range g.Monsters {
-		if m.hostile() && !g.Visible(m.Pos) && g.sensesMonster(m.Pos) {
+		if m.hostile() && !g.Visible(m.Pos) && g.sensesMonster(m.Pos) && !g.hidden(m) {
 			g.use(EffectSenseEnemy)
 			break
 		}

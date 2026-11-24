@@ -68,6 +68,9 @@ type Game struct {
 	ordered *Monster
 	// Dark says whether the floor is dark: the player sees only around.
 	Dark bool
+	// Clear says whether eye drops cleared the player's eyes on the
+	// floor: it sees invisible monsters (shade.go).
+	Clear bool
 	// Traps are the traps of the floor.
 	Traps []*Trap
 	// Decoys are the mimics that look like the stairs.
@@ -251,6 +254,7 @@ func (g *Game) newLevel(rng *rand.Rand) {
 	g.Shop, g.selling = nil, nil
 	g.Seen = make([]bool, len(g.Level.Tiles))
 	g.Safe = make([]bool, len(g.Level.Tiles))
+	g.Clear = false
 	switch d := c.Brightness; {
 	case d == BrightnessBright:
 		g.light()
@@ -1012,7 +1016,7 @@ func (g *Game) dash(d Point) {
 func (g *Game) visibleEnemies() []*Monster {
 	var ms []*Monster
 	for _, m := range g.Monsters {
-		if m.hostile() && g.Visible(m.Pos) {
+		if m.hostile() && g.Visible(m.Pos) && !g.hidden(m) {
 			ms = append(ms, m)
 		}
 	}
