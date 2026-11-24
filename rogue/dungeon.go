@@ -255,6 +255,8 @@ const (
 	EffectRegen      Effect = "回復"
 	EffectSenseEnemy Effect = "気配察知"
 	EffectSenseItem  Effect = "道具感知"
+	EffectNoRust     Effect = "サビよけ"
+	EffectNoTheft    Effect = "盗みよけ"
 	EffectHeal       Effect = "HP回復"
 	EffectLight      Effect = "あかり"
 	EffectIdentify   Effect = "識別"
@@ -269,6 +271,7 @@ const (
 	EffectRotten     Effect = "腐った"
 	EffectKeep       Effect = "保存"
 	EffectSynthesis  Effect = "合成"
+	EffectPlain      Effect = "普通"
 	EffectHealPot    Effect = "全回復"
 	EffectUncurse    Effect = "おはらい"
 	EffectMoreSlots  Effect = "印増大"
@@ -277,12 +280,12 @@ const (
 
 // effects are the effects the items of each category can have.
 var effects = map[Category][]Effect{
-	CategoryBracelet: {EffectStrength, EffectRegen, EffectSenseEnemy, EffectSenseItem},
+	CategoryBracelet: {EffectStrength, EffectRegen, EffectSenseEnemy, EffectSenseItem, EffectNoRust, EffectNoTheft},
 	CategoryGrass:    {EffectHeal, EffectStrength, EffectEyeDrops, EffectMaxHP},
 	CategoryScroll:   {EffectLight, EffectIdentify, EffectUpWeapon, EffectUpShield, EffectUncurse, EffectMoreSlots, EffectEraseSeal},
 	CategoryStaff:    {EffectBlowAway, EffectRecruit, EffectSwap},
 	CategoryFood:     {EffectFood, EffectRotten},
-	CategoryPot:      {EffectKeep, EffectSynthesis, EffectHealPot},
+	CategoryPot:      {EffectKeep, EffectSynthesis, EffectHealPot, EffectPlain},
 }
 
 // FloorRow is a row of an appearance table: id appears on the floors

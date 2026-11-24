@@ -30,6 +30,9 @@ var effectTexts = map[Effect]string{
 	EffectFood:       "満腹度が %d 回復する。",
 	EffectRotten:     "満腹度が %d 回復するが、混乱、鈍足、睡眠のどれかになる。",
 	EffectKeep:       "入れた道具をしまっておける。「見る」で中の道具を使える。",
+	EffectNoRust:     "装備している武器と盾がサビない。",
+	EffectNoTheft:    "道具もお金も盗まれず、荒らされない。",
+	EffectPlain:      "道具を入れられるが、中の道具は使えず、割らないと取り出せない。",
 	EffectSynthesis: "武器と盾は、先に入れた同じ種類のものに印と修正値が合成される。" +
 		"同じ腕輪を入れるとひびが直る。中のものは出せない。",
 	EffectHealPot: "道具を入れると HP が全部回復する。入れた道具はなくなり、壺の容量も 1 つ減る。",

@@ -231,7 +231,11 @@ func (g *Game) abilityText(a Ability) string {
 		}
 		return "隣にいると" + chance + what + "、ワープして逃げる（倒すと盗んだものを落とす）"
 	case AbilityThrow:
-		return line(v[0]) + fmt.Sprintf("%d%%で、足元の道具を投げつけてくる（草はその効果が出る）。プレイヤーが見えないと、見える道具のところへ行く", v[1])
+		where := line(v[0])
+		if v[2] == 1 {
+			where = fmt.Sprintf("%dマス以内の見える所なら", v[0])
+		}
+		return where + fmt.Sprintf("%d%%で、足元の道具を投げつけてくる（草はその効果が出る）。プレイヤーより先に、見える道具のところへ行く", v[1])
 	case AbilityReflect:
 		what := [...]string{"杖の魔法弾", "杖の魔法弾と矢", "杖の魔法弾と、矢や投げた道具"}[v[1]]
 		chance := ""
@@ -240,14 +244,11 @@ func (g *Game) abilityText(a Ability) string {
 		}
 		return chance + what + "をはね返す"
 	case AbilityRuin:
-		what := [...]string{"杖の回数を0にする", "草か巻物を1つなくす", "壺を保存の壺に変える", "杖の回数を0にするか、草か巻物をなくすか、壺を保存の壺に変える"}[v[1]]
+		what := [...]string{"杖の回数を0にする", "草か巻物を1つなくす", "壺を普通の壺に変える", "杖の回数を0にするか、草か巻物をなくすか、壺を普通の壺に変える"}[v[1]]
 		return fmt.Sprintf("隣にいると%d%%で、持ち物の%s（盗みよけで防げる）", v[0], what)
 	case AbilityRust:
-		what := "装備している武器か盾"
-		if v[2] == 1 {
-			what = "装備している武器と盾"
-		}
-		return fmt.Sprintf("隣にいると%d%%で、%sを%dさびさせる", v[0], what, v[1])
+		what := [...]string{"装備している武器か盾を%dさびさせる", "装備している武器と盾を%dさびさせる", "装備している武器か盾を%dさびさせるか、印を1つ消す"}[v[2]]
+		return fmt.Sprintf("攻撃しない。隣にいると%d%%で、", v[0]) + fmt.Sprintf(what, v[1]) + "（サビよけの印を先に消す。素の能力のサビよけには効かない）"
 	case AbilityMimic:
 		if v[0] == mimicDeep {
 			return "道具や階段に化け、持ち物の中でも気づかれない（使うか、次のフロアで正体を現す。識別で見破れる）"

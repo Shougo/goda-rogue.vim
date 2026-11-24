@@ -214,6 +214,13 @@ func (g *Game) act(m *Monster) bool {
 	if acted, hit := g.hunt(m); acted {
 		return hit
 	}
+	if p, ok := g.itemToThrow(m); ok {
+		// An urchin goes for the items it sees before the player.
+		m.target, m.hasTarget = p, true
+		if g.stepToward(m, p) {
+			return false
+		}
+	}
 	// Attack the player first (or steal from it), then an ally.
 	for _, d := range around {
 		if m.Pos.Add(d) == g.Player && g.clearFrom(m.Pos, d) && g.Level.At(m.Pos).Walkable() {
@@ -236,6 +243,7 @@ func (g *Game) act(m *Monster) bool {
 				return true
 			}
 			if a, ok := m.ability(AbilityRust); ok && g.rustBy(m, a) {
+				// (It never attacks.)
 				return true
 			}
 			g.hitPlayer(m)
@@ -254,8 +262,6 @@ func (g *Game) act(m *Monster) bool {
 
 	if _, walls := m.ability(AbilityWalls); m.Hunter || walls || g.sees(m.Pos, g.Player) {
 		m.target, m.hasTarget = g.Player, true
-	} else if p, ok := g.itemToThrow(m); ok {
-		m.target, m.hasTarget = p, true
 	} else if !m.hasTarget || m.Pos == m.target {
 		// Wander: head to a tile of a random room.
 		m.target, m.hasTarget = g.wanderTarget(), true

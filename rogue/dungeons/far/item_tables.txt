@@ -28,6 +28,8 @@
 床	1	99	chikara	1
 床	1	99	kaifuku	1
 床	1	99	kehai	1
+床	1	99	sabiyoke	1
+床	1	99	nusumiyokeu	1
 床	1	99	dougu	1
 床	1	99	kiya	3
 床	1	99	tetsuya	1
@@ -89,6 +91,8 @@
 よろず	1	99	kaifuku	1
 よろず	1	14	kehai	1
 よろず	15	99	kehai	3
+よろず	15	99	sabiyoke	3
+よろず	15	99	nusumiyokeu	3
 よろず	1	14	dougu	1
 よろず	15	99	dougu	3
 よろず	1	99	kiya	2
@@ -161,5 +165,7 @@
 腕輪	1	99	kaifuku	1
 腕輪	1	14	kehai	3
 腕輪	15	99	kehai	5
+腕輪	15	99	sabiyoke	5
+腕輪	15	99	nusumiyokeu	5
 腕輪	1	14	dougu	3
 腕輪	15	99	dougu	5

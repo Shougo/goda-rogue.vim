@@ -887,12 +887,13 @@ The built-in dungeons:
 				  壁抜け  it goes through rock toward the
 				             player, wherever it is; it
 				             fights only out of rock
-				  投げつけ:R:C  standing on an item, with the player on
-				             one of its lines within R tiles, C% of
-				             its actions throw the item at the player
-				             (a grass has its effect on the player);
-				             with the player out of sight, it goes
-				             for the items it sees
+				  投げつけ:R:C:A  standing on an item, with
+				             the player on one of its lines within R
+				             tiles (with A 1, anywhere within them in
+				             sight), C% of its actions throw the item
+				             at the player (a grass has its effect on
+				             the player); it goes for the items it
+				             sees before the player
 				  反射:C:W  C% of the bolts of staffs waved at it go
 				             back to the player; with W 1 the arrows
 				             too, with W 2 any item thrown (it falls
@@ -900,12 +901,19 @@ The built-in dungeons:
 				  荒らし:C:W  next to the player, C% of its actions
 				             ruin an item carried instead of a blow:
 				             W 0 empties a staff, 1 takes a grass or
-				             a scroll away, 2 makes a pot a pot of
-				             keeping, 3 any of those; the seal 盗みよけ
+				             a scroll away, 2 makes a pot a plain pot
+				             (普通の壺: what is in it comes out only
+				             when it breaks), 3 any of those; the
+				             seal 盗みよけ
 				             wards it off
-				  サビ:C:N:B  next to the player, C% of its actions
-				             rust the weapon or the shield equipped
-				             by N instead of a blow (with B 1, both)
+				  サビ:C:N:H  it never attacks: next to the
+				             player, C% of its actions rust what the
+				             player has equipped by N (H 0: the
+				             weapon or the shield, 1: both, 2: one,
+				             or half of the time a seal of one taken
+				             away), the others watch; a seal of
+				             サビよけ is taken away first, one born
+				             with it makes it fail
 				  擬態:D:S:K  on a new floor it hides as
 				             an item of the floor's table,
 				             or (S%) as stairs, or (K%, with
@@ -970,12 +978,13 @@ The built-in dungeons:
 				by its kind (the comments of the built-in
 				items.txt tell what each does):
 				  腕輪: ちから 回復 気配察知 道具感知
+				        サビよけ 盗みよけ
 				  草: HP回復 ちから 目薬 最大HP
 				  巻物: あかり 識別 武器強化 盾強化 おはらい
 				        印増大 印消し
 				  杖: 吹き飛ばし 仲間 場所替え
 				  食料: 満腹 腐った
-				  壺: 保存 合成
+				  壺: 保存 合成 全回復 普通
 				A grass, a scroll or a staff can also have
 				an effect of the bolts of monsters (能力
 				魔法 of monsters.txt: ワープ 倍速 混乱 鈍足

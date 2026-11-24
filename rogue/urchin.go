@@ -10,8 +10,8 @@ import (
 // 2026-11-24: as ギャドン of Shiren).
 
 // itemToThrow returns the tile of the nearest item a monster that throws
-// (AbilityThrow), standing on none, sees: where it goes, the player out
-// of its sight.
+// (AbilityThrow), standing on none, sees: it goes there before it goes
+// for the player (Shougo, 2026-11-25).
 func (g *Game) itemToThrow(m *Monster) (Point, bool) {
 	if _, ok := m.ability(AbilityThrow); !ok {
 		return Point{}, false
@@ -21,7 +21,7 @@ func (g *Game) itemToThrow(m *Monster) (Point, bool) {
 	}
 	best, found := Point{}, false
 	for _, it := range g.Items {
-		if it.ForSale || !g.sees(m.Pos, it.Pos) {
+		if it.ForSale || !g.sees(m.Pos, it.Pos) || g.MonsterAt(it.Pos) != nil {
 			continue
 		}
 		if !found || chebyshev(it.Pos, m.Pos) < chebyshev(best, m.Pos) {
@@ -31,22 +31,33 @@ func (g *Game) itemToThrow(m *Monster) (Point, bool) {
 	return best, found
 }
 
-// throwAt is m throwing the item it stands on along its line to the
-// player, which it sees, by the chance of a (AbilityThrow). The item
-// flies to the first creature on the way: the player takes it
-// (hitPlayerWith); a monster lets it fall by itself. It says whether m
-// threw.
+// throwAt is m throwing the item it stands on at the player, which it
+// sees, by the chance of a (AbilityThrow): along its line to the player
+// within its reach, or, with any (ranks 3 and 4), from anywhere within
+// it, over the heads of the others. On a line the item flies to the
+// first creature on the way: the player takes it (hitPlayerWith); a
+// monster lets it fall by itself. It says whether m threw.
 func (g *Game) throwAt(m *Monster, a Ability) bool {
 	it, ok := g.ItemAt(m.Pos)
-	if !ok || it.ForSale {
+	if !ok || it.ForSale || !g.sees(m.Pos, g.Player) {
 		return false
 	}
-	d, _, ok := g.lineTo(m.Pos, g.Player, a.Values[0])
-	if !ok || !g.sees(m.Pos, g.Player) || g.rng.IntN(100) >= a.Values[1] {
+	d, _, line := g.lineTo(m.Pos, g.Player, a.Values[0])
+	anywhere := !line && a.Values[2] == 1 && chebyshev(m.Pos, g.Player) <= a.Values[0]
+	if !line && !anywhere || g.rng.IntN(100) >= a.Values[1] {
 		return false
 	}
 	g.Items = slices.DeleteFunc(g.Items, func(x *Item) bool { return x == it })
 	g.say(m.Name + "は" + g.Name(it) + "を投げつけた！")
+	if anywhere {
+		if !hits(g.rng, g.Dungeon.Rules.MonsterThrowRate) {
+			g.say(g.Name(it) + "は当たらなかった。")
+			g.landThrown(it, g.Player)
+			return true
+		}
+		g.hitPlayerWith(it, m)
+		return true
+	}
 	p := m.Pos
 	for range throwRange {
 		if !g.clearFrom(p, d) || !g.Level.At(p.Add(d)).Walkable() {
@@ -130,7 +141,7 @@ func (g *Game) reflects(m *Monster, what int) bool {
 const (
 	ruinStaff = 0 // empties a staff
 	ruinGrass = 1 // takes a grass or a scroll away
-	ruinPot   = 2 // makes a pot a pot of keeping
+	ruinPot   = 2 // makes a pot a plain pot
 	ruinAny   = 3 // one of those, at random
 )
 
@@ -152,7 +163,7 @@ func (g *Game) ruin(m *Monster, a Ability) bool {
 		if len(can) == 0 {
 			continue
 		}
-		if g.sealChance(SealNoTheft) {
+		if g.wears(EffectNoTheft) || g.sealChance(SealNoTheft) {
 			g.say(m.Name + "は道具を狙ったが、盗みよけで防いだ。")
 			return true
 		}
@@ -185,32 +196,32 @@ func (g *Game) ruinable(k int) []*Item {
 		switch c := it.Def.Category; {
 		case k == ruinStaff && c == CategoryStaff && it.Charges > 0,
 			k == ruinGrass && (c == CategoryGrass || c == CategoryScroll),
-			k == ruinPot && c == CategoryPot && it.Def.Effect != EffectKeep && g.keepingPot() != nil:
+			k == ruinPot && c == CategoryPot && it.Def.Effect != EffectPlain && g.plainPotDef() != nil:
 			can = append(can, it)
 		}
 	}
 	return can
 }
 
-// keepingPot is the kind of pot that keeps what is put in: a plain pot.
-func (g *Game) keepingPot() *ItemDef {
+// plainPotDef is the kind of the plain pot (普通の壺, Shougo 2026-11-25):
+// no effect, what is in it neither used nor taken out, until it breaks.
+func (g *Game) plainPotDef() *ItemDef {
 	for _, def := range g.Dungeon.Items {
-		if def.Category == CategoryPot && def.Effect == EffectKeep {
+		if def.Category == CategoryPot && def.Effect == EffectPlain {
 			return def
 		}
 	}
 	return nil
 }
 
-// plainPot makes the pot it a pot of keeping: what is in it can be taken
-// out (what a pot of synthesis merged stays merged), its room what it
-// had (a pot of healing: the room left).
+// plainPot makes the pot it a plain pot: what is in it stays there (what
+// a pot of synthesis merged stays merged), its room what it had (a pot of
+// healing: the room left). Its kind is known at once.
 func (g *Game) plainPot(it *Item) {
-	if it.Def.Effect == EffectHealPot {
-		it.Charges = max(it.Charges, 0)
-	}
-	it.Def = g.keepingPot()
+	it.Charges = max(it.Charges, 0)
+	it.Def = g.plainPotDef()
 	it.Glyph = it.Def.Glyph
+	g.identify(it)
 }
 
 // back is the direction opposite d.
@@ -252,6 +263,10 @@ func (g *Game) rust(cs []Category, n int) bool {
 	if len(its) == 0 {
 		return false
 	}
+	if g.wears(EffectNoRust) {
+		g.say("サビよけの腕輪で守られた。")
+		return true
+	}
 	if g.sealChance(SealNoRust) {
 		g.say("サビよけの印で守られた。")
 		return true
@@ -266,29 +281,84 @@ func (g *Game) rust(cs []Category, n int) bool {
 	return true
 }
 
-// rustBy is m next to the player rusting what it has equipped, by its
-// ability a (AbilityRust), instead of a blow: the weapon or the shield,
-// at random (both with a both), by its rust. It says whether it did:
-// with nothing equipped, it attacks.
+// How a monster of rust (AbilityRust) rusts.
+const (
+	rustOne    = 0 // the weapon or the shield
+	rustBoth   = 1 // both
+	rustOrSeal = 2 // one, or half of the time it takes a seal away
+)
+
+// rustBy is m next to the player using its ability a (AbilityRust)
+// (Shougo, 2026-11-25): it never attacks; by its chance it rusts what the
+// player has equipped by its rust (the weapon or the shield, both, or one
+// or, half of the time, a seal of one taken away), and otherwise watches.
+// A seal of サビよけ goes first, always: it is taken away instead. One
+// born with it (no seal) cannot be taken away: the ability fails. With
+// nothing equipped, it fails. A blessing takes the rust (and is gone).
+// It always acts.
 func (g *Game) rustBy(m *Monster, a Ability) bool {
 	if g.rng.IntN(100) >= a.Values[0] {
-		return false
+		g.say(m.Name + "は様子を見ている。")
+		return true
 	}
-	var cs []Category
+	var its []*Item
 	for _, c := range []Category{CategoryWeapon, CategoryShield} {
-		if g.equipped(c) != nil {
-			cs = append(cs, c)
+		if it := g.equipped(c); it != nil {
+			its = append(its, it)
 		}
 	}
-	if len(cs) == 0 {
-		return false
+	failed := m.Name + "はサビを吹きかけたが、何も起こらなかった。"
+	if len(its) == 0 || g.wears(EffectNoRust) {
+		g.say(failed)
+		return true
 	}
-	if a.Values[2] == 0 {
-		cs = cs[g.rng.IntN(len(cs)):][:1]
+	g.event("rusted %s", m.Def.ID)
+	for _, it := range its {
+		if s := g.Dungeon.SealOn(it.Def.Seal, it.Def.Category); s != nil && s.Effect == SealNoRust {
+			g.say(m.Name + "はサビを吹きかけたが、" + g.Name(it) + "はサビない。")
+			return true
+		}
+	}
+	for _, it := range its {
+		for i, glyph := range it.Seals {
+			if s := g.Dungeon.SealOn(glyph, it.Def.Category); s != nil && s.Effect == SealNoRust {
+				g.say(m.Name + "はサビを吹きかけた！")
+				g.eraseSeal(it, i)
+				return true
+			}
+		}
 	}
 	g.say(m.Name + "はサビを吹きかけた！")
-	g.event("rusted %s", m.Def.ID)
-	return g.rust(cs, a.Values[1])
+	switch a.Values[2] {
+	case rustBoth:
+	case rustOrSeal:
+		if g.rng.IntN(2) == 0 {
+			var sealed []*Item
+			for _, it := range its {
+				if len(it.Seals) > 0 {
+					sealed = append(sealed, it)
+				}
+			}
+			if len(sealed) == 0 {
+				g.say("何も起こらなかった。")
+				return true
+			}
+			it := sealed[g.rng.IntN(len(sealed))]
+			g.eraseSeal(it, g.rng.IntN(len(it.Seals)))
+			return true
+		}
+		fallthrough
+	default:
+		its = its[g.rng.IntN(len(its)):][:1]
+	}
+	for _, it := range its {
+		if g.shielded(it) {
+			continue
+		}
+		it.Upgrade -= a.Values[1]
+		g.say(g.Name(it) + "がさびてしまった。")
+	}
+	return true
 }
 
 // sendsBack says whether m may send back what (reflectStaffs, ...), as a

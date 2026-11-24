@@ -132,9 +132,9 @@ const (
 	// it is (shade.go).
 	AbilityWalls AbilityName = "壁抜け"
 	// AbilityThrow: standing on an item, with the player on one of its
-	// lines within a reach, by a chance (a percent), it throws the item
-	// at the player; with the player out of sight, it goes for the
-	// items it sees (urchin.go).
+	// lines within a reach (anywhere within it in sight, with any: 1),
+	// by a chance (a percent), it throws the item at the player; it goes
+	// for the items it sees before the player (urchin.go).
 	AbilityThrow AbilityName = "投げつけ"
 	// AbilityReflect: by a chance (a percent), the bolts of staffs
 	// waved at it go back to the player; with more (what: 1), the
@@ -142,13 +142,14 @@ const (
 	AbilityReflect AbilityName = "反射"
 	// AbilityRuin: next to the player, by a chance (a percent), instead
 	// of a blow, it ruins an item carried (what: 0 empties a staff, 1
-	// takes a grass or a scroll away, 2 makes a pot a pot of keeping, 3
+	// takes a grass or a scroll away, 2 makes a pot a plain pot, 3
 	// any of those); the seal 盗みよけ wards it off as a theft
 	// (urchin.go).
 	AbilityRuin AbilityName = "荒らし"
-	// AbilityRust: next to the player, by a chance (a percent), instead
-	// of a blow, it rusts the weapon or the shield equipped by so much
-	// (with both: 1, the two), as the trap of rust (urchin.go).
+	// AbilityRust: next to the player, it never attacks: by a chance (a
+	// percent), it rusts the weapon or the shield equipped by so much
+	// (how: 0 one, 1 both, 2 one or, half of the time, a seal taken
+	// away; a seal of サビよけ first), and otherwise watches (urchin.go).
 	AbilityRust AbilityName = "サビ"
 )
 
@@ -229,10 +230,10 @@ var abilityDefs = map[AbilityName]abilityDef{
 	AbilityKnight:    {[]string{"damage"}, []int{1}, []int{999}, 0},
 	AbilityInvisible: {nil, nil, nil, 0},
 	AbilityWalls:     {nil, nil, nil, 0},
-	AbilityThrow:     {[]string{"reach", "chance %"}, []int{2, 1}, []int{maxReach, 100}, 0},
+	AbilityThrow:     {[]string{"reach", "chance %", "any"}, []int{2, 1, 0}, []int{maxReach, 100, 1}, 0},
 	AbilityReflect:   {[]string{"chance %", "what"}, []int{1, reflectStaffs}, []int{100, reflectAll}, 0},
 	AbilityRuin:      {[]string{"chance %", "what"}, []int{1, ruinStaff}, []int{100, ruinAny}, 0},
-	AbilityRust:      {[]string{"chance %", "rust", "both"}, []int{1, 1, 0}, []int{100, 9, 1}, 0},
+	AbilityRust:      {[]string{"chance %", "rust", "how"}, []int{1, 1, rustOne}, []int{100, 9, rustOrSeal}, 0},
 	AbilityTrap:      {[]string{"chance %"}, []int{1}, []int{100}, 0},
 	AbilityRevive:    {[]string{"HP %"}, []int{1}, []int{100}, 0},
 	AbilityExplode:   {[]string{"HP %", "damage %"}, []int{1, 1}, []int{99, 100}, 0},

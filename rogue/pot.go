@@ -207,7 +207,7 @@ func (g *Game) doInPot(i, n int, c string) bool {
 		g.showInfo(it)
 		return false
 	case commandTakeOut:
-		if pot.Def.Effect == EffectSynthesis {
+		if pot.Def.Effect == EffectSynthesis || pot.Def.Effect == EffectPlain {
 			g.learn(pot)
 			g.say(g.Name(pot) + "からは出せない。")
 			return true
