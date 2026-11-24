@@ -76,10 +76,7 @@ type Bot struct {
 	lastRisk, fightRisk float64
 	// worst remembers worstTurn.
 	worst map[worstKey]int
-	// priced are the kinds of the items whose price the bot saw in a
-	// shop (as a player who offers them for sale): it knows what kinds
-	// they may be by their price (mayBe).
-	priced map[string]bool
+
 	// depth is the floor the bot is on, arrived the turn it arrived;
 	// floors and floorsTurns count the floors it left and the turns it
 	// spent on them.
@@ -99,7 +96,7 @@ type botStep struct {
 
 // NewBot returns a bot of style, with its randomness from seed.
 func NewBot(style BotStyle, seed uint64) *Bot {
-	return &Bot{Style: style, rng: rand.New(rand.NewPCG(seed, 0x60da)), risks: map[riskKey]bool{}, worst: map[worstKey]int{}, priced: map[string]bool{}}
+	return &Bot{Style: style, rng: rand.New(rand.NewPCG(seed, 0x60da)), risks: map[riskKey]bool{}, worst: map[worstKey]int{}}
 }
 
 // Next returns the next action of the bot in g, and its arguments.
@@ -113,7 +110,7 @@ func (b *Bot) Next(g *Game) (string, []string) {
 	defer func() { b.deciding = false }()
 	b.track(g)
 	b.pacing(g)
-	b.seePrices(g)
+	g.meet()
 	if b.lastRisk = deathChance(g, b.adjacent(g)); b.lastRisk == 0 {
 		b.fightRisk = 0
 	} else if b.fightRisk == 0 {
@@ -232,19 +229,6 @@ func (b *Bot) known(g *Game, it *Item, e Effect) bool {
 // several.
 func (b *Bot) unsure(g *Game, it *Item) bool {
 	return len(b.mayBe(g, it)) > 1
-}
-
-// seePrices is the bot in a shop that would buy: it learns the prices of
-// the kinds of what it carries.
-func (b *Bot) seePrices(g *Game) {
-	if !g.shopOpen() {
-		return
-	}
-	for _, it := range g.Inventory {
-		if !it.ForSale && !g.identified[it.Def.ID] && sellPrice(it) > 0 {
-			b.priced[it.Def.ID] = true
-		}
-	}
 }
 
 // spoiled says whether it is an item the player knows it cannot use: a
@@ -835,12 +819,12 @@ type botAnswer struct {
 
 // mayBe returns the kinds it may be, as the player knows: its kind when
 // identified, else the kinds of its category not identified yet (of its
-// price, once the bot saw it in a shop).
+// price, once the player saw it in a shop: the catalog, catalog.go).
 func (b *Bot) mayBe(g *Game, it *Item) []*ItemDef {
 	if g.identified[it.Def.ID] {
 		return []*ItemDef{it.Def}
 	}
-	priced := b.priced[it.Def.ID]
+	priced := g.priced[it.Def.ID]
 	var kinds []*ItemDef
 	for _, def := range g.Dungeon.Items {
 		if def.Category == it.Def.Category && !g.identified[def.ID] && (!priced || def.Price == it.Def.Price) {
@@ -1423,12 +1407,12 @@ func strength(it *Item) int {
 }
 
 // toShop walks into a shop it has seen, with no enemy in sight, to learn
-// the prices of the kinds it carries and does not know (seePrices).
+// the prices of the kinds it carries and does not know (meet).
 func (b *Bot) toShop(g *Game) (string, []string) {
 	if g.Shop == nil || !g.keepersCalm() || len(g.visibleEnemies()) > 0 {
 		return "", nil
 	}
-	if carried(g, func(it *Item) bool { return b.unsure(g, it) && !b.priced[it.Def.ID] && sellPrice(it) > 0 }) == nil {
+	if carried(g, func(it *Item) bool { return b.unsure(g, it) && !g.priced[it.Def.ID] && sellPrice(it) > 0 }) == nil {
 		return "", nil
 	}
 	return b.walk(g, func(p Point) bool { return g.inShop(p) && g.IsSeen(p) })

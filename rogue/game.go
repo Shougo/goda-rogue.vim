@@ -97,6 +97,9 @@ type Game struct {
 	// names of the others, for this run.
 	identified map[string]bool
 	fakeNames  map[string]string
+	// met are the kinds whose fake names the player carried; priced
+	// those whose prices it saw in a shop (catalog.go).
+	met, priced map[string]bool
 	// Over is why the run is over ("" while it goes on), and Cleared
 	// whether the player went down the last stairs.
 	Over    string
@@ -163,7 +166,7 @@ func NewGame(d *Dungeon, seed string) *Game {
 		Fullness: r.Fullness, MaxFullness: r.Fullness,
 		rng:        rand.New(rand.NewPCG(seedHash(d, seed), math.MaxUint64)),
 		Started:    time.Now(),
-		identified: map[string]bool{},
+		identified: map[string]bool{}, met: map[string]bool{}, priced: map[string]bool{},
 	}
 	g.nameItems()
 	g.planGuaranteed()
@@ -495,6 +498,13 @@ func (g *Game) Do(action string, args []string) error {
 	default:
 		g.Prompt = nil
 	}
+	if action == "catalog" {
+		// Reading the catalog costs no turn.
+		g.beginAction()
+		g.meet()
+		g.showCatalog()
+		return nil
+	}
 	switch action {
 	case "redraw", "log":
 		// (The Vim script asks for the log with the screen.)
@@ -713,6 +723,7 @@ func (g *Game) endTurn(rest bool) {
 		// It ended in the action (a trap).
 		return
 	}
+	g.meet()
 	if g.Hasted > 0 {
 		g.Hasted--
 		if g.Hasted == 0 {
