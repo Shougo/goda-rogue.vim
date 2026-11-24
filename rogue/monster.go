@@ -197,6 +197,9 @@ func (g *Game) act(m *Monster) bool {
 	if m.Fled && g.flee(m) {
 		return false
 	}
+	if _, ok := m.ability(AbilityFlee); ok && g.sees(m.Pos, g.Player) && g.flee(m) {
+		return false
+	}
 	if g.support(m) {
 		return false
 	}

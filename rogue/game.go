@@ -299,6 +299,7 @@ func (g *Game) populate(rng *rand.Rand, rooms []int, start int) {
 		// but never in the player's room.
 		m.Dozing = m.dozes(rng) && g.Level.RoomAt(pos) != start
 		g.Monsters = append(g.Monsters, m)
+		g.pack(m)
 	}
 	for range between(rng, c.MinItem, c.MaxItem) {
 		pos := g.spot(rng, rooms)
@@ -824,6 +825,9 @@ func (g *Game) spawn(def *MonsterDef) *Monster {
 	m.Pos = p
 	m.Spawned = true
 	g.Monsters = append(g.Monsters, m)
+	for _, f := range g.pack(m) {
+		f.Spawned = true
+	}
 	return m
 }
 

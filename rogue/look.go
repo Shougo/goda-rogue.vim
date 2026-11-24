@@ -184,6 +184,10 @@ func (g *Game) abilityText(a Ability) string {
 		return fmt.Sprintf("%d%%で、見えている傷ついた仲間のHPを%d回復する", v[0], v[1])
 	case AbilityCheer:
 		return fmt.Sprintf("%d%%で、見えている仲間のランクを上げる。祈る者どうしは上げない", v[0])
+	case AbilityPack:
+		return fmt.Sprintf("%d匹の仲間と群れで現れる", v[0])
+	case AbilityFlee:
+		return "プレイヤーから逃げる。追い詰められると戦う"
 	case AbilityRevive:
 		return fmt.Sprintf("一度倒しても、最大HPの%d%%で起き上がる", v[0])
 	case AbilityExplode:

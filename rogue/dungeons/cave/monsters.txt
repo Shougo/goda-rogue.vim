@@ -71,6 +71,10 @@
 #              next action: every creature next to it loses D% of its HP,
 #              the items next to it and under it burn, and it is gone,
 #              giving nothing
+#   群れ:N  it comes with N more of its kind next to it, on a new floor
+#              and when it appears later
+#   逃げる  it keeps away from the player it sees, and fights only when
+#              it cannot
 #   擬態:D:S:K  on a new floor it hides as an item of the floor's table, or
 #              (S%) as stairs, or (K%, with a shop) as one of the shop's
 #              goods. D 1: trying to pick it up shows it, and so do a

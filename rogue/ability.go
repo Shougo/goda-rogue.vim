@@ -103,6 +103,12 @@ const (
 	// loses a share (a percent) of its HP, the items next to it burn, and
 	// it is gone, giving nothing (undead.go).
 	AbilityExplode AbilityName = "爆発"
+	// AbilityPack: it comes with so many more of its kind next to it,
+	// on a new floor and when it appears later (pack.go).
+	AbilityPack AbilityName = "群れ"
+	// AbilityFlee: it keeps away from the player it sees, and fights
+	// only when it cannot (pack.go).
+	AbilityFlee AbilityName = "逃げる"
 )
 
 // MagicEffect is an effect of the bolt of AbilityMagic.
@@ -175,6 +181,8 @@ var abilityDefs = map[AbilityName]abilityDef{
 	AbilityBurn:      {nil, nil, nil, 0},
 	AbilityHeal:      {[]string{"chance %", "HP"}, []int{1, 1}, []int{100, 999}, 0},
 	AbilityCheer:     {[]string{"chance %"}, []int{1}, []int{100}, 0},
+	AbilityPack:      {[]string{"more"}, []int{1}, []int{8}, 0},
+	AbilityFlee:      {nil, nil, nil, 0},
 	AbilityRevive:    {[]string{"HP %"}, []int{1}, []int{100}, 0},
 	AbilityExplode:   {[]string{"HP %", "damage %"}, []int{1, 1}, []int{99, 100}, 0},
 	AbilityHunger:    {[]string{"chance %", "fullness", "max fullness"}, []int{1, 0, 0}, []int{100, 999, 999}, 0},
@@ -187,7 +195,7 @@ const maxReach = 20
 
 // abilityNames are the abilities in a fixed order, for the error that
 // lists them.
-var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot, AbilitySynthesis, AbilityCurse, AbilityHunger, AbilityStill, AbilityHold, AbilityBurn, AbilityHeal, AbilityCheer, AbilityRevive, AbilityExplode}
+var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot, AbilitySynthesis, AbilityCurse, AbilityHunger, AbilityStill, AbilityHold, AbilityBurn, AbilityHeal, AbilityCheer, AbilityRevive, AbilityExplode, AbilityPack, AbilityFlee}
 
 // lineAbilities are the abilities that reach the player from afar along
 // a line, their reach their first number.
