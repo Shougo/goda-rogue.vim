@@ -80,7 +80,8 @@
 #   群れ:N  it comes with N more of its kind next to it, on a new floor
 #              and when it appears later
 #   逃げる  it keeps away from the player it sees, and fights only when
-#              it cannot
+#              it cannot; the other monsters that see it hunt it
+#              before the player, and rank up by killing it
 #   罠:C  C% of its actions, out of the player's reach, hide a trap
 #              of the floor's table where it stands; defeated, it leaves
 #              one there

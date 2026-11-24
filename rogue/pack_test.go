@@ -77,3 +77,44 @@ func TestSetTrap(t *testing.T) {
 		t.Error("no trap where it fell")
 	}
 }
+
+// TestHunt: a monster that sees a rabbit goes for it before the player,
+// and ranks up when it kills it; the item of the rabbit is lost.
+func TestHunt(t *testing.T) {
+	g, r := roomGame(t, 8, 4)
+	g.HP, g.MaxHP = 999, 999
+	g.Player = Point{r.X, r.Y}
+	rat := place(g, kind("nezumi1"), Point{r.X + 2, r.Y + 2})
+	rabbit := place(g, kind("usagi1"), Point{r.X + 5, r.Y + 2})
+	g.act(rat)
+	if chebyshev(rat.Pos, rabbit.Pos) != 2 {
+		t.Errorf("the rat at %v, not toward the rabbit at %v", rat.Pos, rabbit.Pos)
+	}
+	rabbit.HP = 1
+	rabbit.Pos = Point{r.X + 4, r.Y + 2}
+	items := len(g.Items)
+	for range 50 {
+		if !slices.Contains(g.Monsters, rabbit) {
+			break
+		}
+		g.act(rat)
+	}
+	if slices.Contains(g.Monsters, rabbit) || rat.Rank != 2 || len(g.Items) != items {
+		t.Errorf("rabbit alive %v, rat rank %d, items %d (were %d)", slices.Contains(g.Monsters, rabbit), rat.Rank, len(g.Items), items)
+	}
+	// Next to the player, a monster with no rabbit next to it attacks
+	// the player.
+	rabbit = place(g, kind("usagi1"), Point{r.X + 7, r.Y + 3})
+	rat.Pos = Point{r.X + 1, r.Y}
+	hp := g.HP
+	for range 20 {
+		g.act(rat)
+	}
+	if g.HP == hp || rat.Pos != (Point{r.X + 1, r.Y}) {
+		t.Errorf("next to the player: HP %d, at %v", g.HP, rat.Pos)
+	}
+	// A rabbit does not hunt a rabbit.
+	if g.prey(rabbit) != nil {
+		t.Error("a rabbit hunts")
+	}
+}

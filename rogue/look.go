@@ -188,7 +188,7 @@ func (g *Game) abilityText(a Ability) string {
 	case AbilityPack:
 		return fmt.Sprintf("%d匹の仲間と群れで現れる", v[0])
 	case AbilityFlee:
-		return "プレイヤーから逃げる。追い詰められると戦う"
+		return "プレイヤーから逃げる。追い詰められると戦う。他のモンスターに狩られる（倒したモンスターはランクが上がる）"
 	case AbilityTrap:
 		return fmt.Sprintf("%d%%で足元に罠を仕掛ける。倒すとそこに罠が残る", v[0])
 	case AbilityLong:

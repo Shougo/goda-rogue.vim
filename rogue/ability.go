@@ -107,7 +107,8 @@ const (
 	// on a new floor and when it appears later (pack.go).
 	AbilityPack AbilityName = "群れ"
 	// AbilityFlee: it keeps away from the player it sees, and fights
-	// only when it cannot (pack.go).
+	// only when it cannot; the other monsters that see it hunt it
+	// before the player (hunt), and rank up by killing it (pack.go).
 	AbilityFlee AbilityName = "逃げる"
 	// AbilityTrap: by a chance (a percent) of its actions, out of the
 	// player's reach, it hides a trap of the floor's table where it

@@ -208,6 +208,9 @@ func (g *Game) act(m *Monster) bool {
 	if a, ok := m.ability(AbilityTrap); ok && chebyshev(m.Pos, g.Player) > 1 && g.rng.IntN(100) < a.Values[0] && g.setTrap(m) {
 		return false
 	}
+	if acted, hit := g.hunt(m); acted {
+		return hit
+	}
 	// Attack the player first (or steal from it), then an ally.
 	for _, d := range around {
 		if m.Pos.Add(d) == g.Player && g.clearFrom(m.Pos, d) && g.Level.At(m.Pos).Walkable() {

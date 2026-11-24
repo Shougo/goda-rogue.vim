@@ -43,3 +43,41 @@ func (g *Game) setTrap(m *Monster) bool {
 	}
 	return true
 }
+
+// prey returns the prey m goes for: the nearest monster that flees (a
+// rabbit) it sees, if m is an enemy that does not flee itself.
+func (g *Game) prey(m *Monster) *Monster {
+	if _, flees := m.ability(AbilityFlee); flees || m.Ally || m.Keeper {
+		return nil
+	}
+	var best *Monster
+	for _, f := range g.Monsters {
+		if _, flees := f.ability(AbilityFlee); !flees || f == m || f.Ally || !g.sees(m.Pos, f.Pos) {
+			continue
+		}
+		if best == nil || chebyshev(f.Pos, m.Pos) < chebyshev(best.Pos, m.Pos) {
+			best = f
+		}
+	}
+	return best
+}
+
+// hunt is m going for a prey it sees (prey), before the player: it
+// attacks one next to it, and, with the player not next to it, steps
+// toward one farther away. Killing it, m ranks up (kill) and the item it
+// would drop is lost. It says whether m acted, and whether it attacked.
+func (g *Game) hunt(m *Monster) (acted, hit bool) {
+	f := g.prey(m)
+	if f == nil {
+		return false, false
+	}
+	if d := f.Pos.Sub(m.Pos); chebyshev(f.Pos, m.Pos) == 1 && g.clearFrom(m.Pos, d) {
+		g.hitMonster(m, f)
+		return true, true
+	}
+	if chebyshev(m.Pos, g.Player) == 1 {
+		return false, false
+	}
+	m.target, m.hasTarget = f.Pos, true
+	return g.stepToward(m, f.Pos), false
+}
