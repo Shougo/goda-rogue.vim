@@ -662,12 +662,13 @@ func (b *Bot) danger(g *Game) (string, []string) {
 	if pot, fuel, ok := b.healingPot(g); ok {
 		answers = append(answers, botAnswer{b.healPrice(g) + b.worth(g, fuel, false), fightDeath(g, ms, g.MaxHP, 1), pot, commandPutIn, nil, fuel, false})
 	}
-	if len(ms) > 1 {
+	// (Held, it cannot step away.)
+	if len(ms) > 1 && g.Stuck == 0 {
 		if d, ok := b.stepBack(g, ms); ok {
 			answers = append(answers, botAnswer{0, oneByOneDeath(g, ms, g.HP), nil, "move " + d, nil, nil, false})
 		}
 	}
-	if b.seesStairs(g) {
+	if b.seesStairs(g) && g.Stuck == 0 {
 		if step, dist, ok := b.route(g, func(p Point) bool { return b.stairs(g, p) }); ok && g.MonsterAt(step) == nil {
 			cost := 0.0
 			if b.Style == BotCareful {
@@ -1298,7 +1299,12 @@ func (b *Bot) costlyFloor(g *Game) bool {
 // adjacent returns the enemies next to the player that it can attack.
 func (b *Bot) adjacent(g *Game) []*Monster {
 	var ms []*Monster
-	for _, m := range g.visibleEnemies() {
+	// An invisible one next to it too: its blows tell it is there (a
+	// player swings at where they come from).
+	for _, m := range g.Monsters {
+		if !m.hostile() || !g.Visible(m.Pos) {
+			continue
+		}
 		if chebyshev(m.Pos, g.Player) == 1 && g.clearFrom(g.Player, m.Pos.Sub(g.Player)) {
 			ms = append(ms, m)
 		}

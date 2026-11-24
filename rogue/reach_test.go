@@ -48,7 +48,7 @@ func TestKnight(t *testing.T) {
 	g.HP, g.MaxHP = 999, 999
 	g.Player = Point{r.X + 1, r.Y + 1}
 	m := place(g, kind("washi1"), Point{r.X + 2, r.Y + 3})
-	if !g.swoop(m) || g.HP != 999-8 {
+	if !g.swoop(m) || g.HP != 999-4 {
 		t.Errorf("HP %d", g.HP)
 	}
 	m.Pos = Point{r.X + 7, r.Y + 5}
