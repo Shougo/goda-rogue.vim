@@ -782,6 +782,7 @@ func (g *Game) tick(rest bool) {
 	if g.Over != "" {
 		return
 	}
+	g.alliesRegen()
 	g.monstersAct()
 	g.sense()
 	g.showSensed()

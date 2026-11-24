@@ -237,3 +237,24 @@ func TestAlliesComeAlong(t *testing.T) {
 		}
 	}
 }
+
+// TestAlliesRegen: an ally restores 1 HP every 回復ターン turns, an enemy
+// does not.
+func TestAlliesRegen(t *testing.T) {
+	g, r := roomGame(t, 8, 3)
+	a := place(g, kind("nezumi4"), Point{r.X + 3, r.Y})
+	a.Ally = true
+	e := place(g, kind("nezumi4"), Point{r.X + 6, r.Y + 2})
+	a.HP, e.HP = 1, 1
+	for range 2 * g.Dungeon.Rules.RegenTurns {
+		g.alliesRegen()
+	}
+	if a.HP != 3 || e.HP != 1 {
+		t.Errorf("ally %d, enemy %d", a.HP, e.HP)
+	}
+	a.HP = a.MaxHP
+	g.alliesRegen()
+	if a.HP != a.MaxHP {
+		t.Errorf("over its max: %d", a.HP)
+	}
+}

@@ -113,3 +113,18 @@ func (g *Game) comesAlong(m *Monster) bool {
 	}
 	return false
 }
+
+// alliesRegen is a turn passing for the allies: they restore HP as the
+// player does, 1 HP every so many turns (rules.txt 回復ターン), but every
+// turn, fighting or not (they do not get hungry).
+func (g *Game) alliesRegen() {
+	for _, a := range g.Monsters {
+		if !a.Ally || a.HP >= a.MaxHP {
+			continue
+		}
+		if a.regen++; a.regen >= g.Dungeon.Rules.RegenTurns {
+			a.regen = 0
+			a.HP++
+		}
+	}
+}

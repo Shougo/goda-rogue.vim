@@ -82,6 +82,8 @@ type Monster struct {
 	// Revived says whether it got up once (AbilityRevive); Fused that it
 	// will explode at its next action (AbilityExplode).
 	Revived, Fused bool
+	// regen counts the turns toward the next HP of an ally (alliesRegen).
+	regen int
 	// States are its states that pass with time (state.go).
 	States
 	// EXP is what defeating it gives. An ally has Gained EXP, and its
