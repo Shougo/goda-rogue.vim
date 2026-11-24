@@ -76,6 +76,10 @@ type Bot struct {
 	lastRisk, fightRisk float64
 	// worst remembers worstTurn.
 	worst map[worstKey]int
+	// awaited is the enemy the bot waited for last (await), and where
+	// it was then.
+	awaited   *Monster
+	awaitedAt Point
 
 	// depth is the floor the bot is on, arrived the turn it arrived;
 	// floors and floorsTurns count the floors it left and the turns it
@@ -127,7 +131,7 @@ func (b *Bot) Next(g *Game) (string, []string) {
 		return "move", []string{clockwise[b.rng.IntN(len(clockwise))]}
 	}
 	for i, rule := range []func(*Game) (string, []string){
-		b.heal, b.danger, b.shoot, b.fight, b.chase, b.eat, b.boost, b.equip, b.identify, b.toShop, b.light,
+		b.heal, b.danger, b.shoot, b.fight, b.chase, b.await, b.eat, b.boost, b.equip, b.identify, b.toShop, b.light,
 		b.tidy, b.trade, b.rest, b.leave, b.pick, b.explore,
 	} {
 		if action, args := rule(g); action != "" {
@@ -160,7 +164,7 @@ const ruleDanger = 1
 // botRules are the names of the rules of Next, in their order: what the
 // bot is doing, for a reader (compare.go).
 var botRules = []string{
-	"回復する", "危険に答える", "矢を撃つ", "戦う", "射手や魔法使いを追う", "食べる", "強化する", "装備する",
+	"回復する", "危険に答える", "矢を撃つ", "戦う", "射手や魔法使いを追う", "敵を待つ", "食べる", "強化する", "装備する",
 	"識別する", "店で値段を見る", "あかりを使う", "不要品を置く", "入れ替える", "休む", "階段へ向かう", "拾いに行く", "探索する",
 }
 
@@ -1321,6 +1325,32 @@ func (b *Bot) fight(g *Game) (string, []string) {
 		return "turn", []string{name}
 	}
 	return "attack", nil
+}
+
+// await waits for an enemy coming, two tiles away, so as to strike
+// first when it steps next to the player, as players do (Shougo's replay
+// of 2026-11-24: he swung at the air while one came). Not for one that
+// does not come (still, fleeing, an archer or a mage: chase), nor
+// twice for the same one when it did not come.
+func (b *Bot) await(g *Game) (string, []string) {
+	for _, m := range g.visibleEnemies() {
+		if m.Dozing || chebyshev(m.Pos, g.Player) != 2 || !g.sees(m.Pos, g.Player) || m.still() {
+			continue
+		}
+		_, shoots := m.ability(AbilityShoot)
+		_, casts := m.ability(AbilityMagic)
+		_, flees := m.ability(AbilityFlee)
+		if shoots || casts || flees || m.Fled {
+			continue
+		}
+		if b.awaited == m && b.awaitedAt == m.Pos {
+			// It did not come: go on.
+			continue
+		}
+		b.awaited, b.awaitedAt = m, m.Pos
+		return "wait", nil
+	}
+	return "", nil
 }
 
 // chase goes for an archer or a mage in sight, awake: it does not come,

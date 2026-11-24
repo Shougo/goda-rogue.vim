@@ -761,3 +761,19 @@ func TestBotOnDecoy(t *testing.T) {
 		t.Errorf("%s %v", a, args)
 	}
 }
+
+// TestBotAwait: the bot waits for an enemy two tiles away, coming, to
+// strike first; not twice when it did not come.
+func TestBotAwait(t *testing.T) {
+	g, r := roomGame(t, 8, 4)
+	g.HP, g.MaxHP = 999, 999
+	g.Player = Point{r.X + 1, r.Y + 1}
+	place(g, kind("nezumi1"), Point{r.X + 3, r.Y + 1})
+	b := NewBot(BotCareful, 1)
+	if a, _ := b.Next(g); a != "wait" || b.rule != "敵を待つ" {
+		t.Fatalf("%s [%s]", a, b.rule)
+	}
+	if a, _ := b.Next(g); a == "wait" && b.rule == "敵を待つ" {
+		t.Errorf("waited again for one that did not come")
+	}
+}

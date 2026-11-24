@@ -1062,7 +1062,8 @@ more), read unknown scrolls on the stairs (anywhere on the first third
 of the floors) and drink unknown grasses at full HP (at 70% on the first
 third), walk into a shop to learn by their prices what the unknown items
 they carry may be, use an item they do not know in a danger only when
-nothing they know helps, check for traps before
+nothing they know helps, wait for an enemy two tiles away to come (so
+as to strike first), check for traps before
 stepping in a monster house whose monsters sleep, and the careful one
 leaves a floor whose fights cost more answers than it gave.  Out of a fight they heal when their HP is below what the
 monsters of the floor could take in two turns (one and a half when none
