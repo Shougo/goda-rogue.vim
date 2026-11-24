@@ -165,7 +165,7 @@ func (g *Game) spring(t *Trap, force bool) bool {
 		g.HP = max((g.HP+1)/2, 1)
 		g.say("爆発に巻き込まれて、HPが半分になった。")
 	case TrapSnare:
-		g.Stuck = n
+		g.Stuck, g.heldBy = n, nil
 		g.say("トラばさみにかかった。")
 	case TrapPoison:
 		g.say("毒矢が刺さった。")

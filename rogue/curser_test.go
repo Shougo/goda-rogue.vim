@@ -34,10 +34,16 @@ func TestCurser(t *testing.T) {
 	}
 	// Rank 4: two of any items; the player knows.
 	a.Values[1], a.Values[2] = curseAny, 2
+	another := carry(g, "yakusou", 0)
+	if !g.curser(m, a) || !grass.Cursed || !another.Cursed || !strings.HasSuffix(g.describe(grass), "（呪）") {
+		t.Errorf("rank 4: grasses %v %v, label %q", grass.Cursed, another.Cursed, g.describe(grass))
+	}
+	// A blessing takes a curse.
+	a.Values[2] = 1
 	food := carry(g, "onigiri", 0)
 	food.Blessed = true
-	if !g.curser(m, a) || !grass.Cursed || food.Cursed || food.Blessed || !strings.HasSuffix(g.describe(grass), "（呪）") {
-		t.Errorf("rank 4: grass %v, food cursed %v blessed %v, label %q", grass.Cursed, food.Cursed, food.Blessed, g.describe(grass))
+	if !g.curser(m, a) || food.Cursed || food.Blessed {
+		t.Errorf("blessed food: cursed %v blessed %v", food.Cursed, food.Blessed)
 	}
 	// The monsters of the dungeon have the ability.
 	for id, want := range map[string][]int{"noroi1": {25, 0, 1}, "noroi2": {25, 1, 1}} {

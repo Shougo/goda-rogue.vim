@@ -926,9 +926,17 @@ func cave() *Dungeon {
 	return d
 }
 
-// kind returns the monster id of the built-in dungeon.
+// kind returns the monster id of the built-in dungeon, or of the far
+// cave (the families only there).
 func kind(id string) *MonsterDef {
 	m := cave().Monster(id)
+	if m == nil {
+		d, err := LoadBuiltin("far")
+		if err != nil {
+			panic(err)
+		}
+		m = d.Monster(id)
+	}
 	if m == nil {
 		panic(id)
 	}

@@ -80,6 +80,15 @@ const (
 	// number above 0) of its max fullness. Food thrown at it defeats it
 	// (ghost.go).
 	AbilityHunger AbilityName = "飢え"
+	// AbilityStill: it never moves by itself (still.go).
+	AbilityStill AbilityName = "不動"
+	// AbilityHold: next to the player, by a chance (a percent), a blow
+	// that hits holds it too: it cannot step away for so many turns, or
+	// until the monster is gone or no more next to it (still.go).
+	AbilityHold AbilityName = "捕縛"
+	// AbilityBurn: what is thrown or shot at it burns, with no effect;
+	// only blows hurt it (still.go).
+	AbilityBurn AbilityName = "燃える"
 )
 
 // MagicEffect is an effect of the bolt of AbilityMagic.
@@ -147,6 +156,9 @@ var abilityDefs = map[AbilityName]abilityDef{
 	AbilitySplit:     {[]string{"chance %"}, []int{1}, []int{100}, 0},
 	AbilityRot:       {[]string{"chance %", "onigiri", "any item"}, []int{1, 1, 0}, []int{100, 5, 1}, 0},
 	AbilitySynthesis: {[]string{"items", "suck %"}, []int{1, 0}, []int{9, 100}, 0},
+	AbilityStill:     {nil, nil, nil, 0},
+	AbilityHold:      {[]string{"chance %", "turns"}, []int{1, 1}, []int{100, 20}, 0},
+	AbilityBurn:      {nil, nil, nil, 0},
 	AbilityHunger:    {[]string{"chance %", "fullness", "max fullness"}, []int{1, 0, 0}, []int{100, 999, 999}, 0},
 	AbilityCurse:     {[]string{"chance %", "what", "items"}, []int{1, curseArms, 1}, []int{100, curseAny, 5}, 0},
 	AbilitySteal:     {[]string{"chance %", "what", "items", "equipped"}, []int{1, stealGold, 0, 0}, []int{100, stealItems, 5, 1}, 0},
@@ -157,7 +169,7 @@ const maxReach = 20
 
 // abilityNames are the abilities in a fixed order, for the error that
 // lists them.
-var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot, AbilitySynthesis, AbilityCurse, AbilityHunger}
+var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot, AbilitySynthesis, AbilityCurse, AbilityHunger, AbilityStill, AbilityHold, AbilityBurn}
 
 // lineAbilities are the abilities that reach the player from afar along
 // a line, their reach their first number.
@@ -272,7 +284,7 @@ func (g *Game) critical(m *Monster, n int, shown bool) int {
 // the step.
 func (g *Game) erratic(m *Monster) bool {
 	a, ok := m.ability(AbilityErratic)
-	if !ok || g.rng.IntN(100) >= a.Values[0] {
+	if !ok || g.rng.IntN(100) >= a.Values[0] || m.still() {
 		return false
 	}
 	var free []Point
@@ -482,6 +494,12 @@ func (g *Game) shootAt(m *Monster, a Ability) bool {
 			continue
 		}
 		shown := g.sees(g.Player, p)
+		if _, ok := f.ability(AbilityBurn); ok {
+			if shown {
+				g.say(def.Name + "は" + f.Name + "に燃やされた！")
+			}
+			return true
+		}
 		f.Dozing = false
 		if !hits(g.rng, r.MonsterThrowRate) {
 			if shown {

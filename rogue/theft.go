@@ -74,6 +74,9 @@ func (g *Game) money(n int) *Item {
 // flee is a thief that stole keeping away from the player: a step that
 // takes it farther, if there is one. It says whether it stepped.
 func (g *Game) flee(m *Monster) bool {
+	if m.still() {
+		return false
+	}
 	best, far := m.Pos, chebyshev(m.Pos, g.Player)
 	for _, d := range around {
 		p := m.Pos.Add(d)

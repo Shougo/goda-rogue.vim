@@ -55,7 +55,7 @@ func (g *Game) throwItem(it *Item) {
 			g.say(m.Name + "に当たらなかった。")
 			continue
 		}
-		if g.swallow(m, thrown) || g.feed(m, thrown) {
+		if g.burn(m, thrown) || g.swallow(m, thrown) || g.feed(m, thrown) {
 			return
 		}
 		if g.hitBy(thrown, m) {

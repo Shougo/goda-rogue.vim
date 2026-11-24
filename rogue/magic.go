@@ -202,7 +202,7 @@ func (g *Game) actConfused(m *Monster) bool {
 		g.hitMonster(m, f)
 		return true
 	}
-	if g.Level.At(p).Walkable() {
+	if g.Level.At(p).Walkable() && !m.still() {
 		m.Pos = p
 	}
 	return false

@@ -304,6 +304,9 @@ func (g *Game) wanderTarget() Point {
 // stepToward moves m one step along a shortest way to to, around other
 // creatures; it says whether it moved.
 func (g *Game) stepToward(m *Monster, to Point) bool {
+	if m.still() {
+		return false
+	}
 	dist := g.distances(to)
 	best, bestDist := Point{}, -1
 	here, ok := g.index(m.Pos)
@@ -404,6 +407,7 @@ func (g *Game) hitPlayer(m *Monster) {
 		g.end(m.Name+"に倒された", false)
 		return
 	}
+	g.holdBy(m)
 	if c := g.sealStrength(SealCounter); c > 0 && g.rng.IntN(100) < c {
 		g.say("反撃した！")
 		g.hurt(m, n)

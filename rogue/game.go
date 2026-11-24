@@ -87,6 +87,9 @@ type Game struct {
 	// sprung says whether a trap went off on the last step.
 	Stuck  int
 	sprung bool
+	// heldBy is the monster that holds the player (AbilityHold), while
+	// Stuck; nil for a snare.
+	heldBy *Monster
 	// identified are the item kinds (IDs) the player knows; fakeNames the
 	// names of the others, for this run.
 	identified map[string]bool
@@ -258,7 +261,7 @@ func (g *Game) newLevel(rng *rand.Rand) {
 	g.Items = nil
 	g.Traps = nil
 	g.Decoys = nil
-	g.Stuck = 0
+	g.Stuck, g.heldBy = 0, nil
 }
 
 // placeStairs puts the player in a room of the new floor and the stairs
@@ -539,7 +542,7 @@ func (g *Game) Do(action string, args []string) error {
 			name, d = g.confusedDirection()
 		}
 		g.Facing = name
-		if g.Stuck > 0 && g.canStep(d) {
+		if g.Stuck > 0 && g.canStep(d) && g.stillHeld() {
 			g.struggle()
 			return nil
 		}
@@ -973,7 +976,7 @@ func (g *Game) dash(d Point) {
 		if g.foundTrapAt(g.Player.Add(d)) != nil {
 			return
 		}
-		if g.Stuck > 0 {
+		if g.Stuck > 0 && g.stillHeld() {
 			g.struggle()
 			return
 		}
@@ -1034,9 +1037,15 @@ func (g *Game) Status() string {
 // cannot.
 func (g *Game) struggle() {
 	g.Stuck--
-	if g.Stuck == 0 {
+	switch {
+	case g.heldBy != nil && g.Stuck == 0:
+		g.say(g.heldBy.Name + "から抜け出した。")
+		g.heldBy = nil
+	case g.heldBy != nil:
+		g.say(g.heldBy.Name + "に捕まっていて動けない。")
+	case g.Stuck == 0:
 		g.say("トラばさみから抜け出した。")
-	} else {
+	default:
 		g.say("トラばさみにかかっていて動けない。")
 	}
 	g.endTurn(true)

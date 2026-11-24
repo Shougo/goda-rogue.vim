@@ -180,6 +180,12 @@ func (g *Game) abilityText(a Ability) string {
 		return curseText(v)
 	case AbilityHunger:
 		return hungerText(v)
+	case AbilityStill:
+		return "その場から動かない"
+	case AbilityHold:
+		return holdText(v)
+	case AbilityBurn:
+		return "投げたものや矢は燃やされて効かない。殴るしかない"
 	case AbilitySynthesis:
 		s := fmt.Sprintf("投げた道具を%d個まで飲み込んで合成し、倒すと落とす", v[0])
 		if v[1] > 0 {

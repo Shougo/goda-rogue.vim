@@ -56,6 +56,12 @@
 #              (never under a fifth of 満腹度; eating more than the
 #              player can hold brings 5 back). Food thrown at it
 #              defeats it
+#   不動  it never moves by itself (a staff or a blow may move it)
+#   捕縛:C:T  a blow of it that hits holds the player C% of the time: it
+#              cannot step away for T turns, or until the monster is gone
+#              or no more next to it
+#   燃える  what is thrown or shot at it burns, with no effect: only
+#              blows hurt it
 #   擬態:D:S:K  on a new floor it hides as an item of the floor's table, or
 #              (S%) as stairs, or (K%, with a shop) as one of the shop's
 #              goods. D 1: trying to pick it up shows it, and so do a
