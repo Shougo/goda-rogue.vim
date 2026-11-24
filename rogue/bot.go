@@ -174,7 +174,7 @@ const ruleDanger = 1
 // botRules are the names of the rules of Next, in their order: what the
 // bot is doing, for a reader (compare.go).
 var botRules = []string{
-	"回復する", "状態異常の敵や状態に答える", "危険に答える", "矢を撃つ", "戦う", "射手や魔法使いを追う", "敵を待つ", "食べる", "強化する", "装備する",
+	"回復する", "状態異常の敵や状態に答える", "危険に答える", "矢を撃つ", "戦う", "離れて打つ敵を追う", "敵を待つ", "食べる", "強化する", "装備する",
 	"合成する", "識別する", "店で値段を見る", "あかりを使う", "不要品を置く", "入れ替える", "休む", "階段へ向かう", "拾いに行く", "探索する",
 }
 
@@ -492,6 +492,15 @@ func oneByOneDeath(g *Game, ms []*Monster, hp int) float64 {
 func fleeDeath(g *Game, ms []*Monster, hp, turns int, step Point) float64 {
 	var foes []foe
 	for _, m := range ms {
+		if a, ok := m.ability(AbilityKnight); ok {
+			// It jumps after the player and swoops on it every turn
+			// (the bots walked away from an eagle under its blows,
+			// back and forth).
+			hits := make([]float64, a.Values[0]+1)
+			hits[a.Values[0]] = 1
+			foes = append(foes, foe{hits, 1, min(turns, riskTurns), m})
+			continue
+		}
 		if !m.Speed.fast() && !m.still() && chebyshev(m.Pos, step) <= 1 && m.Speed != SpeedSlow {
 			foes = append(foes, foe{hitDamages(g, m), 1, min(turns, riskTurns), m})
 			continue
@@ -1451,10 +1460,8 @@ func (b *Bot) await(g *Game) (string, []string) {
 		if m.Dozing || chebyshev(m.Pos, g.Player) != 2 || !g.sees(m.Pos, g.Player) || m.still() {
 			continue
 		}
-		_, shoots := m.ability(AbilityShoot)
-		_, casts := m.ability(AbilityMagic)
 		_, flees := m.ability(AbilityFlee)
-		if shoots || casts || flees || m.Fled {
+		if strikesFromAfar(m) || flees || m.Fled {
 			continue
 		}
 		if b.awaited == m && b.awaitedAt == m.Pos {
@@ -1467,15 +1474,26 @@ func (b *Bot) await(g *Game) (string, []string) {
 	return "", nil
 }
 
-// chase goes for an archer or a mage in sight, awake: it does not come,
-// and shoots or waves its staff from afar. The way keeps off its lines,
-// if it can.
+// strikesFromAfar says whether m strikes the player from where it stands
+// rather than coming next to it: an archer, a mage, one that swoops from
+// a knight's move away (the eagles: the bots waited for one that hit them
+// to death, never coming), one that strikes two tiles away.
+func strikesFromAfar(m *Monster) bool {
+	for _, a := range []AbilityName{AbilityShoot, AbilityMagic, AbilityKnight, AbilityLong} {
+		if _, ok := m.ability(a); ok {
+			return true
+		}
+	}
+	return false
+}
+
+// chase goes for an enemy in sight, awake, that strikes from afar
+// (strikesFromAfar): it does not come. The way keeps off its lines, if it
+// can.
 func (b *Bot) chase(g *Game) (string, []string) {
 	var archer *Monster
 	for _, m := range g.visibleEnemies() {
-		_, shoots := m.ability(AbilityShoot)
-		_, casts := m.ability(AbilityMagic)
-		if (shoots || casts) && !m.Dozing &&
+		if strikesFromAfar(m) && !m.Dozing &&
 			(archer == nil || chebyshev(m.Pos, g.Player) < chebyshev(archer.Pos, g.Player)) {
 			archer = m
 		}
@@ -1905,7 +1923,8 @@ func (b *Bot) approach(g *Game, goal func(Point) bool) (string, []string) {
 	p := g.Player.Add(Directions[args[0]])
 	for _, m := range g.visibleEnemies() {
 		// (Not for one that never moves: it would wait for ever.)
-		if !m.Dozing && !m.Speed.fast() && !m.still() && chebyshev(m.Pos, g.Player) == 2 && chebyshev(m.Pos, p) == 1 {
+		// Nor for one that strikes from afar: it does not come.
+		if !m.Dozing && !m.Speed.fast() && !m.still() && !strikesFromAfar(m) && chebyshev(m.Pos, g.Player) == 2 && chebyshev(m.Pos, p) == 1 {
 			return "wait", nil
 		}
 	}

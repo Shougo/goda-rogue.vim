@@ -778,6 +778,20 @@ func TestBotAwait(t *testing.T) {
 	}
 }
 
+// TestBotChasesEagle: the bot does not wait for an eagle a knight's move
+// away, which swoops from there and never comes: it goes next to it.
+func TestBotChasesEagle(t *testing.T) {
+	g, r := roomGame(t, 8, 4)
+	g.HP, g.MaxHP = 999, 999
+	g.Player = Point{r.X + 1, r.Y + 1}
+	place(g, kind("washi1"), Point{r.X + 3, r.Y + 2})
+	b := NewBot(BotCareful, 1)
+	a, args := b.Next(g)
+	if a != "move" || b.rule != "離れて打つ敵を追う" {
+		t.Fatalf("%s %v [%s]", a, args, b.rule)
+	}
+}
+
 // TestBotRegenBracelet: the bot wears a bracelet of regeneration only to
 // heal, and wears another one the rest of the time.
 func TestBotRegenBracelet(t *testing.T) {
