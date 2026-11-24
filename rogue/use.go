@@ -54,8 +54,13 @@ func (g *Game) useItem(it *Item) {
 	// Using it tells what it is.
 	g.identify(it)
 
+	g.effectOf(it, g.lucky(it, blessed))
+}
+
+// effectOf is the effect of it, used by the player (or a grass thrown at
+// it, which then has its effect on the player), lucky or not.
+func (g *Game) effectOf(it *Item, lucky bool) {
 	n := it.Def.Strength
-	lucky := g.lucky(it, blessed)
 	switch it.Def.Effect {
 	case EffectHeal:
 		if g.HP >= g.MaxHP {
@@ -151,6 +156,10 @@ func (g *Game) cast(c Category, e MagicEffect) {
 		g.magicOnPlayer(e, d, nil)
 	case CategoryStaff:
 		if m := g.bolt(); m != nil {
+			if g.reflects(m, reflectStaffs) {
+				g.magicOnPlayer(e, back(d), m)
+				return
+			}
 			g.provoke(m)
 			g.magicOn(m, e, d)
 		}
@@ -207,7 +216,8 @@ func (g *Game) upgrade(c Category, n int, lucky bool) {
 // change places.
 func (g *Game) swapPlaces() {
 	m := g.bolt()
-	if m == nil {
+	if m == nil || g.reflects(m, reflectStaffs) {
+		// (Sent back, it changes the player with itself.)
 		return
 	}
 	m.Dozing = false
@@ -247,6 +257,11 @@ const blowAwayDamage = 5
 func (g *Game) blowAway() {
 	m := g.bolt()
 	if m == nil {
+		return
+	}
+	if g.reflects(m, reflectStaffs) {
+		g.say("吹き飛ばされた。")
+		g.flingPlayer(back(Directions[g.Facing]), m)
 		return
 	}
 	m.Dozing = false

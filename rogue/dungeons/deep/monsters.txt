@@ -96,6 +96,19 @@
 #              eyes on the floor
 #   壁抜け  it goes through rock toward the player, wherever it is; it
 #              fights only out of rock
+#   投げつけ:R:C  standing on an item, with the player on one of its lines
+#              within R tiles, C% of its actions throw the item at the
+#              player (a grass has its effect on the player); with the
+#              player out of sight, it goes for the items it sees
+#   反射:C:W  C% of the bolts of staffs waved at it go back to the
+#              player; with W 1 the arrows too, with W 2 any item thrown
+#              (it falls at the player's feet)
+#   荒らし:C:W  next to the player, C% of its actions ruin an item carried
+#              instead of a blow: W 0 empties a staff, 1 takes a grass or
+#              a scroll away, 2 makes a pot a pot of keeping, 3 any of
+#              those; the seal 盗みよけ wards it off
+#   サビ:C:N:B  next to the player, C% of its actions rust the weapon or
+#              the shield equipped by N instead of a blow (with B 1, both)
 #   擬態:D:S:K  on a new floor it hides as an item of the floor's table, or
 #              (S%) as stairs, or (K%, with a shop) as one of the shop's
 #              goods. D 1: trying to pick it up shows it, and so do a
@@ -292,3 +305,19 @@ mei1	冥	冥使	1	24	8	4	6	倍速	-	壁抜け	-	道具:4	-
 mei2	冥	冥兵	2	50	14	7	18	倍速	-	壁抜け	-	道具:6	-
 mei3	冥	冥将	3	80	20	10	54	倍速	-	壁抜け	-	道具:9	-
 mei4	冥	冥王	4	120	28	14	162	倍速	-	壁抜け	-	道具:12	-
+warabe1	童	童	1	12	4	2	4	通常	-	投げつけ:4:50	-	道具:3	-
+warabe2	童	悪童	2	26	7	4	12	通常	-	投げつけ:6:50	-	道具:4	-
+warabe3	童	荒童	3	42	10	6	36	通常	-	投げつけ:8:66	-	道具:6	-
+warabe4	童	大悪童	4	62	14	8	108	通常	-	投げつけ:10:75	-	道具:8	-
+kagami1	鏡	鏡	1	12	4	3	4	通常	-	反射:50:0	-	道具:3	-
+kagami2	鏡	大鏡	2	26	7	5	12	通常	-	反射:100:0	-	道具:4	-
+kagami3	鏡	妖鏡	3	42	10	7	36	通常	-	反射:100:1	-	道具:6	-
+kagami4	鏡	魔鏡	4	62	14	10	108	通常	-	反射:100:2	-	道具:8	-
+karasu1	鴉	鴉	1	7	3	1	3	通常	-	荒らし:25:0	-	道具:2	-
+karasu2	鴉	大鴉	2	16	6	2	10	通常	-	荒らし:25:1	-	道具:3	-
+karasu3	鴉	盗鴉	3	26	9	3	30	通常	-	荒らし:25:2	-	道具:4	-
+karasu4	鴉	八咫烏	4	38	12	4	90	通常	-	荒らし:25:3	-	道具:6	-
+sabimushi1	錆	錆虫	1	12	4	3	4	通常	-	サビ:25:1:0	-	道具:3	-
+sabimushi2	錆	大錆虫	2	26	7	5	12	通常	-	サビ:25:1:1	-	道具:4	-
+sabimushi3	錆	錆喰い	3	42	10	7	36	通常	-	サビ:33:2:0	-	道具:6	-
+sabimushi4	錆	錆王	4	62	14	10	108	通常	-	サビ:33:2:1	-	道具:8	-

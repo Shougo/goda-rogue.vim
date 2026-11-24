@@ -196,22 +196,7 @@ func (g *Game) spring(t *Trap, force bool) bool {
 		g.Fullness = max(g.Fullness-n, 0)
 		g.say("お腹が減った。")
 	case TrapRust:
-		if g.sealChance(SealNoRust) {
-			g.say("サビよけの印で守られた。")
-			return true
-		}
-		rusted := false
-		for _, c := range []Category{CategoryWeapon, CategoryShield} {
-			if it := g.equipped(c); it != nil {
-				rusted = true
-				if g.shielded(it) {
-					continue
-				}
-				it.Upgrade--
-				g.say(g.Name(it) + "がさびてしまった。")
-			}
-		}
-		if !rusted {
+		if !g.rust([]Category{CategoryWeapon, CategoryShield}, 1) {
 			g.say("何も起こらなかった。")
 		}
 	case TrapRot:

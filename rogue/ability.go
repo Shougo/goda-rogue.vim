@@ -131,6 +131,25 @@ const (
 	// AbilityWalls: it goes through rock, straight to the player, wherever
 	// it is (shade.go).
 	AbilityWalls AbilityName = "壁抜け"
+	// AbilityThrow: standing on an item, with the player on one of its
+	// lines within a reach, by a chance (a percent), it throws the item
+	// at the player; with the player out of sight, it goes for the
+	// items it sees (urchin.go).
+	AbilityThrow AbilityName = "投げつけ"
+	// AbilityReflect: by a chance (a percent), the bolts of staffs
+	// waved at it go back to the player; with more (what: 1), the
+	// arrows too; with 2, any item thrown at it (urchin.go).
+	AbilityReflect AbilityName = "反射"
+	// AbilityRuin: next to the player, by a chance (a percent), instead
+	// of a blow, it ruins an item carried (what: 0 empties a staff, 1
+	// takes a grass or a scroll away, 2 makes a pot a pot of keeping, 3
+	// any of those); the seal 盗みよけ wards it off as a theft
+	// (urchin.go).
+	AbilityRuin AbilityName = "荒らし"
+	// AbilityRust: next to the player, by a chance (a percent), instead
+	// of a blow, it rusts the weapon or the shield equipped by so much
+	// (with both: 1, the two), as the trap of rust (urchin.go).
+	AbilityRust AbilityName = "サビ"
 )
 
 // MagicEffect is an effect of the bolt of AbilityMagic.
@@ -210,6 +229,10 @@ var abilityDefs = map[AbilityName]abilityDef{
 	AbilityKnight:    {[]string{"damage"}, []int{1}, []int{999}, 0},
 	AbilityInvisible: {nil, nil, nil, 0},
 	AbilityWalls:     {nil, nil, nil, 0},
+	AbilityThrow:     {[]string{"reach", "chance %"}, []int{2, 1}, []int{maxReach, 100}, 0},
+	AbilityReflect:   {[]string{"chance %", "what"}, []int{1, reflectStaffs}, []int{100, reflectAll}, 0},
+	AbilityRuin:      {[]string{"chance %", "what"}, []int{1, ruinStaff}, []int{100, ruinAny}, 0},
+	AbilityRust:      {[]string{"chance %", "rust", "both"}, []int{1, 1, 0}, []int{100, 9, 1}, 0},
 	AbilityTrap:      {[]string{"chance %"}, []int{1}, []int{100}, 0},
 	AbilityRevive:    {[]string{"HP %"}, []int{1}, []int{100}, 0},
 	AbilityExplode:   {[]string{"HP %", "damage %"}, []int{1, 1}, []int{99, 100}, 0},
@@ -223,7 +246,7 @@ const maxReach = 20
 
 // abilityNames are the abilities in a fixed order, for the error that
 // lists them.
-var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot, AbilitySynthesis, AbilityCurse, AbilityHunger, AbilityStill, AbilityHold, AbilityBurn, AbilityHeal, AbilityCheer, AbilityRevive, AbilityExplode, AbilityPack, AbilityFlee, AbilityTrap, AbilityLong, AbilityBlink, AbilityKnight, AbilityInvisible, AbilityWalls}
+var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot, AbilitySynthesis, AbilityCurse, AbilityHunger, AbilityStill, AbilityHold, AbilityBurn, AbilityHeal, AbilityCheer, AbilityRevive, AbilityExplode, AbilityPack, AbilityFlee, AbilityTrap, AbilityLong, AbilityBlink, AbilityKnight, AbilityInvisible, AbilityWalls, AbilityThrow, AbilityReflect, AbilityRuin, AbilityRust}
 
 // lineAbilities are the abilities that reach the player from afar along
 // a line, their reach their first number.
@@ -396,6 +419,9 @@ func (g *Game) reachAbility(m *Monster) bool {
 		return true
 	}
 	if a, ok := m.ability(AbilityShoot); ok && g.shootAt(m, a) {
+		return true
+	}
+	if a, ok := m.ability(AbilityThrow); ok && g.throwAt(m, a) {
 		return true
 	}
 	if a, ok := m.ability(AbilityMagic); ok && g.castAt(m, a) {

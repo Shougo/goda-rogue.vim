@@ -75,7 +75,7 @@ func (g *Game) giveOrder(n int) {
 // shopkeeper or a guard, and not past the dungeon's limit of allies.
 func (g *Game) recruit() {
 	m := g.bolt()
-	if m == nil {
+	if m == nil || g.reflects(m, reflectStaffs) {
 		return
 	}
 	switch {

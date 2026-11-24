@@ -232,6 +232,12 @@ func (g *Game) act(m *Monster) bool {
 			if a, ok := m.ability(AbilityHunger); ok && g.starve(m, a) {
 				return true
 			}
+			if a, ok := m.ability(AbilityRuin); ok && g.ruin(m, a) {
+				return true
+			}
+			if a, ok := m.ability(AbilityRust); ok && g.rustBy(m, a) {
+				return true
+			}
 			g.hitPlayer(m)
 			return true
 		}
@@ -248,6 +254,8 @@ func (g *Game) act(m *Monster) bool {
 
 	if _, walls := m.ability(AbilityWalls); m.Hunter || walls || g.sees(m.Pos, g.Player) {
 		m.target, m.hasTarget = g.Player, true
+	} else if p, ok := g.itemToThrow(m); ok {
+		m.target, m.hasTarget = p, true
 	} else if !m.hasTarget || m.Pos == m.target {
 		// Wander: head to a tile of a random room.
 		m.target, m.hasTarget = g.wanderTarget(), true
