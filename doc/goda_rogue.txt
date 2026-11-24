@@ -827,6 +827,11 @@ The built-in dungeons:
 				             reach, hide a trap of the floor's table
 				             where it stands; defeated, it leaves one
 				             there
+				  長柄  it hits the player two tiles away on one
+				             of its lines, with nothing in between
+				  瞬間移動:C  with the player in sight and not next to
+				             it, C% of its actions take it next to
+				             the player
 				  擬態:D:S:K  on a new floor it hides as
 				             an item of the floor's table,
 				             or (S%) as stairs, or (K%, with

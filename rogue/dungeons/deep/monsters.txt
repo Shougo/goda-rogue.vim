@@ -83,6 +83,10 @@
 #   罠:C  C% of its actions, out of the player's reach, hide a trap
 #              of the floor's table where it stands; defeated, it leaves
 #              one there
+#   長柄  it hits the player two tiles away on one of its lines, with
+#              nothing in between
+#   瞬間移動:C  with the player in sight and not next to it, C% of its
+#              actions take it next to the player
 #   擬態:D:S:K  on a new floor it hides as an item of the floor's table, or
 #              (S%) as stairs, or (K%, with a shop) as one of the shop's
 #              goods. D 1: trying to pick it up shows it, and so do a
@@ -259,3 +263,11 @@ karakuri1	機	木機	1	12	3	3	4	通常	-	罠:10	-	道具:3	-
 karakuri2	機	鉄機	2	28	7	6	12	通常	-	罠:10	-	道具:4	-
 karakuri3	機	銅機	3	45	10	9	36	通常	-	罠:10	-	道具:6	-
 karakuri4	機	金機	4	67	14	12	108	通常	-	罠:10	-	道具:8	-
+kyojin1	巨	巨人	1	32	9	3	6	鈍足	-	長柄	-	道具:4	-
+kyojin2	巨	大巨人	2	66	15	6	18	鈍足	-	長柄	-	道具:6	-
+kyojin3	巨	岩巨人	3	106	22	9	54	鈍足	-	長柄	-	道具:9	-
+kyojin4	巨	巨神	4	158	30	12	162	鈍足	-	長柄	-	道具:12	-
+shinobi1	忍	下忍	1	18	7	3	5	移動倍速	-	瞬間移動:15	-	道具:4	-
+shinobi2	忍	中忍	2	38	12	6	16	移動倍速	-	瞬間移動:20	-	道具:6	-
+shinobi3	忍	上忍	3	61	17	9	48	移動倍速	-	瞬間移動:25	-	道具:9	-
+shinobi4	忍	影忍	4	91	24	12	144	移動倍速	-	瞬間移動:33	-	道具:12	-

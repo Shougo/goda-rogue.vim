@@ -190,6 +190,10 @@ func (g *Game) abilityText(a Ability) string {
 		return "プレイヤーから逃げる。追い詰められると戦う"
 	case AbilityTrap:
 		return fmt.Sprintf("%d%%で足元に罠を仕掛ける。倒すとそこに罠が残る", v[0])
+	case AbilityLong:
+		return "まっすぐ2マス先まで攻撃が届く"
+	case AbilityBlink:
+		return fmt.Sprintf("見えていると%d%%で目の前に現れる", v[0])
 	case AbilityRevive:
 		return fmt.Sprintf("一度倒しても、最大HPの%d%%で起き上がる", v[0])
 	case AbilityExplode:
