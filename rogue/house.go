@@ -133,10 +133,18 @@ func (g *Game) enterHouse() {
 // player (2 tiles) always does.
 const houseWakes = 16
 
-// stir wakes, perhaps, a monster asleep in a monster house where the player
-// is (a big room, where entering it does not wake them all).
+// stir wakes, perhaps, a monster asleep on its turn: next to the player
+// (wakeShare), or in a monster house where the player is (a big room,
+// where entering it does not wake them all).
 func (g *Game) stir(m *Monster) {
-	if !m.House || g.Level.RoomAt(g.Player) != g.House {
+	if !m.House {
+		// Out of a house: next to the player, by wakeShare.
+		if chebyshev(m.Pos, g.Player) <= 1 && g.rng.IntN(100) < wakeShare {
+			m.Dozing = false
+		}
+		return
+	}
+	if g.Level.RoomAt(g.Player) != g.House {
 		return
 	}
 	if chebyshev(m.Pos, g.Player) <= 2 || g.rng.IntN(houseWakes) == 0 {

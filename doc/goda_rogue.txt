@@ -129,8 +129,10 @@ no HP and loses a point every turn, until it eats or dies.
 
 Every action that takes a turn (moving, attacking, waiting, a step of a
 dash) is followed by the turn of the monsters.  Slow monsters act every
-other turn, fast ones twice a turn.  Some monsters doze until the player
-enters or leaves their room, or they are attacked.  Walking and waiting
+other turn, fast ones twice a turn.  Half of the monsters doze on a new
+floor (眠り of monsters.txt).  One wakes half of the time as the player
+enters or leaves its room, half of its turns next to the player, and
+always when attacked.  Walking and waiting
 restore HP; at 0 HP the run is over.
 
 Defeating an enemy gives its EXP to the player and to every ally, whole:

@@ -359,7 +359,7 @@ func (g *Game) erratic(m *Monster) bool {
 // the monsters, or as many as its kind says (monsters.txt 眠り).
 func (m *Monster) dozes(rng *rand.Rand) bool {
 	if m.Def.Asleep < 0 {
-		return rng.IntN(3) == 0
+		return rng.IntN(2) == 0
 	}
 	return rng.IntN(100) < m.Def.Asleep
 }

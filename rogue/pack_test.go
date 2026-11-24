@@ -39,8 +39,11 @@ func TestFlee(t *testing.T) {
 	g.Monsters = nil
 	m = place(g, kind("usagi1"), Point{r.X, r.Y})
 	g.Player = Point{r.X + 1, r.Y + 1}
-	for _, p := range []Point{{r.X + 1, r.Y}, {r.X, r.Y + 1}} {
-		place(g, kind("nezumi1"), p)
+	// (Every other way out taken: a doorway may be next to the corner.)
+	for _, d := range around {
+		if p := m.Pos.Add(d); g.Level.At(p).Walkable() && !g.occupied(p) {
+			place(g, kind("nezumi1"), p)
+		}
 	}
 	hp := g.HP
 	for range 20 {

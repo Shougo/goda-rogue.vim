@@ -608,11 +608,39 @@ func TestDozing(t *testing.T) {
 	if m.Pos != pos || !m.Dozing {
 		t.Fatalf("a dozing monster moved: %v", m.Pos)
 	}
-	if err := g.Do("move", []string{"right"}); err != nil {
+	// Entering the room wakes it half of the time.
+	woke := 0
+	for range 200 {
+		m.Dozing = true
+		g.wake(g.Level.RoomAt(m.Pos))
+		if !m.Dozing {
+			woke++
+		}
+	}
+	if woke < 70 || woke > 130 {
+		t.Errorf("woke %d times of 200 entering", woke)
+	}
+	// Next to the player, half of its turns; attacked, always.
+	g.Player = m.Pos.Add(Point{-1, 0})
+	woke = 0
+	for range 200 {
+		m.Dozing = true
+		g.act(m)
+		if !m.Dozing {
+			woke++
+		}
+	}
+	if woke < 70 || woke > 130 {
+		t.Errorf("woke %d times of 200 next to the player", woke)
+	}
+	m.Dozing = true
+	m.HP, m.MaxHP = 999, 999
+	g.Facing = "right"
+	if err := g.Do("attack", nil); err != nil {
 		t.Fatal(err)
 	}
 	if m.Dozing {
-		t.Error("entering the room did not wake it")
+		t.Error("attacked, it dozes")
 	}
 }
 

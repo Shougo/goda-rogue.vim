@@ -127,7 +127,7 @@ func TestAsleep(t *testing.T) {
 	for _, tc := range []struct {
 		id     string
 		lo, hi int
-	}{{"kuma1", 250, 350}, {"nezumi1", 100, 170}} {
+	}{{"kuma1", 250, 350}, {"ryu1", 250, 350}, {"nezumi1", 160, 240}} {
 		m := newMonster(kind(tc.id))
 		n := 0
 		for range 400 {

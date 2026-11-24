@@ -178,7 +178,7 @@ type MonsterDef struct {
 	// Abilities are its special abilities (monsters.txt 能力).
 	Abilities []Ability
 	// Asleep is the share of them asleep on a new floor, a percent; -1
-	// for the default (a third).
+	// for the default (a half).
 	Asleep int
 	// Drop is what it drops when the player kills it (monsters.txt
 	// 落とし物); nil for the dungeon's rule.

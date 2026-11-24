@@ -547,14 +547,21 @@ func (g *Game) rankUp(m *Monster) {
 	m.MaxHP, m.Attack, m.Defense = next.HP, next.Attack, next.Defense
 }
 
-// wake wakes the dozing monsters in the room i.
+// wakeShare is the chance, a percent, that a monster asleep wakes as the
+// player enters or leaves its room, and on its turn next to the player
+// (Shougo, 2026-11-24). An attack always wakes it.
+const wakeShare = 50
+
+// wake is the player entering or leaving the room i: each monster asleep
+// there wakes by wakeShare (those of a monster house as their house
+// says: house.go).
 func (g *Game) wake(i int) {
 	if i < 0 {
 		return
 	}
 	r := g.Level.Rooms[i]
 	for _, m := range g.Monsters {
-		if r.Contains(m.Pos) {
+		if r.Contains(m.Pos) && m.Dozing && (m.House || g.rng.IntN(100) < wakeShare) {
 			m.Dozing = false
 		}
 	}
