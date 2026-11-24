@@ -153,7 +153,8 @@ Lingering on a floor does not pay: now and then a monster appears out of
 sight, and it gives nothing for defeating it.  Then Kron's wind blows:
 the first time as a warning (the status line shows the turns until the
 next one), the second time a strong monster comes for the player and
-every enemy grows one rank stronger, the third time the run is over.
+every enemy grows one rank stronger (one of rank 4 goes beyond: 熊王2,
+stronger, in red reversed), the third time the run is over.
 
 ==============================================================================
 INSTALL                                                   *goda-rogue-install*
@@ -607,6 +608,8 @@ GodaRogueHungry		The fullness of the top line at 10% or less (with
 GodaRogueRank1		Enemies of rank 1 to 4: green, blue, purple, red.
 ...
 GodaRogueRank4
+GodaRogueRankOver	Enemies beyond rank 4 (a rank 4 that ranked up
+			again: 熊王2, 熊王3, ...): red, reversed and bold.
 GodaRogueAlly1		Allies: the color of their rank, underlined.
 ...
 GodaRogueAlly4
@@ -712,7 +715,12 @@ The built-in dungeons:
 				道具の呪い, optional, default 0: never), how
 				rarely such an item is blessed (祝福, the
 				same), how rarely a scroll is lucky (ラッキー,
-				the same),
+				the same), the percents of its attack and of
+				its defense a monster of rank 4 gets each time
+				it ranks up beyond (超過攻撃 and 超過防御,
+				optional, default 130 and 120; its max HP
+				stays, its name gets the level: 熊王2,
+				熊王3, ...),
 				whether a trap the
 				player has found goes off (見つけた罠: 安全 or
 				発動), and, optional, whether runs may use

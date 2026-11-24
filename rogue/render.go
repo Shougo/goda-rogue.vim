@@ -25,7 +25,10 @@ const (
 	hlSafe   = "GodaRogueFloorSafe"
 	hlStairs = "GodaRogueStairs"
 	hlRank   = "GodaRogueRank"
-	hlAlly   = "GodaRogueAlly"
+	// hlOver is an enemy beyond rank 4 (over.go): the color of rank 4,
+	// reversed and bold.
+	hlOver = "GodaRogueRankOver"
+	hlAlly = "GodaRogueAlly"
 	// hlKeeper is a shopkeeper (not angry): the color of its rank,
 	// reversed.
 	hlKeeper = "GodaRogueKeeper"
@@ -369,6 +372,9 @@ func (g *Game) miniGlyph(p Point) (byte, string) {
 		if m.Keeper && !m.Angry {
 			return miniMonster, hlKeeper + string(rune('0'+m.Rank))
 		}
+		if m.Over > 0 {
+			return miniMonster, hlOver
+		}
 		return miniMonster, hlRank + string(rune('0'+m.Rank))
 	}
 	if _, ok := g.ItemAt(p); ok {
@@ -413,6 +419,9 @@ func (g *Game) glyph(p Point) (string, string) {
 		}
 		if m.Keeper && !m.Angry {
 			return m.Glyph, hlKeeper + string(rune('0'+m.Rank))
+		}
+		if m.Over > 0 {
+			return m.Glyph, hlOver
 		}
 		return m.Glyph, hlRank + string(rune('0'+m.Rank))
 	}

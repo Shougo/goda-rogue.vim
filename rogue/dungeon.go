@@ -133,6 +133,10 @@ type Rules struct {
 	// one in so many (rules.txt ラッキー; 0 for never unless blessed;
 	// lucky.go).
 	Lucky int
+	// OverAttack and OverDefense are the percents of its attack and of
+	// its defense that a monster of rank 4 gets each time it ranks up
+	// beyond (rules.txt 超過攻撃 and 超過防御, optional; over.go).
+	OverAttack, OverDefense int
 	// StrongerBy is how many ranks above the floor's the monster of the
 	// second wind is.
 	StrongerBy int
@@ -619,6 +623,7 @@ func (l *loader) loadRules() {
 		"風1", "風2", "風3", "防御K", "主の命中", "敵の命中", "成長", "最初の仲間", "強敵ランク差",
 		"持ち物の数", "ひびの段階", "腕輪の傷みやすさ", "満腹度", "腹減りターン", "見つけた罠", "デバッグ",
 		"お金投げ", "落とし物", "仲間の命中", "主の投擲命中", "敵の投擲命中", "仲間の上限", "武具の呪い", "腕輪の呪い", "道具の呪い", "食料の呪い", "祝福", "ラッキー",
+		"超過攻撃", "超過防御",
 	})
 	l.rules = rk
 	r := &d.Rules
@@ -712,6 +717,13 @@ func (l *loader) loadRules() {
 	}
 	if _, ok := rk["食料の呪い"]; ok {
 		r.CurseFood = l.keyInt("rules.txt", rk, "食料の呪い", 0)
+	}
+	r.OverAttack, r.OverDefense = defaultOverAttack, defaultOverDefense
+	if _, ok := rk["超過攻撃"]; ok {
+		r.OverAttack = l.keyInt("rules.txt", rk, "超過攻撃", 100)
+	}
+	if _, ok := rk["超過防御"]; ok {
+		r.OverDefense = l.keyInt("rules.txt", rk, "超過防御", 100)
 	}
 	// Optional: most dungeons have no debug mode.
 	if ln, ok := rk["デバッグ"]; ok {

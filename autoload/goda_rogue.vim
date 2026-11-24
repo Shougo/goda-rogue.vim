@@ -129,6 +129,8 @@ function! s:highlights() abort
     call s:highlight('GodaRogueAlly' . (i + 1), c.ranks[i], 'underline')
     call s:highlight('GodaRogueKeeper' . (i + 1), c.ranks[i], 'reverse')
   endfor
+  " An enemy beyond rank 4: the color of rank 4, reversed and bold.
+  call s:highlight('GodaRogueRankOver', c.ranks[-1], 'reverse,bold')
 endfunction
 
 " Set the color of {group} by {group}Default: it follows 'background', and

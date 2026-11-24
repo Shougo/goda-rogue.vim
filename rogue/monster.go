@@ -53,6 +53,8 @@ type Monster struct {
 	Name  string
 	// Rank is 1 to 4, shown as its color.
 	Rank int
+	// Over is how many times it ranked up beyond rank 4 (over.go).
+	Over int
 	Ally bool
 	// Order is what the player told it, an ally ("": OrderFollow).
 	Order   Order
@@ -543,6 +545,7 @@ func (g *Game) defeated(m *Monster) {
 func (g *Game) rankUp(m *Monster) {
 	next := g.Dungeon.nextRank(m.Def)
 	if next == nil {
+		g.overRank(m)
 		return
 	}
 	m.Def, m.Name, m.Rank, m.Speed, m.Enraged = next, next.Name, next.Rank, next.Speed, false
