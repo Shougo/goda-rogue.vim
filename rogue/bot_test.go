@@ -777,3 +777,45 @@ func TestBotAwait(t *testing.T) {
 		t.Errorf("waited again for one that did not come")
 	}
 }
+
+// TestBotRegenBracelet: the bot wears a bracelet of regeneration only to
+// heal, and wears another one the rest of the time.
+func TestBotRegenBracelet(t *testing.T) {
+	g, _ := roomGame(t, 6, 3)
+	b := NewBot(BotCareful, 1)
+	regen := carry(g, "kaifuku", 0)
+	regen.Known = true
+	other := carry(g, "kehai", 0)
+	other.Equipped = true
+	g.Fullness = g.Dungeon.Rules.Fullness
+	carry(g, "ookiionigiri", 0)
+	if a, _ := b.equip(g); a != "" {
+		t.Errorf("at full HP: %s", a)
+	}
+	g.HP = g.MaxHP / 2
+	if a, _ := b.equip(g); a != "inventory" || b.plan[0].item != regen || b.plan[1].label != commandEquip {
+		t.Errorf("hurt: %s %+v", a, b.plan)
+	}
+	b.plan = nil
+	g.equip(regen)
+	g.HP = g.MaxHP
+	if a, _ := b.equip(g); a != "inventory" || b.plan[0].item != other || b.plan[1].label != commandEquip {
+		t.Errorf("healed: %s %+v", a, b.plan)
+	}
+	// Neither is useless: one of each use.
+	if useless(g, regen) || useless(g, other) {
+		t.Errorf("useless: regen %v, other %v", useless(g, regen), useless(g, other))
+	}
+	// Hurt with no food to spare: it does not put it on.
+	b.plan = nil
+	g.equip(other)
+	g.HP, g.Fullness = g.MaxHP/2, 10
+	for i := len(g.Inventory) - 1; i >= 0; i-- {
+		if g.Inventory[i].Def.Category == CategoryFood {
+			g.Inventory = slices.Delete(g.Inventory, i, i+1)
+		}
+	}
+	if a, _ := b.equip(g); a != "" {
+		t.Errorf("hungry: %s", a)
+	}
+}

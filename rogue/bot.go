@@ -1145,8 +1145,29 @@ func useless(g *Game, it *Item) bool {
 		worn := g.equipped(c)
 		return worn != nil && worn != it && strength(it) <= strength(worn)
 	case CategoryBracelet:
-		worn := g.equipped(c)
-		return worn != nil && worn != it
+		// One bracelet of regeneration (known) to heal, and one other
+		// to wear the rest of the time.
+		// The one kept of two of the same use: the one worn, else the
+		// first carried.
+		regen := func(o *Item) bool { return o.Known && o.Def.Effect == EffectRegen }
+		if it.Equipped {
+			return false
+		}
+		for _, o := range g.Inventory {
+			if o == it {
+				// Nothing kept before it: only one worn would be.
+				return slices.ContainsFunc(g.Inventory, func(o *Item) bool {
+					return o != it && o.Equipped && o.Def.Category == c && regen(o) == regen(it)
+				})
+			}
+			if !o.ForSale && o.Def.Category == c && regen(o) == regen(it) && regen(it) {
+				return true
+			}
+		}
+		// On the floor: one of the same use is carried already.
+		return slices.ContainsFunc(g.Inventory, func(o *Item) bool {
+			return !o.ForSale && o.Def.Category == c && regen(o) == regen(it)
+		})
 	case CategoryPot:
 		if it.Def.Effect == EffectHealPot {
 			// Nothing stays in it: it is used up when it holds no more.
@@ -1409,17 +1430,17 @@ func (b *Bot) equip(g *Game) (string, []string) {
 			// It does not come off.
 			continue
 		}
-		if c == CategoryBracelet && worn != nil && worn.Def.Effect == EffectRegen && b.foodFloors(g) < regenOff {
-			return b.use(worn, commandUnequip)
+		if c == CategoryBracelet {
+			if action, args := b.bracelet(g, worn); action != "" {
+				return action, args
+			}
+			continue
 		}
 		it := carried(g, func(it *Item) bool {
 			if it.Def.Category != c || it.Equipped {
 				return false
 			}
 			switch {
-			case c == CategoryBracelet && b.mayRegen(g, it) && b.foodFloors(g) < regenOn:
-				// It would eat the food up.
-				return false
 			case worn == nil:
 				return true
 			case c == CategoryWeapon || c == CategoryShield:
@@ -1437,12 +1458,50 @@ func (b *Bot) equip(g *Game) (string, []string) {
 // regenOff and regenOn are the floors of food (foodFloors) below which
 // the bot takes a bracelet of regeneration off, and from which it puts
 // one on: it makes the player twice as hungry, and the bots that wore one
-// to the end starved (a third of their deaths by hunger in the cave).
+// all the time starved (a third of their deaths by hunger in the cave).
 // The gap keeps it from taking it off and putting it on again and again.
 const (
 	regenOff = 2
 	regenOn  = 3
 )
+
+// regenFrom is the share of the max HP (in tenths) below which the bot
+// puts a bracelet of regeneration on.
+const regenFrom = 9
+
+// bracelet wears a bracelet of regeneration only to heal, as a player
+// puts one on to rest (Shougo): with the HP below regenFrom tenths and
+// food enough, and takes it off at full HP, for another bracelet if it
+// carries one. Otherwise it wears a bracelet when none is worn (to learn
+// it, if it does not know it). Not with an enemy in sight: a swap costs
+// a turn.
+func (b *Bot) bracelet(g *Game, worn *Item) (string, []string) {
+	if (worn != nil && worn.Cursed) || len(g.visibleEnemies()) > 0 {
+		return "", nil
+	}
+	regen := func(it *Item) bool { return b.known(g, it, EffectRegen) }
+	other := carried(g, func(it *Item) bool {
+		return it.Def.Category == CategoryBracelet && !it.Equipped && !regen(it)
+	})
+	if worn != nil && regen(worn) {
+		if g.HP < g.MaxHP && b.foodFloors(g) >= regenOff {
+			return "", nil
+		}
+		if other != nil {
+			return b.use(other, commandEquip)
+		}
+		return b.use(worn, commandUnequip)
+	}
+	if g.HP*10 < g.MaxHP*regenFrom && b.foodFloors(g) >= regenOn {
+		if it := carried(g, func(it *Item) bool { return it.Def.Category == CategoryBracelet && regen(it) }); it != nil {
+			return b.use(it, commandEquip)
+		}
+	}
+	if worn == nil && other != nil {
+		return b.use(other, commandEquip)
+	}
+	return "", nil
+}
 
 // foodFloors is for how many floors the food lasts, the fullness and that
 // of the food carried (in pots too), at twice the hunger, as with a
@@ -1466,12 +1525,6 @@ func foodTotal(g *Game) int {
 	}
 	count(g.Inventory)
 	return total
-}
-
-// mayRegen says whether it may be a bracelet of regeneration, as far as
-// the bot knows.
-func (b *Bot) mayRegen(g *Game, it *Item) bool {
-	return slices.ContainsFunc(b.mayBe(g, it), func(d *ItemDef) bool { return d.Effect == EffectRegen })
 }
 
 // hungerRate is how many times as fast as without a bracelet the player
