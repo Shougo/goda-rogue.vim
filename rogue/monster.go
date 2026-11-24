@@ -203,6 +203,9 @@ func (g *Game) act(m *Monster) bool {
 	if g.support(m) {
 		return false
 	}
+	if a, ok := m.ability(AbilityTrap); ok && chebyshev(m.Pos, g.Player) > 1 && g.rng.IntN(100) < a.Values[0] && g.setTrap(m) {
+		return false
+	}
 	// Attack the player first (or steal from it), then an ally.
 	for _, d := range around {
 		if m.Pos.Add(d) == g.Player && g.clearFrom(m.Pos, d) {
@@ -466,6 +469,9 @@ func (g *Game) kill(m, by *Monster, byPlayer, shown bool) {
 		return
 	}
 	g.remove(m)
+	if _, ok := m.ability(AbilityTrap); ok {
+		g.setTrap(m)
+	}
 	if byPlayer {
 		g.say(m.Name + "を倒した。")
 	} else if shown {

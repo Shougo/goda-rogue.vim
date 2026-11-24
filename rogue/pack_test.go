@@ -50,3 +50,27 @@ func TestFlee(t *testing.T) {
 		t.Errorf("cornered: at %v, HP %d", m.Pos, g.HP)
 	}
 }
+
+// TestSetTrap: a monster that sets traps hides one where it stands, out
+// of the player's reach, and leaves one where it is defeated.
+func TestSetTrap(t *testing.T) {
+	g, r := roomGame(t, 8, 4)
+	g.Depth = 10
+	m := place(g, kind("karakuri1"), Point{r.X + 5, r.Y + 2})
+	g.HP, g.MaxHP = 999, 999
+	for range 200 {
+		m.Pos = Point{r.X + 5, r.Y + 2}
+		if g.act(m); len(g.Traps) > 0 {
+			break
+		}
+	}
+	if len(g.Traps) == 0 || g.Traps[0].Found {
+		t.Fatalf("traps %v", g.Traps)
+	}
+	g.Traps = nil
+	m.Pos = Point{r.X + 6, r.Y + 3}
+	g.hurt(m, 999)
+	if g.TrapAt(Point{r.X + 6, r.Y + 3}) == nil {
+		t.Error("no trap where it fell")
+	}
+}

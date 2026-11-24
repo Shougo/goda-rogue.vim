@@ -823,6 +823,10 @@ The built-in dungeons:
 				             later
 				  逃げる  it keeps away from the player it sees,
 				             and fights only when it cannot
+				  罠:C  C% of its actions, out of the player's
+				             reach, hide a trap of the floor's table
+				             where it stands; defeated, it leaves one
+				             there
 				  擬態:D:S:K  on a new floor it hides as
 				             an item of the floor's table,
 				             or (S%) as stairs, or (K%, with

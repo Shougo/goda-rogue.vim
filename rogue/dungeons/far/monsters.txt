@@ -80,6 +80,9 @@
 #              and when it appears later
 #   逃げる  it keeps away from the player it sees, and fights only when
 #              it cannot
+#   罠:C  C% of its actions, out of the player's reach, hide a trap
+#              of the floor's table where it stands; defeated, it leaves
+#              one there
 #   擬態:D:S:K  on a new floor it hides as an item of the floor's table, or
 #              (S%) as stairs, or (K%, with a shop) as one of the shop's
 #              goods. D 1: trying to pick it up shows it, and so do a
@@ -252,3 +255,7 @@ usagi1	兎	野兎	1	5	1	0	6	倍速	-	逃げる	-	道具:100	-
 usagi2	兎	白兎	2	12	2	1	20	倍速	-	逃げる	-	道具:100	-
 usagi3	兎	月兎	3	19	3	1	60	倍速	-	逃げる	-	道具:100	-
 usagi4	兎	玉兎	4	29	4	2	180	倍速	-	逃げる	-	道具:100	-
+karakuri1	機	木機	1	12	3	3	4	通常	-	罠:10	-	道具:3	-
+karakuri2	機	鉄機	2	28	7	6	12	通常	-	罠:10	-	道具:4	-
+karakuri3	機	銅機	3	45	10	9	36	通常	-	罠:10	-	道具:6	-
+karakuri4	機	金機	4	67	14	12	108	通常	-	罠:10	-	道具:8	-

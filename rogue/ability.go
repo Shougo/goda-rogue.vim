@@ -109,6 +109,10 @@ const (
 	// AbilityFlee: it keeps away from the player it sees, and fights
 	// only when it cannot (pack.go).
 	AbilityFlee AbilityName = "逃げる"
+	// AbilityTrap: by a chance (a percent) of its actions, out of the
+	// player's reach, it hides a trap of the floor's table where it
+	// stands; defeated, it leaves one there (pack.go).
+	AbilityTrap AbilityName = "罠"
 )
 
 // MagicEffect is an effect of the bolt of AbilityMagic.
@@ -183,6 +187,7 @@ var abilityDefs = map[AbilityName]abilityDef{
 	AbilityCheer:     {[]string{"chance %"}, []int{1}, []int{100}, 0},
 	AbilityPack:      {[]string{"more"}, []int{1}, []int{8}, 0},
 	AbilityFlee:      {nil, nil, nil, 0},
+	AbilityTrap:      {[]string{"chance %"}, []int{1}, []int{100}, 0},
 	AbilityRevive:    {[]string{"HP %"}, []int{1}, []int{100}, 0},
 	AbilityExplode:   {[]string{"HP %", "damage %"}, []int{1, 1}, []int{99, 100}, 0},
 	AbilityHunger:    {[]string{"chance %", "fullness", "max fullness"}, []int{1, 0, 0}, []int{100, 999, 999}, 0},
@@ -195,7 +200,7 @@ const maxReach = 20
 
 // abilityNames are the abilities in a fixed order, for the error that
 // lists them.
-var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot, AbilitySynthesis, AbilityCurse, AbilityHunger, AbilityStill, AbilityHold, AbilityBurn, AbilityHeal, AbilityCheer, AbilityRevive, AbilityExplode, AbilityPack, AbilityFlee}
+var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot, AbilitySynthesis, AbilityCurse, AbilityHunger, AbilityStill, AbilityHold, AbilityBurn, AbilityHeal, AbilityCheer, AbilityRevive, AbilityExplode, AbilityPack, AbilityFlee, AbilityTrap}
 
 // lineAbilities are the abilities that reach the player from afar along
 // a line, their reach their first number.
