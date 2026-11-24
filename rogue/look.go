@@ -128,7 +128,8 @@ func (g *Game) lookAt(n int) {
 		g.say(m.Def.Description)
 	}
 	if m.Ally {
-		g.askOrder(m)
+		// The prompt hides the messages: its title tells the status.
+		g.askOrder(m, msg)
 	}
 }
 

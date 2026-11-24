@@ -1,6 +1,7 @@
 package rogue
 
 import (
+	"fmt"
 	"slices"
 	"strings"
 	"testing"
@@ -157,6 +158,13 @@ func TestOrders(t *testing.T) {
 	g.Monsters = nil
 	a := place(g, kind("nezumi1"), Point{r.X + 1, r.Y})
 	a.Ally = true
+	// The prompt tells its status.
+	g.Do("look", nil)
+	g.Do("choose", []string{"0"})
+	if want := fmt.Sprintf("鼠：ランク1  通常  仲間 Lv1  HP %d/%d  命令：ついてきて", a.HP, a.MaxHP); g.Prompt == nil || g.Prompt.Title != want {
+		t.Fatalf("prompt %+v, want the title %q", g.Prompt, want)
+	}
+	g.Prompt = nil
 	turn := g.Turn
 	order(g, OrderWait)
 	if a.Order != OrderWait || g.Turn != turn || !strings.Contains(g.Message, "鼠に「待って」と伝えた。") {

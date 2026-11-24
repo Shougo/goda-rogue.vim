@@ -41,13 +41,14 @@ func (g *Game) allies() []*Monster {
 }
 
 // askOrder asks what to tell the ally m (the one it follows now is
-// marked), unless the player's mouth is sealed.
-func (g *Game) askOrder(m *Monster) {
+// marked), under the title status (its status, as looking tells it),
+// unless the player's mouth is sealed.
+func (g *Game) askOrder(m *Monster, status string) {
 	if g.Sealed {
 		g.say("口が封じられていて命令できない。")
 		return
 	}
-	p := &Prompt{Title: m.Name + "への命令", kind: promptOrder}
+	p := &Prompt{Title: status, kind: promptOrder}
 	for _, o := range orders {
 		c := string(o)
 		if o == m.order() {
