@@ -665,3 +665,14 @@ func TestItemList(t *testing.T) {
 		t.Errorf("not hidden: %+v", s.Items)
 	}
 }
+
+// TestGoldPile: the gold of a pile grows with the floors.
+func TestGoldPile(t *testing.T) {
+	for _, c := range []struct{ depth, lo, hi int }{
+		{1, 100, 400}, {30, 300, 1000}, {40, 350, 1100}, {50, 400, 1200}, {99, 500, 1500}, {120, 500, 1500},
+	} {
+		if lo, hi := goldPile(c.depth); lo != c.lo || hi != c.hi {
+			t.Errorf("%dF: %d-%d, want %d-%d", c.depth, lo, hi, c.lo, c.hi)
+		}
+	}
+}

@@ -8,12 +8,40 @@ func (g *Game) newItem(rng *rand.Rand, pos Point) *Item {
 	return g.newItemOf(rng, d.ItemTable(d.counts(g.Depth).ItemTable).pick(rng, d, g.Depth), pos)
 }
 
+// goldPiles are the least and the most gold of a pile on the floor, on
+// some floors (Shougo, 2026-11-24): a pile is worth some of the goods of a
+// shop, as in Shiren. Between them, they go in a straight line.
+var goldPiles = []struct{ depth, lo, hi int }{
+	{1, 100, 400},
+	{30, 300, 1000},
+	{50, 400, 1200},
+	{99, 500, 1500},
+}
+
+// goldPile returns the least and the most gold of a pile on the floor
+// depth.
+func goldPile(depth int) (int, int) {
+	first, last := goldPiles[0], goldPiles[len(goldPiles)-1]
+	if depth <= first.depth {
+		return first.lo, first.hi
+	}
+	for i := 1; i < len(goldPiles); i++ {
+		a, b := goldPiles[i-1], goldPiles[i]
+		if depth <= b.depth {
+			f := func(x, y int) int { return x + (y-x)*(depth-a.depth)/(b.depth-a.depth) }
+			return f(a.lo, b.lo), f(a.hi, b.hi)
+		}
+	}
+	return last.lo, last.hi
+}
+
 // newItemOf makes an item of the kind def on p.
 func (g *Game) newItemOf(rng *rand.Rand, def *ItemDef, pos Point) *Item {
 	it := &Item{Def: def, Pos: pos, Glyph: def.Glyph}
 	switch {
 	case def.Category == CategoryMoney:
-		it.Amount = between(rng, 10, 30+g.Depth*10)
+		lo, hi := goldPile(g.Depth)
+		it.Amount = between(rng, lo, hi)
 	case it.upgradable():
 		it.Upgrade = rollUpgrade(rng)
 		if def.Seal != "" {
