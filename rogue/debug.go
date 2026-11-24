@@ -159,7 +159,9 @@ func (g *Game) debugUsed(args []string) {
 // when the inventory is full).
 func (g *Game) giveItem(def *ItemDef) {
 	it := g.newItemOf(g.rng, def, g.Player)
-	it.Known = true
+	// (Neither cursed nor blessed: what was asked for.)
+	it.Known, it.Cursed, it.Blessed = true, false, false
+	it.Upgrade = max(it.Upgrade, 0)
 	if def.Category == CategoryMoney {
 		g.Gold += it.Amount
 		g.say(fmt.Sprintf("%dG 得た。", it.Amount))
