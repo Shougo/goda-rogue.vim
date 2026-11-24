@@ -50,6 +50,8 @@ type Bot struct {
 	// plan is what to answer to the prompts it opened: an item of the
 	// inventory, then a command.
 	plan []botStep
+	// lastHP is the HP at its last choice (afflicted: hit unseen).
+	lastHP int
 	// rule is the name of the rule that gave the last action (botRules).
 	rule string
 	// leaving is the floor it turned to the stairs on, and until which
@@ -139,7 +141,7 @@ func (b *Bot) Next(g *Game) (string, []string) {
 		return "move", []string{clockwise[b.rng.IntN(len(clockwise))]}
 	}
 	for i, rule := range []func(*Game) (string, []string){
-		b.heal, b.danger, b.shoot, b.fight, b.chase, b.await, b.eat, b.boost, b.equip, b.synthesize, b.identify, b.toShop, b.light,
+		b.heal, b.afflicted, b.danger, b.shoot, b.fight, b.chase, b.await, b.eat, b.boost, b.equip, b.synthesize, b.identify, b.toShop, b.light,
 		b.tidy, b.trade, b.rest, b.leave, b.pick, b.explore,
 	} {
 		if action, args := rule(g); action != "" {
@@ -172,7 +174,7 @@ const ruleDanger = 1
 // botRules are the names of the rules of Next, in their order: what the
 // bot is doing, for a reader (compare.go).
 var botRules = []string{
-	"回復する", "危険に答える", "矢を撃つ", "戦う", "射手や魔法使いを追う", "敵を待つ", "食べる", "強化する", "装備する",
+	"回復する", "状態異常の敵や状態に答える", "危険に答える", "矢を撃つ", "戦う", "射手や魔法使いを追う", "敵を待つ", "食べる", "強化する", "装備する",
 	"合成する", "識別する", "店で値段を見る", "あかりを使う", "不要品を置く", "入れ替える", "休む", "階段へ向かう", "拾いに行く", "探索する",
 }
 
@@ -618,9 +620,36 @@ func (b *Bot) danger(g *Game) (string, []string) {
 	if fight < b.risk() {
 		return "", nil
 	}
-	if g.Player == g.Stairs {
+	if g.Player == g.Stairs && g.Confused == 0 {
 		return "stairs", nil
 	}
+	answers := b.answers(g, near, ms)
+	if g.Confused > 0 || g.Blind > 0 {
+		// Confused, a step goes anywhere; blind, it may meet what it
+		// does not see: items only.
+		answers = slices.DeleteFunc(answers, func(a botAnswer) bool { return a.item == nil })
+	}
+	// What it knows first; an item it does not know only when nothing
+	// else helps.
+	pick := b.pickAnswer(answers, fight, false)
+	if pick == nil {
+		pick = b.pickAnswer(answers, fight, true)
+	}
+	if h := b.hopelessHeal(g, answers, pick); h != nil {
+		pick = h
+	}
+	if l, ok := b.lookAhead(g, answers, pick); ok {
+		pick = l
+	}
+	if b.Trace != nil {
+		b.traceAnswers(g, fight, answers, pick)
+	}
+	return b.take(g, pick)
+}
+
+// answers are the answers to a danger: the enemies near next to the
+// player, ms coming at it.
+func (b *Bot) answers(g *Game, near, ms []*Monster) []botAnswer {
 	var answers []botAnswer
 	seen := map[*ItemDef]bool{}
 	for _, it := range g.Inventory {
@@ -696,22 +725,7 @@ func (b *Bot) danger(g *Game) (string, []string) {
 			answers = append(answers, botAnswer{cost, fleeDeath(g, ms, g.HP, dist, step), nil, "", nil, nil, false})
 		}
 	}
-	// What it knows first; an item it does not know only when nothing
-	// else helps.
-	pick := b.pickAnswer(answers, fight, false)
-	if pick == nil {
-		pick = b.pickAnswer(answers, fight, true)
-	}
-	if h := b.hopelessHeal(g, answers, pick); h != nil {
-		pick = h
-	}
-	if l, ok := b.lookAhead(g, answers, pick); ok {
-		pick = l
-	}
-	if b.Trace != nil {
-		b.traceAnswers(g, fight, answers, pick)
-	}
-	return b.take(g, pick)
+	return answers
 }
 
 // take is the action that carries out the answer pick (nil for none: the
@@ -725,7 +739,8 @@ func (b *Bot) take(g *Game, pick *botAnswer) (string, []string) {
 	case pick.item == nil:
 		return b.toStairs(g)
 	case pick.target != nil:
-		if name := directionName(pick.target.Pos.Sub(g.Player)); g.Facing != name {
+		d := pick.target.Pos.Sub(g.Player)
+		if name := directionName(Point{sign(d.X), sign(d.Y)}); g.Facing != name {
 			return "turn", []string{name}
 		}
 	}
@@ -2028,6 +2043,15 @@ func reachLines(g *Game) map[Point]bool {
 		for _, n := range lineAbilities {
 			if a, ok := m.ability(n); ok {
 				reach = max(reach, a.Values[0])
+			}
+		}
+		if a, ok := m.ability(AbilityAfflict); ok && a.Values[1] == 0 {
+			// Next to one that brings a state: kept off (afflict.go).
+			for _, d := range around {
+				if lines == nil {
+					lines = map[Point]bool{}
+				}
+				lines[m.Pos.Add(d)] = true
 			}
 		}
 		for _, d := range around {
