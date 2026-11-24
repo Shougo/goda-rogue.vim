@@ -262,6 +262,10 @@ func (g *Game) showUp(it *Item) {
 
 // eyeDrops shows the shallow mimics and the traps of the floor.
 func (g *Game) eyeDrops() {
+	if g.Blind > 0 {
+		// It cures blindness too (Shougo, 2026-11-25).
+		g.Blind = 0
+	}
 	g.say("目がよく見えるようになった。")
 	g.Clear = true
 	for _, t := range g.Traps {

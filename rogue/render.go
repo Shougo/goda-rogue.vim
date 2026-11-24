@@ -446,6 +446,9 @@ func (g *Game) glyph(p Point) (string, string) {
 // senses says whether a bracelet shows what is at p on a tile the player
 // has not seen: a monster, or an item.
 func (g *Game) senses(p Point) bool {
+	if g.Blind > 0 {
+		return false
+	}
 	if m := g.MonsterAt(p); g.sensesMonster(p) && m != nil && !g.hidden(m) {
 		return true
 	}

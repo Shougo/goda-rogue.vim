@@ -69,3 +69,26 @@ func TestBlindMonster(t *testing.T) {
 		t.Errorf("HP %d, blind %d", g.HP, m.Blind)
 	}
 }
+
+// TestBlindCured: eye drops cure blindness; blind, nothing is sensed nor
+// lit.
+func TestBlindCured(t *testing.T) {
+	g, r := roomGame(t, 8, 4)
+	g.Player = Point{r.X, r.Y}
+	far := Point{r.X + 5, r.Y + 2}
+	g.Lit = true
+	g.Blind = 10
+	if g.Visible(far) {
+		t.Error("lit while blind")
+	}
+	carry(g, "kehai", 0).Equipped = true
+	place(g, kind("nezumi1"), far)
+	if g.sensesMonster(far) {
+		t.Error("sensed while blind")
+	}
+	drops := carry(g, "megusuri", 0)
+	command(t, g, drops, commandDrink)
+	if g.Blind != 0 || !g.Visible(far) {
+		t.Errorf("blind %d after the eye drops", g.Blind)
+	}
+}

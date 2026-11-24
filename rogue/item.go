@@ -784,6 +784,10 @@ func (g *Game) wears(e Effect) bool {
 // sensesMonster says whether a bracelet of sensing shows a monster on p:
 // within its reach (items.txt 強さ, in tiles; 0 for the whole floor).
 func (g *Game) sensesMonster(p Point) bool {
+	if g.Blind > 0 {
+		// Blind, nothing is sensed (the light neither: Visible).
+		return false
+	}
 	b := g.equipped(CategoryBracelet)
 	if b == nil || b.Def.Effect != EffectSenseEnemy {
 		return false

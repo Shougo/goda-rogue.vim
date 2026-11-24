@@ -18,6 +18,7 @@ var effectTexts = map[Effect]string{
 	EffectRegen:      "HP の回復が 2 倍速くなる（お腹も 2 倍速く減る）。",
 	EffectSenseEnemy: "%d マス以内の敵の居場所が分かる。",
 	EffectSenseItem:  "フロアの道具の場所が分かる。",
+	EffectEyeDrops:   "フロアの罠と、道具に化けたものが見える。目つぶしも治る。",
 	EffectHeal:       "HP が %d 回復する。HP が満タンなら最大 HP が上がる。",
 	EffectLight:      "フロア全体が明るくなり、地形と道具と敵が見える。",
 	EffectUncurse:    "持ち物 1 つの呪いを解く。ラッキーなら持ち物すべて。",
