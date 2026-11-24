@@ -69,6 +69,12 @@ const (
 	// weapon or a shield the player carries in instead of a blow, an
 	// equipped one too. Defeated, it drops what it holds (synth.go).
 	AbilitySynthesis AbilityName = "合成"
+	// AbilityCurse: next to the player, by a chance (a percent), it
+	// curses what the player carries instead of a blow: the weapon or
+	// the shield equipped (0), those or the bracelet (1), or any item
+	// (2), so many of them. A scroll of おはらい read near it destroys
+	// it (curser.go).
+	AbilityCurse AbilityName = "呪い"
 )
 
 // MagicEffect is an effect of the bolt of AbilityMagic.
@@ -136,6 +142,7 @@ var abilityDefs = map[AbilityName]abilityDef{
 	AbilitySplit:     {[]string{"chance %"}, []int{1}, []int{100}, 0},
 	AbilityRot:       {[]string{"chance %", "onigiri", "any item"}, []int{1, 1, 0}, []int{100, 5, 1}, 0},
 	AbilitySynthesis: {[]string{"items", "suck %"}, []int{1, 0}, []int{9, 100}, 0},
+	AbilityCurse:     {[]string{"chance %", "what", "items"}, []int{1, curseArms, 1}, []int{100, curseAny, 5}, 0},
 	AbilitySteal:     {[]string{"chance %", "what", "items", "equipped"}, []int{1, stealGold, 0, 0}, []int{100, stealItems, 5, 1}, 0},
 }
 
@@ -144,7 +151,7 @@ const maxReach = 20
 
 // abilityNames are the abilities in a fixed order, for the error that
 // lists them.
-var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot, AbilitySynthesis}
+var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot, AbilitySynthesis, AbilityCurse}
 
 // lineAbilities are the abilities that reach the player from afar along
 // a line, their reach their first number.

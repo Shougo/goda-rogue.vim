@@ -364,3 +364,7 @@
 6	15	gou1	1
 16	32	gou2	1
 33	50	gou3	1
+# The monster that curses: rare, over many floors.
+8	17	noroi1	1
+18	34	noroi2	1
+35	50	noroi3	1

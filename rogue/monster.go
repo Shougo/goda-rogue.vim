@@ -202,6 +202,9 @@ func (g *Game) act(m *Monster) bool {
 			if g.suck(m) {
 				return true
 			}
+			if a, ok := m.ability(AbilityCurse); ok && g.curser(m, a) {
+				return true
+			}
 			g.hitPlayer(m)
 			return true
 		}

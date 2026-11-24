@@ -51,6 +51,11 @@
 #              above 0, next to the player, C% of its blows suck a weapon
 #              or a shield the player carries in instead, an equipped one
 #              too (they count in N). Defeated, it drops what it holds
+#   呪い:C:W:N  next to the player, C% of its blows curse N of the items
+#              carried instead: W 0 the weapon or the shield equipped, W 1
+#              those or the bracelet equipped, W 2 any item, equipped or
+#              not. With nothing to curse, it attacks. A scroll of
+#              おはらい read in its room (or next to it) destroys it
 #   擬態:D:S:K  on a new floor it hides as an item of the floor's table, or
 #              (S%) as stairs, or (K%, with a shop) as one of the shop's
 #              goods. D 1: trying to pick it up shows it, and so do a
@@ -163,3 +168,7 @@ gou1	合	混ぜ虫	1	31	8	6	10	通常	-	合成:2:0	-	なし	-
 gou2	合	大混ぜ虫	2	62	15	11	30	通常	-	合成:3:0	-	なし	-
 gou3	合	混ぜ主	3	99	22	16	90	通常	-	合成:4:25	-	なし	-
 gou4	合	混ぜ王	4	149	30	22	220	通常	-	合成:5:50	-	なし	-
+noroi1	呪	呪い子	1	16	5	2	6	通常	-	呪い:25:0:1	-	道具:3	-
+noroi2	呪	呪い師	2	36	9	5	18	通常	-	呪い:25:1:1	-	道具:4	-
+noroi3	呪	大呪い師	3	58	13	7	55	通常	-	呪い:25:2:1	-	道具:6	-
+noroi4	呪	呪い王	4	86	18	10	160	通常	-	呪い:25:2:2	-	道具:8	-

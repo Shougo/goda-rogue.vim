@@ -9,3 +9,4 @@
 1	30	harahe	2
 5	30	sabi	2
 10	30	kusari	2
+8	30	noroi	2

@@ -111,6 +111,7 @@ func (g *Game) useItem(it *Item) {
 	case EffectSwap:
 		g.swapPlaces()
 	case EffectUncurse:
+		g.exorcise()
 		switch {
 		case lucky:
 			g.say(sayLucky)

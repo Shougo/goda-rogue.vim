@@ -66,7 +66,7 @@ scroll of identification identifies everything carried, a scroll of
 
 An item that can be cursed may be blessed instead (薬草（祝）), never
 both.  A blessing takes a bad effect on its item in its place, once:
-rust, rot, a curse (not a theft).  A blessed grass, scroll or food is not
+rust, rot, a curse (of a monster or of a trap; not a theft).  A blessed grass, scroll or food is not
 used up: used, or thrown at a monster, it has its effect and loses its
 blessing.  A blessed staff keeps its charges when waved, and loses its
 blessing half of the time.  A blessing shows as a curse does; a shop
@@ -780,6 +780,15 @@ The built-in dungeons:
 				             sealed, it is hit by a thrown
 				             item as any monster.  Defeated,
 				             it drops what it holds
+				  呪い:C:W:N  next to the player, C% of
+				             its blows curse N of the items
+				             carried instead: W 0 the weapon
+				             or the shield equipped, W 1
+				             those or the bracelet equipped,
+				             W 2 any item.  With nothing to
+				             curse, it attacks.  A scroll of
+				             おはらい read in its room (or
+				             next to it) destroys it
 				  擬態:D:S:K  on a new floor it hides as
 				             an item of the floor's table,
 				             or (S%) as stairs, or (K%, with
