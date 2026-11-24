@@ -290,3 +290,10 @@ func (g *Game) rustBy(m *Monster, a Ability) bool {
 	g.event("rusted %s", m.Def.ID)
 	return g.rust(cs, a.Values[1])
 }
+
+// sendsBack says whether m may send back what (reflectStaffs, ...), as a
+// player who knows its kind would know.
+func sendsBack(m *Monster, what int) bool {
+	a, ok := m.ability(AbilityReflect)
+	return ok && what <= a.Values[1]
+}

@@ -120,3 +120,13 @@ func TestRustBy(t *testing.T) {
 		t.Errorf("one: upgrades %d %d", sword.Upgrade, board.Upgrade)
 	}
 }
+
+// TestSendsBack: what a mirror sends back, by its rank.
+func TestSendsBack(t *testing.T) {
+	g, _ := roomGame(t, 4, 3)
+	one := place(g, kind("kagami1"), Point{-1, -1})
+	three := place(g, kind("kagami3"), Point{-2, -2})
+	if !sendsBack(one, reflectStaffs) || sendsBack(one, reflectArrows) || !sendsBack(three, reflectArrows) || sendsBack(three, reflectAll) {
+		t.Error("what a mirror sends back")
+	}
+}

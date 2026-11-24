@@ -650,7 +650,14 @@ func (b *Bot) danger(g *Game) (string, []string) {
 			}
 			// At the enemy next to it on which it helps most, for
 			// what the staff may be.
-			target, chance := b.best(near, func(m *Monster) float64 {
+			// (Not at a mirror: it sends the bolt back.)
+			var at []*Monster
+			for _, m := range near {
+				if !sendsBack(m, reflectStaffs) {
+					at = append(at, m)
+				}
+			}
+			target, chance := b.best(at, func(m *Monster) float64 {
 				return meanOf(kinds, func(def *ItemDef) float64 { return waveDeath(g, ms, m, def) })
 			})
 			if target != nil {
@@ -909,8 +916,9 @@ func (b *Bot) shoot(g *Game) (string, []string) {
 		return "", nil
 	}
 	for _, m := range g.visibleEnemies() {
-		if arrows.Count < plentyArrows && !b.worthArrows(g, m) || m.room() > 0 {
-			// (One of synthesis swallows the arrow.)
+		if arrows.Count < plentyArrows && !b.worthArrows(g, m) || m.room() > 0 || sendsBack(m, reflectArrows) {
+			// (One of synthesis swallows the arrow; a mirror sends it
+			// back.)
 			continue
 		}
 		d := m.Pos.Sub(g.Player)
