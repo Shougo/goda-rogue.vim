@@ -260,7 +260,8 @@ func TestAttackKeeper(t *testing.T) {
 		t.Errorf("angry %v, message %q", k.Angry, g.Message)
 	}
 	// Without shopkeepers, the goods are free.
-	for _, m := range g.Shop.Keepers {
+	// (A clone: removing one takes it out of the list.)
+	for _, m := range slices.Clone(g.Shop.Keepers) {
 		g.remove(m)
 	}
 	if len(forSale(g)) != 0 {
@@ -404,5 +405,34 @@ func TestShopGoods(t *testing.T) {
 				t.Errorf("%v is free, nearer to the middle than some goods", p)
 			}
 		}
+	}
+}
+
+// TestKeeperBlocks: owing the shop, the player finds each shopkeeper in
+// its door at once, and each door has one.
+func TestKeeperBlocks(t *testing.T) {
+	g := shopGame(t, "yorozu")
+	if n := len(g.doors(g.Shop.Room)); len(g.Shop.Keepers) < n {
+		t.Fatalf("%d shopkeepers for %d doors", len(g.Shop.Keepers), n)
+	}
+	r := g.shopRoom()
+	g.Player = Point{r.X + r.W/2, r.Y + r.H/2}
+	goods := forSale(g)
+	if len(goods) == 0 {
+		t.Fatal("no goods")
+	}
+	it := goods[0]
+	g.Items = slices.DeleteFunc(g.Items, func(x *Item) bool { return x == it })
+	g.Inventory = append(g.Inventory, it)
+	if err := g.Do("wait", nil); err != nil {
+		t.Fatal(err)
+	}
+	for _, k := range g.Shop.Keepers {
+		if k.Pos != k.door {
+			t.Errorf("a shopkeeper at %v, its door at %v", k.Pos, k.door)
+		}
+	}
+	if !strings.Contains(strings.Join(g.Log, ""), "店主が入り口に立ちふさがった。") {
+		t.Errorf("%q", g.Log)
 	}
 }

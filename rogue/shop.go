@@ -97,7 +97,9 @@ func (g *Game) openShop(rng *rand.Rand, rooms []int, start int) {
 	g.Shop = &Shop{Def: def, Room: room}
 
 	doors := g.doors(room)
-	for i := range between(rng, def.Keepers[0], def.Keepers[1]) {
+	// (A shopkeeper for each door at least: each stands in one when the
+	// player owes.)
+	for i := range max(between(rng, def.Keepers[0], def.Keepers[1]), len(doors)) {
 		door := doors[i%len(doors)]
 		home, ok := g.keeperHome(room, door)
 		if !ok {
@@ -204,6 +206,13 @@ func (g *Game) actKeeper(m *Monster) {
 	to := m.home
 	if g.debt() > 0 && g.inShop(g.Player) {
 		to = m.door
+		// At once, as in Shiren: the player owing cannot slip out
+		// before it gets there, only talk to it (talkTo).
+		if m.Pos != to && !g.occupied(to) {
+			m.Pos = to
+			g.say("店主が入り口に立ちふさがった。")
+			return
+		}
 	}
 	if m.Pos != to {
 		g.stepToward(m, to)

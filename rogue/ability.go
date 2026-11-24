@@ -416,6 +416,11 @@ func (g *Game) charge(m *Monster, a Ability) bool {
 	g.say(m.Name + "が突進してきた！")
 	n := a.Values[1]
 	if f := g.MonsterAt(m.Pos.Add(d)); f != nil {
+		if f.Keeper && !f.Angry {
+			// A shopkeeper keeps its shop (as against the bolts).
+			g.say(f.Name + "には効かなかった。")
+			return true
+		}
 		f.Dozing = false
 		f.HP -= n
 		g.say(fmt.Sprintf("%sに%dのダメージ。", f.Name, n))

@@ -94,11 +94,12 @@ holds: a big room has some 20 monsters, 35 items and 20 traps.
 
                                                             *goda-rogue-shops*
 Some floors have a shop: a room of items for sale, with their prices,
-and shopkeepers (商, in the color of their rank, reversed) by its doors.
-Picking an item up puts it on the bill: a shopkeeper then stands in its
-door, and walking into one asks to pay.  An item put down in the shop
-can be sold for half its price.  Leaving the shop without paying (by
-another door, a warp, a pit) is stealing: the shopkeepers get angry, and
+and shopkeepers (商, in the color of their rank, reversed) by its doors,
+one for each door at least.  Picking an item up puts it on the bill: each
+shopkeeper then stands in its door at once, and walking into one asks
+to pay.  An item put down in the shop can be sold for half its price.
+Leaving the shop without paying (a warp, a pit, a door left free) is
+stealing: the shopkeepers get angry, and
 guards come after the thief.  The stronger the shopkeepers (their rank,
 their number), the harder it is; deep shops sell rarer items.  Attacking
 a shopkeeper is stealing too.  Angry shopkeepers sell no more, and with
