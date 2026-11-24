@@ -30,6 +30,8 @@
 床	1	99	kaifuku	1
 床	1	99	kehai	1
 床	1	99	sabiyoke	1
+床	1	99	suiminyoke	1
+床	1	99	konranyoke	1
 床	1	99	nusumiyokeu	1
 床	1	99	dougu	1
 床	1	99	kiya	3
@@ -42,6 +44,7 @@
 床	1	99	takatobi	2
 床	1	99	subayasa	1
 床	1	99	konran	2
+床	1	99	metsubushi	2
 床	1	99	suimin	2
 床	1	99	shikibetsu	3
 床	1	99	akari	2
@@ -95,6 +98,8 @@
 よろず	1	14	kehai	1
 よろず	15	99	kehai	3
 よろず	15	99	sabiyoke	3
+よろず	15	99	suiminyoke	3
+よろず	15	99	konranyoke	3
 よろず	15	99	nusumiyokeu	3
 よろず	1	14	dougu	1
 よろず	15	99	dougu	3
@@ -109,6 +114,7 @@
 よろず	1	99	takatobi	2
 よろず	1	99	subayasa	1
 よろず	1	99	konran	2
+よろず	1	99	metsubushi	2
 よろず	1	99	suimin	2
 よろず	1	99	shikibetsu	4
 よろず	1	99	akari	2
@@ -140,6 +146,7 @@
 草	1	99	takatobi	2
 草	1	99	subayasa	1
 草	1	99	konran	2
+草	1	99	metsubushi	2
 草	1	99	suimin	2
 武具	1	99	bokutou	2
 武具	1	99	tetsuken	3
@@ -170,6 +177,8 @@
 腕輪	1	14	kehai	3
 腕輪	15	99	kehai	5
 腕輪	15	99	sabiyoke	5
+腕輪	15	99	suiminyoke	5
+腕輪	15	99	konranyoke	5
 腕輪	15	99	nusumiyokeu	5
 腕輪	1	14	dougu	3
 腕輪	15	99	dougu	5

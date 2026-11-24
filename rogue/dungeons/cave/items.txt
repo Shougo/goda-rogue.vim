@@ -10,6 +10,8 @@
 #     道具感知  shows the items of the floor
 #     サビよけ  nothing rusts (the seal does it by chance only)
 #     盗みよけ  nothing is stolen nor ruined (the seal: by chance)
+#     睡眠よけ  nothing puts the player to sleep
+#     混乱よけ  nothing confuses the player
 #   草, drunk:
 #     HP回復    restores 強さ HP, or raises the max HP if it is full
 #     ちから    under the max strength, restores 強さ of the strength
@@ -35,7 +37,7 @@
 #     場所替え  the player and the monster it hits change places
 #   草, 巻物 and 杖 can also have an effect of the bolts of monsters
 #   (monsters.txt 魔法: ワープ 倍速 混乱 鈍足 睡眠 封印 HP1/2 HP1/4 レベル-1
-#   レベル-3): a grass on who drinks it, or on the monster it is thrown
+#   レベル-3 目つぶし): a grass on who drinks it, or on the monster it is thrown
 #   at; a scroll on the enemies of the room (next to the player, in a
 #   corridor); a staff on the monster its bolt hits
 #   食料, eaten:
@@ -101,6 +103,8 @@ kehai	腕	気配察知の腕輪	腕輪	10	気配察知	15	-	-	0	2000
 dougu	腕	道具感知の腕輪	腕輪	0	道具感知	15	-	-	0	2000
 sabiyoke	腕	サビよけの腕輪	腕輪	0	サビよけ	15	-	-	0	1500
 nusumiyokeu	腕	盗みよけの腕輪	腕輪	0	盗みよけ	15	-	-	0	1500
+suiminyoke	腕	睡眠よけの腕輪	腕輪	0	睡眠よけ	15	-	-	0	1500
+konranyoke	腕	混乱よけの腕輪	腕輪	0	混乱よけ	15	-	-	0	1500
 kiya	矢	木の矢	矢	4	-	0	5-15	-	0	10
 tetsuya	矢	鉄の矢	矢	8	-	0	3-10	-	0	20
 ishi	矢	石	矢	3	-	0	1-1	-	0	2
@@ -113,6 +117,7 @@ inochi	草	命の草	草	5	最大HP	0	-	-	0	300
 takatobi	草	高飛び草	草	0	ワープ	0	-	-	0	100
 subayasa	草	すばやさ草	草	0	倍速	0	-	-	0	150
 konran	草	混乱草	草	0	混乱	0	-	-	0	100
+metsubushi	草	目つぶし草	草	0	目つぶし	0	-	-	0	100
 suimin	草	睡眠草	草	0	睡眠	0	-	-	0	150
 shikibetsu	巻	識別の巻物	巻物	0	識別	0	-	-	0	100
 akari	巻	あかりの巻物	巻物	0	あかり	0	-	-	0	200

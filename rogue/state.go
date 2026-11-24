@@ -11,6 +11,9 @@ package rogue
 type States struct {
 	Confused, Slowed, Hasted, Asleep int
 	Sealed                           bool
+	// Blind is the turns left blind (目つぶし): the player sees only the
+	// tiles next to it; a monster walks at random and attacks no one.
+	Blind int
 }
 
 // The turns of the states.
@@ -18,6 +21,7 @@ const (
 	confuseTurns = 10
 	slowTurns    = 10
 	sleepTurns   = 5
+	blindTurns   = 10
 	// hasteTurns is how long the player stays fast (a monster, for
 	// good).
 	hasteTurns = 20
@@ -30,6 +34,7 @@ var stateTexts = map[MagicEffect]struct{ player, monster string }{
 	MagicSlow:    {"体が重くなった……。", "は遅くなった。"},
 	MagicSleep:   {"眠ってしまった……。", "は眠ってしまった。"},
 	MagicSeal:    {"口が封じられた！", "は能力を封印された。"},
+	MagicBlind:   {"目が見えなくなった！", "は目が見えなくなった。"},
 }
 
 // take brings the state of the bolt e, and says whether e is one of a
@@ -44,6 +49,8 @@ func (s *States) take(e MagicEffect) bool {
 		s.Asleep = sleepTurns
 	case MagicSeal:
 		s.Sealed = true
+	case MagicBlind:
+		s.Blind = blindTurns
 	default:
 		return false
 	}
@@ -59,7 +66,7 @@ func (s States) names(sealed string) []string {
 		name string
 	}{
 		{s.Confused > 0, "混乱"}, {s.Slowed > 0, "鈍足"}, {s.Hasted > 0, "倍速"},
-		{s.Asleep > 0, "睡眠"}, {s.Sealed, sealed},
+		{s.Asleep > 0, "睡眠"}, {s.Sealed, sealed}, {s.Blind > 0, "目つぶし"},
 	} {
 		if st.on {
 			ns = append(ns, st.name)

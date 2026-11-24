@@ -246,6 +246,13 @@ func (g *Game) abilityText(a Ability) string {
 	case AbilityRuin:
 		what := [...]string{"杖の回数を0にする", "草か巻物を1つなくす", "壺を普通の壺に変える", "杖の回数を0にするか、草か巻物をなくすか、壺を普通の壺に変える"}[v[1]]
 		return fmt.Sprintf("隣にいると%d%%で、持ち物の%s（盗みよけで防げる）", v[0], what)
+	case AbilityAfflict:
+		where := "隣にいると"
+		if v[1] == 1 {
+			where = "見えていると"
+		}
+		what := [...]string{"目つぶし（隣しか見えない）にする", "眠らせる", "混乱させる", "攻撃力か防御力を下げる（30%、その階のあいだ）"}[v[2]]
+		return fmt.Sprintf("%s%d%%で、%dターン%s", where, v[0], v[3], what)
 	case AbilityRust:
 		what := [...]string{"装備している武器か盾を%dさびさせる", "装備している武器と盾を%dさびさせる", "装備している武器か盾を%dさびさせるか、印を1つ消す"}[v[2]]
 		return fmt.Sprintf("攻撃しない。隣にいると%d%%で、", v[0]) + fmt.Sprintf(what, v[1]) + "（サビよけの印を先に消す。素の能力のサビよけには効かない）"

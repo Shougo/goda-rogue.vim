@@ -257,6 +257,8 @@ const (
 	EffectSenseItem  Effect = "道具感知"
 	EffectNoRust     Effect = "サビよけ"
 	EffectNoTheft    Effect = "盗みよけ"
+	EffectNoSleep    Effect = "睡眠よけ"
+	EffectNoConfuse  Effect = "混乱よけ"
 	EffectHeal       Effect = "HP回復"
 	EffectLight      Effect = "あかり"
 	EffectIdentify   Effect = "識別"
@@ -280,7 +282,7 @@ const (
 
 // effects are the effects the items of each category can have.
 var effects = map[Category][]Effect{
-	CategoryBracelet: {EffectStrength, EffectRegen, EffectSenseEnemy, EffectSenseItem, EffectNoRust, EffectNoTheft},
+	CategoryBracelet: {EffectStrength, EffectRegen, EffectSenseEnemy, EffectSenseItem, EffectNoRust, EffectNoTheft, EffectNoSleep, EffectNoConfuse},
 	CategoryGrass:    {EffectHeal, EffectStrength, EffectEyeDrops, EffectMaxHP},
 	CategoryScroll:   {EffectLight, EffectIdentify, EffectUpWeapon, EffectUpShield, EffectUncurse, EffectMoreSlots, EffectEraseSeal},
 	CategoryStaff:    {EffectBlowAway, EffectRecruit, EffectSwap},

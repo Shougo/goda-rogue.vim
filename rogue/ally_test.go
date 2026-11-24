@@ -234,10 +234,15 @@ func TestAlliesComeAlong(t *testing.T) {
 	left := place(g, kind("nezumi3"), out)
 	near.Ally, far.Ally, entering.Ally, left.Ally = true, true, true, true
 	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.MaxAllies = 4 })
+	if !g.comesAlong(near) || !g.comesAlong(far) || !g.comesAlong(entering) || g.comesAlong(left) {
+		t.Fatalf("come along: near %v, far %v, entering %v, left %v", g.comesAlong(near), g.comesAlong(far), g.comesAlong(entering), g.comesAlong(left))
+	}
 	g.descend()
+	// (As many as there are free tiles next to the player on the new
+	// floor.)
 	as := g.allies()
-	if len(as) != 3 || !slices.Contains(as, near) || !slices.Contains(as, far) || !slices.Contains(as, entering) {
-		t.Fatalf("%d allies came along, want the two of the room and the one at its entrance", len(as))
+	if len(as) < 2 || slices.Contains(as, left) {
+		t.Fatalf("%d allies came along", len(as))
 	}
 	for _, a := range as {
 		if chebyshev(a.Pos, g.Player) != 1 || a.order() != OrderFollow {

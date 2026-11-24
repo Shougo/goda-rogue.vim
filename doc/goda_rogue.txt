@@ -914,6 +914,16 @@ The built-in dungeons:
 				             away), the others watch; a seal of
 				             サビよけ is taken away first, one born
 				             with it makes it fail
+				  状態:C:S:W:T  C% of its actions bring a state to the
+				             player for T turns (W 0: blind, sees
+				             only next to it; 1: asleep; 2: confused;
+				             3: its attack or its defense down, at
+				             random, 30%, longer by T if down
+				             already, until the next floor): next to
+				             it instead of a blow, or with S 1 from
+				             anywhere it sees the player; the
+				             bracelets of 睡眠よけ and 混乱よけ ward off
+				             sleep and confusion
 				  擬態:D:S:K  on a new floor it hides as
 				             an item of the floor's table,
 				             or (S%) as stairs, or (K%, with
@@ -978,7 +988,7 @@ The built-in dungeons:
 				by its kind (the comments of the built-in
 				items.txt tell what each does):
 				  腕輪: ちから 回復 気配察知 道具感知
-				        サビよけ 盗みよけ
+				        サビよけ 盗みよけ 睡眠よけ 混乱よけ
 				  草: HP回復 ちから 目薬 最大HP
 				  巻物: あかり 識別 武器強化 盾強化 おはらい
 				        印増大 印消し
@@ -988,7 +998,9 @@ The built-in dungeons:
 				A grass, a scroll or a staff can also have
 				an effect of the bolts of monsters (能力
 				魔法 of monsters.txt: ワープ 倍速 混乱 鈍足
-				睡眠 封印 HP1/2 HP1/4 レベル-1 レベル-3):
+				睡眠 封印 HP1/2 HP1/4 レベル-1 レベル-3
+				目つぶし: 10 turns, the player sees only
+				next to it, a monster walks at random):
 				a grass on who drinks it, or on the monster
 				it is thrown at; a scroll on the enemies of
 				the room (next to the player, in a

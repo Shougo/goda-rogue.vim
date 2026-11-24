@@ -151,6 +151,11 @@ const (
 	// (how: 0 one, 1 both, 2 one or, half of the time, a seal taken
 	// away; a seal of サビよけ first), and otherwise watches (urchin.go).
 	AbilityRust AbilityName = "サビ"
+	// AbilityAfflict: by a chance (a percent), it brings a state to the
+	// player (what: 0 blind, 1 asleep, 2 confused, 3 its attack or its
+	// defense down) for so many turns: next to it, instead of a blow, or
+	// (with sight: 1) from anywhere it sees the player (afflict.go).
+	AbilityAfflict AbilityName = "状態"
 )
 
 // MagicEffect is an effect of the bolt of AbilityMagic.
@@ -169,13 +174,14 @@ const (
 	MagicQuarter MagicEffect = "HP1/4"
 	MagicLevel1  MagicEffect = "レベル-1"
 	MagicLevel3  MagicEffect = "レベル-3"
+	MagicBlind   MagicEffect = "目つぶし"
 )
 
 // magicEffects are the effects, in a fixed order, for the error that lists
 // them.
 var magicEffects = []MagicEffect{
 	MagicWarp, MagicHaste, MagicBlow, MagicConfuse, MagicSlow, MagicSleep,
-	MagicSeal, MagicHalf, MagicQuarter, MagicLevel1, MagicLevel3,
+	MagicSeal, MagicHalf, MagicQuarter, MagicLevel1, MagicLevel3, MagicBlind,
 }
 
 // parseMagic reads the effects of AbilityMagic: separated by commas.
@@ -234,6 +240,7 @@ var abilityDefs = map[AbilityName]abilityDef{
 	AbilityReflect:   {[]string{"chance %", "what"}, []int{1, reflectStaffs}, []int{100, reflectAll}, 0},
 	AbilityRuin:      {[]string{"chance %", "what"}, []int{1, ruinStaff}, []int{100, ruinAny}, 0},
 	AbilityRust:      {[]string{"chance %", "rust", "how"}, []int{1, 1, rustOne}, []int{100, 9, rustOrSeal}, 0},
+	AbilityAfflict:   {[]string{"chance %", "sight", "what", "turns"}, []int{1, 0, afflictBlind, 1}, []int{100, 1, afflictWeaken, 99}, 0},
 	AbilityTrap:      {[]string{"chance %"}, []int{1}, []int{100}, 0},
 	AbilityRevive:    {[]string{"HP %"}, []int{1}, []int{100}, 0},
 	AbilityExplode:   {[]string{"HP %", "damage %"}, []int{1, 1}, []int{99, 100}, 0},
@@ -247,7 +254,7 @@ const maxReach = 20
 
 // abilityNames are the abilities in a fixed order, for the error that
 // lists them.
-var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot, AbilitySynthesis, AbilityCurse, AbilityHunger, AbilityStill, AbilityHold, AbilityBurn, AbilityHeal, AbilityCheer, AbilityRevive, AbilityExplode, AbilityPack, AbilityFlee, AbilityTrap, AbilityLong, AbilityBlink, AbilityKnight, AbilityInvisible, AbilityWalls, AbilityThrow, AbilityReflect, AbilityRuin, AbilityRust}
+var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot, AbilitySynthesis, AbilityCurse, AbilityHunger, AbilityStill, AbilityHold, AbilityBurn, AbilityHeal, AbilityCheer, AbilityRevive, AbilityExplode, AbilityPack, AbilityFlee, AbilityTrap, AbilityLong, AbilityBlink, AbilityKnight, AbilityInvisible, AbilityWalls, AbilityThrow, AbilityReflect, AbilityRuin, AbilityRust, AbilityAfflict}
 
 // lineAbilities are the abilities that reach the player from afar along
 // a line, their reach their first number.
@@ -425,6 +432,9 @@ func (g *Game) reachAbility(m *Monster) bool {
 	if a, ok := m.ability(AbilityThrow); ok && g.throwAt(m, a) {
 		return true
 	}
+	if a, ok := m.ability(AbilityAfflict); ok && a.Values[1] == 1 && g.afflictBy(m, a) {
+		return true
+	}
 	if a, ok := m.ability(AbilityMagic); ok && g.castAt(m, a) {
 		return true
 	}
@@ -518,6 +528,7 @@ func (g *Game) pull(m *Monster, a Ability) bool {
 // playerHurt hurts the player by n, done by m; it says whether the player
 // fell.
 func (g *Game) playerHurt(n int, m *Monster) bool {
+	n = g.weakened(n)
 	g.HP -= n
 	g.say(fmt.Sprintf("%dのダメージ。", n))
 	g.event("hurt %d %s", n, m.Def.ID)

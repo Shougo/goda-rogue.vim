@@ -38,9 +38,8 @@ func (g *Game) magicOnPlayer(e MagicEffect, d Point, m *Monster) {
 	case MagicBlow:
 		g.say("吹き飛ばされた。")
 		g.flingPlayer(d, m)
-	case MagicConfuse, MagicSlow, MagicSleep, MagicSeal:
-		g.States.take(e)
-		g.say(stateTexts[e].player)
+	case MagicConfuse, MagicSlow, MagicSleep, MagicSeal, MagicBlind:
+		g.afflict(e)
 	case MagicHalf, MagicQuarter:
 		g.HP = max(g.HP/fraction(e), 1)
 		g.say(fmt.Sprintf("HPが%dになった。", g.HP))
@@ -77,7 +76,7 @@ func (g *Game) magicOn(f *Monster, e MagicEffect, d Point) {
 	case MagicBlow:
 		say("は吹き飛ばされた。")
 		g.fling(f, d, false)
-	case MagicConfuse, MagicSlow, MagicSleep, MagicSeal:
+	case MagicConfuse, MagicSlow, MagicSleep, MagicSeal, MagicBlind:
 		f.States.take(e)
 		say(stateTexts[e].monster)
 	case MagicHalf, MagicQuarter:

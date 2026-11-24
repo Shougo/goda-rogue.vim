@@ -26,7 +26,8 @@
 #              turns), 睡眠 (5 turns), 封印 (the player: no eating,
 #              drinking, reading or talking on the floor; a monster: no
 #              abilities), HP1/2, HP1/4, レベル-1, レベル-3 (a monster:
-#              ranks)
+#              ranks), 目つぶし (10 turns: the player sees only next to
+#              it, a monster walks at random)
 #   分裂:C     a blow of the player that leaves it with 2 HP or more
 #              splits it C% of the time: its HP halves, and another with
 #              that HP appears next to it (it gives nothing when defeated)
@@ -108,6 +109,13 @@
 #              the shield, 1: both, 2: one, or half of the time a seal of
 #              one taken away), the others watch; a seal of サビよけ is
 #              taken away first, one born with it makes it fail
+#   状態:C:S:W:T  C% of its actions bring a state to the player for T turns
+#              (W 0: blind, sees only next to it; 1: asleep; 2: confused;
+#              3: its attack or its defense down, at random, 30%, longer
+#              by T if down already, until the next floor): next to it
+#              instead of a blow, or with S 1 from anywhere it sees the
+#              player; the bracelets of 睡眠よけ and 混乱よけ ward off sleep and
+#              confusion
 #   擬態:D:S:K  on a new floor it hides as an item of the floor's table, or
 #              (S%) as stairs, or (K%, with a shop) as one of the shop's
 #              goods. D 1: trying to pick it up shows it, and so do a

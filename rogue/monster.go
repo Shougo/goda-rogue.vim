@@ -192,6 +192,10 @@ func (g *Game) act(m *Monster) bool {
 	if m.Confused > 0 {
 		return g.actConfused(m)
 	}
+	if m.Blind > 0 {
+		g.actBlind(m)
+		return false
+	}
 	if m.Ally {
 		return g.actAlly(m)
 	}
@@ -240,6 +244,9 @@ func (g *Game) act(m *Monster) bool {
 				return true
 			}
 			if a, ok := m.ability(AbilityRuin); ok && g.ruin(m, a) {
+				return true
+			}
+			if a, ok := m.ability(AbilityAfflict); ok && g.afflictBy(m, a) {
 				return true
 			}
 			if a, ok := m.ability(AbilityRust); ok && g.rustBy(m, a) {

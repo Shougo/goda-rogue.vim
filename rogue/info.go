@@ -32,6 +32,8 @@ var effectTexts = map[Effect]string{
 	EffectKeep:       "入れた道具をしまっておける。「見る」で中の道具を使える。",
 	EffectNoRust:     "装備している武器と盾がサビない。",
 	EffectNoTheft:    "道具もお金も盗まれず、荒らされない。",
+	EffectNoSleep:    "眠らされない。",
+	EffectNoConfuse:  "混乱しない。",
 	EffectPlain:      "道具を入れられるが、中の道具は使えず、割らないと取り出せない。",
 	EffectSynthesis: "武器と盾は、先に入れた同じ種類のものに印と修正値が合成される。" +
 		"同じ腕輪を入れるとひびが直る。中のものは出せない。",

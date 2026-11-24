@@ -89,8 +89,11 @@ type Game struct {
 	distCache distCache
 	// Stuck is how many more turns the player is caught in a snare;
 	// sprung says whether a trap went off on the last step.
-	Stuck  int
-	sprung bool
+	Stuck int
+	// AttackDown and DefenseDown are the turns left weakened (仙,
+	// afflict.go): the player deals 30% less damage, takes 30% more.
+	AttackDown, DefenseDown int
+	sprung                  bool
 	// heldBy is the monster that holds the player (AbilityHold), while
 	// Stuck; nil for a snare.
 	heldBy *Monster
@@ -244,6 +247,8 @@ func (g *Game) descend() {
 // floors.txt says), and leaves the state of the last floor behind.
 func (g *Game) newLevel(rng *rand.Rand) {
 	g.FloorTurns, g.Wind, g.Lit, g.Dark = 0, 0, false, false
+	// Weakness (仙) passes with the floor.
+	g.AttackDown, g.DefenseDown = 0, 0
 	// (The seal of the mouth is for the floor.)
 	g.Sealed = false
 	c := g.Dungeon.counts(g.Depth)
@@ -456,9 +461,9 @@ func (g *Game) IsSafe(p Point) bool {
 // floor; only next to it on a dark one.
 func (g *Game) Visible(p Point) bool {
 	switch {
-	case g.Lit:
+	case g.Lit && g.Blind == 0:
 		return true
-	case g.Dark:
+	case g.Dark, g.Blind > 0:
 		return chebyshev(g.Player, p) <= 1
 	}
 	return g.sees(g.Player, p)
@@ -730,6 +735,7 @@ func (g *Game) strike(m *Monster, share float64) {
 		g.say("会心の一撃！")
 	}
 	g.use(EffectStrength)
+	n = g.weakening(n)
 	m.HP -= n
 	g.say(fmt.Sprintf("%sに%dのダメージ。", m.Name, n))
 	if m.HP > 0 {
@@ -789,6 +795,17 @@ func (g *Game) tick(rest bool) {
 		g.Confused--
 		if g.Confused == 0 {
 			g.say("混乱が治った。")
+		}
+	}
+	if g.Blind > 0 {
+		g.Blind--
+		if g.Blind == 0 {
+			g.say("目が見えるようになった。")
+		}
+	}
+	for _, w := range []*int{&g.AttackDown, &g.DefenseDown} {
+		if *w > 0 {
+			*w--
 		}
 	}
 	g.Turn++
@@ -1071,6 +1088,12 @@ func (g *Game) Status() string {
 	}
 	for _, name := range g.States.names("口封じ") {
 		s += "  " + name
+	}
+	if g.AttackDown > 0 {
+		s += "  攻撃ダウン"
+	}
+	if g.DefenseDown > 0 {
+		s += "  防御ダウン"
 	}
 	if g.Debugged {
 		s += "  デバッグ"
