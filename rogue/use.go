@@ -95,8 +95,7 @@ func (g *Game) useItem(it *Item) {
 	case EffectEyeDrops:
 		g.eyeDrops()
 	case EffectFood:
-		g.Fullness = min(g.Fullness+n, g.Dungeon.Rules.Fullness)
-		g.hunger = 0
+		g.fill(n)
 		g.say("お腹がふくれた。")
 	case EffectRotten:
 		g.eatRotten(n)

@@ -51,6 +51,11 @@
 #              those or the bracelet equipped, W 2 any item, equipped or
 #              not. With nothing to curse, it attacks. A scroll of
 #              おはらい read in its room (or next to it) destroys it
+#   飢え:C:N:M  next to the player, C% of its blows take N of its
+#              fullness instead, or (M above 0) M of its max fullness
+#              (never under a fifth of 満腹度; eating more than the
+#              player can hold brings 5 back). Food thrown at it
+#              defeats it
 #   擬態:D:S:K  on a new floor it hides as an item of the floor's table, or
 #              (S%) as stairs, or (K%, with a shop) as one of the shop's
 #              goods. D 1: trying to pick it up shows it, and so do a
@@ -167,3 +172,7 @@ noroi1	呪	呪い子	1	16	5	2	6	通常	-	呪い:25:0:1	-	道具:3	-
 noroi2	呪	呪い師	2	36	9	5	18	通常	-	呪い:25:1:1	-	道具:4	-
 noroi3	呪	大呪い師	3	68	14	9	55	通常	-	呪い:25:2:1	-	道具:6	-
 noroi4	呪	呪い王	4	120	20	14	160	通常	-	呪い:25:2:2	-	道具:8	-
+gaki1	餓	餓鬼	1	14	5	1	5	通常	-	飢え:25:10:0	-	道具:3	-
+gaki2	餓	青餓鬼	2	32	9	4	16	通常	-	飢え:25:30:0	-	道具:4	-
+gaki3	餓	赤餓鬼	3	60	14	8	50	通常	-	飢え:25:0:10	-	道具:6	-
+gaki4	餓	餓鬼王	4	105	20	13	150	通常	-	飢え:25:0:20	-	道具:8	-

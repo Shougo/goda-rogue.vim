@@ -111,8 +111,7 @@ var rottenStates = []MagicEffect{MagicConfuse, MagicSlow, MagicSleep}
 
 // eatRotten is eating a rotten onigiri: n of fullness, and a bad state.
 func (g *Game) eatRotten(n int) {
-	g.Fullness = min(g.Fullness+n, g.Dungeon.Rules.Fullness)
-	g.hunger = 0
+	g.fill(n)
 	g.say("お腹がふくれたが、腐っていた……。")
 	e := rottenStates[g.rng.IntN(len(rottenStates))]
 	g.States.take(e)

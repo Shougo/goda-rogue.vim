@@ -789,6 +789,14 @@ The built-in dungeons:
 				             curse, it attacks.  A scroll of
 				             おはらい read in its room (or
 				             next to it) destroys it
+				  飢え:C:N:M  next to the player, C% of
+				             its blows take N of its fullness
+				             instead, or (M above 0) M of its
+				             max fullness (never under a
+				             fifth of 満腹度; eating more
+				             than the player can hold brings
+				             5 back).  Food thrown at it
+				             defeats it
 				  擬態:D:S:K  on a new floor it hides as
 				             an item of the floor's table,
 				             or (S%) as stairs, or (K%, with

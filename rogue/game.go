@@ -55,7 +55,10 @@ type Game struct {
 	// Fullness is how full the player is, up to the rule; hunger counts
 	// the turns toward the next point of it lost.
 	Fullness int
-	hunger   int
+	// MaxFullness is how full the player can be: the rule (rules.txt
+	// 満腹度) at the start, less after a hungry ghost (ghost.go).
+	MaxFullness int
+	hunger      int
 	// Lit says whether the floor is lit (a scroll): the player sees it
 	// all.
 	Lit bool
@@ -151,7 +154,7 @@ func NewGame(d *Dungeon, seed string) *Game {
 	g := &Game{
 		Dungeon: d, Seed: seed, Facing: "down",
 		HP: r.PlayerHP, MaxHP: r.PlayerHP, PlayerLevel: 1, Strength: r.Strength, MaxStrength: r.Strength,
-		Fullness:   r.Fullness,
+		Fullness: r.Fullness, MaxFullness: r.Fullness,
 		rng:        rand.New(rand.NewPCG(seedHash(d, seed), math.MaxUint64)),
 		Started:    time.Now(),
 		identified: map[string]bool{},

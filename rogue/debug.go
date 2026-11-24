@@ -217,7 +217,7 @@ func (g *Game) spared() bool {
 	if !g.Invincible {
 		return false
 	}
-	g.HP, g.Fullness = g.MaxHP, g.Dungeon.Rules.Fullness
+	g.HP, g.Fullness = g.MaxHP, g.MaxFullness
 	g.say("不死身なので倒れなかった。")
 	return true
 }

@@ -1030,7 +1030,7 @@ func (b *Bot) wants(g *Game, p Point) bool {
 
 // fits says whether eating the food it now wastes none of it.
 func fits(g *Game, it *Item) bool {
-	return it.Def.Effect != EffectRotten && !spoiled(it) && g.Fullness+it.Def.Strength <= g.Dungeon.Rules.Fullness
+	return it.Def.Effect != EffectRotten && !spoiled(it) && g.Fullness+it.Def.Strength <= g.MaxFullness
 }
 
 // trade is the bot standing on an item with a full inventory: it eats

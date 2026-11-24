@@ -469,3 +469,8 @@
 20	44	noroi2	1
 45	72	noroi3	1
 73	99	noroi4	1
+# The hungry ghost: rare, over many floors.
+4	18	gaki1	1
+19	44	gaki2	1
+45	72	gaki3	1
+73	99	gaki4	1

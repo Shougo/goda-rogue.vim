@@ -204,3 +204,6 @@
 # The monster that curses: rare, over many floors.
 8	17	noroi1	1
 18	30	noroi2	1
+# The hungry ghost: rare, over many floors.
+4	14	gaki1	1
+15	30	gaki2	1
