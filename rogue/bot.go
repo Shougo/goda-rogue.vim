@@ -76,6 +76,10 @@ type Bot struct {
 	lastRisk, fightRisk float64
 	// worst remembers worstTurn.
 	worst map[worstKey]int
+	// priced are the kinds of the items whose price the bot saw in a
+	// shop (as a player who offers them for sale): it knows what kinds
+	// they may be by their price (mayBe).
+	priced map[string]bool
 	// depth is the floor the bot is on, arrived the turn it arrived;
 	// floors and floorsTurns count the floors it left and the turns it
 	// spent on them.
@@ -95,7 +99,7 @@ type botStep struct {
 
 // NewBot returns a bot of style, with its randomness from seed.
 func NewBot(style BotStyle, seed uint64) *Bot {
-	return &Bot{Style: style, rng: rand.New(rand.NewPCG(seed, 0x60da)), risks: map[riskKey]bool{}, worst: map[worstKey]int{}}
+	return &Bot{Style: style, rng: rand.New(rand.NewPCG(seed, 0x60da)), risks: map[riskKey]bool{}, worst: map[worstKey]int{}, priced: map[string]bool{}}
 }
 
 // Next returns the next action of the bot in g, and its arguments.
@@ -109,6 +113,7 @@ func (b *Bot) Next(g *Game) (string, []string) {
 	defer func() { b.deciding = false }()
 	b.track(g)
 	b.pacing(g)
+	b.seePrices(g)
 	if b.lastRisk = deathChance(g, b.adjacent(g)); b.lastRisk == 0 {
 		b.fightRisk = 0
 	} else if b.fightRisk == 0 {
@@ -125,7 +130,7 @@ func (b *Bot) Next(g *Game) (string, []string) {
 		return "move", []string{clockwise[b.rng.IntN(len(clockwise))]}
 	}
 	for i, rule := range []func(*Game) (string, []string){
-		b.heal, b.danger, b.shoot, b.fight, b.chase, b.eat, b.boost, b.equip, b.identify, b.light,
+		b.heal, b.danger, b.shoot, b.fight, b.chase, b.eat, b.boost, b.equip, b.identify, b.toShop, b.light,
 		b.tidy, b.trade, b.rest, b.leave, b.pick, b.explore,
 	} {
 		if action, args := rule(g); action != "" {
@@ -159,7 +164,7 @@ const ruleDanger = 1
 // bot is doing, for a reader (compare.go).
 var botRules = []string{
 	"回復する", "危険に答える", "矢を撃つ", "戦う", "射手や魔法使いを追う", "食べる", "強化する", "装備する",
-	"識別する", "あかりを使う", "不要品を置く", "入れ替える", "休む", "階段へ向かう", "拾いに行く", "探索する",
+	"識別する", "店で値段を見る", "あかりを使う", "不要品を置く", "入れ替える", "休む", "階段へ向かう", "拾いに行く", "探索する",
 }
 
 // answer answers the prompt of g by the plan, or cancels it.
@@ -213,9 +218,33 @@ func carried(g *Game, f func(*Item) bool) *Item {
 	return nil
 }
 
-// known says whether the kind of it is identified, with the effect e.
+// known says whether the bot knows the kind of it, with the effect e:
+// identified, or the only kind it may be (mayBe).
 func (b *Bot) known(g *Game, it *Item, e Effect) bool {
-	return g.identified[it.Def.ID] && it.Def.Effect == e && !spoiled(it)
+	if spoiled(it) {
+		return false
+	}
+	kinds := b.mayBe(g, it)
+	return len(kinds) == 1 && kinds[0].Effect == e
+}
+
+// unsure says whether the bot does not know the kind of it: it may be
+// several.
+func (b *Bot) unsure(g *Game, it *Item) bool {
+	return len(b.mayBe(g, it)) > 1
+}
+
+// seePrices is the bot in a shop that would buy: it learns the prices of
+// the kinds of what it carries.
+func (b *Bot) seePrices(g *Game) {
+	if !g.shopOpen() {
+		return
+	}
+	for _, it := range g.Inventory {
+		if !it.ForSale && !g.identified[it.Def.ID] && sellPrice(it) > 0 {
+			b.priced[it.Def.ID] = true
+		}
+	}
 }
 
 // spoiled says whether it is an item the player knows it cannot use: a
@@ -238,6 +267,10 @@ func (b *Bot) heal(g *Game) (string, []string) {
 	}
 	h, ok := b.bestHeal(g)
 	if !ok {
+		// None known: an unknown grass may be one (healUnknown).
+		if it := b.unknownHeal(g); it != nil {
+			return b.use(it, commandDrink)
+		}
 		return "", nil
 	}
 	return b.useHeal(h)
@@ -588,23 +621,24 @@ func (b *Bot) danger(g *Game) (string, []string) {
 			continue
 		}
 		cost := b.itemCost(g, it, kinds)
+		first := len(answers)
 		switch it.Def.Category {
 		case CategoryGrass:
 			chance := meanOf(kinds, func(def *ItemDef) float64 { return drinkDeath(g, ms, def) })
-			answers = append(answers, botAnswer{cost, chance, it, commandDrink, nil, nil})
+			answers = append(answers, botAnswer{cost, chance, it, commandDrink, nil, nil, false})
 			// A known grass that is better thrown.
 			if g.identified[it.Def.ID] {
 				if target, chance := b.best(near, func(m *Monster) float64 { return throwDeath(g, ms, m, it.Def) }); target != nil {
-					answers = append(answers, botAnswer{cost, chance, it, commandThrow, target, nil})
+					answers = append(answers, botAnswer{cost, chance, it, commandThrow, target, nil, false})
 				}
 			}
 		case CategoryScroll:
 			chance := meanOf(kinds, func(def *ItemDef) float64 { return readDeath(g, ms, def) })
-			answers = append(answers, botAnswer{cost, chance, it, commandRead, nil, nil})
+			answers = append(answers, botAnswer{cost, chance, it, commandRead, nil, nil, false})
 		case CategoryFood:
 			// At a hungry ghost: it eats it and is gone.
 			if target, chance := b.best(near, func(m *Monster) float64 { return feedDeath(g, ms, m) }); target != nil {
-				answers = append(answers, botAnswer{b.worth(g, it, false), chance, it, commandThrow, target, nil})
+				answers = append(answers, botAnswer{b.worth(g, it, false), chance, it, commandThrow, target, nil, false})
 			}
 		case CategoryStaff:
 			if it.Known && it.Charges == 0 {
@@ -616,16 +650,21 @@ func (b *Bot) danger(g *Game) (string, []string) {
 				return meanOf(kinds, func(def *ItemDef) float64 { return waveDeath(g, ms, m, def) })
 			})
 			if target != nil {
-				answers = append(answers, botAnswer{cost, chance, it, commandWave, target, nil})
+				answers = append(answers, botAnswer{cost, chance, it, commandWave, target, nil, false})
+			}
+		}
+		if len(kinds) > 1 {
+			for n := first; n < len(answers); n++ {
+				answers[n].unsure = true
 			}
 		}
 	}
 	if pot, fuel, ok := b.healingPot(g); ok {
-		answers = append(answers, botAnswer{b.healPrice(g) + b.worth(g, fuel, false), fightDeath(g, ms, g.MaxHP, 1), pot, commandPutIn, nil, fuel})
+		answers = append(answers, botAnswer{b.healPrice(g) + b.worth(g, fuel, false), fightDeath(g, ms, g.MaxHP, 1), pot, commandPutIn, nil, fuel, false})
 	}
 	if len(ms) > 1 {
 		if d, ok := b.stepBack(g, ms); ok {
-			answers = append(answers, botAnswer{0, oneByOneDeath(g, ms, g.HP), nil, "move " + d, nil, nil})
+			answers = append(answers, botAnswer{0, oneByOneDeath(g, ms, g.HP), nil, "move " + d, nil, nil, false})
 		}
 	}
 	if b.seesStairs(g) {
@@ -634,21 +673,14 @@ func (b *Bot) danger(g *Game) (string, []string) {
 			if b.Style == BotCareful {
 				cost = leaveCost
 			}
-			answers = append(answers, botAnswer{cost, fleeDeath(g, near, g.HP, dist), nil, "", nil, nil})
+			answers = append(answers, botAnswer{cost, fleeDeath(g, near, g.HP, dist), nil, "", nil, nil, false})
 		}
 	}
-	var pick *botAnswer
-	for i, a := range answers {
-		if a.chance < b.risk() && (pick == nil || a.cost < pick.cost) {
-			pick = &answers[i]
-		}
-	}
+	// What it knows first; an item it does not know only when nothing
+	// else helps.
+	pick := b.pickAnswer(answers, fight, false)
 	if pick == nil {
-		for i, a := range answers {
-			if a.chance < fight && (pick == nil || a.chance < pick.chance) {
-				pick = &answers[i]
-			}
-		}
+		pick = b.pickAnswer(answers, fight, true)
 	}
 	switch {
 	case pick == nil:
@@ -667,6 +699,27 @@ func (b *Bot) danger(g *Game) (string, []string) {
 		return b.putIn(pick.item, pick.fuel)
 	}
 	return b.use(pick.item, pick.command)
+}
+
+// pickAnswer picks of answers (the unsure ones too with unsure) the
+// cheapest that brings the chance of dying under the risk the bot takes,
+// else the one that lowers it most under fight; nil if none.
+func (b *Bot) pickAnswer(answers []botAnswer, fight float64, unsure bool) *botAnswer {
+	var pick *botAnswer
+	for i, a := range answers {
+		if (unsure || !a.unsure) && a.chance < b.risk() && (pick == nil || a.cost < pick.cost) {
+			pick = &answers[i]
+		}
+	}
+	if pick != nil {
+		return pick
+	}
+	for i, a := range answers {
+		if (unsure || !a.unsure) && a.chance < fight && (pick == nil || a.chance < pick.chance) {
+			pick = &answers[i]
+		}
+	}
+	return pick
 }
 
 // minFlight is how far a monster blown away must fly for the bot to count
@@ -774,17 +827,22 @@ type botAnswer struct {
 	target       *Monster
 	// fuel is what goes in a pot of healing.
 	fuel *Item
+	// unsure says the bot does not know what the item is: such answers
+	// are the last resort.
+	unsure bool
 }
 
 // mayBe returns the kinds it may be, as the player knows: its kind when
-// identified, else the kinds of its category not identified yet.
+// identified, else the kinds of its category not identified yet (of its
+// price, once the bot saw it in a shop).
 func (b *Bot) mayBe(g *Game, it *Item) []*ItemDef {
 	if g.identified[it.Def.ID] {
 		return []*ItemDef{it.Def}
 	}
+	priced := b.priced[it.Def.ID]
 	var kinds []*ItemDef
 	for _, def := range g.Dungeon.Items {
-		if def.Category == it.Def.Category && !g.identified[def.ID] {
+		if def.Category == it.Def.Category && !g.identified[def.ID] && (!priced || def.Price == it.Def.Price) {
 			kinds = append(kinds, def)
 		}
 	}
@@ -1358,27 +1416,48 @@ func strength(it *Item) int {
 	return it.Def.Strength
 }
 
+// toShop walks into a shop it has seen, with no enemy in sight, to learn
+// the prices of the kinds it carries and does not know (seePrices).
+func (b *Bot) toShop(g *Game) (string, []string) {
+	if g.Shop == nil || !g.keepersCalm() || len(g.visibleEnemies()) > 0 {
+		return "", nil
+	}
+	if carried(g, func(it *Item) bool { return b.unsure(g, it) && !b.priced[it.Def.ID] && sellPrice(it) > 0 }) == nil {
+		return "", nil
+	}
+	return b.walk(g, func(p Point) bool { return g.inShop(p) && g.IsSeen(p) })
+}
+
+// earlyFloors: the first floors are the first 1/earlyFloors of the
+// dungeon (identify).
+const earlyFloors = 3
+
 // identify reads a scroll of identification on an unknown item, and with
-// no enemy in sight, reads unknown scrolls and drinks unknown grasses at
-// full HP, to learn them.
+// no enemy in sight, reads unknown scrolls (on the stairs, or anywhere on
+// the first floors) and drinks unknown grasses (at full HP, or at 70% on
+// the first floors), to learn them.
 func (b *Bot) identify(g *Game) (string, []string) {
 	if len(g.visibleEnemies()) > 0 {
 		return "", nil
 	}
 	unknown := func(c Category) *Item {
-		return carried(g, func(it *Item) bool { return it.Def.Category == c && !g.identified[it.Def.ID] && !spoiled(it) })
+		return carried(g, func(it *Item) bool { return it.Def.Category == c && b.unsure(g, it) && !spoiled(it) })
 	}
 	if s := carried(g, func(it *Item) bool { return b.known(g, it, EffectIdentify) }); s != nil {
-		if carried(g, func(it *Item) bool { return !g.identified[it.Def.ID] }) != nil {
+		if carried(g, func(it *Item) bool { return b.unsure(g, it) }) != nil {
 			return b.use(s, commandRead)
 		}
 	}
-	if s := unknown(CategoryScroll); s != nil && g.Player == g.Stairs {
-		// Read near the stairs once the floor is done: a scroll may
+	// On the first floors, where a bad surprise costs little, it tries
+	// what it does not know as soon as it is safe: a known healing grass
+	// is worth more than an unknown one when it matters.
+	early := g.Depth*earlyFloors <= g.Dungeon.Floors
+	if s := unknown(CategoryScroll); s != nil && (g.Player == g.Stairs || early) {
+		// Else near the stairs once the floor is done: a scroll may
 		// not be undone (the article "原始に続く穴 安定攻略への道").
 		return b.use(s, commandRead)
 	}
-	if s := unknown(CategoryGrass); s != nil && g.HP == g.MaxHP {
+	if s := unknown(CategoryGrass); s != nil && (g.HP == g.MaxHP || early && g.HP*10 >= g.MaxHP*7) {
 		return b.use(s, commandDrink)
 	}
 	return "", nil

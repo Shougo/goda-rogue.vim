@@ -89,3 +89,21 @@ func TestBotAnswersNewMonsters(t *testing.T) {
 		t.Errorf("curser: %s %+v", a, b.plan)
 	}
 }
+
+// TestBotUnknownHeal: with no healing known, a bot that needs to heal
+// drinks an unknown grass that may well be one.
+func TestBotUnknownHeal(t *testing.T) {
+	g, _ := roomGame(t, 4, 3)
+	b := NewBot(BotReckless, 1)
+	g.Inventory = nil
+	for _, def := range g.Dungeon.Items {
+		if def.Category == CategoryGrass {
+			delete(g.identified, def.ID)
+		}
+	}
+	grass := carry(g, "yakusou", 0)
+	g.HP = 1
+	if a, _ := b.Next(g); a != "inventory" || b.plan[0].item != grass || b.plan[1].label != commandDrink {
+		t.Errorf("%s %+v", a, b.plan)
+	}
+}
