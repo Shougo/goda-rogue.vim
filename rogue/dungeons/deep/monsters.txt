@@ -70,6 +70,12 @@
 #   回復:C:N  C% of its actions heal another hurt monster it sees by N HP
 #   鼓舞:C  C% of its actions rank up another monster of the floors it
 #              sees (not one that cheers)
+#   復活:P  defeated the first time, it gets up again with P% of its
+#              max HP (and gives nothing yet)
+#   爆発:H:D  hurt down to H% of its max HP or below, it explodes at its
+#              next action: every creature next to it loses D% of its HP,
+#              the items next to it and under it burn, and it is gone,
+#              giving nothing
 #   擬態:D:S:K  on a new floor it hides as an item of the floor's table, or
 #              (S%) as stairs, or (K%, with a shop) as one of the shop's
 #              goods. D 1: trying to pick it up shows it, and so do a
@@ -226,3 +232,11 @@ miko1	巫	巫女	1	14	4	2	6	通常	-	鼓舞:15	-	道具:4	-
 miko2	巫	神巫	2	30	7	5	18	通常	-	鼓舞:15	-	道具:6	-
 miko3	巫	大巫女	3	48	10	7	54	通常	-	鼓舞:15	-	道具:9	-
 miko4	巫	斎王	4	72	14	10	162	通常	-	鼓舞:15	-	道具:12	-
+shikabane1	屍	屍	1	10	4	2	3	鈍足	-	復活:50	-	道具:3	-
+shikabane2	屍	腐屍	2	25	8	5	10	鈍足	-	復活:50	-	道具:4	-
+shikabane3	屍	屍鬼	3	40	12	7	30	鈍足	-	復活:100	-	道具:6	-
+shikabane4	屍	屍王	4	60	16	10	90	鈍足	-	復活:100	-	道具:8	-
+bakudan1	爆	爆虫	1	18	6	2	5	通常	-	爆発:33:50	-	道具:4	-
+bakudan2	爆	大爆虫	2	40	11	5	16	通常	-	爆発:33:50	-	道具:6	-
+bakudan3	爆	爆岩	3	64	16	7	48	通常	-	爆発:33:50	-	道具:9	-
+bakudan4	爆	爆王	4	96	22	10	144	通常	-	爆発:33:50	-	道具:12	-

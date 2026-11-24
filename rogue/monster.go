@@ -79,6 +79,9 @@ type Monster struct {
 	Hunter bool
 	// Enraged says whether its anger (AbilityAnger) raised its attack.
 	Enraged bool
+	// Revived says whether it got up once (AbilityRevive); Fused that it
+	// will explode at its next action (AbilityExplode).
+	Revived, Fused bool
 	// States are its states that pass with time (state.go).
 	States
 	// EXP is what defeating it gives. An ally has Gained EXP, and its
@@ -172,6 +175,10 @@ func (g *Game) act(m *Monster) bool {
 	if m.Keeper && !m.Angry {
 		g.actKeeper(m)
 		return false
+	}
+	if m.Fused {
+		g.explode(m)
+		return true
 	}
 	if m.Dozing {
 		g.stir(m)
@@ -452,6 +459,9 @@ func (g *Game) hitMonster(a, m *Monster) {
 // defeats it; what a thief stole falls; a monster of the floors that
 // defeats another ranks up. Every death of a monster comes here.
 func (g *Game) kill(m, by *Monster, byPlayer, shown bool) {
+	if g.revive(m) {
+		return
+	}
 	g.remove(m)
 	if byPlayer {
 		g.say(m.Name + "を倒した。")

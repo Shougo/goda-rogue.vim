@@ -810,6 +810,14 @@ The built-in dungeons:
 				  鼓舞:C  C% of its actions rank up another
 				             monster of the floors it sees (not one
 				             that cheers)
+				  復活:P  defeated the first time, it gets up
+				             again with P% of its max HP (and gives
+				             nothing yet)
+				  爆発:H:D  hurt down to H% of its max HP or below,
+				             it explodes at its next action: every
+				             creature next to it loses D% of its HP,
+				             the items next to it and under it burn,
+				             and it is gone, giving nothing
 				  擬態:D:S:K  on a new floor it hides as
 				             an item of the floor's table,
 				             or (S%) as stairs, or (K%, with

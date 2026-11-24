@@ -95,6 +95,14 @@ const (
 	// AbilityCheer: by a chance (a percent) of its actions, it ranks up
 	// another monster of the floors it sees (support.go).
 	AbilityCheer AbilityName = "鼓舞"
+	// AbilityRevive: defeated the first time, it gets up again with a
+	// share (a percent) of its max HP (undead.go).
+	AbilityRevive AbilityName = "復活"
+	// AbilityExplode: hurt down to a share (a percent) of its max HP or
+	// below, it explodes at its next action: every creature next to it
+	// loses a share (a percent) of its HP, the items next to it burn, and
+	// it is gone, giving nothing (undead.go).
+	AbilityExplode AbilityName = "爆発"
 )
 
 // MagicEffect is an effect of the bolt of AbilityMagic.
@@ -167,6 +175,8 @@ var abilityDefs = map[AbilityName]abilityDef{
 	AbilityBurn:      {nil, nil, nil, 0},
 	AbilityHeal:      {[]string{"chance %", "HP"}, []int{1, 1}, []int{100, 999}, 0},
 	AbilityCheer:     {[]string{"chance %"}, []int{1}, []int{100}, 0},
+	AbilityRevive:    {[]string{"HP %"}, []int{1}, []int{100}, 0},
+	AbilityExplode:   {[]string{"HP %", "damage %"}, []int{1, 1}, []int{99, 100}, 0},
 	AbilityHunger:    {[]string{"chance %", "fullness", "max fullness"}, []int{1, 0, 0}, []int{100, 999, 999}, 0},
 	AbilityCurse:     {[]string{"chance %", "what", "items"}, []int{1, curseArms, 1}, []int{100, curseAny, 5}, 0},
 	AbilitySteal:     {[]string{"chance %", "what", "items", "equipped"}, []int{1, stealGold, 0, 0}, []int{100, stealItems, 5, 1}, 0},
@@ -177,7 +187,7 @@ const maxReach = 20
 
 // abilityNames are the abilities in a fixed order, for the error that
 // lists them.
-var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot, AbilitySynthesis, AbilityCurse, AbilityHunger, AbilityStill, AbilityHold, AbilityBurn, AbilityHeal, AbilityCheer}
+var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot, AbilitySynthesis, AbilityCurse, AbilityHunger, AbilityStill, AbilityHold, AbilityBurn, AbilityHeal, AbilityCheer, AbilityRevive, AbilityExplode}
 
 // lineAbilities are the abilities that reach the player from afar along
 // a line, their reach their first number.
@@ -262,8 +272,10 @@ func (m *Monster) ability(n AbilityName) (Ability, bool) {
 	return Ability{}, false
 }
 
-// wounded is m hurt and still standing: it may get angry.
+// wounded is m hurt and still standing: it may get angry, or catch fire
+// (fuse).
 func (g *Game) wounded(m *Monster) {
+	g.fuse(m)
 	a, ok := m.ability(AbilityAnger)
 	if !ok || m.Enraged || m.HP*100 > m.MaxHP*a.Values[0] {
 		return
