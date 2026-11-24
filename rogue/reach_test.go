@@ -40,3 +40,24 @@ func TestBlink(t *testing.T) {
 		t.Errorf("at %v, %q", m.Pos, g.Message)
 	}
 }
+
+// TestKnight: an eagle swoops on the player a knight's move away, and
+// jumps as a knight toward it.
+func TestKnight(t *testing.T) {
+	g, r := roomGame(t, 10, 6)
+	g.HP, g.MaxHP = 999, 999
+	g.Player = Point{r.X + 1, r.Y + 1}
+	m := place(g, kind("washi1"), Point{r.X + 2, r.Y + 3})
+	if !g.swoop(m) || g.HP != 999-8 {
+		t.Errorf("HP %d", g.HP)
+	}
+	m.Pos = Point{r.X + 7, r.Y + 5}
+	from := m.Pos
+	if !g.stepToward(m, g.Player) {
+		t.Fatal("did not move")
+	}
+	d := m.Pos.Sub(from)
+	if abs(d.X)+abs(d.Y) != 3 || d.X == 0 || d.Y == 0 {
+		t.Errorf("moved by %v", d)
+	}
+}

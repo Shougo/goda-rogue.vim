@@ -323,6 +323,9 @@ func (g *Game) stepToward(m *Monster, to Point) bool {
 	if m.still() {
 		return false
 	}
+	if g.knightStep(m, to) {
+		return true
+	}
 	dist := g.distances(to)
 	best, bestDist := Point{}, -1
 	here, ok := g.index(m.Pos)

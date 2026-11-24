@@ -120,6 +120,10 @@ const (
 	// chance (a percent) of its actions, it appears next to the player
 	// (reach.go).
 	AbilityBlink AbilityName = "瞬間移動"
+	// AbilityKnight: it moves as a knight of shogi or chess, over what is
+	// in the way; with the player a knight's move away, it swoops on it
+	// for so much damage, which defense does not lower (reach.go).
+	AbilityKnight AbilityName = "桂馬"
 )
 
 // MagicEffect is an effect of the bolt of AbilityMagic.
@@ -196,6 +200,7 @@ var abilityDefs = map[AbilityName]abilityDef{
 	AbilityFlee:      {nil, nil, nil, 0},
 	AbilityLong:      {nil, nil, nil, 0},
 	AbilityBlink:     {[]string{"chance %"}, []int{1}, []int{100}, 0},
+	AbilityKnight:    {[]string{"damage"}, []int{1}, []int{999}, 0},
 	AbilityTrap:      {[]string{"chance %"}, []int{1}, []int{100}, 0},
 	AbilityRevive:    {[]string{"HP %"}, []int{1}, []int{100}, 0},
 	AbilityExplode:   {[]string{"HP %", "damage %"}, []int{1, 1}, []int{99, 100}, 0},
@@ -209,7 +214,7 @@ const maxReach = 20
 
 // abilityNames are the abilities in a fixed order, for the error that
 // lists them.
-var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot, AbilitySynthesis, AbilityCurse, AbilityHunger, AbilityStill, AbilityHold, AbilityBurn, AbilityHeal, AbilityCheer, AbilityRevive, AbilityExplode, AbilityPack, AbilityFlee, AbilityTrap, AbilityLong, AbilityBlink}
+var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot, AbilitySynthesis, AbilityCurse, AbilityHunger, AbilityStill, AbilityHold, AbilityBurn, AbilityHeal, AbilityCheer, AbilityRevive, AbilityExplode, AbilityPack, AbilityFlee, AbilityTrap, AbilityLong, AbilityBlink, AbilityKnight}
 
 // lineAbilities are the abilities that reach the player from afar along
 // a line, their reach their first number.
@@ -372,7 +377,7 @@ func (g *Game) lineTo(a, b Point, reach int) (Point, int, bool) {
 // reachAbility uses an ability of m that reaches the player from afar (a
 // charge, a pull); it says whether m did.
 func (g *Game) reachAbility(m *Monster) bool {
-	if g.longHit(m) || g.blink(m) {
+	if g.longHit(m) || g.blink(m) || g.swoop(m) {
 		return true
 	}
 	if a, ok := m.ability(AbilityCharge); ok && g.charge(m, a) {

@@ -82,6 +82,9 @@
 #              nothing in between
 #   瞬間移動:C  with the player in sight and not next to it, C% of its
 #              actions take it next to the player
+#   桂馬:D  it moves as a knight of shogi or chess, over what is in the
+#              way; with the player a knight's move away, it swoops on it
+#              for D damage, which defense does not lower
 #   擬態:D:S:K  on a new floor it hides as an item of the floor's table, or
 #              (S%) as stairs, or (K%, with a shop) as one of the shop's
 #              goods. D 1: trying to pick it up shows it, and so do a

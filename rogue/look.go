@@ -194,6 +194,8 @@ func (g *Game) abilityText(a Ability) string {
 		return "まっすぐ2マス先まで攻撃が届く"
 	case AbilityBlink:
 		return fmt.Sprintf("見えていると%d%%で目の前に現れる", v[0])
+	case AbilityKnight:
+		return fmt.Sprintf("桂馬のように跳んで動く。桂馬の位置から舞い降りて%dのダメージ（防御は効かない）", v[0])
 	case AbilityRevive:
 		return fmt.Sprintf("一度倒しても、最大HPの%d%%で起き上がる", v[0])
 	case AbilityExplode:

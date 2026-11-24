@@ -87,6 +87,9 @@
 #              nothing in between
 #   瞬間移動:C  with the player in sight and not next to it, C% of its
 #              actions take it next to the player
+#   桂馬:D  it moves as a knight of shogi or chess, over what is in the
+#              way; with the player a knight's move away, it swoops on it
+#              for D damage, which defense does not lower
 #   擬態:D:S:K  on a new floor it hides as an item of the floor's table, or
 #              (S%) as stairs, or (K%, with a shop) as one of the shop's
 #              goods. D 1: trying to pick it up shows it, and so do a
@@ -271,3 +274,7 @@ shinobi1	忍	下忍	1	18	7	3	5	移動倍速	-	瞬間移動:15	-	道具:4	-
 shinobi2	忍	中忍	2	38	12	6	16	移動倍速	-	瞬間移動:20	-	道具:6	-
 shinobi3	忍	上忍	3	61	17	9	48	移動倍速	-	瞬間移動:25	-	道具:9	-
 shinobi4	忍	影忍	4	91	24	12	144	移動倍速	-	瞬間移動:33	-	道具:12	-
+washi1	鷲	鷲	1	20	7	3	5	通常	-	桂馬:8	-	道具:4	-
+washi2	鷲	大鷲	2	42	12	6	16	通常	-	桂馬:14	-	道具:6	-
+washi3	鷲	荒鷲	3	67	17	9	48	通常	-	桂馬:20	-	道具:9	-
+washi4	鷲	鷲王	4	101	24	12	144	通常	-	桂馬:28	-	道具:12	-
