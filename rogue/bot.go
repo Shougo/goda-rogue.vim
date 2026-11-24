@@ -464,12 +464,19 @@ func oneByOneDeath(g *Game, ms []*Monster, hp int) float64 {
 }
 
 // fleeDeath returns the chance that the player with hp dies walking
-// turns steps away from the enemies ms next to it: an enemy of normal
-// speed follows without attacking, a fast one attacks once a turn, a
-// slow one is left behind.
-func fleeDeath(g *Game, ms []*Monster, hp, turns int) float64 {
+// turns steps away from the enemies ms, its first step to step: an enemy
+// of normal speed behind follows without attacking, a fast one attacks
+// once a turn, a slow one is left behind; one still next to the player
+// after the step (alongside it, or ahead) attacks every turn too, as it
+// keeps up: the bots that counted it out walked to the stairs under the
+// blows of a crowd, with a scroll that would have put it to sleep.
+func fleeDeath(g *Game, ms []*Monster, hp, turns int, step Point) float64 {
 	var foes []foe
 	for _, m := range ms {
+		if !m.Speed.fast() && !m.still() && chebyshev(m.Pos, step) <= 1 && m.Speed != SpeedSlow {
+			foes = append(foes, foe{hitDamages(g, m), 1, min(turns, riskTurns), m})
+			continue
+		}
 		if m.Speed.fast() {
 			// Its second action is the attack: as a normal one
 			// standing.
@@ -662,7 +669,7 @@ func (b *Bot) danger(g *Game) (string, []string) {
 			if b.Style == BotCareful {
 				cost = leaveCost
 			}
-			answers = append(answers, botAnswer{cost, fleeDeath(g, near, g.HP, dist), nil, "", nil, nil, false})
+			answers = append(answers, botAnswer{cost, fleeDeath(g, ms, g.HP, dist, step), nil, "", nil, nil, false})
 		}
 	}
 	// What it knows first; an item it does not know only when nothing
