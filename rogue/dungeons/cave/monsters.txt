@@ -35,10 +35,11 @@
 #              and X 1, an item that is no equipment turns into a rotten
 #              onigiri
 #   盗み:C:W:N:E  next to the player, C% of its blows are thefts instead:
-#              W 0 half the money of the purse, W 1 N carried items (with E
-#              1, equipped ones too); then it warps away and keeps away
-#              from the player, never stealing again. Defeated, it drops
-#              what it stole, not its 落とし物
+#              W 0 as much money as a pile on the floor (at most the
+#              purse), W 1 N carried items (with E 1, equipped ones too);
+#              then it warps away and keeps away from the player, never
+#              stealing again. Defeated, it drops what it stole, not its
+#              落とし物
 #   合成:N:C   it swallows the items the player throws at it, N of them,
 #              and merges them as a pot of synthesis does, and also a
 #              material into a weapon or a shield swallowed before it

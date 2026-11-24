@@ -767,8 +767,9 @@ The built-in dungeons:
 				             腐った)
 				  盗み:C:W:N:E  next to the player, C% of
 				             its blows are thefts instead:
-				             W 0 half the money of the
-				             purse, W 1 N carried items
+				             W 0 as much money as a pile
+				             on the floor (at most the
+				             purse), W 1 N carried items
 				             (with E 1, equipped ones too);
 				             then it warps away and keeps
 				             away from the player, never

@@ -1,6 +1,7 @@
 package rogue
 
 import (
+	"fmt"
 	"slices"
 	"strings"
 	"testing"
@@ -17,14 +18,17 @@ func thiefGame(t *testing.T, id string) (*Game, *Monster) {
 	return g, m
 }
 
-// TestStealGold: a thief of rank 1 takes half the purse, warps away,
-// keeps away, and drops the money when defeated (not its own drop).
+// TestStealGold: a thief of rank 1 takes as much as a pile on the floor
+// (at most the purse), warps away, keeps away, and drops the money when
+// defeated (not its own drop).
 func TestStealGold(t *testing.T) {
 	g, m := thiefGame(t, "touzoku1")
-	g.Gold = 101
+	g.Gold = 5000
 	g.act(m)
-	if g.Gold != 50 || !m.Fled || !strings.Contains(g.Message, "盗人に51G を盗まれた！") {
-		t.Fatalf("gold %d, fled %v, %q", g.Gold, m.Fled, g.Message)
+	lo, hi := goldPile(g.Depth)
+	n := 5000 - g.Gold
+	if n < lo || n > hi || !m.Fled || !strings.Contains(g.Message, fmt.Sprintf("盗人に%dG を盗まれた！", n)) {
+		t.Fatalf("stole %d of %d-%d, fled %v, %q", n, lo, hi, m.Fled, g.Message)
 	}
 	// Away, and it keeps away.
 	// (Where it can: in a corner it has no step away.)
@@ -34,8 +38,15 @@ func TestStealGold(t *testing.T) {
 	}
 	g.remove(m)
 	g.defeated(m)
-	if len(g.Items) != 1 || g.Items[0].Amount != 51 {
-		t.Errorf("items %v: want the 51G", g.Items)
+	if len(g.Items) != 1 || g.Items[0].Amount != n {
+		t.Errorf("items %v: want the %dG", g.Items, n)
+	}
+	// No more than the purse.
+	g, m = thiefGame(t, "touzoku1")
+	g.Gold = 30
+	g.act(m)
+	if g.Gold != 0 || !strings.Contains(g.Message, "盗人に30G を盗まれた！") {
+		t.Errorf("gold %d, %q", g.Gold, g.Message)
 	}
 
 	// An empty purse: it hits instead.

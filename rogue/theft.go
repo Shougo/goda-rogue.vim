@@ -12,7 +12,8 @@ const (
 )
 
 // thieve is the thief m next to the player taking from it, by its ability
-// a, if it may: money (half the purse), or items (not equipped ones,
+// a, if it may: money (as much as a pile on the floor, at most the purse),
+// or items (not equipped ones,
 // unless it takes those too). Then it warps away and flees. It says
 // whether it stole: with nothing to take, it attacks instead.
 func (g *Game) thieve(m *Monster, a Ability) bool {
@@ -24,7 +25,9 @@ func (g *Game) thieve(m *Monster, a Ability) bool {
 		if g.Gold == 0 {
 			return false
 		}
-		n := (g.Gold + 1) / 2
+		// As much as a pile of gold on the floor (goldPile).
+		lo, hi := goldPile(g.Depth)
+		n := min(between(g.rng, lo, hi), g.Gold)
 		g.Gold -= n
 		m.stolen = append(m.stolen, g.money(n))
 		g.say(fmt.Sprintf("%sに%dG を盗まれた！", m.Name, n))
