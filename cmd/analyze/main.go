@@ -32,6 +32,7 @@ func main() {
 	actions := flag.Int("actions", 50000, "the most actions of a run")
 	jobs := flag.Int("j", runtime.NumCPU(), "the runs played at once")
 	tsv := flag.Bool("tsv", false, "print one line a run, tab-separated, instead of the summary")
+	trace := flag.Int("trace", -1, "a run: print each choice of the first of the bots in run N (of -seed), instead of the summary")
 	compare := flag.String("compare", "", "a replay file: print where the first of the bots would have done another kind of thing than its player, instead of playing")
 	flag.Parse()
 	if *compare != "" {
@@ -53,6 +54,16 @@ func main() {
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "analyze:", err)
 		os.Exit(1)
+	}
+	if *trace >= 0 {
+		name := strings.Split(*bots, ",")[0]
+		s, ok := rogue.BotStyles[name]
+		if !ok {
+			fmt.Fprintf(os.Stderr, "analyze: no bot %q\n", name)
+			os.Exit(2)
+		}
+		fmt.Println(rogue.TraceBot(d, runSeed(*seed, *trace), rogue.NewBot(s, uint64(*trace)), *actions, func(l string) { fmt.Println(l) }))
+		return
 	}
 	var styles []rogue.BotStyle
 	for _, name := range strings.Split(*bots, ",") {

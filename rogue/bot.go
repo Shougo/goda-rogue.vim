@@ -38,6 +38,10 @@ func (s BotStyle) String() string {
 // balance of dungeons (cmd/analyze), not to play well.
 type Bot struct {
 	Style BotStyle
+	// Trace, if set, gets a line on each of its choices: the rule that
+	// gave the action, and the answers to a danger it weighed (analyze
+	// -trace).
+	Trace func(string)
 	rng   *rand.Rand
 	// plan is what to answer to the prompts it opened: an item of the
 	// inventory, then a command.
@@ -683,6 +687,12 @@ func (b *Bot) danger(g *Game) (string, []string) {
 	if pick == nil {
 		pick = b.pickAnswer(answers, fight, true)
 	}
+	if h := b.hopelessHeal(g, answers, pick); h != nil {
+		pick = h
+	}
+	if b.Trace != nil {
+		b.traceAnswers(g, fight, answers, pick)
+	}
 	switch {
 	case pick == nil:
 		return "", nil
@@ -700,6 +710,37 @@ func (b *Bot) danger(g *Game) (string, []string) {
 		return b.putIn(pick.item, pick.fuel)
 	}
 	return b.use(pick.item, pick.command)
+}
+
+// hopeless is the chance of dying from which the reckoning of the bots
+// tells the answers no more apart: against many enemies, every answer
+// looks as deadly, over the turns it counts.
+const hopeless = 0.95
+
+// hopelessHeal returns, when the answer picked (pick, nil for none)
+// leaves the chance of dying hopeless and the HP is below half, the
+// known healing that heals most: it buys turns, which the reckoning does
+// not see (the bots that walked on under blows died with grasses of
+// healing in the pack). Nil otherwise.
+func (b *Bot) hopelessHeal(g *Game, answers []botAnswer, pick *botAnswer) *botAnswer {
+	if pick != nil && pick.chance < hopeless || g.HP*2 >= g.MaxHP {
+		return nil
+	}
+	var best *botAnswer
+	amount := 0
+	for i, a := range answers {
+		n := 0
+		switch {
+		case a.fuel != nil:
+			n = g.MaxHP
+		case a.command == commandDrink && a.item != nil && !a.unsure && a.item.Def.Effect == EffectHeal:
+			n = a.item.Def.Strength
+		}
+		if n > amount {
+			best, amount = &answers[i], n
+		}
+	}
+	return best
 }
 
 // pickAnswer picks of answers (the unsure ones too with unsure) the
@@ -1155,7 +1196,7 @@ func useless(g *Game, it *Item) bool {
 	switch c := it.Def.Category; c {
 	case CategoryWeapon, CategoryShield:
 		worn := g.equipped(c)
-		return worn != nil && worn != it && strength(it) <= strength(worn)
+		return worn != nil && worn != it && gearWorth(g, it) <= gearWorth(g, worn)
 	case CategoryBracelet:
 		// One bracelet of regeneration (known) to heal, and one other
 		// to wear the rest of the time.
@@ -1456,7 +1497,7 @@ func (b *Bot) equip(g *Game) (string, []string) {
 			case worn == nil:
 				return true
 			case c == CategoryWeapon || c == CategoryShield:
-				return strength(it) > strength(worn)
+				return gearWorth(g, it) > gearWorth(g, worn)
 			}
 			return false
 		})
@@ -1546,6 +1587,45 @@ func hungerRate(g *Game) int {
 		return 2
 	}
 	return 1
+}
+
+// gearWorth is what a weapon or a shield is worth to the bots: its
+// strength as far as known, and its ability born with and its seals, as
+// so much strength each (abilityWorth).
+func gearWorth(g *Game, it *Item) float64 {
+	w := float64(strength(it))
+	if s := g.Dungeon.SealOn(it.Def.Seal, it.Def.Category); s != nil {
+		w += abilityWorth(s.Effect, s.Strength)
+	}
+	for _, glyph := range it.Seals {
+		if s := g.Dungeon.SealOn(glyph, it.Def.Category); s != nil {
+			w += abilityWorth(s.Effect, s.AsSeal)
+		}
+	}
+	return w
+}
+
+// abilityWorth is how much strength an ability of the effect e and the
+// strength n is worth to the bots, roughly: 25% of critical blows as 3,
+// every miss turned into a hit as 4, a guard against rust, hunger or
+// theft as 2.
+func abilityWorth(e SealEffect, n int) float64 {
+	f := float64(n)
+	switch e {
+	case SealAttack, SealDefense:
+		return f
+	case SealCrit:
+		return f / 8
+	case SealSure:
+		return f / 25
+	case SealThree:
+		return f / 20
+	case SealCounter:
+		return f / 10
+	case SealDodge:
+		return f / 5
+	}
+	return f / 50
 }
 
 // strength is the strength of a weapon or a shield as far as known.

@@ -819,3 +819,29 @@ func TestBotRegenBracelet(t *testing.T) {
 		t.Errorf("hungry: %s", a)
 	}
 }
+
+// TestGearWorth: the bots count the ability born with and the seals of a
+// weapon, not its strength only.
+func TestGearWorth(t *testing.T) {
+	g, _ := roomGame(t, 4, 3)
+	plain := carry(g, "tetsuken", 0) // 7
+	sure := carry(g, "hicchuu", 0)   // 4, and 必中: 4
+	sealed := carry(g, "tetsuken", 0)
+	sealed.Seals = []string{"会", "会"}
+	if !(gearWorth(g, sure) > gearWorth(g, plain) && gearWorth(g, sealed) > gearWorth(g, plain)) {
+		t.Errorf("worth: plain %.1f, 必中の剣 %.1f, with 2 seals 会 %.1f", gearWorth(g, plain), gearWorth(g, sure), gearWorth(g, sealed))
+	}
+	plain.Equipped = true
+	if useless(g, sure) || !useless(g, carry(g, "bokutou", 0)) {
+		t.Error("useless: wrong weapon")
+	}
+}
+
+// TestTraceBot: the trace of a run tells each choice and its rule.
+func TestTraceBot(t *testing.T) {
+	var lines []string
+	over := TraceBot(cave(), "trace", NewBot(BotCareful, 1), 30, func(l string) { lines = append(lines, l) })
+	if over != "" || len(lines) == 0 || !strings.Contains(lines[0], "1F T0") || !strings.Contains(lines[0], "[") {
+		t.Errorf("over %q, lines %q", over, lines)
+	}
+}
