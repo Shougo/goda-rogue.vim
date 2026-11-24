@@ -135,7 +135,7 @@ func (b *Bot) Next(g *Game) (string, []string) {
 		return "move", []string{clockwise[b.rng.IntN(len(clockwise))]}
 	}
 	for i, rule := range []func(*Game) (string, []string){
-		b.heal, b.danger, b.shoot, b.fight, b.chase, b.await, b.eat, b.boost, b.equip, b.identify, b.toShop, b.light,
+		b.heal, b.danger, b.shoot, b.fight, b.chase, b.await, b.eat, b.boost, b.equip, b.synthesize, b.identify, b.toShop, b.light,
 		b.tidy, b.trade, b.rest, b.leave, b.pick, b.explore,
 	} {
 		if action, args := rule(g); action != "" {
@@ -169,7 +169,7 @@ const ruleDanger = 1
 // bot is doing, for a reader (compare.go).
 var botRules = []string{
 	"回復する", "危険に答える", "矢を撃つ", "戦う", "射手や魔法使いを追う", "敵を待つ", "食べる", "強化する", "装備する",
-	"識別する", "店で値段を見る", "あかりを使う", "不要品を置く", "入れ替える", "休む", "階段へ向かう", "拾いに行く", "探索する",
+	"合成する", "識別する", "店で値段を見る", "あかりを使う", "不要品を置く", "入れ替える", "休む", "階段へ向かう", "拾いに行く", "探索する",
 }
 
 // answer answers the prompt of g by the plan, or cancels it.
