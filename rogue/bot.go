@@ -38,6 +38,10 @@ func (s BotStyle) String() string {
 // balance of dungeons (cmd/analyze), not to play well.
 type Bot struct {
 	Style BotStyle
+	// LookAhead turns the look-ahead on (lookahead.go; off by default:
+	// a first step, to measure); rollout says it plays one: it does not
+	// look ahead itself.
+	LookAhead, rollout bool
 	// Trace, if set, gets a line on each of its choices: the rule that
 	// gave the action, and the answers to a danger it weighed (analyze
 	// -trace).
@@ -333,6 +337,10 @@ func killTurns(g *Game, m *Monster) float64 {
 // player, by the damage (index 0 a miss), by the combat formula: a hit
 // rate, then a damage spread evenly over +-1/8, rounded, at least 1.
 func hitDamages(g *Game, m *Monster) []float64 {
+	if _, ok := m.ability(AbilityRust); ok {
+		// A rust bug never attacks.
+		return []float64{1}
+	}
 	r := g.Dungeon.Rules
 	hit := float64(r.MonsterHitRate) / 100
 	c := float64(m.Attack) * float64(r.DefenseK) / float64(r.DefenseK+g.Defense())
@@ -697,9 +705,18 @@ func (b *Bot) danger(g *Game) (string, []string) {
 	if h := b.hopelessHeal(g, answers, pick); h != nil {
 		pick = h
 	}
+	if l, ok := b.lookAhead(g, answers, pick); ok {
+		pick = l
+	}
 	if b.Trace != nil {
 		b.traceAnswers(g, fight, answers, pick)
 	}
+	return b.take(g, pick)
+}
+
+// take is the action that carries out the answer pick (nil for none: the
+// rules below go on).
+func (b *Bot) take(g *Game, pick *botAnswer) (string, []string) {
 	switch {
 	case pick == nil:
 		return "", nil
@@ -1632,6 +1649,8 @@ func abilityWorth(e SealEffect, n int) float64 {
 		return f / 10
 	case SealDodge:
 		return f / 5
+	case SealDodgeThrown:
+		return f / 20
 	}
 	return f / 50
 }

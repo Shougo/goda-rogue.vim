@@ -146,6 +146,8 @@ type Game struct {
 	// floors (combat, for now), so that what the player does never
 	// changes the floors of a seed.
 	rng *rand.Rand
+	// pcg is the source of rng, to copy its state (Clone).
+	pcg *rand.PCG
 }
 
 // Directions are the names of the eight directions.
@@ -169,10 +171,11 @@ func NewGame(d *Dungeon, seed string) *Game {
 		Dungeon: d, Seed: seed, Facing: "down",
 		HP: r.PlayerHP, MaxHP: r.PlayerHP, PlayerLevel: 1, Strength: r.Strength, MaxStrength: r.Strength,
 		Fullness: r.Fullness, MaxFullness: r.Fullness,
-		rng:        rand.New(rand.NewPCG(seedHash(d, seed), math.MaxUint64)),
 		Started:    time.Now(),
 		identified: map[string]bool{}, met: map[string]bool{}, priced: map[string]bool{}, names: map[string]string{},
 	}
+	g.pcg = rand.NewPCG(seedHash(d, seed), math.MaxUint64)
+	g.rng = rand.New(g.pcg)
 	g.nameItems()
 	g.planGuaranteed()
 	g.descend()

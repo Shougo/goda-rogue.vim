@@ -32,6 +32,7 @@ func main() {
 	actions := flag.Int("actions", 50000, "the most actions of a run")
 	jobs := flag.Int("j", runtime.NumCPU(), "the runs played at once")
 	tsv := flag.Bool("tsv", false, "print one line a run, tab-separated, instead of the summary")
+	look := flag.Bool("look", false, "the bots look ahead at the hopeless moments (Bot.LookAhead)")
 	trace := flag.Int("trace", -1, "a run: print each choice of the first of the bots in run N (of -seed), instead of the summary")
 	compare := flag.String("compare", "", "a replay file: print where the first of the bots would have done another kind of thing than its player, instead of playing")
 	flag.Parse()
@@ -62,7 +63,9 @@ func main() {
 			fmt.Fprintf(os.Stderr, "analyze: no bot %q\n", name)
 			os.Exit(2)
 		}
-		fmt.Println(rogue.TraceBot(d, runSeed(*seed, *trace), rogue.NewBot(s, uint64(*trace)), *actions, func(l string) { fmt.Println(l) }))
+		b := rogue.NewBot(s, uint64(*trace))
+		b.LookAhead = *look
+		fmt.Println(rogue.TraceBot(d, runSeed(*seed, *trace), b, *actions, func(l string) { fmt.Println(l) }))
 		return
 	}
 	var styles []rogue.BotStyle
@@ -78,7 +81,7 @@ func main() {
 		fmt.Println("bot\tseed\tdepth\tcause\tover\tturns\tlevel\tkills\tdamage\tunfair")
 	}
 	for _, s := range styles {
-		rs, err := play(d, s, *seed, *runs, *actions, *jobs)
+		rs, err := play(d, s, *seed, *runs, *actions, *jobs, *look)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "analyze:", err)
 			os.Exit(1)
@@ -95,7 +98,7 @@ func main() {
 }
 
 // play plays n runs of d by bots of style s, jobs at once.
-func play(d *rogue.Dungeon, s rogue.BotStyle, seed string, n, actions, jobs int) ([]rogue.BotRun, error) {
+func play(d *rogue.Dungeon, s rogue.BotStyle, seed string, n, actions, jobs int, look bool) ([]rogue.BotRun, error) {
 	rs := make([]rogue.BotRun, n)
 	errs := make([]error, n)
 	next := make(chan int)
@@ -103,7 +106,9 @@ func play(d *rogue.Dungeon, s rogue.BotStyle, seed string, n, actions, jobs int)
 	for range max(jobs, 1) {
 		wg.Go(func() {
 			for i := range next {
-				rs[i], errs[i] = rogue.PlayBot(d, runSeed(seed, i), rogue.NewBot(s, uint64(i)), actions)
+				b := rogue.NewBot(s, uint64(i))
+				b.LookAhead = look
+				rs[i], errs[i] = rogue.PlayBot(d, runSeed(seed, i), b, actions)
 			}
 		})
 	}
