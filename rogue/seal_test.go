@@ -66,47 +66,93 @@ func TestSealThree(t *testing.T) {
 	}
 }
 
-// TestSealNoTheft: with the seal nothing is stolen; without it, it is.
+// TestSealNoTheft: born with it (the shield of 盗みよけ), nothing is
+// stolen; as a seal, half the time; without it, always.
 func TestSealNoTheft(t *testing.T) {
-	for _, seals := range [][]string{{"盗"}, nil} {
-		g, _ := sealGame(t, nil, seals)
-		g.Gold = 100
-		carry(g, "yakusou", 0)
-		n := len(g.Inventory)
-		for _, id := range []string{"touzoku1", "touzoku2"} {
-			m := place(g, kind(id), g.Player.Add(Point{1, 0}))
-			for i := range m.Def.Abilities {
-				if a := m.Def.Abilities[i]; a.Name == AbilitySteal {
+	for _, c := range []struct {
+		shield   string
+		seals    []string
+		min, max int
+	}{{"nusumiyoke", nil, 0, 0}, {"tetsutate", []string{"盗"}, 60, 140}, {"tetsutate", nil, 200, 200}} {
+		g, _ := sealGame(t, nil, c.seals)
+		g.equipped(CategoryShield).Equipped = false
+		carry(g, c.shield, 0).Equipped = true
+		g.equipped(CategoryShield).Seals = c.seals
+		stolen := 0
+		for range 200 {
+			g.Gold = 100
+			m := place(g, kind("touzoku1"), g.Player.Add(Point{1, 0}))
+			for _, a := range m.Def.Abilities {
+				if a.Name == AbilitySteal {
 					a.Values = append([]int{100}, a.Values[1:]...)
-					g.thieve(m, a)
+					if g.thieve(m, a) {
+						stolen++
+					}
 				}
 			}
+			g.Monsters = nil
 		}
-		stolen := g.Gold != 100 || len(g.Inventory) != n
-		if stolen == (seals != nil) {
-			t.Errorf("seals %v: gold %d, %d items of %d", seals, g.Gold, len(g.Inventory), n)
+		if stolen < c.min || stolen > c.max {
+			t.Errorf("%s %v: stolen %d times of 200, want %d-%d", c.shield, c.seals, stolen, c.min, c.max)
 		}
 	}
 }
 
-// TestSealDodge: the blows of the monsters hit less often by the
-// strength of the seal.
+// TestSealDodge: the blows of the monsters hit less often by the share of
+// 見切り: 15% born with it, 8% as a seal, more with two seals.
 func TestSealDodge(t *testing.T) {
-	g, _ := sealGame(t, nil, []string{"避"})
-	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.MonsterHitRate = 15 })
-	g.HP, g.MaxHP = 99999, 99999
-	m := place(g, kind("nezumi1"), g.Player.Add(Point{1, 0}))
-	for range 200 {
-		g.hitPlayer(m)
+	for _, c := range []struct {
+		shield   string
+		seals    []string
+		min, max int
+	}{{"mikiri", nil, 300, 380}, {"tetsutate", []string{"避"}, 340, 395}, {"tetsutate", []string{"避", "避"}, 320, 385},
+		{"tetsutate", nil, 400, 400}} {
+		g, _ := sealGame(t, nil, nil)
+		g.equipped(CategoryShield).Equipped = false
+		carry(g, c.shield, 0).Equipped = true
+		g.equipped(CategoryShield).Seals = c.seals
+		g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.MonsterHitRate = 100 })
+		g.HP, g.MaxHP = 99999, 99999
+		m := place(g, kind("nezumi1"), g.Player.Add(Point{1, 0}))
+		hit := 0
+		for range 400 {
+			hp := g.HP
+			g.hitPlayer(m)
+			if g.HP < hp {
+				hit++
+			}
+		}
+		if hit < c.min || hit > c.max {
+			t.Errorf("%s %v: hit %d times of 400, want %d-%d", c.shield, c.seals, hit, c.min, c.max)
+		}
 	}
-	if g.HP != g.MaxHP {
-		t.Fatalf("hit at a rate of 15%% with a seal of 15: HP %d/%d", g.HP, g.MaxHP)
-	}
-	g.equipped(CategoryShield).Seals = nil
-	for range 200 {
-		g.hitPlayer(m)
-	}
-	if g.HP == g.MaxHP {
-		t.Error("never hit at a rate of 15% without the seal")
+}
+
+// TestSealSure: 必中 born with it, every blow hits; as a seal, half the
+// misses hit, three quarters with two.
+func TestSealSure(t *testing.T) {
+	for _, c := range []struct {
+		sword    string
+		seals    []string
+		min, max int
+	}{{"hicchuu", nil, 400, 400}, {"katana", []string{"必"}, 160, 240}, {"katana", []string{"必", "必"}, 260, 340},
+		{"katana", nil, 0, 0}} {
+		g, _ := sealGame(t, nil, nil)
+		g.equipped(CategoryWeapon).Equipped = false
+		carry(g, c.sword, 0).Equipped = true
+		g.equipped(CategoryWeapon).Seals = c.seals
+		g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.PlayerHitRate = 0 })
+		m := place(g, kind("nezumi4"), g.Player.Add(Point{1, 0}))
+		hit := 0
+		for range 400 {
+			m.HP, m.MaxHP = 9999, 9999
+			g.strike(m, 1)
+			if m.HP < 9999 {
+				hit++
+			}
+		}
+		if hit < c.min || hit > c.max {
+			t.Errorf("%s %v: hit %d times of 400, want %d-%d", c.sword, c.seals, hit, c.min, c.max)
+		}
 	}
 }

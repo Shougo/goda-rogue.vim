@@ -2,6 +2,7 @@ package rogue
 
 import (
 	"fmt"
+	"math"
 	"slices"
 )
 
@@ -304,17 +305,15 @@ func (g *Game) getHungry() {
 		}
 		return
 	}
-	// The seal ハラヘラズ: every other turn only.
-	if !g.sealed(SealNoHunger) || g.Turn%2 == 0 {
-		g.hunger++
-	}
+	// In hundredths of a turn's hunger: ハラヘラズ takes its share off.
+	g.hunger += int(math.Round(100 * (1 - g.sealShare(SealNoHunger))))
 	if g.wears(EffectRegen) {
-		g.hunger++
+		g.hunger += 100
 	}
-	if g.hunger < g.Dungeon.Rules.HungerTurns {
+	if g.hunger < 100*g.Dungeon.Rules.HungerTurns {
 		return
 	}
-	g.hunger -= g.Dungeon.Rules.HungerTurns
+	g.hunger -= 100 * g.Dungeon.Rules.HungerTurns
 	g.Fullness--
 	for _, h := range hungerMessages {
 		if g.Fullness == h.fullness {

@@ -2,6 +2,7 @@ package rogue
 
 import (
 	"fmt"
+	"math"
 	"slices"
 )
 
@@ -421,7 +422,7 @@ func (g *Game) workOutDistances(to Point) []int {
 func (g *Game) hitPlayer(m *Monster) {
 	r := g.Dungeon.Rules
 	name := g.seenName(m)
-	if !hits(g.rng, max(r.MonsterHitRate-g.sealStrength(SealDodge), 0)) {
+	if !hits(g.rng, int(math.Round(float64(r.MonsterHitRate)*(1-g.sealShare(SealDodge))))) {
 		g.say(name + "の攻撃は外れた。")
 		return
 	}
@@ -435,7 +436,7 @@ func (g *Game) hitPlayer(m *Monster) {
 		return
 	}
 	g.holdBy(m)
-	if c := g.sealStrength(SealCounter); c > 0 && g.rng.IntN(100) < c {
+	if g.sealChance(SealCounter) {
 		g.say("反撃した！")
 		g.hurt(m, n)
 	}

@@ -38,12 +38,12 @@ var sealTexts = map[SealEffect]string{
 	SealAttack:   "攻撃力 +%d。",
 	SealDefense:  "防御力 +%d。",
 	SealCrit:     "%d%% の確率で会心の一撃（2 倍のダメージ）。",
-	SealSure:     "攻撃が必ず当たる。",
+	SealSure:     "外れるはずの攻撃の %d%% が当たる。",
 	SealCounter:  "%d%% の確率で受けたダメージを相手に返す。",
-	SealNoRust:   "武器と盾がサビない。",
-	SealNoHunger: "お腹が減る速さが半分になる。",
-	SealThree:    "正面と、その左右の斜め前の 3 方向を同時に攻撃する。",
-	SealNoTheft:  "道具もお金も盗まれない。",
+	SealNoRust:   "%d%% の確率で武器と盾のサビを防ぐ。",
+	SealNoHunger: "お腹が減る速さが %d%% 遅くなる。",
+	SealThree:    "正面に加えて、左右の斜め前にも %d%% のダメージで攻撃する。",
+	SealNoTheft:  "%d%% の確率で盗みを防ぐ。",
 	SealDodge:    "敵の攻撃が当たる確率が %d%% 下がる。",
 }
 
@@ -110,12 +110,17 @@ func (g *Game) info(it *Item) []string {
 		if it.curseKnown() {
 			lines = append(lines, "呪われている（装備すると外せない）")
 		}
+		if sd := g.Dungeon.SealOn(def.Seal, def.Category); sd != nil {
+			lines = append(lines,
+				fmt.Sprintf("[%s]素の能力：%s", sd.Glyph, withStrength(sealTexts[sd.Effect], sd.Strength)),
+				fmt.Sprintf("　別の%sに合成すると【%s】：%s", def.Category, sd.Glyph, withStrength(sealTexts[sd.Effect], sd.AsSeal)))
+		}
 		for _, s := range it.Seals {
 			sd := g.Dungeon.SealOn(s, def.Category)
 			if sd == nil {
 				continue
 			}
-			lines = append(lines, fmt.Sprintf("【%s】%s：%s", s, sd.Name, withStrength(sealTexts[sd.Effect], sd.Strength)))
+			lines = append(lines, fmt.Sprintf("【%s】%s：%s", s, sd.Name, withStrength(sealTexts[sd.Effect], sd.AsSeal)))
 		}
 	case CategoryArrow:
 		lines = append(lines, fmt.Sprintf("攻撃力 %d。%d 本。装備すると撃てる。", def.Strength, it.Count))
@@ -176,7 +181,7 @@ func (g *Game) materialInfo(def *ItemDef) []string {
 	for _, c := range []Category{CategoryWeapon, CategoryShield} {
 		if s := g.Dungeon.SealOn(def.Seal, c); s != nil {
 			lines = append(lines, fmt.Sprintf("%sに異種合成すると【%s】%s：%s", c, s.Glyph, s.Name,
-				withStrength(sealTexts[s.Effect], s.Strength)))
+				withStrength(sealTexts[s.Effect], s.AsSeal)))
 		}
 	}
 	return lines

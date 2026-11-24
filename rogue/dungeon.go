@@ -834,6 +834,10 @@ func (l *loader) loadSeals() {
 			l.errorf(row.file, row.n, "効果: unknown %q", s.Effect)
 		}
 		s.Strength = l.int(row, "強さ", 0)
+		s.AsSeal = s.Strength
+		if v, ok := row.cols["印の強さ"]; ok && v != "" && v != "-" {
+			s.AsSeal = l.int(row, "印の強さ", 0)
+		}
 		if f, ok := row.cols["付く先"]; ok {
 			s.For = Category(f)
 			if s.For != CategoryWeapon && s.For != CategoryShield {
@@ -895,9 +899,6 @@ func (l *loader) loadItems() {
 		}
 		if it.Seal != "" && c == CategoryMoney {
 			l.errorf(row.file, row.n, "印: money is no material")
-		}
-		if it.Seal != "" && equipment && it.Slots == 0 {
-			l.errorf(row.file, row.n, "印数: no room for its seal %q", it.Seal)
 		}
 		if s := d.Seal(it.Seal); s != nil && equipment && d.SealOn(it.Seal, c) == nil {
 			l.errorf(row.file, row.n, "印: the seal %q goes on a %s, not a %s", it.Seal, s.For, c)

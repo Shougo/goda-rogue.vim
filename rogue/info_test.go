@@ -15,13 +15,20 @@ func TestInfo(t *testing.T) {
 		"木刀+2【会】（武器）",
 		"攻撃力 5（基本 3、修正値 +2）",
 		"印 1/2",
-		"【会】会心の印：25% の確率で会心の一撃（2 倍のダメージ）。",
+		"【会】会心の印：12% の確率で会心の一撃（2 倍のダメージ）。",
 	}
 	if g.Prompt == nil || !slices.Equal(g.Prompt.Choices, want) || g.Turn != turn {
 		t.Fatalf("prompt %+v, turn %d", g.Prompt, g.Turn)
 	}
 	if err := g.Do("choose", []string{"0"}); err != nil || g.Prompt != nil {
 		t.Errorf("choose: %v, %+v", err, g.Prompt)
+	}
+
+	// Born with an ability: not a seal, and what it would be as one.
+	kaishin := carry(g, "kaishin", 0)
+	if lines := g.info(kaishin); lines[0] != "会心剣[会]（武器）" || !slices.Contains(lines, "[会]素の能力：25% の確率で会心の一撃（2 倍のダメージ）。") ||
+		!slices.Contains(lines, "　別の武器に合成すると【会】：12% の確率で会心の一撃（2 倍のダメージ）。") || !slices.Contains(lines, "印 0/3") {
+		t.Errorf("born with 会: %q", lines)
 	}
 
 	// An upgrade value not known yet.

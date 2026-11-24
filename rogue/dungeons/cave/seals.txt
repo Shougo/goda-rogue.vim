@@ -1,31 +1,37 @@
-# The seals (印) of weapons and shields: one kanji each. 効果 is what a
-# seal does while its weapon or shield is equipped, with 強さ as how much:
-#   攻撃      adds 強さ to the attack
-#   防御      adds 強さ to the defense
-#   会心      強さ % of the attacks of the player do twice the damage
-#   必中      the attacks of the player always hit
-#   反撃      with a chance of 強さ %, the damage the player takes goes
+# The seals (印) of weapons and shields: one kanji each. 効果 is what it
+# does while its weapon or shield is equipped. 強さ is how much as the
+# ability an item is born with (items.txt 印: 素の能力), 印の強さ as a
+# seal merged into another (weaker; optional, 強さ if missing):
+#   攻撃      adds it to the attack
+#   防御      adds it to the defense
+#   会心      its % of the attacks of the player do twice the damage
+#   必中      its % of the attacks of the player that would miss hit
+#   反撃      with a chance of its %, the damage the player takes goes
 #             back to the attacker
-#   サビよけ  the weapon and the shield do not rust
-#   ハラヘラズ  the player gets hungry half as fast
+#   サビよけ  with a chance of its %, the weapon and the shield do not
+#             rust
+#   ハラヘラズ  the player gets hungry its % less fast
 #   三方向    a blow also strikes the two tiles beside the one the player
-#             faces, ahead of it
-#   盗みよけ  nothing is stolen from the player
-#   見切り    the blows of the monsters hit 強さ % less often
+#             faces, ahead of it, for its % of the damage
+#   盗みよけ  with a chance of its %, nothing is stolen
+#   見切り    the blows of the monsters hit its % less often
+# The same seal may be there more than once (and with the ability the
+# item is born with): 攻撃 and 防御 add up, the others add up as chances
+# do (two of 50% make 75%), never past 100%.
 # 付く先 is what it goes on, a weapon (武器) or a shield (盾): the seals of
 # weapons and of shields have different effects, so the two never add up.
 # A seal may have two rows, one for weapons and one for shields: the seal
 # of a material (items.txt) is the one for what it is merged into.
-印	名前	効果	強さ	付く先
-攻	攻撃の印	攻撃	3	武器
-防	防御の印	防御	3	盾
-会	会心の印	会心	25	武器
-必	必中の印	必中	0	武器
-反	反撃の印	反撃	30	盾
-錆	サビよけの印	サビよけ	0	盾
-腹	ハラヘラズの印	ハラヘラズ	0	盾
-力	力の印	攻撃	2	武器
-力	力の印	反撃	15	盾
-三	三方向の印	三方向	0	武器
-盗	盗みよけの印	盗みよけ	0	盾
-避	見切りの印	見切り	15	盾
+印	名前	効果	強さ	印の強さ	付く先
+攻	攻撃の印	攻撃	3	2	武器
+防	防御の印	防御	3	2	盾
+会	会心の印	会心	25	12	武器
+必	必中の印	必中	100	50	武器
+反	反撃の印	反撃	30	15	盾
+錆	サビよけの印	サビよけ	100	50	盾
+腹	ハラヘラズの印	ハラヘラズ	50	25	盾
+力	力の印	攻撃	2	2	武器
+力	力の印	反撃	15	15	盾
+三	三方向の印	三方向	50	25	武器
+盗	盗みよけの印	盗みよけ	100	50	盾
+避	見切りの印	見切り	15	8	盾

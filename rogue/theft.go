@@ -17,7 +17,7 @@ const (
 // unless it takes those too). Then it warps away and flees. It says
 // whether it stole: with nothing to take, it attacks instead.
 func (g *Game) thieve(m *Monster, a Ability) bool {
-	if m.Fled || g.sealed(SealNoTheft) || g.rng.IntN(100) >= a.Values[0] {
+	if m.Fled || g.rng.IntN(100) >= a.Values[0] || g.sealChance(SealNoTheft) {
 		return false
 	}
 	switch a.Values[1] {

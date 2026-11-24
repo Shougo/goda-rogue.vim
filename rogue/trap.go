@@ -196,7 +196,7 @@ func (g *Game) spring(t *Trap, force bool) bool {
 		g.Fullness = max(g.Fullness-n, 0)
 		g.say("お腹が減った。")
 	case TrapRust:
-		if g.sealed(SealNoRust) {
+		if g.sealChance(SealNoRust) {
 			g.say("サビよけの印で守られた。")
 			return true
 		}

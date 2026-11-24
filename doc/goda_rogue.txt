@@ -42,7 +42,11 @@ falls around.
 
 Weapons and shields can have seals (印), one kanji each, shown in the
 inventory (鉄の剣+2【会必】): they work while the weapon or the shield is
-equipped, as many as it has room for.
+equipped, as many as it has room for, the same seal more than once too.
+Some are born with an ability (素の能力, 必中の剣[必]): not a seal, it
+takes no room, and works in full while the item is equipped.  Merged
+into another weapon or shield, it becomes a seal of that one, weaker
+(half or so).  A synthesis keeps the ability of the base.
 
 An item of the dungeon, but arrows and money, may be cursed.  A cursed
 weapon, shield or bracelet does not come off once equipped (木刀-1（呪）):
@@ -963,9 +967,12 @@ The built-in dungeons:
 				how many times a staff can be waved, how
 				many arrows there are, how many items a pot
 				holds (min-max; - for other items).  印 is
-				the seal a weapon or a shield is born with
-				(- for none), 印数 how many seals it can
-				have.  On another item, 印 makes it a
+				the ability a weapon or a shield is born
+				with (a seal of seals.txt at its 強さ; - for
+				none): it takes no slot and stays on the
+				base of a synthesis; merged into another,
+				it becomes a seal (at its 印の強さ).  印数
+				is how many seals it can have.  On another item, 印 makes it a
 				material: merged into a weapon or a shield
 				by mixed synthesis (異種合成, by a monster;
 				a pot of synthesis merges items of a kind
@@ -1005,8 +1012,13 @@ The built-in dungeons:
 	seals.txt		The seals of weapons and shields, a table:
 				印 is the kanji of a seal, 効果 what it does
 				(the comments of the built-in seals.txt tell
-				what each does), 強さ how much, 付く先 what it
-				goes on (武器 or 盾, optional: either).  Give
+				what each does), 強さ how much as the ability
+				an item is born with, 印の強さ how much as a
+				seal (optional: 強さ), 付く先 what it goes on
+				(武器 or 盾, optional: either).  攻撃 and
+				防御 add up; the others are percents of
+				chances that add up as chances do (two
+				of 50 make 75).  Give
 				the seals of weapons and of shields different
 				effects: the seals of the two add up.  A
 				kanji may have two rows, one for weapons and

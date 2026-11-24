@@ -107,6 +107,7 @@ func TestSynthesis(t *testing.T) {
 	g, _ := roomGame(t, 4, 3)
 	p := pot(g, "gousei", 4)
 	base := carry(g, "katana", 1)
+	// Born with 会: it becomes a seal of the base.
 	other := carry(g, "kaishin", 2)
 	other.Seals = []string{"会", "必"}
 	command(t, g, base, commandEquip)
@@ -120,23 +121,23 @@ func TestSynthesis(t *testing.T) {
 		t.Error("a weapon in a pot is still equipped")
 	}
 	put(other)
-	if len(p.Contents) != 1 || base.Upgrade != 3 || !slices.Equal(base.Seals, []string{"会", "必"}) {
+	if len(p.Contents) != 1 || base.Upgrade != 3 || !slices.Equal(base.Seals, []string{"会", "会", "必"}) {
 		t.Fatalf("contents %d, upgrade %d, seals %v", len(p.Contents), base.Upgrade, base.Seals)
 	}
 	if !strings.Contains(g.Message, "カタナと会心剣が合成された！") {
 		t.Errorf("message %q", g.Message)
 	}
-	// No more seals than the slots, no seal twice.
+	// No more seals than the slots; the same seal again too.
 	more := carry(g, "seidou", 0)
 	more.Seals = []string{"錆"}
 	put(more) // A shield: kept apart.
 	sword := carry(g, "bokutou", 0)
 	sword.Seals = []string{"会", "攻", "反"}
 	put(sword)
-	if !slices.Equal(base.Seals, []string{"会", "必", "攻", "反"}) || len(p.Contents) != 2 {
+	if !slices.Equal(base.Seals, []string{"会", "会", "必", "会"}) || len(p.Contents) != 2 {
 		t.Errorf("seals %v, contents %d", base.Seals, len(p.Contents))
 	}
-	if g.describe(base) != "カタナ+3【会必攻反】" {
+	if g.describe(base) != "カタナ+3【会会必会】" {
 		t.Errorf("label %q", g.describe(base))
 	}
 	// Four items went in, two merged: the pot is full.
@@ -250,13 +251,15 @@ func TestSeals(t *testing.T) {
 	g, r := roomGame(t, 6, 3)
 	g.HP, g.MaxHP = 9999, 9999
 	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.SpawnTurns = 1 << 30 })
-	sword := carry(g, "tetsuken", 0)
-	shield := carry(g, "tetsutate", 0)
+	// Born with 必中 and サビよけ: in full.
+	sword := carry(g, "hicchuu", 0)
+	shield := carry(g, "kintate", 0)
 	sword.Equipped, shield.Equipped = true, true
 	attack, defense := g.Attack(), g.Defense()
-	sword.Seals = []string{"攻", "会", "必"}
-	shield.Seals = []string{"防", "反", "錆", "腹"}
-	if g.Attack() != attack+3 || g.Defense() != defense+3 {
+	sword.Seals = []string{"攻", "会"}
+	shield.Seals = []string{"防", "反"}
+	// As seals, 攻 and 防 add 2, not 3.
+	if g.Attack() != attack+2 || g.Defense() != defense+2 {
 		t.Errorf("attack %d, defense %d", g.Attack(), g.Defense())
 	}
 
@@ -293,7 +296,9 @@ func TestSeals(t *testing.T) {
 		t.Errorf("upgrade %d, message %q", sword.Upgrade, g.Message)
 	}
 
-	// ハラヘラズ: half as hungry.
+	// ハラヘラズ, born with it: half as hungry.
+	shield.Equipped = false
+	carry(g, "kawa", 0).Equipped = true
 	g.Fullness, g.hunger = 50, 0
 	wait(t, g, g.Dungeon.Rules.HungerTurns*10)
 	if g.Fullness != 45 {

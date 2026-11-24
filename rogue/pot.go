@@ -115,6 +115,11 @@ func (g *Game) merge(base, it *Item, mixed bool) bool {
 	switch {
 	case (c == CategoryWeapon || c == CategoryShield) && it.Def.Category == c:
 		base.Upgrade += it.Upgrade
+		// The innate ability of the material becomes a seal; that of
+		// the base stays as it was.
+		if it.Def.Seal != "" {
+			g.addSeal(base, it.Def.Seal)
+		}
 		for _, s := range it.Seals {
 			g.addSeal(base, s)
 		}
@@ -141,10 +146,10 @@ func (g *Game) merge(base, it *Item, mixed bool) bool {
 	return false
 }
 
-// addSeal adds the seal glyph to base, if it has room and not the seal
-// yet.
+// addSeal adds the seal glyph to base, if it has room (the same seal
+// again too: they add up, seal.go).
 func (g *Game) addSeal(base *Item, glyph string) {
-	if len(base.Seals) < base.Def.Slots && !slices.Contains(base.Seals, glyph) {
+	if len(base.Seals) < base.Def.Slots {
 		base.Seals = append(base.Seals, glyph)
 	}
 }

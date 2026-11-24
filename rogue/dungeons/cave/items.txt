@@ -51,11 +51,14 @@
 #               with its room in the pot
 # 回数 is how many times a staff can be waved, how many arrows there are,
 # how many items a pot holds (min-max; - for others).
-# 印 is the seal a weapon or a shield is born with (seals.txt; - for
-# none), 印数 how many seals it can have. On another item, 印 makes it a
-# material: merged into a weapon or a shield by mixed synthesis (異種合成,
-# by a monster; a pot of synthesis merges items of a kind only), it adds
-# its seal for weapons or for shields, and is used up.
+# 印 is the ability a weapon or a shield is born with (素の能力: a seal
+# of seals.txt at its strength 強さ; - for none): it takes no slot, and
+# stays when the item is the base of a synthesis; merged into another,
+# it becomes a seal of that one, at 印の強さ. 印数 is how many seals it
+# can have. On another item, 印 makes it a material: merged into a weapon
+# or a shield by mixed synthesis (異種合成, by a monster; a pot of
+# synthesis merges items of a kind only), it adds its seal for weapons or
+# for shields, and is used up.
 # Any item can be thrown: an arrow hurts the monster it hits, a grass
 # has its effect on it, another item hurts it a little.
 # 値段 is the price in shops (of one arrow for arrows); a shop buys for

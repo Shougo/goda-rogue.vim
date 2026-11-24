@@ -693,32 +693,36 @@ func (g *Game) attack() bool {
 		}
 		return true
 	}
-	g.strike(m)
-	if g.sealed(SealThree) {
+	g.strike(m, 1)
+	if share := g.sealShare(SealThree); share > 0 {
 		// The two tiles beside it, ahead: the enemies there too.
 		i := slices.Index(clockwise, g.Facing)
 		for _, turn := range []int{len(clockwise) - 1, 1} {
 			sd := Directions[clockwise[(i+turn)%len(clockwise)]]
 			if o := g.MonsterAt(g.Player.Add(sd)); o != nil && !o.Ally && !(o.Keeper && !o.Angry) && g.clearFrom(g.Player, sd) && g.Over == "" {
-				g.strike(o)
+				g.strike(o, share)
 			}
 		}
 	}
 	return true
 }
 
-// strike is a blow of the player on the monster m: it may miss; a hit
-// may be a critical one.
-func (g *Game) strike(m *Monster) {
+// strike is a blow of the player on the monster m, with the share of its
+// damage (the side blows of 三方向 deal less): it may miss; a hit may be
+// a critical one.
+func (g *Game) strike(m *Monster, share float64) {
 	m.Dozing = false
 	g.provoke(m)
 	r := g.Dungeon.Rules
-	if !g.sealed(SealSure) && !hits(g.rng, r.PlayerHitRate) {
+	if !hits(g.rng, r.PlayerHitRate) && !g.sealChance(SealSure) {
 		g.say(m.Name + "にかわされた。")
 		return
 	}
 	n := damage(g.rng, g.Attack(), m.Defense, r.DefenseK)
-	if c := g.sealStrength(SealCrit); c > 0 && g.rng.IntN(100) < c {
+	if share < 1 {
+		n = max(int(math.Round(float64(n)*share)), 1)
+	}
+	if g.sealChance(SealCrit) {
 		n *= 2
 		g.say("会心の一撃！")
 	}
