@@ -89,6 +89,12 @@ const (
 	// AbilityBurn: what is thrown or shot at it burns, with no effect;
 	// only blows hurt it (still.go).
 	AbilityBurn AbilityName = "燃える"
+	// AbilityHeal: by a chance (a percent) of its actions, it heals
+	// another hurt monster it sees by so many HP (support.go).
+	AbilityHeal AbilityName = "回復"
+	// AbilityCheer: by a chance (a percent) of its actions, it ranks up
+	// another monster of the floors it sees (support.go).
+	AbilityCheer AbilityName = "鼓舞"
 )
 
 // MagicEffect is an effect of the bolt of AbilityMagic.
@@ -159,6 +165,8 @@ var abilityDefs = map[AbilityName]abilityDef{
 	AbilityStill:     {nil, nil, nil, 0},
 	AbilityHold:      {[]string{"chance %", "turns"}, []int{1, 1}, []int{100, 20}, 0},
 	AbilityBurn:      {nil, nil, nil, 0},
+	AbilityHeal:      {[]string{"chance %", "HP"}, []int{1, 1}, []int{100, 999}, 0},
+	AbilityCheer:     {[]string{"chance %"}, []int{1}, []int{100}, 0},
 	AbilityHunger:    {[]string{"chance %", "fullness", "max fullness"}, []int{1, 0, 0}, []int{100, 999, 999}, 0},
 	AbilityCurse:     {[]string{"chance %", "what", "items"}, []int{1, curseArms, 1}, []int{100, curseAny, 5}, 0},
 	AbilitySteal:     {[]string{"chance %", "what", "items", "equipped"}, []int{1, stealGold, 0, 0}, []int{100, stealItems, 5, 1}, 0},
@@ -169,7 +177,7 @@ const maxReach = 20
 
 // abilityNames are the abilities in a fixed order, for the error that
 // lists them.
-var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot, AbilitySynthesis, AbilityCurse, AbilityHunger, AbilityStill, AbilityHold, AbilityBurn}
+var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot, AbilitySynthesis, AbilityCurse, AbilityHunger, AbilityStill, AbilityHold, AbilityBurn, AbilityHeal, AbilityCheer}
 
 // lineAbilities are the abilities that reach the player from afar along
 // a line, their reach their first number.

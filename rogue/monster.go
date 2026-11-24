@@ -190,6 +190,9 @@ func (g *Game) act(m *Monster) bool {
 	if m.Fled && g.flee(m) {
 		return false
 	}
+	if g.support(m) {
+		return false
+	}
 	// Attack the player first (or steal from it), then an ally.
 	for _, d := range around {
 		if m.Pos.Add(d) == g.Player && g.clearFrom(m.Pos, d) {

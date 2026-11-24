@@ -180,6 +180,10 @@ func (g *Game) abilityText(a Ability) string {
 		return curseText(v)
 	case AbilityHunger:
 		return hungerText(v)
+	case AbilityHeal:
+		return fmt.Sprintf("%d%%で、見えている傷ついた仲間のHPを%d回復する", v[0], v[1])
+	case AbilityCheer:
+		return fmt.Sprintf("%d%%で、見えている仲間のランクを上げる。祈る者どうしは上げない", v[0])
 	case AbilityStill:
 		return "その場から動かない"
 	case AbilityHold:

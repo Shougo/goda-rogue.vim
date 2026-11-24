@@ -805,6 +805,11 @@ The built-in dungeons:
 				             no more next to it
 				  燃える  what is thrown or shot at it burns, with
 				             no effect: only blows hurt it
+				  回復:C:N  C% of its actions heal another hurt
+				             monster it sees by N HP
+				  鼓舞:C  C% of its actions rank up another
+				             monster of the floors it sees (not one
+				             that cheers)
 				  擬態:D:S:K  on a new floor it hides as
 				             an item of the floor's table,
 				             or (S%) as stairs, or (K%, with
