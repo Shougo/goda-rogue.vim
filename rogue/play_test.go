@@ -49,6 +49,9 @@ func (p *player) next() (string, []string) {
 		if rng.IntN(8) == 0 {
 			return "cancel", nil
 		}
+		if g.Prompt.Input {
+			return "name", []string{[]string{"", "混乱?", "とても長い名前をつけてみるとどうなるか"}[rng.IntN(3)]}
+		}
 		return "choose", []string{fmt.Sprint(rng.IntN(len(g.Prompt.Choices)))}
 	}
 	if rng.IntN(1000) < p.give && len(g.Inventory) < g.Dungeon.Rules.Capacity {
@@ -262,7 +265,7 @@ func checkGame(g *Game) error {
 	if len(g.Log) > maxLog || g.actionStart > len(g.Log) {
 		fail("%d messages, the action's from %d", len(g.Log), g.actionStart)
 	}
-	if g.Prompt != nil && len(g.Prompt.Choices) == 0 {
+	if g.Prompt != nil && len(g.Prompt.Choices) == 0 && !g.Prompt.Input {
 		fail("the prompt %q has no choice", g.Prompt.Title)
 	}
 	if !lv.At(g.Stairs).Walkable() {

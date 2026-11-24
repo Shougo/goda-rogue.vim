@@ -16,7 +16,7 @@ const (
 // carried (buying and selling), picked up from the floor, taken out of a
 // pot of the shop.
 var freeOfShop = map[itemPlace][]string{
-	placeCarried: {commandDrop, commandEquip, commandUnequip, commandInfo},
+	placeCarried: {commandDrop, commandEquip, commandUnequip, commandInfo, commandName},
 	placeFoot:    {commandPickUp, commandPurse, commandSwap, commandInfo},
 	placePot:     {commandTakeOut, commandInfo},
 }
@@ -25,7 +25,7 @@ var freeOfShop = map[itemPlace][]string{
 // reading about it; on the floor, picking it up and swapping (they test
 // it themselves, pickUp and swap).
 var mimicSafe = map[itemPlace][]string{
-	placeCarried: {commandInfo},
+	placeCarried: {commandInfo, commandName},
 	placeFoot:    {commandInfo, commandPickUp, commandSwap},
 	placePot:     {commandInfo},
 }

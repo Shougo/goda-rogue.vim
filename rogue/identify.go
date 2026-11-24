@@ -41,7 +41,7 @@ func (g *Game) Name(it *Item) string {
 	if g.identified[it.Def.ID] {
 		return it.Def.Name
 	}
-	return g.fakeNames[it.Def.ID]
+	return g.fakeLabel(it.Def.ID)
 }
 
 // identify makes the kind of it known, and says what it was.

@@ -46,8 +46,8 @@ func (g *Game) showCatalog() {
 				}
 			default:
 				unknown = append(unknown, fmt.Sprintf("%s %dG", def.Name, def.Price))
-				if g.met[def.ID] {
-					met = append(met, g.metLine(def, fake))
+				if g.met[def.ID] || g.names[def.ID] != "" {
+					met = append(met, g.metLine(def, g.fakeLabel(def.ID)))
 				}
 			}
 		}

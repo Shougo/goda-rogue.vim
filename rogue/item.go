@@ -193,6 +193,11 @@ type Prompt struct {
 	// Multi says whether several choices may be chosen at once (the
 	// action "choose" with them separated by commas: "0,2,5").
 	Multi bool `json:"multi,omitempty"`
+	// Input says that it asks for a text, not a choice: the answer is the
+	// action "name" with it (naming).
+	Input bool `json:"input,omitempty"`
+	// Default is the text an Input prompt starts with.
+	Default string `json:"default,omitempty"`
 
 	// What the choice is for: the inventory, what to do with the item at
 	// index item, or which item to identify (items are the indexes of
@@ -246,6 +251,7 @@ const (
 	promptFoot      = "foot"
 	promptFootTrap  = "foot trap"
 	promptSwap      = "swap"
+	promptName      = "name"
 )
 
 // The commands of an item.
@@ -260,6 +266,7 @@ const (
 	commandThrow   = "投げる"
 	commandPickUp  = "拾う"
 	commandPurse   = "財布に入れる"
+	commandName    = "名前をつける"
 	commandSwap    = "交換"
 )
 
@@ -486,6 +493,10 @@ func (g *Game) footCommands(it *Item) []string {
 // under the player, swapping them too.
 func (g *Game) itemCommands(it *Item) []string {
 	cs := it.commands()
+	if g.nameable(it) {
+		// Before 説明, the last.
+		cs = slices.Insert(cs, len(cs)-1, commandName)
+	}
 	if g.canSwap() && g.foot() != nil {
 		// Before 説明, the last.
 		cs = slices.Insert(cs, len(cs)-1, commandSwap)
@@ -651,6 +662,9 @@ func (g *Game) choose(arg string) (bool, error) {
 			return false, nil
 		case commandInfo:
 			g.showInfo(it)
+			return false, nil
+		case commandName:
+			g.askName(it)
 			return false, nil
 		case commandPurse:
 			// Putting money away costs no turn.

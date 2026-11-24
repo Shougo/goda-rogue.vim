@@ -421,9 +421,13 @@ inventory                                               *goda-rogue-inventory*
 		rules.txt, whatever the defense, and is used up, other
 		items hurt it a little and fall by it), 財布に入れる (put
 		money in the purse, the gold; no turn), 見る or 入れる (see
-		what is in a pot, put an item in it), 置く (drop it), 説明
-		(what it is and does: the attack of a weapon, its seals,
-		the effect of a grass; no turn).  The items are sorted by
+		what is in a pot, put an item in it), 置く (drop it), 名前を
+		つける (name a kind not identified: its items show the name
+		after their fake name, 橙の草「混乱?」, until it is
+		identified; asked on the command line, or by
+		g:goda_rogue#prompt_func with "input"; an empty name takes
+		it away; no turn), 説明 (what it is and does: the attack of
+		a weapon, its seals, the effect of a grass; no turn).  The items are sorted by
 		kind, each with the glyph of its kind as an icon; a pot
 		shows the icons of what is in it (保存の壺[1]【草草巻】).
 		The item under the player comes last, marked [足元]: it can
@@ -568,7 +572,10 @@ g:goda_rogue#prompt_func
 		prompt (a |Dictionary| with "title" and "choices", and
 		"multi" true when several may be chosen) and a function
 		to call with the choice, from 1 (0 to cancel), or with a
-		|List| of choices when "multi" is true.
+		|List| of choices when "multi" is true.  A prompt for a
+		text (a name) has "input" true, "default" (the text to
+		start with) and no "choices": call the function with the
+		text, or |v:null| to cancel.
 
 ==============================================================================
 HIGHLIGHTS                                             *goda-rogue-highlights*

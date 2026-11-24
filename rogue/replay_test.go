@@ -19,6 +19,9 @@ func randomAction(g *Game, rng *rand.Rand) (string, []string) {
 		if rng.IntN(8) == 0 {
 			return "cancel", nil
 		}
+		if p.Input {
+			return "name", []string{[]string{"", "混乱?"}[rng.IntN(2)]}
+		}
 		return "choose", []string{fmt.Sprint(rng.IntN(len(p.Choices)))}
 	}
 	dirs := slices.Sorted(func(yield func(string) bool) {

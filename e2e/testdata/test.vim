@@ -468,6 +468,18 @@ function! s:debug() abort
   call s:check('put in', filter(copy(s:asked.choices), {_, c -> c =~# '^草\|^壺'}),
         \ filter(copy(s:asked.choices), {_, c -> c =~# '^壺.*【草草】$'}))
   call goda_rogue#do('cancel')
+
+  " Naming a kind not identified: a text prompt, then the name shows.
+  call goda_rogue#do('debug', 'item', 'konran')
+  call goda_rogue#do('inventory')
+  " (The newest item, the last of its kind: a grass not yet in a pot.)
+  call s:answer(match(s:asked.choices, '^草') + 1)
+  call s:answer(index(s:asked.choices, '名前をつける') + 1)
+  call s:check('name prompt', get(s:asked, 'input', v:false), v:true)
+  call s:answer('混乱?')
+  call goda_rogue#do('inventory')
+  call s:check('named', len(filter(copy(s:asked.choices), {_, c -> c =~# '「混乱?」'})), 1)
+  call goda_rogue#do('cancel')
   unlet g:goda_rogue#prompt_func
   unlet g:goda_rogue#debug
 endfunction

@@ -602,6 +602,10 @@ let s:prompt = -1
 
 function! s:ask(prompt) abort
   let winid = win_getid()
+  if get(a:prompt, 'input', v:false)
+    call s:input_text(a:prompt, winid)
+    return
+  endif
   if get(a:prompt, 'multi', v:false)
     call s:select_many(a:prompt.title, a:prompt.choices,
           \ {idx -> goda_rogue#_answer(winid, idx)})
@@ -609,6 +613,42 @@ function! s:ask(prompt) abort
   endif
   call s:select(a:prompt.title, a:prompt.choices,
         \ {idx -> goda_rogue#_answer(winid, idx)})
+endfunction
+
+" Ask for a text ({prompt}.input: a name), starting with {prompt}.default:
+" with g:goda_rogue#prompt_func (#{title, input: v:true, default}, whose
+" callback gets the text, or v:null to cancel), else on the command line.
+" The answer goes back as the action "name", or "cancel".
+function! s:input_text(prompt, winid) abort
+  let default = get(a:prompt, 'default', '')
+  if !empty(get(g:, 'goda_rogue#prompt_func', ''))
+    call call(g:goda_rogue#prompt_func,
+          \ [#{title: a:prompt.title, input: v:true, default: default},
+          \ {text -> goda_rogue#_answer_text(a:winid, text)}])
+    return
+  endif
+  call s:close_prompt()
+  " Once the current action is over: input() does not wait for an answer
+  " inside win_execute().
+  call timer_start(0, {-> goda_rogue#_answer_text(a:winid,
+        \ s:read_text(a:prompt.title, default))})
+endfunction
+
+" The text typed after {title} (v:null when cancelled with <Esc>).
+function! s:read_text(title, default) abort
+  redraw
+  let cancel = "\x01"
+  let text = inputdialog(a:title . ': ', a:default, cancel)
+  return text ==# cancel ? v:null : text
+endfunction
+
+" Answer the text prompt shown in the window {winid} with {text} (v:null
+" to cancel).
+function! goda_rogue#_answer_text(winid, text) abort
+  let cmd = a:text is v:null
+        \ ? 'call goda_rogue#do("cancel")'
+        \ : printf('call goda_rogue#do("name", %s)', string(a:text))
+  call win_execute(a:winid, cmd)
 endfunction
 
 " Ask to choose some of {choices}: their numbers separated by commas

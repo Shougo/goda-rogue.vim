@@ -7,6 +7,7 @@ import (
 	"math"
 	"math/rand/v2"
 	"slices"
+	"strings"
 	"time"
 )
 
@@ -100,6 +101,10 @@ type Game struct {
 	// met are the kinds whose fake names the player carried; priced
 	// those whose prices it saw in a shop (catalog.go).
 	met, priced map[string]bool
+	// names are what the player named the kinds not identified, and
+	// naming the kind it is naming now (naming.go).
+	names  map[string]string
+	naming string
 	// Over is why the run is over ("" while it goes on), and Cleared
 	// whether the player went down the last stairs.
 	Over    string
@@ -166,7 +171,7 @@ func NewGame(d *Dungeon, seed string) *Game {
 		Fullness: r.Fullness, MaxFullness: r.Fullness,
 		rng:        rand.New(rand.NewPCG(seedHash(d, seed), math.MaxUint64)),
 		Started:    time.Now(),
-		identified: map[string]bool{}, met: map[string]bool{}, priced: map[string]bool{},
+		identified: map[string]bool{}, met: map[string]bool{}, priced: map[string]bool{}, names: map[string]string{},
 	}
 	g.nameItems()
 	g.planGuaranteed()
@@ -497,6 +502,12 @@ func (g *Game) Do(action string, args []string) error {
 	case "redraw", "log", "map", "items", "choose", "cancel":
 	default:
 		g.Prompt = nil
+	}
+	if action == "name" {
+		// Naming costs no turn.
+		g.beginAction()
+		g.nameKind(strings.Join(args, " "))
+		return nil
 	}
 	if action == "catalog" {
 		// Reading the catalog costs no turn.
