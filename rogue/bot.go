@@ -1206,7 +1206,7 @@ func (b *Bot) threatened(g *Game) bool {
 // go down and find food, not to rest.
 func (b *Bot) hungry(g *Game) bool {
 	r := g.Dungeon.Rules
-	return g.Fullness*r.HungerTurns < 2*b.floorTurns() &&
+	return g.Fullness*r.HungerTurns/hungerRate(g) < 2*b.floorTurns() &&
 		carried(g, func(it *Item) bool { return it.Def.Category == CategoryFood }) == nil
 }
 
@@ -1409,11 +1409,17 @@ func (b *Bot) equip(g *Game) (string, []string) {
 			// It does not come off.
 			continue
 		}
+		if c == CategoryBracelet && worn != nil && worn.Def.Effect == EffectRegen && b.foodFloors(g) < regenOff {
+			return b.use(worn, commandUnequip)
+		}
 		it := carried(g, func(it *Item) bool {
 			if it.Def.Category != c || it.Equipped {
 				return false
 			}
 			switch {
+			case c == CategoryBracelet && b.mayRegen(g, it) && b.foodFloors(g) < regenOn:
+				// It would eat the food up.
+				return false
 			case worn == nil:
 				return true
 			case c == CategoryWeapon || c == CategoryShield:
@@ -1426,6 +1432,55 @@ func (b *Bot) equip(g *Game) (string, []string) {
 		}
 	}
 	return "", nil
+}
+
+// regenOff and regenOn are the floors of food (foodFloors) below which
+// the bot takes a bracelet of regeneration off, and from which it puts
+// one on: it makes the player twice as hungry, and the bots that wore one
+// to the end starved (a third of their deaths by hunger in the cave).
+// The gap keeps it from taking it off and putting it on again and again.
+const (
+	regenOff = 2
+	regenOn  = 3
+)
+
+// foodFloors is for how many floors the food lasts, the fullness and that
+// of the food carried (in pots too), at twice the hunger, as with a
+// bracelet of regeneration.
+func (b *Bot) foodFloors(g *Game) int {
+	return foodTotal(g) * g.Dungeon.Rules.HungerTurns / 2 / max(b.floorTurns(), 1)
+}
+
+// foodTotal is the fullness and that of the food carried, in pots too (not
+// rotten).
+func foodTotal(g *Game) int {
+	total := g.Fullness
+	var count func(its []*Item)
+	count = func(its []*Item) {
+		for _, o := range its {
+			if !o.ForSale && o.Def.Category == CategoryFood && o.Def.Effect != EffectRotten {
+				total += o.Def.Strength
+			}
+			count(o.Contents)
+		}
+	}
+	count(g.Inventory)
+	return total
+}
+
+// mayRegen says whether it may be a bracelet of regeneration, as far as
+// the bot knows.
+func (b *Bot) mayRegen(g *Game, it *Item) bool {
+	return slices.ContainsFunc(b.mayBe(g, it), func(d *ItemDef) bool { return d.Effect == EffectRegen })
+}
+
+// hungerRate is how many times as fast as without a bracelet the player
+// gets hungry.
+func hungerRate(g *Game) int {
+	if g.wears(EffectRegen) {
+		return 2
+	}
+	return 1
 }
 
 // strength is the strength of a weapon or a shield as far as known.
@@ -1738,7 +1793,7 @@ func (b *Bot) reach(g *Game) int {
 			food += it.Def.Strength
 		}
 	}
-	switch floors := food * r.HungerTurns / max(b.floorTurns(), 1); {
+	switch floors := food * r.HungerTurns / hungerRate(g) / max(b.floorTurns(), 1); {
 	case floors < 3:
 		return exploreReach / 2
 	case floors >= 5:
