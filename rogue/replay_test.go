@@ -100,6 +100,7 @@ func play(t *testing.T, p *Plugin, rng *rand.Rand, n int) [][]string {
 			if err := p.do("stairs", nil); err != nil {
 				t.Fatal(err)
 			}
+			done = append(done, []string{"stairs"})
 		}
 	}
 	return done

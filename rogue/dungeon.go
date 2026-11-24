@@ -271,13 +271,15 @@ const (
 	EffectSynthesis  Effect = "合成"
 	EffectHealPot    Effect = "全回復"
 	EffectUncurse    Effect = "おはらい"
+	EffectMoreSlots  Effect = "印増大"
+	EffectEraseSeal  Effect = "印消し"
 )
 
 // effects are the effects the items of each category can have.
 var effects = map[Category][]Effect{
 	CategoryBracelet: {EffectStrength, EffectRegen, EffectSenseEnemy, EffectSenseItem},
 	CategoryGrass:    {EffectHeal, EffectStrength, EffectEyeDrops, EffectMaxHP},
-	CategoryScroll:   {EffectLight, EffectIdentify, EffectUpWeapon, EffectUpShield, EffectUncurse},
+	CategoryScroll:   {EffectLight, EffectIdentify, EffectUpWeapon, EffectUpShield, EffectUncurse, EffectMoreSlots, EffectEraseSeal},
 	CategoryStaff:    {EffectBlowAway, EffectRecruit, EffectSwap},
 	CategoryFood:     {EffectFood, EffectRotten},
 	CategoryPot:      {EffectKeep, EffectSynthesis, EffectHealPot},

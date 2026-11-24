@@ -115,6 +115,14 @@ func (g *Game) effectOf(it *Item, lucky bool) {
 		g.upgrade(CategoryShield, n+luckyUpgrade*boolInt(lucky), lucky)
 	case EffectSwap:
 		g.swapPlaces()
+	case EffectMoreSlots:
+		if !g.askSlot() {
+			g.say("何も起こらなかった。")
+		}
+	case EffectEraseSeal:
+		if !g.askErase() {
+			g.say("何も起こらなかった。")
+		}
 	case EffectUncurse:
 		g.exorcise()
 		switch {

@@ -21,6 +21,8 @@ var effectTexts = map[Effect]string{
 	EffectHeal:       "HP が %d 回復する。HP が満タンなら最大 HP が上がる。",
 	EffectLight:      "フロア全体が明るくなり、地形と道具と敵が見える。",
 	EffectUncurse:    "持ち物 1 つの呪いを解く。ラッキーなら持ち物すべて。",
+	EffectMoreSlots:  "選んだ武器か盾の印の枠を 1 つ増やす（10 まで）。",
+	EffectEraseSeal:  "選んだ印を 1 つ消す（素の能力は消えない）。",
 	EffectUpWeapon:   "装備している武器の修正値が %d 上がり、呪いが解ける。ラッキーならさらに 2 上がる。",
 	EffectUpShield:   "装備している盾の修正値が %d 上がり、呪いが解ける。ラッキーならさらに 2 上がる。",
 	EffectIdentify:   "持ち物を 1 つ識別する。ラッキーなら持ち物すべて。",
@@ -106,7 +108,7 @@ func (g *Game) info(it *Item) []string {
 		} else {
 			lines = append(lines, fmt.Sprintf("%s %d+?（修正値は装備するか識別すると分かる）", what, def.Strength))
 		}
-		lines = append(lines, fmt.Sprintf("印 %d/%d", len(it.Seals), def.Slots))
+		lines = append(lines, fmt.Sprintf("印 %d/%d", len(it.Seals), it.slots()))
 		if it.curseKnown() {
 			lines = append(lines, "呪われている（装備すると外せない）")
 		}

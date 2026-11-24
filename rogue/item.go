@@ -58,6 +58,9 @@ type Item struct {
 	ForSale bool
 	// Seals are the seals of a weapon or a shield (their glyphs).
 	Seals []string
+	// MoreSlots are the slots for seals a scroll of 印増大 added to those
+	// of its kind (seals.go).
+	MoreSlots int
 	// Contents are the items in a pot; Charges is how many it holds.
 	Contents []*Item
 	// Known says whether the player knows the upgrade value of a weapon
@@ -248,6 +251,8 @@ const (
 	promptItem      = "item"
 	promptIdentify  = "identify"
 	promptUncurse   = "uncurse"
+	promptSlot      = "slot"
+	promptErase     = "erase"
 	promptFoot      = "foot"
 	promptFootTrap  = "foot trap"
 	promptSwap      = "swap"
@@ -626,6 +631,12 @@ func (g *Game) choose(arg string) (bool, error) {
 		return false, nil
 	case promptUncurse:
 		g.uncurseOne(p.targets[n])
+		return false, nil
+	case promptSlot:
+		g.addSlot(p.targets[n])
+		return false, nil
+	case promptErase:
+		g.eraseSeal(p.targets[n], p.items[n])
 		return false, nil
 	case promptPay:
 		if n == 0 {

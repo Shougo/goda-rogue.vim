@@ -149,7 +149,7 @@ func (g *Game) merge(base, it *Item, mixed bool) bool {
 // addSeal adds the seal glyph to base, if it has room (the same seal
 // again too: they add up, seal.go).
 func (g *Game) addSeal(base *Item, glyph string) {
-	if len(base.Seals) < base.Def.Slots {
+	if len(base.Seals) < base.slots() {
 		base.Seals = append(base.Seals, glyph)
 	}
 }

@@ -181,6 +181,11 @@ func (b *Bot) answer(g *Game) (string, []string) {
 		i := max(slices.IndexFunc(p.targets, func(it *Item) bool { return it.curseKnown() }), 0)
 		return "choose", []string{fmt.Sprint(i)}
 	}
+	if p.kind == promptSlot && len(p.Choices) > 0 {
+		// The weapon or the shield equipped first.
+		i := max(slices.IndexFunc(p.targets, func(it *Item) bool { return it.Equipped }), 0)
+		return "choose", []string{fmt.Sprint(i)}
+	}
 	if len(b.plan) == 0 {
 		return "cancel", nil
 	}

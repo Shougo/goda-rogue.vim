@@ -46,7 +46,9 @@ equipped, as many as it has room for, the same seal more than once too.
 Some are born with an ability (素の能力, 必中の剣[必]): not a seal, it
 takes no room, and works in full while the item is equipped.  Merged
 into another weapon or shield, it becomes a seal of that one, weaker
-(half or so).  A synthesis keeps the ability of the base.
+(half or so).  A synthesis keeps the ability of the base.  A scroll of
+印増大 adds a slot for seals (10 at most), one of 印消し takes a seal
+chosen away.
 
 An item of the dungeon, but arrows and money, may be cursed.  A cursed
 weapon, shield or bracelet does not come off once equipped (木刀-1（呪）):
@@ -970,6 +972,7 @@ The built-in dungeons:
 				  腕輪: ちから 回復 気配察知 道具感知
 				  草: HP回復 ちから 目薬 最大HP
 				  巻物: あかり 識別 武器強化 盾強化 おはらい
+				        印増大 印消し
 				  杖: 吹き飛ばし 仲間 場所替え
 				  食料: 満腹 腐った
 				  壺: 保存 合成

@@ -43,6 +43,8 @@
 床	1	50	shikibetsu	3
 床	1	50	akari	2
 床	1	50	oharai	2
+床	1	50	inzoudai	1
+床	1	50	inkeshi	1
 床	1	20	ten	1
 床	21	50	ten	3
 床	1	20	chi	1
@@ -104,6 +106,8 @@
 よろず	1	50	shikibetsu	4
 よろず	1	50	akari	2
 よろず	1	50	oharai	2
+よろず	1	50	inzoudai	1
+よろず	1	50	inkeshi	1
 よろず	1	50	ten	1
 よろず	1	50	chi	1
 よろず	1	50	konranmaki	1

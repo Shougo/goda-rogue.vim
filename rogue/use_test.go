@@ -112,13 +112,19 @@ func TestBlowAway(t *testing.T) {
 	}
 
 	// A weak monster dies on the wall, and gives EXP.
+	// (A row with no doorway in the wall beyond.)
 	g.Monsters = nil
-	w := place(g, kind("nezumi1"), Point{r.X + r.W - 2, r.Y})
+	y := r.Y
+	for g.Level.At(Point{r.X + r.W, y}).Walkable() && y < r.Y+r.H-1 {
+		y++
+	}
+	g.Player = Point{r.X, y}
+	w := place(g, kind("nezumi1"), Point{r.X + r.W - 2, y})
 	w.HP = 1
 	exp := g.EXP
 	use(t, g, "fukitobashi")
 	if g.MonsterAt(w.Pos) == w || g.EXP <= exp {
-		t.Errorf("not defeated: HP %d, EXP %d", w.HP, g.EXP)
+		t.Errorf("not defeated: HP %d, EXP %d, at %v, room %+v, %q", w.HP, g.EXP, w.Pos, r, g.Message)
 	}
 
 	// Nothing to hit.
