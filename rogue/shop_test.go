@@ -253,10 +253,27 @@ func TestAttackKeeper(t *testing.T) {
 			g.Facing = name
 		}
 	}
+	// The attack button talks to it, and takes no turn.
+	turn := g.Turn
 	if err := g.Do("attack", nil); err != nil {
 		t.Fatal(err)
 	}
-	if !k.Angry || !strings.Contains(g.Message, "店主を怒らせてしまった！") {
+	if k.Angry || g.Turn != turn || !strings.Contains(g.Message, sayWelcome) {
+		t.Fatalf("attacked: angry %v, turn %d to %d, %q", k.Angry, turn, g.Turn, g.Message)
+	}
+	// Owing: it asks to pay.
+	goods := forSale(g)
+	g.Items = slices.DeleteFunc(g.Items, func(x *Item) bool { return x == goods[0] })
+	g.Inventory = append(g.Inventory, goods[0])
+	g.Do("attack", nil)
+	if k.Angry || g.Prompt == nil || !strings.Contains(g.Prompt.Title, "お代は") {
+		t.Fatalf("owing: angry %v, prompt %+v", k.Angry, g.Prompt)
+	}
+	g.Prompt = nil
+	// A thrown item makes it angry.
+	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.PlayerThrowRate = 100 })
+	command(t, g, carry(g, "bokutou", 0), commandThrow)
+	if !k.Angry || !strings.Contains(strings.Join(g.Log, ""), "店主を怒らせてしまった！") {
 		t.Errorf("angry %v, message %q", k.Angry, g.Message)
 	}
 	// Without shopkeepers, the goods are free.

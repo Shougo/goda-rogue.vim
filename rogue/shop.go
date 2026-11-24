@@ -200,6 +200,9 @@ func (g *Game) debt() int {
 	return n
 }
 
+// sayBlocks is said as the shopkeepers stand in their doors.
+const sayBlocks = "店主が入り口に立ちふさがった。"
+
 // actKeeper is a turn of a shopkeeper not angry: it stands at its place
 // inside, or in its door while the player owes the shop.
 func (g *Game) actKeeper(m *Monster) {
@@ -210,7 +213,10 @@ func (g *Game) actKeeper(m *Monster) {
 		// before it gets there, only talk to it (talkTo).
 		if m.Pos != to && !g.occupied(to) {
 			m.Pos = to
-			g.say("店主が入り口に立ちふさがった。")
+			// (Once for all of them.)
+			if !strings.Contains(g.Message, sayBlocks) {
+				g.say(sayBlocks)
+			}
 			return
 		}
 	}

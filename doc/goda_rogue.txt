@@ -101,10 +101,11 @@ to pay.  An item put down in the shop can be sold for half its price.
 Leaving the shop without paying (a warp, a pit, a door left free) is
 stealing: the shopkeepers get angry, and
 guards come after the thief.  The stronger the shopkeepers (their rank,
-their number), the harder it is; deep shops sell rarer items.  Attacking
-a shopkeeper is stealing too.  Angry shopkeepers sell no more, and with
-none left either: the items are anyone's.  Items not paid for cannot be
-put in a pot.
+their number), the harder it is; deep shops sell rarer items.  The
+attack button facing a calm shopkeeper talks to it, as walking into it
+does (no turn); hurting one (a thrown item, a staff) is stealing too.
+Angry shopkeepers sell no more, and with none left either: the items are
+anyone's.  Items not paid for cannot be put in a pot.
 In a shop that trades, the inventory shows what the shop pays for each
 item (売), and the description of an item shows its price; for an item
 not identified, it also shows the kinds it may be by that price (the
@@ -373,7 +374,8 @@ dash {direction}                                             *goda-rogue-dash*
 
 attack                                                     *goda-rogue-attack*
 		Attack the tile the player faces.  It costs a turn, even
-		when nothing is there, but allies are not attacked.  There is
+		when nothing is there, but allies are not attacked, and a
+		calm shopkeeper is talked to (no turn).  There is
 		no attack around a corner of a wall.  A swing at nothing
 		checks the tile: it finds a trap there, or shows the tile
 		as safe (|goda-rogue-traps|).

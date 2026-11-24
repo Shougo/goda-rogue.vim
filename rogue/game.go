@@ -670,12 +670,19 @@ func (g *Game) faceEnemy() {
 }
 
 // attack attacks the tile the player faces; it says whether it took the
-// turn: always, even when it hits nothing, but an ally is not attacked.
+// turn: always, even when it hits nothing, but an ally is not attacked,
+// and a calm shopkeeper is talked to.
 func (g *Game) attack() bool {
 	d := Directions[g.Facing]
 	m := g.MonsterAt(g.Player.Add(d))
 	if m != nil && m.Ally {
 		g.say("仲間は攻撃しない。")
+		return false
+	}
+	if m != nil && m.Keeper && !m.Angry && g.clearFrom(g.Player, d) {
+		// Facing a shopkeeper, the attack button talks, as in Shiren:
+		// a thrown item or a staff is what makes it angry.
+		g.talkTo(m)
 		return false
 	}
 	// No attack around a corner of rock.
@@ -692,7 +699,7 @@ func (g *Game) attack() bool {
 		i := slices.Index(clockwise, g.Facing)
 		for _, turn := range []int{len(clockwise) - 1, 1} {
 			sd := Directions[clockwise[(i+turn)%len(clockwise)]]
-			if o := g.MonsterAt(g.Player.Add(sd)); o != nil && !o.Ally && g.clearFrom(g.Player, sd) && g.Over == "" {
+			if o := g.MonsterAt(g.Player.Add(sd)); o != nil && !o.Ally && !(o.Keeper && !o.Angry) && g.clearFrom(g.Player, sd) && g.Over == "" {
 				g.strike(o)
 			}
 		}
