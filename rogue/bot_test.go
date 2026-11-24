@@ -743,3 +743,16 @@ func TestBotPacingShut(t *testing.T) {
 		t.Error("the tiles stay shut")
 	}
 }
+
+// TestBotOnDecoy: standing on what looks like stairs (blown there), the
+// bot goes down them; it does not ask for a step to where it stands.
+func TestBotOnDecoy(t *testing.T) {
+	g, r := roomGame(t, 6, 3)
+	g.Stairs = Point{r.X + 4, r.Y}
+	g.look()
+	g.Decoys = []Decoy{{Pos: g.Player, Def: kind("nezumi1")}}
+	b := NewBot(BotReckless, 0)
+	if a, args := b.toStairs(g); a != "stairs" {
+		t.Errorf("%s %v", a, args)
+	}
+}

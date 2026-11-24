@@ -1422,7 +1422,9 @@ const leaveTurns = 10
 
 // toStairs goes to the stairs, and down them.
 func (b *Bot) toStairs(g *Game) (string, []string) {
-	if g.Player == g.Stairs {
+	// (Also on what looks like stairs: a mimic the player came to stand
+	// on without walking there, which walking has no step to.)
+	if g.stairsAt(g.Player) {
 		return "stairs", nil
 	}
 	return b.walk(g, func(p Point) bool { return b.stairs(g, p) })
