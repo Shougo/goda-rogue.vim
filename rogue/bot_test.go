@@ -875,3 +875,39 @@ func TestTraceBot(t *testing.T) {
 		t.Errorf("over %q, lines %q", over, lines)
 	}
 }
+
+// TestBotFusedStepsAway: the bot steps out of the blast of a monster
+// about to explode, rather than hit it.
+func TestBotFusedStepsAway(t *testing.T) {
+	g, r := roomGame(t, 8, 5)
+	g.Player = Point{r.X + 3, r.Y + 2}
+	m := place(g, kind("bakudan1"), g.Player.Add(Point{1, 0}))
+	m.Fused = true
+	b := NewBot(BotCareful, 1)
+	a, args := b.Next(g)
+	if a != "move" || b.rule != "爆発から離れる" {
+		t.Fatalf("%s %v [%s]", a, args, b.rule)
+	}
+	if p := g.Player.Add(Directions[args[0]]); chebyshev(p, m.Pos) < 2 {
+		t.Errorf("stepped to %v, next to the bomb at %v", p, m.Pos)
+	}
+}
+
+// TestBotCannonHurt: hurt, the bot leaves the lines of a cannon rather
+// than walk to it under its fire.
+func TestBotCannonHurt(t *testing.T) {
+	g, r := roomGame(t, 9, 5)
+	g.Player = Point{r.X, r.Y + 2}
+	m := place(g, kind("houdai1"), Point{r.X + 6, r.Y + 2})
+	m.Dozing = false
+	g.HP = g.MaxHP / 3
+	b := NewBot(BotCareful, 1)
+	a, args := b.Next(g)
+	if a != "move" {
+		t.Fatalf("%s %v [%s]", a, args, b.rule)
+	}
+	p := g.Player.Add(Directions[args[0]])
+	if p.Y == m.Pos.Y || p.X == m.Pos.X || abs(p.X-m.Pos.X) == abs(p.Y-m.Pos.Y) {
+		t.Errorf("stepped to %v, on a line of the cannon at %v [%s]", p, m.Pos, b.rule)
+	}
+}

@@ -141,7 +141,7 @@ func (b *Bot) Next(g *Game) (string, []string) {
 		return "move", []string{clockwise[b.rng.IntN(len(clockwise))]}
 	}
 	for i, rule := range []func(*Game) (string, []string){
-		b.heal, b.afflicted, b.danger, b.shoot, b.fight, b.chase, b.await, b.eat, b.boost, b.equip, b.synthesize, b.identify, b.toShop, b.light,
+		b.heal, b.afflicted, b.fused, b.danger, b.shoot, b.fight, b.chase, b.await, b.eat, b.boost, b.equip, b.synthesize, b.identify, b.toShop, b.light,
 		b.tidy, b.trade, b.rest, b.leave, b.pick, b.explore,
 	} {
 		if action, args := rule(g); action != "" {
@@ -189,13 +189,14 @@ func (b *Bot) needsMouth() bool {
 	return false
 }
 
-// ruleDanger is the place of the rule danger in the rules of Next.
-const ruleDanger = 1
+// ruleDanger is the place of the rule danger in the rules of Next (it was
+// a number, left behind when a rule came before it).
+var ruleDanger = slices.Index(botRules, "危険に答える")
 
 // botRules are the names of the rules of Next, in their order: what the
 // bot is doing, for a reader (compare.go).
 var botRules = []string{
-	"回復する", "状態異常の敵や状態に答える", "危険に答える", "矢を撃つ", "戦う", "離れて打つ敵を追う", "敵を待つ", "食べる", "強化する", "装備する",
+	"回復する", "状態異常の敵や状態に答える", "爆発から離れる", "危険に答える", "矢を撃つ", "戦う", "離れて打つ敵を追う", "敵を待つ", "食べる", "強化する", "装備する",
 	"合成する", "識別する", "店で値段を見る", "あかりを使う", "不要品を置く", "入れ替える", "休む", "階段へ向かう", "拾いに行く", "探索する",
 }
 
@@ -1522,7 +1523,63 @@ func (b *Bot) chase(g *Game) (string, []string) {
 	if archer == nil || chebyshev(archer.Pos, g.Player) <= 1 {
 		return "", nil
 	}
+	if archer.still() && g.HP*2 < g.MaxHP {
+		// One that never moves (a cannon), the bot hurt: out of its
+		// lines rather than through them (the bots walked to cannons
+		// under their fire and died on the way).
+		lines := b.lines(g)
+		if !lines[g.Player] {
+			return "", nil
+		}
+		return b.walk(g, func(p Point) bool { return !lines[p] })
+	}
 	return b.walk(g, func(p Point) bool { return chebyshev(p, archer.Pos) == 1 })
+}
+
+// fused steps away from an enemy next to the player that will explode at
+// its next action (AbilityExplode), out of its blast, rather than fight
+// it: the explosion takes half the HP (the bots lost 74 of 149 so). The
+// step keeps clear of the other enemies, if it can.
+func (b *Bot) fused(g *Game) (string, []string) {
+	var bombs []*Monster
+	for _, m := range g.visibleEnemies() {
+		if m.Fused && chebyshev(m.Pos, g.Player) <= 1 {
+			bombs = append(bombs, m)
+		}
+	}
+	if len(bombs) == 0 {
+		return "", nil
+	}
+	best, bestNear := "", 99
+	for _, name := range clockwise {
+		d := Directions[name]
+		p := g.Player.Add(d)
+		if !g.canStep(d) || g.MonsterAt(p) != nil || g.TrapAt(p) != nil && g.TrapAt(p).Found {
+			continue
+		}
+		clear := true
+		for _, m := range bombs {
+			if chebyshev(m.Pos, p) <= 1 {
+				clear = false
+			}
+		}
+		if !clear {
+			continue
+		}
+		near := 0
+		for _, m := range g.visibleEnemies() {
+			if chebyshev(m.Pos, p) == 1 {
+				near++
+			}
+		}
+		if near < bestNear {
+			best, bestNear = name, near
+		}
+	}
+	if best == "" {
+		return "", nil
+	}
+	return "move", []string{best}
 }
 
 // directionName returns the name of the direction d.
