@@ -54,6 +54,9 @@
 床	1	99	hetanage	1
 床	1	99	taibaku	1
 床	1	99	mizugumo	1
+床	1	99	fuyuu	1
+床	1	99	kabenuke	1
+床	1	99	noroiryoku	1
 床	1	99	nusumiyokeu	1
 床	1	99	dougu	1
 床	1	99	kiya	3
@@ -145,6 +148,9 @@
 よろず	15	99	hetanage	3
 よろず	15	99	taibaku	3
 よろず	15	99	mizugumo	3
+よろず	15	99	fuyuu	1
+よろず	15	99	kabenuke	3
+よろず	15	99	noroiryoku	3
 よろず	15	99	nusumiyokeu	3
 よろず	1	14	dougu	1
 よろず	15	99	dougu	3
@@ -247,6 +253,9 @@
 腕輪	15	99	hetanage	5
 腕輪	15	99	taibaku	5
 腕輪	15	99	mizugumo	5
+腕輪	15	99	fuyuu	1
+腕輪	15	99	kabenuke	5
+腕輪	15	99	noroiryoku	5
 腕輪	15	99	nusumiyokeu	5
 腕輪	1	14	dougu	3
 腕輪	15	99	dougu	5

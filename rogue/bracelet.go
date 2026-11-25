@@ -113,15 +113,63 @@ func (g *Game) clumsy(it *Item, m *Monster) {
 	}
 }
 
-// overboard is the player on water without the bracelet of 水蜘蛛 (taken
-// off, or another put on there): it falls in and is washed away, to a
-// tile somewhere on the floor (Shougo).
+// standsOn says whether the player can stand on the tile t at p: a
+// floor; water with a bracelet of 水蜘蛛 or 浮遊; rock with a bracelet of
+// 壁抜け, but the edge of the floor.
+func (g *Game) standsOn(t Tile, p Point) bool {
+	switch t {
+	case TileWater:
+		return g.wears(EffectWaterWalk) || g.wears(EffectFloat)
+	case TileRock:
+		return g.wears(EffectWalls) && p.X > 0 && p.Y > 0 && p.X < g.Level.W-1 && p.Y < g.Level.H-1
+	}
+	return t.Walkable()
+}
+
+// overboard is the player where it cannot stand any more, its bracelet
+// taken off (or another put on, or blown there): in water it falls in and
+// is washed away, in the rock it is pushed out, to a tile somewhere on the
+// floor (Shougo).
 func (g *Game) overboard() {
-	if g.Level.At(g.Player) != TileWater || g.wears(EffectWaterWalk) {
+	t := g.Level.At(g.Player)
+	if g.standsOn(t, g.Player) {
 		return
 	}
-	g.say("水路に落ちてしまった！")
+	if t == TileWater {
+		g.say("水路に落ちてしまった！")
+	} else {
+		g.say("壁の中から押し出された！")
+	}
 	g.warpAway()
+}
+
+// inWalls is a turn of the player in the rock (a bracelet of 壁抜け): 1 HP
+// lost, never the last.
+func (g *Game) inWalls() {
+	if g.Level.At(g.Player) != TileRock || !g.wears(EffectWalls) {
+		return
+	}
+	g.use(EffectWalls)
+	if g.HP > 1 {
+		g.HP--
+	}
+}
+
+// cursePower is what a bracelet of 呪い力 adds to the strength (Shougo):
+// its strength for each cursed item carried (the bracelet too), not those
+// in pots.
+func (g *Game) cursePower() int {
+	b := g.equipped(CategoryBracelet)
+	if b == nil || b.Def.Effect != EffectCursePower {
+		return 0
+	}
+	n := 0
+	for _, it := range g.Inventory {
+		if it.Cursed {
+			n++
+		}
+	}
+	return n * b.Def.Strength
 }
 
 // drain is the scroll of 水がれ read: the waterways of the floor dry up

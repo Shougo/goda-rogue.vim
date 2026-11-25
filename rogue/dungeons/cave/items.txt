@@ -39,6 +39,13 @@
 #               next to it crumble
 #     耐爆      an explosion (a monster's, a mine) does half its damage
 #               to the player
+#     浮遊      the player floats over the waterways and the traps (it
+#               sets none off by walking); rare
+#     壁抜け    the player walks in the rock (not the edge of the floor),
+#               losing 1 HP a turn there (never the last); taken off
+#               there, the player is pushed out somewhere on the floor
+#     呪い力    each cursed item carried (not in pots) adds 強さ to the
+#               strength
 #     水蜘蛛    the player walks on the waterways; taken off there, the
 #               player falls in and is washed away somewhere on the floor
 #     ヘタ投げ  what the player throws or shoots never hits: it falls at
@@ -166,6 +173,9 @@ bakuhatsu	腕	爆発の腕輪	腕輪	10	爆発	0	-	-	0	1500
 hetanage	腕	ヘタ投げの腕輪	腕輪	0	ヘタ投げ	0	-	-	0	1000
 taibaku	腕	耐爆の腕輪	腕輪	0	耐爆	15	-	-	0	1500
 mizugumo	腕	水蜘蛛の腕輪	腕輪	0	水蜘蛛	0	-	-	0	2000
+fuyuu	腕	浮遊の腕輪	腕輪	0	浮遊	0	-	-	0	5000
+kabenuke	腕	壁抜けの腕輪	腕輪	0	壁抜け	0	-	-	0	3000
+noroiryoku	腕	呪い力の腕輪	腕輪	1	呪い力	0	-	-	0	1500
 kiya	矢	木の矢	矢	4	-	0	5-15	-	0	10
 tetsuya	矢	鉄の矢	矢	8	-	0	3-10	-	0	20
 ishi	矢	石	矢	3	-	0	1-1	-	0	2

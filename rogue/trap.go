@@ -148,6 +148,11 @@ func (g *Game) stepOn(t *Trap) bool { return g.spring(t, false) }
 // off by itself with the rule 見つけた罠 安全, but stepping on it on
 // purpose (force) does. It says whether the trap went off.
 func (g *Game) spring(t *Trap, force bool) bool {
+	if !force && g.wears(EffectFloat) {
+		// Floating over it: nothing.
+		g.use(EffectFloat)
+		return false
+	}
 	if !force && g.wears(EffectTrapper) {
 		// A bracelet of the trapper: the player never sets a trap off
 		// by walking.

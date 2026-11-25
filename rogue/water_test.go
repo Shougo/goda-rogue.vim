@@ -215,3 +215,60 @@ func TestFlungIntoWater(t *testing.T) {
 		t.Errorf("the monster in the water at %v", m.Pos)
 	}
 }
+
+// TestFloatBracelet: floating, the player crosses water and sets no trap
+// off by walking.
+func TestFloatBracelet(t *testing.T) {
+	g, r := waterGame(t)
+	wear(g, "fuyuu")
+	if !g.step(Directions["right"], false) {
+		t.Fatal("not over the water")
+	}
+	tr := trap(g, "otoshiana", Point{r.X + 4, r.Y + 1})
+	if !g.step(Directions["right"], false) || g.Depth != 1 || g.Player != tr.Pos {
+		t.Errorf("at %v on %dF: the pit went off", g.Player, g.Depth)
+	}
+}
+
+// TestWallsBracelet: in the rock with a bracelet of 壁抜け, 1 HP a turn
+// (never the last); taken off there, the player is pushed out.
+func TestWallsBracelet(t *testing.T) {
+	g, r := trapGame(t)
+	g.Player = Point{r.X, r.Y}
+	g.HP = 2
+	if g.step(Directions["up"], false) {
+		t.Fatal("into the rock without the bracelet")
+	}
+	b := wear(g, "kabenuke")
+	if !g.step(Directions["up"], false) || g.Level.At(g.Player) != TileRock {
+		t.Fatalf("not in the rock: %v", g.Player)
+	}
+	g.inWalls()
+	g.inWalls()
+	if g.HP != 1 {
+		t.Errorf("HP %d", g.HP)
+	}
+	g.unequip(b)
+	g.overboard()
+	if !g.Level.At(g.Player).Walkable() {
+		t.Errorf("still in the rock at %v", g.Player)
+	}
+}
+
+// TestCursePowerBracelet: each cursed item carried adds to the strength,
+// not those in pots.
+func TestCursePowerBracelet(t *testing.T) {
+	g, _ := roomGame(t, 6, 3)
+	s := g.CurrentStrength()
+	b := wear(g, "noroiryoku")
+	if g.CurrentStrength() != s {
+		t.Error("strength without curses")
+	}
+	b.Cursed = true
+	carry(g, "yakusou", 0).Cursed = true
+	pot := carry(g, "hozon", 0)
+	pot.Contents = append(pot.Contents, &Item{Def: g.Dungeon.Item("yakusou"), Cursed: true})
+	if g.CurrentStrength() != s+2 {
+		t.Errorf("strength %d, want %d", g.CurrentStrength(), s+2)
+	}
+}

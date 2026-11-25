@@ -273,7 +273,7 @@ func checkGame(g *Game) error {
 	}
 
 	// The creatures: one a tile, on the floor, alive.
-	if !lv.At(g.Player).Walkable() && !(lv.At(g.Player) == TileWater && g.wears(EffectWaterWalk)) {
+	if !g.standsOn(lv.At(g.Player), g.Player) {
 		fail("the player on %v", g.Player)
 	}
 	tiles := map[Point]bool{g.Player: true}

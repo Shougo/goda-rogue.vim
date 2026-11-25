@@ -309,8 +309,17 @@ const (
 	EffectBlastGuard Effect = "耐爆"
 	// EffectWaterWalk: the player walks on the waterways (TileWater).
 	EffectWaterWalk Effect = "水蜘蛛"
-	EffectHeal      Effect = "HP回復"
-	EffectLight     Effect = "あかり"
+	// EffectFloat: the player floats: over the waterways, and over the
+	// traps without setting them off.
+	EffectFloat Effect = "浮遊"
+	// EffectWalls: the player walks in the rock (not the edge of the
+	// floor), losing 1 HP a turn there (never the last).
+	EffectWalls Effect = "壁抜け"
+	// EffectCursePower: each cursed item carried (the bracelet too, not
+	// what is in pots) adds its strength to the strength (ちから).
+	EffectCursePower Effect = "呪い力"
+	EffectHeal       Effect = "HP回復"
+	EffectLight      Effect = "あかり"
 	// EffectDrain: the waterways of the floor dry up (水がれ).
 	EffectDrain     Effect = "水がれ"
 	EffectIdentify  Effect = "識別"
@@ -336,7 +345,8 @@ const (
 var effects = map[Category][]Effect{
 	CategoryBracelet: {EffectStrength, EffectRegen, EffectSenseEnemy, EffectSenseItem, EffectNoRust, EffectNoTheft, EffectNoSleep, EffectNoConfuse,
 		EffectNoCurse, EffectNoBlind, EffectNoSeal, EffectNoWeak, EffectHungry, EffectDrops, EffectTrapper, EffectSmallStomach, EffectCritTaken,
-		EffectCall, EffectLeap, EffectBlast, EffectClumsy, EffectBlastGuard, EffectWaterWalk},
+		EffectCall, EffectLeap, EffectBlast, EffectClumsy, EffectBlastGuard, EffectWaterWalk,
+		EffectFloat, EffectWalls, EffectCursePower},
 	CategoryGrass:  {EffectHeal, EffectStrength, EffectEyeDrops, EffectMaxHP},
 	CategoryScroll: {EffectLight, EffectDrain, EffectIdentify, EffectUpWeapon, EffectUpShield, EffectUncurse, EffectMoreSlots, EffectEraseSeal},
 	CategoryStaff:  {EffectBlowAway, EffectRecruit, EffectSwap},

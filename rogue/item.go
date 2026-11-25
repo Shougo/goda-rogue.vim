@@ -734,6 +734,11 @@ func (g *Game) drop(i int) bool {
 	}
 	g.Inventory = slices.Delete(g.Inventory, i, i+1)
 	it.Equipped, it.used = false, false
+	if !g.Level.At(g.Player).Walkable() {
+		// In water (it sinks) or in the rock (it falls by).
+		g.land(it, g.Player)
+		return true
+	}
 	it.Pos = g.Player
 	g.Items = append(g.Items, it)
 	g.say(g.Name(it) + "を置いた。")
@@ -798,7 +803,7 @@ func (g *Game) sensesMonster(p Point) bool {
 // CurrentStrength is the strength of the player, with what its bracelet
 // adds.
 func (g *Game) CurrentStrength() int {
-	return g.Strength + g.braceletStrength()
+	return g.Strength + g.braceletStrength() + g.cursePower()
 }
 
 // braceletStrength is what the bracelet worn adds to the strength.

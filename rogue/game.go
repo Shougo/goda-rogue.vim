@@ -839,6 +839,11 @@ func (g *Game) tick(rest bool) {
 	}
 	g.leak()
 	g.overboard()
+	g.inWalls()
+	if g.cursePower() > 0 {
+		// The strength it adds tells what it is.
+		g.use(EffectCursePower)
+	}
 	g.trapperSees()
 	g.call()
 	if g.leap() || g.blast() {
@@ -961,11 +966,15 @@ func (g *Game) say(msg string) {
 const maxLog = 1000
 
 // canStep says whether the player can go from its tile by d: onto a
-// walkable tile (water, with a bracelet of 水蜘蛛), and not diagonally
-// around a corner of rock.
+// tile it can stand on (standsOn), and not diagonally around a corner of
+// rock (but through the walls).
 func (g *Game) canStep(d Point) bool {
-	t := g.Level.At(g.Player.Add(d))
-	return (t.Walkable() || t == TileWater && g.wears(EffectWaterWalk)) && g.clearFrom(g.Player, d)
+	to := g.Player.Add(d)
+	if g.wears(EffectWalls) {
+		// Through the rock, around its corners too.
+		return g.standsOn(g.Level.At(to), to)
+	}
+	return g.standsOn(g.Level.At(to), to) && g.clearFrom(g.Player, d)
 }
 
 // step moves the player by d; it says whether it moved. With pick, it
@@ -997,6 +1006,10 @@ func (g *Game) step(d Point, pick bool) bool {
 	g.Player = to
 	if g.Level.At(to) == TileWater {
 		g.use(EffectWaterWalk)
+		g.use(EffectFloat)
+	}
+	if g.Level.At(to) == TileRock {
+		g.use(EffectWalls)
 	}
 	g.Steps++
 	if room := g.Level.RoomAt(to); room != from {
@@ -1111,7 +1124,7 @@ func (g *Game) visibleEnemies() []*Monster {
 // Status is the status line, under the map.
 func (g *Game) Status() string {
 	s := fmt.Sprintf("攻撃 %d  防御 %d  ちから %d/%d  持ち物 %d/%d  ターン %d（この階 %d）  歩数 %d  時間 %s  向き %s  シード %s",
-		g.Attack(), g.Defense(), g.CurrentStrength(), g.MaxStrength+g.braceletStrength(),
+		g.Attack(), g.Defense(), g.CurrentStrength(), g.MaxStrength+g.braceletStrength()+g.cursePower(),
 		len(g.Inventory), g.Dungeon.Rules.Capacity, g.Turn, g.FloorTurns, g.Steps,
 		playTime(g.PlayTime()), directionArrows[g.Facing], g.Seed)
 	if w := g.Dungeon.Rules.WindTurns; g.Wind > 0 && g.Wind < len(w) {

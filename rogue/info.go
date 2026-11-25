@@ -50,6 +50,9 @@ var effectTexts = map[Effect]string{
 	EffectClumsy:       "投げた物と撃った矢が必ず外れ、狙った敵の足元に落ちる。敵が罠の上にいれば、その罠が敵に働く。",
 	EffectBlastGuard:   "爆発（敵の爆発、地雷）で受けるダメージが半分になる。",
 	EffectWaterWalk:    "水路の上を歩ける。水の上で外すと、水に落ちてどこかへ流される。",
+	EffectFloat:        "浮いて、水路の上を渡れ、罠を踏まない。",
+	EffectWalls:        "壁の中を歩ける。壁の中では毎ターン HP が 1 減る（1 は残る）。",
+	EffectCursePower:   "持っている呪われた物 1 つにつき、ちからが %d 上がる（壺の中は数えない）。",
 	EffectTrapper:      "罠がすべて見え、歩いて罠を踏まない。敵は罠を踏むようになる。",
 	EffectPlain:        "道具を入れられるが、中の道具は使えず、割らないと取り出せない。",
 	EffectSynthesis: "武器と盾は、先に入れた同じ種類のものに印と修正値が合成される。" +
