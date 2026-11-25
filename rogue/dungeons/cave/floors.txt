@@ -6,13 +6,15 @@
 # table the items of the floor come from (category_tables.txt). ハウスの罠
 # are the traps a monster house adds in its room (optional). Deeper
 # floors have fewer items: stronger monsters drop more, and shops make up
-# for the rest.
+# for the rest. 水路 is the chance (percent) of waterways in the rooms of
+# a floor of rooms: a pond, or an island of three items in a ring of
+# water (optional: none).
 # The last floors have more monsters: the cave gets harder at its end,
 # not at its start.
-開始	終了	敵の数	道具の数	道具表	罠の数	ハウスの罠	明るさ	大部屋	迷路	モンスターハウス	店
-1	2	5-8	6-10	床	2-5	5-8	通常	0	0	0	15
-3	4	5-8	6-10	床	2-5	5-8	通常	5	5	0	18
-5	8	5-8	6-10	床	2-5	5-8	通常	5	5	8	18
-9	18	5-8	5-8	床	2-5	5-8	通常	5	5	8	18
-19	24	6-9	4-6	床	2-5	5-8	通常	5	5	8	18
-25	30	7-10	4-6	床	2-5	5-8	通常	5	5	8	18
+開始	終了	敵の数	道具の数	道具表	罠の数	ハウスの罠	明るさ	大部屋	迷路	モンスターハウス	店	水路
+1	2	5-8	6-10	床	2-5	5-8	通常	0	0	0	15	0
+3	4	5-8	6-10	床	2-5	5-8	通常	5	5	0	18	0
+5	8	5-8	6-10	床	2-5	5-8	通常	5	5	8	18	0
+9	18	5-8	5-8	床	2-5	5-8	通常	5	5	8	18	20
+19	24	6-9	4-6	床	2-5	5-8	通常	5	5	8	18	20
+25	30	7-10	4-6	床	2-5	5-8	通常	5	5	8	18	20

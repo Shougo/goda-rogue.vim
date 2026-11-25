@@ -60,7 +60,7 @@ func (g *Game) throwAt(m *Monster, a Ability) bool {
 	}
 	p := m.Pos
 	for range throwRange {
-		if !g.clearFrom(p, d) || !g.Level.At(p.Add(d)).Walkable() {
+		if !g.clearFrom(p, d) || !g.Level.At(p.Add(d)).Open() {
 			break
 		}
 		next := p.Add(d)

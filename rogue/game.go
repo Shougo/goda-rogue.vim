@@ -266,6 +266,9 @@ func (g *Game) newLevel(rng *rand.Rand) {
 			g.Level = Generate(rng)
 		}
 	}
+	if c.Water > 0 && !g.Level.Maze && len(g.Level.Rooms) > 1 && rng.IntN(100) < c.Water {
+		g.Level.flood(rng)
+	}
 	g.House, g.houseFound = -1, false
 	g.Shop, g.selling = nil, nil
 	g.Seen = make([]bool, len(g.Level.Tiles))
@@ -324,6 +327,12 @@ func (g *Game) populate(rng *rand.Rand, rooms []int, start int) {
 	for range between(rng, c.MinItem, c.MaxItem) {
 		pos := g.spot(rng, rooms)
 		g.Items = append(g.Items, g.newItem(rng, pos))
+	}
+	// The items of an island: as those of the floor.
+	isles := slices.Clone(g.Level.Isles)
+	rng.Shuffle(len(isles), func(i, j int) { isles[i], isles[j] = isles[j], isles[i] })
+	for _, p := range isles[:min(len(isles), islandItems)] {
+		g.Items = append(g.Items, g.newItem(rng, p))
 	}
 	if c.House > 0 && rng.IntN(100) < c.House {
 		g.fillHouse(rng, rooms, start)
@@ -951,9 +960,11 @@ func (g *Game) say(msg string) {
 const maxLog = 1000
 
 // canStep says whether the player can go from its tile by d: onto a
-// walkable tile, and not diagonally around a corner of rock.
+// walkable tile (water, with a bracelet of 水蜘蛛), and not diagonally
+// around a corner of rock.
 func (g *Game) canStep(d Point) bool {
-	return g.Level.At(g.Player.Add(d)).Walkable() && g.clearFrom(g.Player, d)
+	t := g.Level.At(g.Player.Add(d))
+	return (t.Walkable() || t == TileWater && g.wears(EffectWaterWalk)) && g.clearFrom(g.Player, d)
 }
 
 // step moves the player by d; it says whether it moved. With pick, it
@@ -983,6 +994,9 @@ func (g *Game) step(d Point, pick bool) bool {
 	from := g.Level.RoomAt(g.Player)
 	wasInShop := g.inShop(g.Player)
 	g.Player = to
+	if g.Level.At(to) == TileWater {
+		g.use(EffectWaterWalk)
+	}
 	g.Steps++
 	if room := g.Level.RoomAt(to); room != from {
 		g.wake(from)

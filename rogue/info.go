@@ -48,6 +48,7 @@ var effectTexts = map[Effect]string{
 	EffectBlast:        "毎ターン %d%% の確率で爆発する。自分の HP は半分になり、周りの敵は消え、仲間の HP は半分になり、隣の道具は消え、隣の壁は崩れる。",
 	EffectClumsy:       "投げた物と撃った矢が必ず外れ、狙った敵の足元に落ちる。敵が罠の上にいれば、その罠が敵に働く。",
 	EffectBlastGuard:   "爆発（敵の爆発、地雷）で受けるダメージが半分になる。",
+	EffectWaterWalk:    "水路の上を歩ける。水の上では外せない。",
 	EffectTrapper:      "罠がすべて見え、歩いて罠を踏まない。敵は罠を踏むようになる。",
 	EffectPlain:        "道具を入れられるが、中の道具は使えず、割らないと取り出せない。",
 	EffectSynthesis: "武器と盾は、先に入れた同じ種類のものに印と修正値が合成される。" +

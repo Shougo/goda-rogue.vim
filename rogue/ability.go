@@ -430,7 +430,7 @@ func (g *Game) lineTo(a, b Point, reach int) (Point, int, bool) {
 	}
 	d := Point{sign(v.X), sign(v.Y)}
 	for p := a; p != b; p = p.Add(d) {
-		if !g.clearFrom(p, d) || !g.Level.At(p.Add(d)).Walkable() {
+		if !g.clearFrom(p, d) || !g.Level.At(p.Add(d)).Open() {
 			return Point{}, 0, false
 		}
 	}
@@ -598,7 +598,7 @@ func (g *Game) shootAt(m *Monster, a Ability) bool {
 	g.say(m.Name + "は" + def.Name + "を撃った！")
 	p := m.Pos
 	for range throwRange {
-		if !g.clearFrom(p, d) || !g.Level.At(p.Add(d)).Walkable() {
+		if !g.clearFrom(p, d) || !g.Level.At(p.Add(d)).Open() {
 			break
 		}
 		p = p.Add(d)

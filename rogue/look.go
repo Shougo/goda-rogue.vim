@@ -112,6 +112,9 @@ func (g *Game) lookAt(n int) {
 	for _, name := range m.States.names("封印") {
 		msg += "  " + name
 	}
+	for _, a := range m.Def.Attrs {
+		msg += "  " + a
+	}
 	g.say(msg)
 	if len(m.Def.Abilities) > 0 {
 		var texts []string

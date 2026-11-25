@@ -39,6 +39,8 @@
 #               next to it crumble
 #     耐爆      an explosion (a monster's, a mine) does half its damage
 #               to the player
+#     水蜘蛛    the player walks on the waterways, and may not take it off
+#               there
 #     ヘタ投げ  what the player throws or shoots never hits: it falls at
 #               the feet of the monster it would have hit, and a trap
 #               there goes off on it (as with 罠師)
@@ -162,6 +164,7 @@ takatobiu	腕	高飛びの腕輪	腕輪	10	高飛び	0	-	-	0	1500
 bakuhatsu	腕	爆発の腕輪	腕輪	10	爆発	0	-	-	0	1500
 hetanage	腕	ヘタ投げの腕輪	腕輪	0	ヘタ投げ	0	-	-	0	1000
 taibaku	腕	耐爆の腕輪	腕輪	0	耐爆	15	-	-	0	1500
+mizugumo	腕	水蜘蛛の腕輪	腕輪	0	水蜘蛛	0	-	-	0	2000
 kiya	矢	木の矢	矢	4	-	0	5-15	-	0	10
 tetsuya	矢	鉄の矢	矢	8	-	0	3-10	-	0	20
 ishi	矢	石	矢	3	-	0	1-1	-	0	2

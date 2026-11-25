@@ -601,6 +601,7 @@ GodaRogueFloorSafe	The floor known to have no trap: where the player
 			has walked.
 GodaRogueStairs		The stairs.
 GodaRogueTrap		A trap the player has found.
+GodaRogueWater		The waterways.
 GodaRogueFacing		The tile the player faces: its background, over the
 			highlight of what is there.  After turning, the
 			whole line the player faces (|goda-rogue-turn|).
@@ -637,6 +638,11 @@ Every tile is one full-width character, two cells wide:
 		is known to have no trap
 	段	the stairs
 	罠	a trap the player has found ("GodaRogueTrap")
+	～	a waterway ("GodaRogueWater"): only those that swim or
+		float go over it, and the player with a bracelet of 水蜘蛛;
+		what is thrown flies over it, and what falls in sinks.
+		Some rooms have a pond, or an island of three items in a
+		ring of water
 	剣 盾 腕 草 巻 杖 壺 矢 金 食
 		items
 	鼠 蛇 狼 霊 盗 骸 鬼 蟹 蜂 蛙 茸 竜 熊 亀 猪 鎧
@@ -751,7 +757,10 @@ The built-in dungeons:
 				種別 is - for monsters of the floors, 店主
 				for shopkeepers, 番犬 for the guards after
 				a thief: these never appear by themselves,
-				nor rank up.  能力, optional, is its special
+				nor rank up.  属性, optional, is what it
+				is: 水棲 (it swims) or 浮遊 (it floats),
+				both go over the waterways (- for none).
+				能力, optional, is its special
 				abilities, separated by spaces (- for
 				none), each with its numbers after colons:
 				  怒り:H:A   at H% of its max HP or below,
@@ -992,6 +1001,7 @@ The built-in dungeons:
 				        呪いよけ 目つぶしよけ 口封じよけ
 				        弱りよけ ハラヘリ 垂れ流し 罠師 胃縮小
 				        痛恨 魔物呼び 高飛び 爆発 ヘタ投げ 耐爆
+				        水蜘蛛
 				  草: HP回復 ちから 目薬 最大HP
 				  巻物: あかり 識別 武器強化 盾強化 おはらい
 				        印増大 印消し
@@ -1100,7 +1110,9 @@ The built-in dungeons:
 				it; and the chances (percent, optional) of a
 				floor of one big room (大部屋), of a maze
 				(迷路), of a monster house (モンスターハウス),
-				and of a shop (店); the traps a monster
+				of a shop (店), and of waterways in the
+				rooms (水路: a pond, or an island of three
+				items in a ring of water); the traps a monster
 				house adds in its room (ハウスの罠, optional,
 				min-max), a table.
 	growth.txt		The growth tables: the total EXP for each

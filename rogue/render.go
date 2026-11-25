@@ -13,6 +13,7 @@ const (
 	glyphFloor   = "．"
 	glyphUnknown = "　"
 	glyphStairs  = "段"
+	glyphWater   = "～"
 	glyphBytes   = 3
 )
 
@@ -21,6 +22,7 @@ const (
 	hlPlayer = "GodaRoguePlayer"
 	hlWall   = "GodaRogueWall"
 	hlFloor  = "GodaRogueFloor"
+	hlWater  = "GodaRogueWater"
 	// hlSafe is the floor known to have no trap.
 	hlSafe   = "GodaRogueFloorSafe"
 	hlStairs = "GodaRogueStairs"
@@ -182,7 +184,7 @@ func (g *Game) renderMap(s *Screen, viewW, viewH int) {
 	// The axis: on in the facing direction, over creatures, to the first
 	// wall or the first tile not seen.
 	f := g.Player.Add(d)
-	for p := f; g.Level.At(p).Walkable() && g.IsSeen(p); p = p.Add(d) {
+	for p := f; g.Level.At(p).Open() && g.IsSeen(p); p = p.Add(d) {
 		if p != f && in(p) {
 			s.Highlights[hlFacing] = append(s.Highlights[hlFacing], span(p))
 		}
@@ -297,6 +299,7 @@ const hungryShare = 10
 const (
 	miniPlayer  = '@'
 	miniFloor   = '.'
+	miniWater   = '~'
 	miniUnknown = ' '
 	miniStairs  = '>'
 	miniItem    = '*'
@@ -336,7 +339,7 @@ func (g *Game) minimap() *Minimap {
 func (g *Game) seenBounds() (x0, y0, x1, y1 int) {
 	x0, y0, x1, y1 = g.Player.X, g.Player.Y, g.Player.X, g.Player.Y
 	for i, seen := range g.Seen {
-		if !seen || !g.Level.Tiles[i].Walkable() {
+		if !seen || !g.Level.Tiles[i].Open() {
 			continue
 		}
 		x, y := i%g.Level.W, i/g.Level.W
@@ -386,6 +389,9 @@ func (g *Game) miniGlyph(p Point) (byte, string) {
 	if g.foundTrapAt(p) != nil {
 		return miniTrap, hlTrap
 	}
+	if g.Level.At(p) == TileWater {
+		return miniWater, hlWater
+	}
 	if g.Level.At(p).Walkable() {
 		if g.IsSafe(p) {
 			return miniFloor, hlSafe
@@ -433,6 +439,9 @@ func (g *Game) glyph(p Point) (string, string) {
 	}
 	if g.foundTrapAt(p) != nil {
 		return glyphTrap, hlTrap
+	}
+	if g.Level.At(p) == TileWater {
+		return glyphWater, hlWater
 	}
 	if g.Level.At(p).Walkable() {
 		if g.IsSafe(p) {

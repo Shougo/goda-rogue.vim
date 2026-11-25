@@ -976,8 +976,8 @@ func kind(id string) *MonsterDef {
 func TestDistancesKept(t *testing.T) {
 	g, r := roomGame(t, 8, 1)
 	to := Point{r.X + 7, r.Y}
-	d1 := g.distances(to)
-	if d2 := g.distances(to); &d1[0] != &d2[0] {
+	d1 := g.distances(to, false)
+	if d2 := g.distances(to, false); &d1[0] != &d2[0] {
 		t.Error("worked out again with the tiles the same")
 	}
 	i, _ := g.index(Point{r.X, r.Y})
@@ -987,7 +987,7 @@ func TestDistancesKept(t *testing.T) {
 	// (The way may go round the wall: only being worked out again is
 	// sure.)
 	g.Level.set(Point{r.X + 3, r.Y}, TileRock)
-	if d3 := g.distances(to); &d3[0] == &d1[0] {
+	if d3 := g.distances(to, false); &d3[0] == &d1[0] {
 		t.Error("not worked out again after a wall")
 	}
 }

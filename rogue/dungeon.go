@@ -179,6 +179,8 @@ type MonsterDef struct {
 	Growth  string
 	// Kind is "" for monsters of the floors, KindKeeper or KindGuard.
 	Kind string
+	// Attrs are what it is (monsters.txt 属性): AttrAquatic, AttrFloating.
+	Attrs []string
 	// Abilities are its special abilities (monsters.txt 能力).
 	Abilities []Ability
 	// Asleep is the share of them asleep on a new floor, a percent; -1
@@ -191,6 +193,16 @@ type MonsterDef struct {
 	// 説明), shown when the player looks at it; "" for none.
 	Description string
 }
+
+// The attributes of monsters (monsters.txt 属性).
+const (
+	// AttrAquatic: it lives in water, and swims in the waterways.
+	AttrAquatic = "水棲"
+	// AttrFloating: it floats, over the waterways too.
+	AttrFloating = "浮遊"
+)
+
+var attrs = []string{AttrAquatic, AttrFloating}
 
 // Drop is what a kind of monster drops when killed, and how often.
 type Drop struct {
@@ -295,32 +307,34 @@ const (
 	// EffectBlastGuard: an explosion (a monster's, a mine) does half its
 	// damage to the player.
 	EffectBlastGuard Effect = "耐爆"
-	EffectHeal       Effect = "HP回復"
-	EffectLight      Effect = "あかり"
-	EffectIdentify   Effect = "識別"
-	EffectBlowAway   Effect = "吹き飛ばし"
-	EffectRecruit    Effect = "仲間"
-	EffectEyeDrops   Effect = "目薬"
-	EffectMaxHP      Effect = "最大HP"
-	EffectUpWeapon   Effect = "武器強化"
-	EffectUpShield   Effect = "盾強化"
-	EffectSwap       Effect = "場所替え"
-	EffectFood       Effect = "満腹"
-	EffectRotten     Effect = "腐った"
-	EffectKeep       Effect = "保存"
-	EffectSynthesis  Effect = "合成"
-	EffectPlain      Effect = "普通"
-	EffectHealPot    Effect = "全回復"
-	EffectUncurse    Effect = "おはらい"
-	EffectMoreSlots  Effect = "印増大"
-	EffectEraseSeal  Effect = "印消し"
+	// EffectWaterWalk: the player walks on the waterways (TileWater).
+	EffectWaterWalk Effect = "水蜘蛛"
+	EffectHeal      Effect = "HP回復"
+	EffectLight     Effect = "あかり"
+	EffectIdentify  Effect = "識別"
+	EffectBlowAway  Effect = "吹き飛ばし"
+	EffectRecruit   Effect = "仲間"
+	EffectEyeDrops  Effect = "目薬"
+	EffectMaxHP     Effect = "最大HP"
+	EffectUpWeapon  Effect = "武器強化"
+	EffectUpShield  Effect = "盾強化"
+	EffectSwap      Effect = "場所替え"
+	EffectFood      Effect = "満腹"
+	EffectRotten    Effect = "腐った"
+	EffectKeep      Effect = "保存"
+	EffectSynthesis Effect = "合成"
+	EffectPlain     Effect = "普通"
+	EffectHealPot   Effect = "全回復"
+	EffectUncurse   Effect = "おはらい"
+	EffectMoreSlots Effect = "印増大"
+	EffectEraseSeal Effect = "印消し"
 )
 
 // effects are the effects the items of each category can have.
 var effects = map[Category][]Effect{
 	CategoryBracelet: {EffectStrength, EffectRegen, EffectSenseEnemy, EffectSenseItem, EffectNoRust, EffectNoTheft, EffectNoSleep, EffectNoConfuse,
 		EffectNoCurse, EffectNoBlind, EffectNoSeal, EffectNoWeak, EffectHungry, EffectDrops, EffectTrapper, EffectSmallStomach, EffectCritTaken,
-		EffectCall, EffectLeap, EffectBlast, EffectClumsy, EffectBlastGuard},
+		EffectCall, EffectLeap, EffectBlast, EffectClumsy, EffectBlastGuard, EffectWaterWalk},
 	CategoryGrass:  {EffectHeal, EffectStrength, EffectEyeDrops, EffectMaxHP},
 	CategoryScroll: {EffectLight, EffectIdentify, EffectUpWeapon, EffectUpShield, EffectUncurse, EffectMoreSlots, EffectEraseSeal},
 	CategoryStaff:  {EffectBlowAway, EffectRecruit, EffectSwap},
@@ -352,7 +366,10 @@ type FloorCounts struct {
 	// room, of a maze; House the chance of a monster house.
 	BigRoom, Maze, House int
 	// Shop is the chance (percent) of a shop.
-	Shop       int
+	Shop int
+	// Water is the chance (percent) of waterways in the rooms (a pond, an
+	// island) on a floor of rooms (水路, optional: none).
+	Water      int
 	Brightness Brightness
 }
 
@@ -844,6 +861,14 @@ func (l *loader) loadMonsters() {
 				l.errorf(row.file, row.n, "眠り: %d above 100", m.Asleep)
 			}
 		}
+		if v, ok := row.cols["属性"]; ok && v != "-" {
+			for _, a := range strings.Fields(v) {
+				if !slices.Contains(attrs, a) {
+					l.errorf(row.file, row.n, "属性: want - or %s, not %q", strings.Join(attrs, ", "), a)
+				}
+				m.Attrs = append(m.Attrs, a)
+			}
+		}
 		switch k := row.cols["種別"]; k {
 		case "", "-":
 		case KindKeeper, KindGuard:
@@ -1103,7 +1128,7 @@ func (l *loader) loadFloors() {
 			return n
 		}
 		c.BigRoom, c.Maze, c.House = percent("大部屋"), percent("迷路"), percent("モンスターハウス")
-		c.Shop = percent("店")
+		c.Shop, c.Water = percent("店"), percent("水路")
 		if c.BigRoom+c.Maze > 100 {
 			l.errorf(row.file, row.n, "大部屋 and 迷路: %d%% together", c.BigRoom+c.Maze)
 		}

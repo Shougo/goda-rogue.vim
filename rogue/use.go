@@ -242,7 +242,7 @@ func (g *Game) bolt() *Monster {
 	d := Directions[g.Facing]
 	for p := g.Player; g.clearFrom(p, d); {
 		p = p.Add(d)
-		if !g.Level.At(p).Walkable() {
+		if !g.Level.At(p).Open() {
 			break
 		}
 		if m := g.MonsterAt(p); m != nil {

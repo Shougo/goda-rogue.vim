@@ -54,9 +54,9 @@ func (g *Game) blocked(p Point, n tileNeed) bool {
 }
 
 // fits says whether something that needs n can be put on p: a walkable
-// tile with none of the things of n on it.
+// tile with none of the things of n on it, not on an island (flood).
 func (g *Game) fits(p Point, n tileNeed) bool {
-	return g.Level.At(p).Walkable() && !g.blocked(p, n)
+	return g.Level.At(p).Walkable() && !g.Level.Island[p] && !g.blocked(p, n)
 }
 
 // free says whether nothing stands or lies on p.

@@ -27,10 +27,18 @@ const (
 	TileRoom
 	// TileCorridor is the floor of a corridor (doorways included).
 	TileCorridor
+	// TileWater is a waterway: no one walks there but swimmers and
+	// fliers (monsters.txt 属性) and the player with a bracelet of 水蜘蛛;
+	// what flies passes over it, what falls in sinks.
+	TileWater
 )
 
-// Walkable says whether a creature can stand on t.
+// Walkable says whether a creature can stand on t (on foot: not water).
 func (t Tile) Walkable() bool { return t == TileRoom || t == TileCorridor }
+
+// Open says whether t lets what flies (and the sight) through: a floor,
+// or water.
+func (t Tile) Open() bool { return t.Walkable() || t == TileWater }
 
 // Point is a tile position.
 type Point struct{ X, Y int }
@@ -66,6 +74,11 @@ type Level struct {
 	// Maze says whether it is a maze: things lie anywhere in it, not only
 	// in its rooms.
 	Maze bool
+	// Island marks the tiles of islands, the floor in a ring of water
+	// (flood): nothing is put there but their own items (Isles).
+	Island map[Point]bool
+	// Isles are the tiles of the islands where their items go.
+	Isles []Point
 	// version counts the changes of its tiles (set), for what is worked
 	// out from them (Game.distances).
 	version int
@@ -332,4 +345,81 @@ func GenerateMaze(rng *rand.Rand) *Level {
 		}
 	}
 	return l
+}
+
+// floodRooms is how many rooms of a floor with water get some: 1 to it.
+const floodRooms = 2
+
+// islandItems is how many items an island holds (as in Shiren 5).
+const islandItems = 3
+
+// flood puts water in a room or two of the floor: a pond in the room, or
+// an island (a floor of at least islandItems tiles in a ring of water,
+// once a floor). The water keeps off the edge of the room, so its doors
+// stay joined by the floor around it.
+func (l *Level) flood(rng *rand.Rand) {
+	var rooms []int
+	for i, r := range l.Rooms {
+		if !r.Dummy && r.W >= 5 && r.H >= 5 {
+			rooms = append(rooms, i)
+		}
+	}
+	rng.Shuffle(len(rooms), func(i, j int) { rooms[i], rooms[j] = rooms[j], rooms[i] })
+	island := false
+	for _, i := range rooms[:min(len(rooms), 1+rng.IntN(floodRooms))] {
+		r := l.Rooms[i]
+		// The inside of the room, its edge left out.
+		x0, y0, iw, ih := r.X+1, r.Y+1, r.W-2, r.H-2
+		if !island && iw >= 5 && ih >= 3 && rng.IntN(2) == 0 {
+			island = true
+			cw := between(rng, 1, min(iw-2, 4))
+			ch := between(rng, 1, min(ih-2, 3))
+			if cw*ch < islandItems {
+				cw = min(iw-2, (islandItems+ch-1)/ch)
+			}
+			if cw*ch < islandItems {
+				continue
+			}
+			x, y := x0+rng.IntN(iw-cw-1), y0+rng.IntN(ih-ch-1)
+			if l.Island == nil {
+				l.Island = map[Point]bool{}
+			}
+			for dy := range ch + 2 {
+				for dx := range cw + 2 {
+					p := Point{x + dx, y + dy}
+					if dx == 0 || dy == 0 || dx == cw+1 || dy == ch+1 {
+						l.set(p, TileWater)
+					} else {
+						l.Island[p] = true
+						l.Isles = append(l.Isles, p)
+					}
+				}
+			}
+			continue
+		}
+		// A pond: a rectangle, its corners cut now and then.
+		pw, ph := between(rng, 1, iw), between(rng, 1, ih)
+		x, y := x0+rng.IntN(iw-pw+1), y0+rng.IntN(ih-ph+1)
+		for dy := range ph {
+			for dx := range pw {
+				corner := (dx == 0 || dx == pw-1) && (dy == 0 || dy == ph-1)
+				if corner && pw > 2 && ph > 2 && rng.IntN(2) == 0 {
+					continue
+				}
+				l.set(Point{x + dx, y + dy}, TileWater)
+			}
+		}
+	}
+}
+
+// wet says whether the room r has water (flood): no shop opens there.
+func (l *Level) wet(r Room) bool {
+	for y := r.Y; y < r.Y+r.H; y++ {
+		for x := r.X; x < r.X+r.W; x++ {
+			if l.At(Point{x, y}) == TileWater {
+				return true
+			}
+		}
+	}
+	return false
 }

@@ -79,7 +79,7 @@ func (g *Game) openShop(rng *rand.Rand, rooms []int, start int) {
 	var candidates []int
 	for _, i := range rooms {
 		r := g.Level.Rooms[i]
-		if i != start && i != g.House && !r.Contains(g.Stairs) && r.W*r.H >= 6 && len(g.doors(i)) > 0 {
+		if i != start && i != g.House && !r.Contains(g.Stairs) && r.W*r.H >= 6 && len(g.doors(i)) > 0 && !g.Level.wet(r) {
 			candidates = append(candidates, i)
 		}
 	}

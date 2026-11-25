@@ -42,7 +42,7 @@ func (g *Game) throwItem(it *Item) {
 	r := g.Dungeon.Rules
 	p := g.Player
 	for range throwRange {
-		if !g.clearFrom(p, d) || !g.Level.At(p.Add(d)).Walkable() {
+		if !g.clearFrom(p, d) || !g.Level.At(p.Add(d)).Open() {
 			break
 		}
 		p = p.Add(d)
@@ -144,8 +144,12 @@ func (g *Game) hurt(m *Monster, n int) {
 }
 
 // land puts it on p, or the nearest free tile around (no item, no
-// stairs); with none, it is lost.
+// stairs); with none, it is lost; in water, it sinks.
 func (g *Game) land(it *Item, p Point) {
+	if g.Level.At(p) == TileWater {
+		g.say(g.Name(it) + "は水に沈んでしまった。")
+		return
+	}
 	for r := 0; r <= 2; r++ {
 		for y := -r; y <= r; y++ {
 			for x := -r; x <= r; x++ {

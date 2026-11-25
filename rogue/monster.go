@@ -131,9 +131,22 @@ var around = []Point{{0, -1}, {1, -1}, {1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0},
 func (g *Game) clearFrom(p, d Point) bool {
 	l := g.Level
 	if d.X != 0 && d.Y != 0 {
-		return l.At(p.Add(Point{d.X, 0})).Walkable() && l.At(p.Add(Point{0, d.Y})).Walkable()
+		return l.At(p.Add(Point{d.X, 0})).Open() && l.At(p.Add(Point{0, d.Y})).Open()
 	}
 	return true
+}
+
+// passable says whether m can stand on p by its tile: a floor, or water
+// for one that swims. (distances leads there by such tiles, but to the
+// tile it leads to, whatever it is.)
+func (g *Game) passable(m *Monster, p Point) bool {
+	t := g.Level.At(p)
+	return t.Walkable() || t == TileWater && m.swims()
+}
+
+// swims says whether m goes over water: an aquatic or a floating one.
+func (m *Monster) swims() bool {
+	return slices.ContainsFunc(m.Def.Attrs, func(a string) bool { return a == AttrAquatic || a == AttrFloating })
 }
 
 // occupied says whether a creature (the player included) stands on p.
@@ -232,7 +245,7 @@ func (g *Game) act(m *Monster) bool {
 	}
 	// Attack the player first (or steal from it), then an ally.
 	for _, d := range around {
-		if m.Pos.Add(d) == g.Player && g.clearFrom(m.Pos, d) && g.Level.At(m.Pos).Walkable() {
+		if m.Pos.Add(d) == g.Player && g.clearFrom(m.Pos, d) && g.Level.At(m.Pos).Open() {
 			if a, ok := m.ability(AbilitySteal); ok && g.thieve(m, a) {
 				return true
 			}
@@ -360,7 +373,7 @@ func (g *Game) stepToward(m *Monster, to Point) bool {
 	if g.knightStep(m, to) || g.throughWalls(m, to) {
 		return true
 	}
-	dist := g.distances(to)
+	dist := g.distances(to, m.swims())
 	best, bestDist := Point{}, -1
 	here, ok := g.index(m.Pos)
 	if !ok || dist[here] < 0 {
@@ -369,7 +382,7 @@ func (g *Game) stepToward(m *Monster, to Point) bool {
 	for _, d := range around {
 		p := m.Pos.Add(d)
 		i, ok := g.index(p)
-		if !ok || dist[i] < 0 || dist[i] >= dist[here] || g.occupied(p) || !g.clearFrom(m.Pos, d) {
+		if !ok || dist[i] < 0 || dist[i] >= dist[here] || g.occupied(p) || !g.clearFrom(m.Pos, d) || !g.passable(m, p) {
 			continue
 		}
 		if bestDist < 0 || dist[i] < bestDist {
@@ -384,22 +397,30 @@ func (g *Game) stepToward(m *Monster, to Point) bool {
 }
 
 // distances returns the number of steps from every tile to to (-1 where it
-// cannot be reached), by the walkable tiles, diagonals around corners left
-// out; creatures are not obstacles. The tiles alone decide it, so it is
+// cannot be reached), by the walkable tiles (and the water, for one that
+// swims), diagonals around corners left out; creatures are not obstacles. The tiles alone decide it, so it is
 // kept while they stay the same (the monsters going for the player, or
 // wandering to the same tile, ask again and again): not to be changed by
 // the caller.
-func (g *Game) distances(to Point) []int {
+func (g *Game) distances(to Point, swim bool) []int {
 	c := &g.distCache
 	if c.level != g.Level || c.version != g.Level.version || len(c.dist) >= maxDistances {
-		*c = distCache{level: g.Level, version: g.Level.version, dist: map[Point][]int{}}
+		*c = distCache{level: g.Level, version: g.Level.version, dist: map[distKey][]int{}}
 	}
-	if dist, ok := c.dist[to]; ok {
+	k := distKey{to, swim}
+	if dist, ok := c.dist[k]; ok {
 		return dist
 	}
-	dist := g.workOutDistances(to)
-	c.dist[to] = dist
+	dist := g.workOutDistances(to, swim)
+	c.dist[k] = dist
 	return dist
+}
+
+// distKey is what distances are kept by: where they lead, and whether
+// over water.
+type distKey struct {
+	to   Point
+	swim bool
 }
 
 // distCache keeps the distances on a level, as its tiles are, by where
@@ -407,7 +428,7 @@ func (g *Game) distances(to Point) []int {
 type distCache struct {
 	level   *Level
 	version int
-	dist    map[Point][]int
+	dist    map[distKey][]int
 }
 
 // maxDistances is how many distances distCache keeps at most (each is as
@@ -415,7 +436,7 @@ type distCache struct {
 const maxDistances = 64
 
 // workOutDistances is distances, worked out.
-func (g *Game) workOutDistances(to Point) []int {
+func (g *Game) workOutDistances(to Point, swim bool) []int {
 	l := g.Level
 	dist := make([]int, len(l.Tiles))
 	for i := range dist {
@@ -434,7 +455,7 @@ func (g *Game) workOutDistances(to Point) []int {
 		for _, d := range around {
 			q := p.Add(d)
 			qi, ok := g.index(q)
-			if !ok || dist[qi] >= 0 || !l.At(q).Walkable() || !g.clearFrom(p, d) {
+			if !ok || dist[qi] >= 0 || !(l.At(q).Walkable() || swim && l.At(q) == TileWater) || !g.clearFrom(p, d) {
 				continue
 			}
 			dist[qi] = dist[pi] + 1

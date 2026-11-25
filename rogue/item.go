@@ -654,6 +654,10 @@ func (g *Game) choose(arg string) (bool, error) {
 		if ok, turn := g.allowed(it, nil, placeCarried, p.Choices[n]); !ok {
 			return turn, nil
 		}
+		if c := p.Choices[n]; (c == commandEquip || c == commandUnequip) && it.Def.Category == CategoryBracelet && g.onWaterWith(it, c) {
+			g.say("水の上では水蜘蛛の腕輪を外せない。")
+			return false, nil
+		}
 		switch p.Choices[n] {
 		// Arrows are equipped and taken off without a turn, as in Shiren.
 		case commandEquip:

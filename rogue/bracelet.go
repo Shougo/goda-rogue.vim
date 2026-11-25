@@ -112,3 +112,14 @@ func (g *Game) clumsy(it *Item, m *Monster) {
 		g.monsterSprings(m, t)
 	}
 }
+
+// onWaterWith says whether doing command (to equip or to take off) with
+// the bracelet it would take the bracelet of 水蜘蛛 off the player on
+// water, which it may not.
+func (g *Game) onWaterWith(it *Item, command string) bool {
+	if g.Level.At(g.Player) != TileWater || !g.wears(EffectWaterWalk) {
+		return false
+	}
+	worn := g.equipped(CategoryBracelet)
+	return command == commandUnequip && it == worn || command == commandEquip && it != worn
+}

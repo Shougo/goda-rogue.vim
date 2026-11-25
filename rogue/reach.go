@@ -66,7 +66,7 @@ func (g *Game) knightStep(m *Monster, to Point) bool {
 	if _, ok := m.ability(AbilityKnight); !ok {
 		return false
 	}
-	dist := g.distances(to)
+	dist := g.distances(to, m.swims())
 	here, ok := g.index(m.Pos)
 	if !ok || dist[here] < 0 {
 		return false

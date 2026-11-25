@@ -273,13 +273,13 @@ func checkGame(g *Game) error {
 	}
 
 	// The creatures: one a tile, on the floor, alive.
-	if !lv.At(g.Player).Walkable() {
+	if !lv.At(g.Player).Walkable() && !(lv.At(g.Player) == TileWater && g.wears(EffectWaterWalk)) {
 		fail("the player on %v", g.Player)
 	}
 	tiles := map[Point]bool{g.Player: true}
 	for _, m := range g.Monsters {
-		if tiles[m.Pos] || !lv.At(m.Pos).Walkable() {
-			fail("%s on %v", m.Name, m.Pos)
+		if tiles[m.Pos] || !lv.At(m.Pos).Walkable() && !(lv.At(m.Pos) == TileWater && m.swims()) {
+			fail("%s on %v (%v)", m.Name, m.Pos, lv.At(m.Pos))
 		}
 		tiles[m.Pos] = true
 		if (m.HP <= 0 && g.Over == "") || m.HP > m.MaxHP {
