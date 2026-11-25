@@ -279,6 +279,15 @@ const (
 	// EffectCritTaken: its strength in % of the blows of the monsters on
 	// the player are critical (critTakenRate).
 	EffectCritTaken Effect = "痛恨"
+	// EffectCall: the monsters of the floor come for the player, and new
+	// ones come twice as often.
+	EffectCall Effect = "魔物呼び"
+	// EffectLeap: a turn in a hundred, its strength in %, the player is
+	// sent to a tile of the floor at random.
+	EffectLeap Effect = "高飛び"
+	// EffectBlast: its strength in % of the turns, the player blows up
+	// (blast).
+	EffectBlast     Effect = "爆発"
 	EffectHeal      Effect = "HP回復"
 	EffectLight     Effect = "あかり"
 	EffectIdentify  Effect = "識別"
@@ -303,7 +312,8 @@ const (
 // effects are the effects the items of each category can have.
 var effects = map[Category][]Effect{
 	CategoryBracelet: {EffectStrength, EffectRegen, EffectSenseEnemy, EffectSenseItem, EffectNoRust, EffectNoTheft, EffectNoSleep, EffectNoConfuse,
-		EffectNoCurse, EffectNoBlind, EffectNoSeal, EffectNoWeak, EffectHungry, EffectDrops, EffectTrapper, EffectSmallStomach, EffectCritTaken},
+		EffectNoCurse, EffectNoBlind, EffectNoSeal, EffectNoWeak, EffectHungry, EffectDrops, EffectTrapper, EffectSmallStomach, EffectCritTaken,
+		EffectCall, EffectLeap, EffectBlast},
 	CategoryGrass:  {EffectHeal, EffectStrength, EffectEyeDrops, EffectMaxHP},
 	CategoryScroll: {EffectLight, EffectIdentify, EffectUpWeapon, EffectUpShield, EffectUncurse, EffectMoreSlots, EffectEraseSeal},
 	CategoryStaff:  {EffectBlowAway, EffectRecruit, EffectSwap},

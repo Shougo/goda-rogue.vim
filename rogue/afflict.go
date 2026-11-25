@@ -50,12 +50,17 @@ func (g *Game) afflict(e MagicEffect) {
 	g.say(stateTexts[e].player)
 }
 
-// weakened is the damage n the player takes: more with its defense down,
-// less with a bracelet of 胃縮小 (not under 1).
+// weakened is the damage n the player takes, more with its defense down.
 func (g *Game) weakened(n int) int {
 	if g.DefenseDown > 0 {
 		n = int(math.Ceil(float64(n) * (1 + weakShare)))
 	}
+	return n
+}
+
+// cushioned is the damage n of a blow of a monster on the player, less
+// with a bracelet of 胃縮小 (Shougo: blows only; never under 1).
+func (g *Game) cushioned(n int) int {
 	if b := g.equipped(CategoryBracelet); b != nil && b.Def.Effect == EffectSmallStomach && n > 0 {
 		g.use(EffectSmallStomach)
 		n = max(int(math.Round(float64(n)*float64(100-b.Def.Strength)/100)), 1)

@@ -173,19 +173,20 @@ func TestTrapperBracelet(t *testing.T) {
 	}
 }
 
-// TestSmallStomachBracelet: 20% less damage, 25 less fullness held.
+// TestSmallStomachBracelet: the blows of the monsters do 20% less (not
+// other damage), 25 less fullness held.
 func TestSmallStomachBracelet(t *testing.T) {
 	g, _ := roomGame(t, 6, 3)
-	if g.weakened(10) != 10 {
-		t.Error("without the bracelet")
-	}
 	g.Fullness = 100
 	wear(g, "ishukushou")
-	if n := g.weakened(10); n != 8 {
-		t.Errorf("damage %d, want 8", n)
+	if n := g.cushioned(10); n != 8 {
+		t.Errorf("a blow of 10: %d, want 8", n)
 	}
-	if g.weakened(1) != 1 {
-		t.Error("1 damage made 0")
+	if g.cushioned(1) != 1 {
+		t.Error("a blow of 1 made 0")
+	}
+	if g.weakened(10) != 10 {
+		t.Error("other damage lessened")
 	}
 	g.getHungry()
 	if g.Fullness != 75 {
@@ -236,5 +237,75 @@ func TestCritTakenBracelet(t *testing.T) {
 		if n := g.criticalOn(m, 30); n != 30 && n != 23 {
 			t.Fatalf("damage %d with the seal, want 30 or 23", n)
 		}
+	}
+}
+
+// TestCallBracelet: the monsters of the floor wake and come.
+func TestCallBracelet(t *testing.T) {
+	g, r := trapGame(t)
+	g.Player = Point{r.X, r.Y}
+	m := place(g, kind("nezumi1"), Point{r.X + 5, r.Y + 2})
+	m.Dozing = true
+	wear(g, "mamonoyobi")
+	g.call()
+	if m.Dozing {
+		t.Fatal("still dozing")
+	}
+	before := chebyshev(m.Pos, g.Player)
+	g.monstersAct()
+	if chebyshev(m.Pos, g.Player) >= before {
+		t.Errorf("did not come: %v", m.Pos)
+	}
+}
+
+// TestLeapBracelet: the player leaps away now and then.
+func TestLeapBracelet(t *testing.T) {
+	g, r := trapGame(t)
+	g.Player = Point{r.X, r.Y}
+	wear(g, "takatobiu")
+	n := 0
+	for range 1000 {
+		at := g.Player
+		if g.leap() {
+			n++
+			if g.Player == at {
+				t.Log("leapt in place")
+			}
+		}
+	}
+	if n < 60 || n > 140 {
+		t.Errorf("%d leaps in 1000 turns", n)
+	}
+}
+
+// TestBlastBracelet: HP halves, the enemies around are gone, an ally's HP
+// halves, the walls around crumble.
+func TestBlastBracelet(t *testing.T) {
+	g, r := trapGame(t)
+	g.Player = Point{r.X, r.Y}
+	g.HP, g.MaxHP = 100, 100
+	enemy := place(g, kind("nezumi1"), Point{r.X + 1, r.Y})
+	ally := place(g, kind("nezumi1"), Point{r.X, r.Y + 1})
+	ally.Ally = true
+	ally.HP, ally.MaxHP = 20, 20
+	far := place(g, kind("nezumi1"), Point{r.X + 3, r.Y})
+	wall := Point{r.X - 1, r.Y - 1}
+	if g.Level.At(wall) != TileRock {
+		t.Fatalf("no wall at %v", wall)
+	}
+	wear(g, "bakuhatsu")
+	for !g.blast() {
+	}
+	if g.HP != 50 {
+		t.Errorf("HP %d, want 50", g.HP)
+	}
+	if slices.Contains(g.Monsters, enemy) || !slices.Contains(g.Monsters, far) {
+		t.Error("the enemy next to it stays, or the far one is gone")
+	}
+	if !slices.Contains(g.Monsters, ally) || ally.HP != 10 {
+		t.Errorf("ally HP %d", ally.HP)
+	}
+	if g.Level.At(wall) != TileCorridor {
+		t.Error("the wall stands")
 	}
 }

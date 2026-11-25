@@ -41,8 +41,11 @@ var effectTexts = map[Effect]string{
 	EffectNoWeak:       "攻撃力や防御力を下げられない。",
 	EffectHungry:       "お腹が 2 倍速く減るが、攻撃で与えるダメージが %d%% 増える。",
 	EffectDrops:        "倒した敵が道具を落とす確率が %d%% 上がるが、ときどき持ち物を足元に落とす。",
-	EffectSmallStomach: "受けるダメージが %d%% 減るが、最大満腹度が 25 下がる。",
+	EffectSmallStomach: "敵の通常攻撃で受けるダメージが %d%% 減るが、最大満腹度が 25 下がる。",
 	EffectCritTaken:    "敵の攻撃が %d%% の確率で痛恨の一撃（1.5 倍）になる。",
+	EffectCall:         "フロアの敵がすべて寄ってきて、敵の湧く速さも 2 倍になる。",
+	EffectLeap:         "毎ターン %d%% の確率で、フロアのどこかへ飛ぶ。",
+	EffectBlast:        "毎ターン %d%% の確率で爆発する。自分の HP は半分になり、周りの敵は消え、仲間の HP は半分になり、隣の壁は崩れる。",
 	EffectTrapper:      "罠がすべて見え、歩いて罠を踏まない。敵は罠を踏むようになる。",
 	EffectPlain:        "道具を入れられるが、中の道具は使えず、割らないと取り出せない。",
 	EffectSynthesis: "武器と盾は、先に入れた同じ種類のものに印と修正値が合成される。" +

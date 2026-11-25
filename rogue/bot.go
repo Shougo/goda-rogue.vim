@@ -1617,9 +1617,25 @@ func (b *Bot) bracelet(g *Game, worn *Item) (string, []string) {
 	// few floors, as one of regeneration does.
 	hungry := func(it *Item) bool { return b.known(g, it, EffectHungry) }
 	short := b.foodFloors(g) < regenOn
+	// The bracelets that are only a price for the bots: they do not use
+	// them (calling monsters to rise, leaping or blowing up on purpose).
+	bad := func(it *Item) bool {
+		for _, e := range []Effect{EffectCall, EffectLeap, EffectBlast, EffectCritTaken} {
+			if b.known(g, it, e) {
+				return true
+			}
+		}
+		return false
+	}
 	other := carried(g, func(it *Item) bool {
-		return it.Def.Category == CategoryBracelet && !it.Equipped && !regen(it) && !(short && hungry(it))
+		return it.Def.Category == CategoryBracelet && !it.Equipped && !regen(it) && !(short && hungry(it)) && !bad(it)
 	})
+	if worn != nil && bad(worn) {
+		if other != nil {
+			return b.use(other, commandEquip)
+		}
+		return b.use(worn, commandUnequip)
+	}
 	if worn != nil && hungry(worn) && b.foodFloors(g) < regenOff {
 		if other != nil {
 			return b.use(other, commandEquip)

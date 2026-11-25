@@ -272,7 +272,7 @@ func (g *Game) act(m *Monster) bool {
 		return true
 	}
 
-	if _, walls := m.ability(AbilityWalls); m.Hunter || walls || g.sees(m.Pos, g.Player) {
+	if _, walls := m.ability(AbilityWalls); m.Hunter || walls || g.sees(m.Pos, g.Player) || g.wears(EffectCall) {
 		m.target, m.hasTarget = g.Player, true
 	} else if !m.hasTarget || m.Pos == m.target {
 		// Wander: head to a tile of a random room.
@@ -452,7 +452,7 @@ func (g *Game) hitPlayer(m *Monster) {
 		g.say(name + "の攻撃は外れた。")
 		return
 	}
-	n := g.weakened(g.criticalOn(m, damage(g.rng, m.Attack, g.Defense(), r.DefenseK)))
+	n := g.cushioned(g.weakened(g.criticalOn(m, damage(g.rng, m.Attack, g.Defense(), r.DefenseK))))
 	g.HP -= n
 	g.say(fmt.Sprintf("%sの攻撃。%dのダメージ。", name, n))
 	g.event("hurt %d %s", n, m.Def.ID)

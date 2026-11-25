@@ -830,6 +830,12 @@ func (g *Game) tick(rest bool) {
 	}
 	g.leak()
 	g.trapperSees()
+	g.call()
+	if g.leap() || g.blast() {
+		if g.Over != "" {
+			return
+		}
+	}
 	g.alliesRegen()
 	g.monstersAct()
 	g.sense()
@@ -845,7 +851,11 @@ func (g *Game) tick(rest bool) {
 func (g *Game) linger() {
 	d := g.Dungeon
 	r := d.Rules
-	if g.FloorTurns%r.SpawnTurns == 0 && len(g.Monsters) < r.MaxMonsters {
+	spawn := r.SpawnTurns
+	if g.wears(EffectCall) {
+		spawn = max(spawn/2, 1)
+	}
+	if g.FloorTurns%spawn == 0 && len(g.Monsters) < r.MaxMonsters {
 		def := d.Monster(pick(g.rng, d.MonsterRows, g.Depth))
 		if a, ok := mimicOf(def); ok {
 			g.spawnHidden(def, a)

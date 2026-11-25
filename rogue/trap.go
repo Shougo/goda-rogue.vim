@@ -194,12 +194,7 @@ func (g *Game) spring(t *Trap, force bool) bool {
 		}
 		g.say("目が覚めた。")
 	case TrapWarp:
-		wasInShop := g.inShop(g.Player)
-		g.warp()
-		g.say("どこかへ飛ばされた。")
-		if wasInShop && !g.inShop(g.Player) && g.debt() > 0 {
-			g.steal()
-		}
+		g.warpAway()
 	case TrapHunger:
 		g.Fullness = max(g.Fullness-n, 0)
 		g.say("お腹が減った。")

@@ -26,8 +26,16 @@
 #               the monsters do: a pit takes one away, a mine halves its
 #               HP, an arrow hurts it, a snare or sleep stops it for 強さ
 #               of the trap turns, a warp sends it away
-#     胃縮小    the player takes 強さ % less damage, and holds 25 less
-#               fullness
+#     胃縮小    the blows of the monsters do 強さ % less damage to the
+#               player (not under 1), which holds 25 less fullness
+#     魔物呼び  the monsters of the floor come for the player, and new
+#               ones come twice as often
+#     高飛び    a turn in a hundred 強さ, the player is sent somewhere on
+#               the floor
+#     爆発      a turn in a hundred 強さ, the player blows up: its HP
+#               halves, the monsters next to it are gone (no EXP), an
+#               ally's or a shopkeeper's HP halves (an attack on a
+#               shopkeeper), the walls next to it crumble
 #     痛恨      強さ % of the blows of the monsters on the player are
 #               critical, for 150% of the damage (a shield of 防恨 makes
 #               them weaker)
@@ -143,6 +151,9 @@ hicchuuu	腕	必中の腕輪	腕輪	0	-	0	-	必	0	2500
 wanashi	腕	罠師の腕輪	腕輪	0	罠師	15	-	-	0	2000
 ishukushou	腕	胃縮小の腕輪	腕輪	20	胃縮小	0	-	-	0	1500
 tsuukon	腕	痛恨の腕輪	腕輪	50	痛恨	0	-	-	0	1000
+mamonoyobi	腕	魔物呼びの腕輪	腕輪	0	魔物呼び	0	-	-	0	1000
+takatobiu	腕	高飛びの腕輪	腕輪	10	高飛び	0	-	-	0	1500
+bakuhatsu	腕	爆発の腕輪	腕輪	10	爆発	0	-	-	0	1500
 kiya	矢	木の矢	矢	4	-	0	5-15	-	0	10
 tetsuya	矢	鉄の矢	矢	8	-	0	3-10	-	0	20
 ishi	矢	石	矢	3	-	0	1-1	-	0	2
