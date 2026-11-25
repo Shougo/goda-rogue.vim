@@ -452,7 +452,7 @@ func (g *Game) hitPlayer(m *Monster) {
 		g.say(name + "の攻撃は外れた。")
 		return
 	}
-	n := g.critical(m, damage(g.rng, m.Attack, g.Defense(), r.DefenseK), true)
+	n := g.weakened(g.criticalOn(m, damage(g.rng, m.Attack, g.Defense(), r.DefenseK)))
 	g.HP -= n
 	g.say(fmt.Sprintf("%sの攻撃。%dのダメージ。", name, n))
 	g.event("hurt %d %s", n, m.Def.ID)
@@ -483,7 +483,7 @@ func (g *Game) hitMonster(a, m *Monster) {
 		}
 		return
 	}
-	n := g.critical(a, damage(g.rng, a.Attack, m.Defense, r.DefenseK), shown)
+	n, _ := g.critical(a, damage(g.rng, a.Attack, m.Defense, r.DefenseK), shown)
 	m.HP -= n
 	if shown {
 		g.say(fmt.Sprintf("%sは%sに%dのダメージ。", a.Name, m.Name, n))

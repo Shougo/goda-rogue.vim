@@ -16,16 +16,30 @@ func (g *Game) fill(n int) {
 		g.MaxFullness = min(g.MaxFullness+min(over, fullnessBack), g.Dungeon.Rules.Fullness)
 		g.say("最大満腹度が少し戻った。")
 	}
-	g.Fullness = min(g.Fullness, g.MaxFullness)
+	g.Fullness = min(g.Fullness, g.fullnessCap())
+}
+
+// shrinkFullness is how much less fullness the player holds with a
+// bracelet of 胃縮小 (Shougo: 25).
+const shrinkFullness = 25
+
+// fullnessCap is how full the player can be now: the max fullness, less
+// with a bracelet of 胃縮小 (not under 1).
+func (g *Game) fullnessCap() int {
+	if g.wears(EffectSmallStomach) {
+		return max(g.MaxFullness-shrinkFullness, 1)
+	}
+	return g.MaxFullness
 }
 
 // fullnessLabel is the fullness of the status: a percent of the rule,
-// and the max when a hungry ghost lowered it ("80%（最大 90%）").
+// and the max when a hungry ghost or a bracelet lowered it ("80%（最大
+// 90%）").
 func (g *Game) fullnessLabel() string {
 	rule := g.Dungeon.Rules.Fullness
 	s := fmt.Sprintf("%d%%", g.Fullness*100/rule)
-	if g.MaxFullness < rule {
-		s += fmt.Sprintf("（最大 %d%%）", g.MaxFullness*100/rule)
+	if c := g.fullnessCap(); c < rule {
+		s += fmt.Sprintf("（最大 %d%%）", c*100/rule)
 	}
 	return s
 }

@@ -316,6 +316,8 @@ var hungerMessages = []struct {
 // 回復 or ハラヘリ bracelet), and hurts it once it is starving: no HP
 // comes back, and a point goes every turn.
 func (g *Game) getHungry() {
+	// A bracelet of 胃縮小 put on: what is over its cap is gone.
+	g.Fullness = min(g.Fullness, g.fullnessCap())
 	if g.Fullness == 0 {
 		// Said again now and then: it is easy to miss once.
 		if g.Turn%starveWarning == 0 {

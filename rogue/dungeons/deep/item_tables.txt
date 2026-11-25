@@ -24,6 +24,7 @@
 床	1	50	nusumiyoke	1
 床	5	50	mikiri	1
 床	5	50	mikawashi	1
+床	5	50	bokon	1
 床	1	50	kintate	1
 床	1	50	kawa	1
 床	1	50	chikara	1
@@ -45,6 +46,8 @@
 床	1	50	mikawashiu	1
 床	1	50	hicchuuu	1
 床	1	50	wanashi	1
+床	1	50	ishukushou	1
+床	1	50	tsuukon	1
 床	1	50	nusumiyokeu	1
 床	1	50	dougu	1
 床	1	50	kiya	3
@@ -104,6 +107,7 @@
 よろず	1	50	nusumiyoke	2
 よろず	5	50	mikiri	2
 よろず	5	50	mikawashi	2
+よろず	5	50	bokon	2
 よろず	1	50	kintate	2
 よろず	1	50	kawa	2
 よろず	1	50	chikara	1
@@ -126,6 +130,8 @@
 よろず	15	50	mikawashiu	3
 よろず	15	50	hicchuuu	3
 よろず	15	50	wanashi	3
+よろず	15	50	ishukushou	3
+よろず	15	50	tsuukon	3
 よろず	15	50	nusumiyokeu	3
 よろず	1	14	dougu	1
 よろず	15	50	dougu	3
@@ -197,6 +203,7 @@
 武具	1	50	nusumiyoke	2
 武具	5	50	mikiri	2
 武具	5	50	mikawashi	2
+武具	5	50	bokon	2
 # The bracelet shop: rarer bracelets.
 腕輪	1	50	chikara	1
 腕輪	1	50	kaifuku	1
@@ -218,6 +225,8 @@
 腕輪	15	50	mikawashiu	5
 腕輪	15	50	hicchuuu	5
 腕輪	15	50	wanashi	5
+腕輪	15	50	ishukushou	5
+腕輪	15	50	tsuukon	5
 腕輪	15	50	nusumiyokeu	5
 腕輪	1	14	dougu	3
 腕輪	15	50	dougu	5

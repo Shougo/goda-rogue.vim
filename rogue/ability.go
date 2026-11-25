@@ -2,6 +2,7 @@ package rogue
 
 import (
 	"fmt"
+	"math"
 	"math/rand/v2"
 	"slices"
 	"strconv"
@@ -354,17 +355,39 @@ func (g *Game) wounded(m *Monster) {
 	}
 }
 
+// critTakenRate is the damage (%) of a critical blow a bracelet of 痛恨
+// brings on the player (Shougo: 150%).
+const critTakenRate = 150
+
 // critical returns n, the damage of a blow of m, made a critical blow by
-// chance.
-func (g *Game) critical(m *Monster, n int, shown bool) int {
+// chance, and whether it is one.
+func (g *Game) critical(m *Monster, n int, shown bool) (int, bool) {
 	a, ok := m.ability(AbilityCritical)
 	if !ok || g.rng.IntN(100) >= a.Values[0] {
-		return n
+		return n, false
 	}
 	if shown {
 		g.say("痛恨の一撃！")
 	}
-	return n * a.Values[1] / 100
+	return n * a.Values[1] / 100, true
+}
+
+// criticalOn returns n, the damage of a blow of m on the player, made a
+// critical blow by chance: by m's own ability, or else by a bracelet of
+// 痛恨; a critical blow does less with the guard of 防恨.
+func (g *Game) criticalOn(m *Monster, n int) int {
+	n, crit := g.critical(m, n, true)
+	if b := g.equipped(CategoryBracelet); !crit && b != nil && b.Def.Effect == EffectCritTaken && g.rng.IntN(100) < b.Def.Strength {
+		g.use(EffectCritTaken)
+		g.say("痛恨の一撃！")
+		n, crit = n*critTakenRate/100, true
+	}
+	if crit {
+		if s := g.sealShare(SealCritGuard); s > 0 && n > 0 {
+			n = max(int(math.Round(float64(n)*(1-s))), 1)
+		}
+	}
+	return n
 }
 
 // erratic says whether m steps at random instead of acting, and makes

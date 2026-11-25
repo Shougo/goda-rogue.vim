@@ -272,7 +272,13 @@ const (
 	EffectDrops Effect = "垂れ流し"
 	// EffectTrapper: the player sees every trap and never sets one off
 	// by walking; the monsters set them off.
-	EffectTrapper   Effect = "罠師"
+	EffectTrapper Effect = "罠師"
+	// EffectSmallStomach: the player takes its strength in % less
+	// damage, and holds shrinkFullness less fullness.
+	EffectSmallStomach Effect = "胃縮小"
+	// EffectCritTaken: its strength in % of the blows of the monsters on
+	// the player are critical (critTakenRate).
+	EffectCritTaken Effect = "痛恨"
 	EffectHeal      Effect = "HP回復"
 	EffectLight     Effect = "あかり"
 	EffectIdentify  Effect = "識別"
@@ -297,7 +303,7 @@ const (
 // effects are the effects the items of each category can have.
 var effects = map[Category][]Effect{
 	CategoryBracelet: {EffectStrength, EffectRegen, EffectSenseEnemy, EffectSenseItem, EffectNoRust, EffectNoTheft, EffectNoSleep, EffectNoConfuse,
-		EffectNoCurse, EffectNoBlind, EffectNoSeal, EffectNoWeak, EffectHungry, EffectDrops, EffectTrapper},
+		EffectNoCurse, EffectNoBlind, EffectNoSeal, EffectNoWeak, EffectHungry, EffectDrops, EffectTrapper, EffectSmallStomach, EffectCritTaken},
 	CategoryGrass:  {EffectHeal, EffectStrength, EffectEyeDrops, EffectMaxHP},
 	CategoryScroll: {EffectLight, EffectIdentify, EffectUpWeapon, EffectUpShield, EffectUncurse, EffectMoreSlots, EffectEraseSeal},
 	CategoryStaff:  {EffectBlowAway, EffectRecruit, EffectSwap},

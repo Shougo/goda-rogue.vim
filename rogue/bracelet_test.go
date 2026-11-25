@@ -172,3 +172,69 @@ func TestTrapperBracelet(t *testing.T) {
 		t.Errorf("without the bracelet: at %v, HP %d", m.Pos, m.HP)
 	}
 }
+
+// TestSmallStomachBracelet: 20% less damage, 25 less fullness held.
+func TestSmallStomachBracelet(t *testing.T) {
+	g, _ := roomGame(t, 6, 3)
+	if g.weakened(10) != 10 {
+		t.Error("without the bracelet")
+	}
+	g.Fullness = 100
+	wear(g, "ishukushou")
+	if n := g.weakened(10); n != 8 {
+		t.Errorf("damage %d, want 8", n)
+	}
+	if g.weakened(1) != 1 {
+		t.Error("1 damage made 0")
+	}
+	g.getHungry()
+	if g.Fullness != 75 {
+		t.Errorf("fullness %d, want 75", g.Fullness)
+	}
+	g.fill(50)
+	if g.Fullness != 75 || g.fullnessLabel() != "75%（最大 75%）" {
+		t.Errorf("fullness %d, %q", g.Fullness, g.fullnessLabel())
+	}
+}
+
+// TestCritTakenBracelet: half the blows on the player are critical, for
+// 150%; a shield of 防恨 takes 2/3 off, its seal 1/2.
+func TestCritTakenBracelet(t *testing.T) {
+	g, r := roomGame(t, 6, 3)
+	m := place(g, kind("nezumi1"), Point{r.X + 1, r.Y})
+	count := func() (crit int) {
+		for range 400 {
+			if n := g.criticalOn(m, 30); n != 30 {
+				crit++
+			}
+		}
+		return crit
+	}
+	if count() != 0 {
+		t.Error("critical blows without the bracelet")
+	}
+	wear(g, "tsuukon")
+	if c := count(); c < 160 || c > 240 {
+		t.Errorf("%d critical in 400", c)
+	}
+	n := 0
+	for n != 45 {
+		n = g.criticalOn(m, 30)
+	}
+	shield := carry(g, "bokon", 0)
+	shield.Equipped = true
+	for range 100 {
+		if n := g.criticalOn(m, 30); n != 30 && n != 15 {
+			t.Fatalf("damage %d with the shield, want 30 or 15", n)
+		}
+	}
+	shield.Equipped = false
+	plain := carry(g, "kitate", 0)
+	plain.Seals = []string{"恨"}
+	plain.Equipped = true
+	for range 100 {
+		if n := g.criticalOn(m, 30); n != 30 && n != 23 {
+			t.Fatalf("damage %d with the seal, want 30 or 23", n)
+		}
+	}
+}

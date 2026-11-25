@@ -278,6 +278,7 @@ func (g *Game) monsterSprings(m *Monster, t *Trap) {
 // trapDamage hurts the player by n, by the trap why; it says whether the
 // player fell.
 func (g *Game) trapDamage(n int, why string) bool {
+	n = g.weakened(n)
 	g.HP -= n
 	g.say(fmt.Sprintf("%dのダメージ。", n))
 	g.event("hurt %d %s", n, why)

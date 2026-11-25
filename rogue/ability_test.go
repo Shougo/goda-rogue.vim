@@ -83,7 +83,7 @@ func TestCritical(t *testing.T) {
 	m := place(g, kind("kuma2"), Point{r.X + 1, r.Y})
 	crit, plain := 0, 0
 	for range 400 {
-		if n := g.critical(m, 10, true); n == 15 {
+		if n, _ := g.critical(m, 10, true); n == 15 {
 			crit++
 		} else if n == 10 {
 			plain++
@@ -94,7 +94,7 @@ func TestCritical(t *testing.T) {
 	if crit < 60 || crit > 140 {
 		t.Errorf("%d critical blows in 400, want about 100", crit)
 	}
-	if n := g.critical(newMonster(kind("kuma1")), 10, true); n != 10 {
+	if n, _ := g.critical(newMonster(kind("kuma1")), 10, true); n != 10 {
 		t.Errorf("a cub: damage %d, want 10 (no critical blows)", n)
 	}
 }

@@ -26,6 +26,11 @@
 #               the monsters do: a pit takes one away, a mine halves its
 #               HP, an arrow hurts it, a snare or sleep stops it for 強さ
 #               of the trap turns, a warp sends it away
+#     胃縮小    the player takes 強さ % less damage, and holds 25 less
+#               fullness
+#     痛恨      強さ % of the blows of the monsters on the player are
+#               critical, for 150% of the damage (a shield of 防恨 makes
+#               them weaker)
 #   A bracelet with a 印 (and no 効果) has its ability while worn, at
 #   the strength an item is born with (seals.txt 強さ).
 #   草, drunk:
@@ -114,6 +119,7 @@ ootate	盾	大盾	盾	12	-	0	-	-	2	2500
 nusumiyoke	盾	盗みよけの盾	盾	3	-	0	-	盗	3	1000
 mikiri	盾	見切りの盾	盾	3	-	0	-	避	3	1500
 mikawashi	盾	身躱しの盾	盾	4	-	0	-	躱	3	1500
+bokon	盾	防恨の盾	盾	5	-	0	-	恨	3	1500
 chikara	腕	力の腕輪	腕輪	3	ちから	0	-	-	0	1000
 kaifuku	腕	回復の腕輪	腕輪	0	回復	0	-	-	0	1500
 kehai	腕	気配察知の腕輪	腕輪	10	気配察知	15	-	-	0	2000
@@ -135,6 +141,8 @@ hangekiu	腕	反撃の腕輪	腕輪	0	-	0	-	反	0	2000
 mikawashiu	腕	身躱しの腕輪	腕輪	0	-	0	-	躱	0	2000
 hicchuuu	腕	必中の腕輪	腕輪	0	-	0	-	必	0	2500
 wanashi	腕	罠師の腕輪	腕輪	0	罠師	15	-	-	0	2000
+ishukushou	腕	胃縮小の腕輪	腕輪	20	胃縮小	0	-	-	0	1500
+tsuukon	腕	痛恨の腕輪	腕輪	50	痛恨	0	-	-	0	1000
 kiya	矢	木の矢	矢	4	-	0	5-15	-	0	10
 tetsuya	矢	鉄の矢	矢	8	-	0	3-10	-	0	20
 ishi	矢	石	矢	3	-	0	1-1	-	0	2

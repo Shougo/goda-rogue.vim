@@ -1218,7 +1218,7 @@ func (b *Bot) wants(g *Game, p Point) bool {
 
 // fits says whether eating the food it now wastes none of it.
 func fits(g *Game, it *Item) bool {
-	return it.Def.Effect != EffectRotten && !spoiled(it) && g.Fullness+it.Def.Strength <= g.MaxFullness
+	return it.Def.Effect != EffectRotten && !spoiled(it) && g.Fullness+it.Def.Strength <= g.fullnessCap()
 }
 
 // trade is the bot standing on an item with a full inventory: it eats
@@ -1716,6 +1716,8 @@ func abilityWorth(e SealEffect, n int) float64 {
 		return f / 5
 	case SealDodgeThrown:
 		return f / 20
+	case SealCritGuard:
+		return f / 25
 	}
 	return f / 50
 }

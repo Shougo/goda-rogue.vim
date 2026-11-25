@@ -45,10 +45,13 @@ const (
 	// (not a piercing arrow, nor what a mirror sends back) by a chance of
 	// its %; the item falls at its feet (dodgeThrown).
 	SealDodgeThrown SealEffect = "身躱し"
+	// SealCritGuard: a critical blow on the player (痛恨) does its %
+	// less damage.
+	SealCritGuard SealEffect = "防恨"
 )
 
 var sealEffects = []SealEffect{SealAttack, SealDefense, SealCrit, SealSure, SealCounter, SealNoRust, SealNoHunger,
-	SealThree, SealNoTheft, SealDodge, SealDodgeThrown}
+	SealThree, SealNoTheft, SealDodge, SealDodgeThrown, SealCritGuard}
 
 // No seal heals: not on a blow given, not on a blow taken. Such seals
 // (弟 and 回 of Shiren 2 and Asuka, stacked) make trading blows pay, and a

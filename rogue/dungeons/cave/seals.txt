@@ -19,6 +19,7 @@
 #             (arrows too; not a piercing arrow, nor what a mirror sends
 #             back) misses it and falls at its feet (a trap there goes
 #             off)
+#   防恨      a critical blow of a monster (痛恨) does its % less damage
 # The same seal may be there more than once (and with the ability the
 # item is born with): 攻撃 and 防御 add up, the others add up as chances
 # do (two of 50% make 75%), never past 100%.
@@ -40,3 +41,4 @@
 盗	盗みよけの印	盗みよけ	100	50	盾
 避	見切りの印	見切り	15	8	盾
 躱	身躱しの印	身躱し	50	25	盾
+恨	防恨の印	防恨	67	50	盾
