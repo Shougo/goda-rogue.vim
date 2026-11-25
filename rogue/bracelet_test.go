@@ -135,3 +135,40 @@ func TestSealBracelets(t *testing.T) {
 		}
 	}
 }
+
+// TestTrapperBracelet: every trap shows, the player walks over them, and
+// the monsters set them off.
+func TestTrapperBracelet(t *testing.T) {
+	g, r := trapGame(t)
+	g.Player = Point{r.X, r.Y}
+	hp := g.HP
+	pit := trap(g, "otoshiana", Point{r.X + 1, r.Y})
+	poison := trap(g, "dokuya", Point{r.X + 2, r.Y})
+	// The monster may come either way.
+	trap(g, "dokuya", Point{r.X + 2, r.Y + 1})
+	wear(g, "wanashi")
+	if err := g.Do("move", []string{"right"}); err != nil {
+		t.Fatal(err)
+	}
+	if g.Depth != 1 || g.HP != hp || g.Player != pit.Pos {
+		t.Fatalf("depth %d, HP %d, at %v: the pit went off", g.Depth, g.HP, g.Player)
+	}
+	if !pit.Found || !poison.Found {
+		t.Error("traps hidden")
+	}
+	// A monster coming to the player over the poisoned arrows is hurt.
+	m := place(g, kind("nezumi1"), Point{r.X + 3, r.Y})
+	m.Dozing = false
+	m.HP, m.MaxHP = 50, 50
+	g.monstersAct()
+	if m.Pos.X != r.X+2 || m.HP != 50-poison.Def.Strength {
+		t.Errorf("monster at %v, HP %d: the arrows did not go off", m.Pos, m.HP)
+	}
+	// Without the bracelet, the monsters do not.
+	g.equipped(CategoryBracelet).Equipped = false
+	m.HP, m.Pos = 50, Point{r.X + 3, r.Y}
+	g.monstersAct()
+	if m.Pos.X != r.X+2 || m.HP < 50 {
+		t.Errorf("without the bracelet: at %v, HP %d", m.Pos, m.HP)
+	}
+}

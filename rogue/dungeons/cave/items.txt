@@ -21,6 +21,11 @@
 #     垂れ流し  the monsters killed drop an item 強さ % more often; a
 #               turn in ten, an item carried (not equipped) falls at the
 #               player's feet
+#     罠師      shows every trap of the floor; the player never sets one
+#               off by walking (stepping on one on purpose does), and
+#               the monsters do: a pit takes one away, a mine halves its
+#               HP, an arrow hurts it, a snare or sleep stops it for 強さ
+#               of the trap turns, a warp sends it away
 #   A bracelet with a 印 (and no 効果) has its ability while worn, at
 #   the strength an item is born with (seals.txt 強さ).
 #   草, drunk:
@@ -129,6 +134,7 @@ mikiriu	腕	見切りの腕輪	腕輪	0	-	0	-	避	0	2000
 hangekiu	腕	反撃の腕輪	腕輪	0	-	0	-	反	0	2000
 mikawashiu	腕	身躱しの腕輪	腕輪	0	-	0	-	躱	0	2000
 hicchuuu	腕	必中の腕輪	腕輪	0	-	0	-	必	0	2500
+wanashi	腕	罠師の腕輪	腕輪	0	罠師	15	-	-	0	2000
 kiya	矢	木の矢	矢	4	-	0	5-15	-	0	10
 tetsuya	矢	鉄の矢	矢	8	-	0	3-10	-	0	20
 ishi	矢	石	矢	3	-	0	1-1	-	0	2

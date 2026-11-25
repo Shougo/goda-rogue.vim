@@ -167,7 +167,12 @@ func (g *Game) monstersAct() {
 			if g.Over != "" || !slices.Contains(g.Monsters, m) {
 				break
 			}
-			if g.act(m) && m.Speed == SpeedMoveDouble {
+			from := m.Pos
+			attacked := g.act(m)
+			if t := g.TrapAt(m.Pos); t != nil && m.Pos != from && g.wears(EffectTrapper) && slices.Contains(g.Monsters, m) {
+				g.monsterSprings(m, t)
+			}
+			if attacked && m.Speed == SpeedMoveDouble {
 				break
 			}
 		}

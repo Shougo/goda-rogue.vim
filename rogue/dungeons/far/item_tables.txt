@@ -44,6 +44,7 @@
 床	1	99	hangekiu	1
 床	1	99	mikawashiu	1
 床	1	99	hicchuuu	1
+床	1	99	wanashi	1
 床	1	99	nusumiyokeu	1
 床	1	99	dougu	1
 床	1	99	kiya	3
@@ -124,6 +125,7 @@
 よろず	15	99	hangekiu	3
 よろず	15	99	mikawashiu	3
 よろず	15	99	hicchuuu	3
+よろず	15	99	wanashi	3
 よろず	15	99	nusumiyokeu	3
 よろず	1	14	dougu	1
 よろず	15	99	dougu	3
@@ -215,6 +217,7 @@
 腕輪	15	99	hangekiu	5
 腕輪	15	99	mikawashiu	5
 腕輪	15	99	hicchuuu	5
+腕輪	15	99	wanashi	5
 腕輪	15	99	nusumiyokeu	5
 腕輪	1	14	dougu	3
 腕輪	15	99	dougu	5

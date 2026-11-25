@@ -145,6 +145,14 @@ func (g *Game) stepOn(t *Trap) bool { return g.spring(t, false) }
 // off by itself with the rule 見つけた罠 安全, but stepping on it on
 // purpose (force) does. It says whether the trap went off.
 func (g *Game) spring(t *Trap, force bool) bool {
+	if !force && g.wears(EffectTrapper) {
+		// A bracelet of the trapper: the player never sets a trap off
+		// by walking.
+		t.Found = true
+		g.use(EffectTrapper)
+		g.say(t.Def.Name + "がある。")
+		return false
+	}
 	if t.Found && g.Dungeon.Rules.FoundTrapsSafe && !force {
 		g.say(t.Def.Name + "がある。")
 		return false
@@ -205,6 +213,66 @@ func (g *Game) spring(t *Trap, force bool) bool {
 		g.curseTrap(n)
 	}
 	return true
+}
+
+// trapperSees shows every trap of the floor to the player wearing a
+// bracelet of the trapper (罠師).
+func (g *Game) trapperSees() {
+	if !g.wears(EffectTrapper) {
+		return
+	}
+	for _, t := range g.Traps {
+		if !t.Found {
+			t.Found = true
+			g.use(EffectTrapper)
+		}
+	}
+}
+
+// monsterSprings is the monster m stepping on the trap t while the player
+// wears a bracelet of the trapper (罠師): monsters set traps off then
+// (never an ally, nor a calm shopkeeper). What it does to m: a pit takes
+// it off the floor, a mine halves its HP, the poisoned arrow hurts it, a
+// snare holds it and the trap of sleep puts it to sleep (both: turns of
+// sleep), the warp sends it away; the others do nothing to a monster. A
+// monster it kills is defeated by the player.
+func (g *Game) monsterSprings(m *Monster, t *Trap) {
+	if m.Ally || m.Keeper && !m.Angry {
+		return
+	}
+	shown := g.sees(g.Player, m.Pos)
+	say := func(s string) {
+		if shown {
+			g.say(s)
+		}
+	}
+	t.Found = true
+	say(m.Name + "は" + t.Def.Name + "を踏んだ！")
+	n := t.Def.Strength
+	switch t.Def.Effect {
+	case TrapPit:
+		say(m.Name + "は落とし穴に落ちていった。")
+		g.remove(m)
+	case TrapMine:
+		m.HP = max((m.HP+1)/2, 1)
+		say(m.Name + "は爆発に巻き込まれた。")
+	case TrapPoison:
+		m.HP -= n
+		say(fmt.Sprintf("毒矢が刺さった。%sに%dのダメージ。", m.Name, n))
+		if m.HP <= 0 {
+			g.kill(m, nil, true, shown)
+		}
+	case TrapSnare, TrapSleep:
+		m.Asleep = max(m.Asleep, n)
+		say(m.Name + "は動けなくなった。")
+	case TrapWarp:
+		if p, ok := g.freeTile(); ok {
+			m.Pos = p
+			say(m.Name + "はどこかへ飛ばされた。")
+		}
+	default:
+		say("しかし何も起こらなかった。")
+	}
 }
 
 // trapDamage hurts the player by n, by the trap why; it says whether the

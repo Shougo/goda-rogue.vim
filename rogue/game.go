@@ -829,6 +829,7 @@ func (g *Game) tick(rest bool) {
 		return
 	}
 	g.leak()
+	g.trapperSees()
 	g.alliesRegen()
 	g.monstersAct()
 	g.sense()

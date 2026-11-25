@@ -2207,7 +2207,7 @@ func (b *Bot) passable(g *Game, p Point) bool {
 	if !g.IsSeen(p) || !g.Level.At(p).Walkable() {
 		return false
 	}
-	if g.foundTrapAt(p) != nil && !g.Dungeon.Rules.FoundTrapsSafe {
+	if g.foundTrapAt(p) != nil && !g.Dungeon.Rules.FoundTrapsSafe && !g.wears(EffectTrapper) {
 		return false
 	}
 	if until, ok := b.shut[p]; ok && g.Turn < until {
