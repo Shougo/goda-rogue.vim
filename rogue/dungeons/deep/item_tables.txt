@@ -52,6 +52,7 @@
 床	1	50	takatobiu	1
 床	1	50	bakuhatsu	1
 床	1	50	hetanage	1
+床	1	50	taibaku	1
 床	1	50	nusumiyokeu	1
 床	1	50	dougu	1
 床	1	50	kiya	3
@@ -140,6 +141,7 @@
 よろず	15	50	takatobiu	3
 よろず	15	50	bakuhatsu	3
 よろず	15	50	hetanage	3
+よろず	15	50	taibaku	3
 よろず	15	50	nusumiyokeu	3
 よろず	1	14	dougu	1
 よろず	15	50	dougu	3
@@ -239,6 +241,7 @@
 腕輪	15	50	takatobiu	5
 腕輪	15	50	bakuhatsu	5
 腕輪	15	50	hetanage	5
+腕輪	15	50	taibaku	5
 腕輪	15	50	nusumiyokeu	5
 腕輪	1	14	dougu	3
 腕輪	15	50	dougu	5

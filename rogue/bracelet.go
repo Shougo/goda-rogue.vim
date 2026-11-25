@@ -86,6 +86,17 @@ func (g *Game) blast() bool {
 	return true
 }
 
+// blastDamage is the damage n of an explosion on the player, halved with a
+// bracelet of 耐爆 (not under 1).
+func (g *Game) blastDamage(n int) int {
+	if n > 0 && g.wears(EffectBlastGuard) {
+		g.use(EffectBlastGuard)
+		g.say("耐爆の腕輪が爆風を和らげた。")
+		return max(n/2, 1)
+	}
+	return n
+}
+
 // clumsy is what the player threw or shot missing m, with a bracelet of
 // ヘタ投げ: it falls at m's feet (a pot breaks there), and a trap under m
 // goes off on it, as with a bracelet of the trapper.

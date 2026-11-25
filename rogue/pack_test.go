@@ -70,10 +70,15 @@ func TestSetTrap(t *testing.T) {
 	if len(g.Traps) == 0 || g.Traps[0].Found {
 		t.Fatalf("traps %v", g.Traps)
 	}
+	// Not by a door of the room (the layout comes from the seed).
+	at := Point{r.X + 6, r.Y + 2}
+	for x := r.X + 1; g.entrance(at) && x < r.X+r.W-1; x++ {
+		at = Point{x, r.Y + 2}
+	}
 	g.Traps = nil
-	m.Pos = Point{r.X + 6, r.Y + 3}
-	g.hurt(m, 999)
-	if g.TrapAt(Point{r.X + 6, r.Y + 3}) == nil {
+	f := place(g, kind("karakuri1"), at)
+	g.hurt(f, 999)
+	if g.TrapAt(at) == nil {
 		t.Error("no trap where it fell")
 	}
 }

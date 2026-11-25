@@ -338,3 +338,23 @@ func TestClumsyBracelet(t *testing.T) {
 		t.Errorf("the item at %v, the monster at %v", stone.Pos, m.Pos)
 	}
 }
+
+// TestBlastGuardBracelet: half the damage of a mine and of a monster
+// blowing up.
+func TestBlastGuardBracelet(t *testing.T) {
+	g, r := trapGame(t)
+	g.Player = Point{r.X, r.Y}
+	g.HP, g.MaxHP = 100, 100
+	wear(g, "taibaku")
+	mine := trap(g, "jirai", Point{r.X + 1, r.Y})
+	g.spring(mine, true)
+	if g.HP != 75 {
+		t.Errorf("HP %d after a mine, want 75", g.HP)
+	}
+	g.HP = 100
+	m := place(g, kind("bakudan1"), Point{r.X + 1, r.Y + 1})
+	g.explode(m)
+	if g.HP != 75 {
+		t.Errorf("HP %d after a blast, want 75", g.HP)
+	}
+}

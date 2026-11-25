@@ -291,33 +291,36 @@ const (
 	// EffectClumsy: what the player throws or shoots never hits: it falls
 	// at the feet of the monster it would have hit, setting a trap there
 	// off on it.
-	EffectClumsy    Effect = "ヘタ投げ"
-	EffectHeal      Effect = "HP回復"
-	EffectLight     Effect = "あかり"
-	EffectIdentify  Effect = "識別"
-	EffectBlowAway  Effect = "吹き飛ばし"
-	EffectRecruit   Effect = "仲間"
-	EffectEyeDrops  Effect = "目薬"
-	EffectMaxHP     Effect = "最大HP"
-	EffectUpWeapon  Effect = "武器強化"
-	EffectUpShield  Effect = "盾強化"
-	EffectSwap      Effect = "場所替え"
-	EffectFood      Effect = "満腹"
-	EffectRotten    Effect = "腐った"
-	EffectKeep      Effect = "保存"
-	EffectSynthesis Effect = "合成"
-	EffectPlain     Effect = "普通"
-	EffectHealPot   Effect = "全回復"
-	EffectUncurse   Effect = "おはらい"
-	EffectMoreSlots Effect = "印増大"
-	EffectEraseSeal Effect = "印消し"
+	EffectClumsy Effect = "ヘタ投げ"
+	// EffectBlastGuard: an explosion (a monster's, a mine) does half its
+	// damage to the player.
+	EffectBlastGuard Effect = "耐爆"
+	EffectHeal       Effect = "HP回復"
+	EffectLight      Effect = "あかり"
+	EffectIdentify   Effect = "識別"
+	EffectBlowAway   Effect = "吹き飛ばし"
+	EffectRecruit    Effect = "仲間"
+	EffectEyeDrops   Effect = "目薬"
+	EffectMaxHP      Effect = "最大HP"
+	EffectUpWeapon   Effect = "武器強化"
+	EffectUpShield   Effect = "盾強化"
+	EffectSwap       Effect = "場所替え"
+	EffectFood       Effect = "満腹"
+	EffectRotten     Effect = "腐った"
+	EffectKeep       Effect = "保存"
+	EffectSynthesis  Effect = "合成"
+	EffectPlain      Effect = "普通"
+	EffectHealPot    Effect = "全回復"
+	EffectUncurse    Effect = "おはらい"
+	EffectMoreSlots  Effect = "印増大"
+	EffectEraseSeal  Effect = "印消し"
 )
 
 // effects are the effects the items of each category can have.
 var effects = map[Category][]Effect{
 	CategoryBracelet: {EffectStrength, EffectRegen, EffectSenseEnemy, EffectSenseItem, EffectNoRust, EffectNoTheft, EffectNoSleep, EffectNoConfuse,
 		EffectNoCurse, EffectNoBlind, EffectNoSeal, EffectNoWeak, EffectHungry, EffectDrops, EffectTrapper, EffectSmallStomach, EffectCritTaken,
-		EffectCall, EffectLeap, EffectBlast, EffectClumsy},
+		EffectCall, EffectLeap, EffectBlast, EffectClumsy, EffectBlastGuard},
 	CategoryGrass:  {EffectHeal, EffectStrength, EffectEyeDrops, EffectMaxHP},
 	CategoryScroll: {EffectLight, EffectIdentify, EffectUpWeapon, EffectUpShield, EffectUncurse, EffectMoreSlots, EffectEraseSeal},
 	CategoryStaff:  {EffectBlowAway, EffectRecruit, EffectSwap},

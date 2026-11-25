@@ -170,8 +170,10 @@ func (g *Game) spring(t *Trap, force bool) bool {
 		g.wearAndTear()
 		g.descend()
 	case TrapMine:
-		g.HP = max((g.HP+1)/2, 1)
-		g.say("爆発に巻き込まれて、HPが半分になった。")
+		g.say("爆発に巻き込まれた！")
+		lost := g.blastDamage(g.HP - max((g.HP+1)/2, 1))
+		g.HP -= lost
+		g.say(fmt.Sprintf("%dのダメージを受けた。", lost))
 	case TrapSnare:
 		g.Stuck, g.heldBy = n, nil
 		g.say("トラばさみにかかった。")
