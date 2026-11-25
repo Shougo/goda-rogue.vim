@@ -605,6 +605,16 @@ func (g *Game) remove(m *Monster) {
 	}
 }
 
+// dropRate is the chance (%) of a drop, rate by the monster or the rule,
+// with the bracelet worn: more with one of drops (垂れ流し).
+func (g *Game) dropRate(rate int) int {
+	if b := g.equipped(CategoryBracelet); b != nil && b.Def.Effect == EffectDrops && rate > 0 {
+		g.use(EffectDrops)
+		return min(rate*(100+b.Def.Strength)/100, 100)
+	}
+	return rate
+}
+
 // dropFrom is m, killed by the player, dropping an item by chance where
 // it fell: as its kind says (monsters.txt 落とし物), or by the dungeon's
 // rule (an item of the floor's item table).
@@ -614,6 +624,7 @@ func (g *Game) dropFrom(m *Monster) {
 	if m.Def.Drop != nil {
 		what, rate = m.Def.Drop.What, m.Def.Drop.Rate
 	}
+	rate = g.dropRate(rate)
 	if what == DropNone || rate == 0 || g.rng.IntN(100) >= rate {
 		return
 	}

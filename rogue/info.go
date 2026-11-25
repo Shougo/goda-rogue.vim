@@ -35,6 +35,12 @@ var effectTexts = map[Effect]string{
 	EffectNoTheft:    "道具もお金も盗まれず、荒らされない。",
 	EffectNoSleep:    "眠らされない。",
 	EffectNoConfuse:  "混乱しない。",
+	EffectNoCurse:    "持ち物が呪われない（呪いの罠、呪いをかける敵）。",
+	EffectNoBlind:    "目つぶしにならない。",
+	EffectNoSeal:     "口を封じられない。",
+	EffectNoWeak:     "攻撃力や防御力を下げられない。",
+	EffectHungry:     "お腹が 2 倍速く減るが、攻撃で与えるダメージが %d%% 増える。",
+	EffectDrops:      "倒した敵が道具を落とす確率が %d%% 上がる。",
 	EffectPlain:      "道具を入れられるが、中の道具は使えず、割らないと取り出せない。",
 	EffectSynthesis: "武器と盾は、先に入れた同じ種類のものに印と修正値が合成される。" +
 		"同じ腕輪を入れるとひびが直る。中のものは出せない。",
@@ -134,7 +140,11 @@ func (g *Game) info(it *Item) []string {
 	case CategoryArrow:
 		lines = append(lines, fmt.Sprintf("攻撃力 %d。%d 本。装備すると撃てる。", def.Strength, it.Count))
 	case CategoryBracelet:
-		lines = append(lines, effectText(def))
+		if sd := g.Dungeon.Seal(def.Seal); sd != nil && def.Effect == "" {
+			lines = append(lines, usePrefixes[def.Category]+withStrength(sealTexts[sd.Effect], sd.Strength))
+		} else {
+			lines = append(lines, effectText(def))
+		}
 		if it.curseKnown() {
 			lines = append(lines, "呪われている（装備すると外せない）")
 		}

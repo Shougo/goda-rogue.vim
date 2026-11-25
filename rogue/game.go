@@ -735,6 +735,10 @@ func (g *Game) strike(m *Monster, share float64) {
 		g.say("会心の一撃！")
 	}
 	g.use(EffectStrength)
+	if b := g.equipped(CategoryBracelet); b != nil && b.Def.Effect == EffectHungry {
+		n = int(math.Round(float64(n) * float64(100+b.Def.Strength) / 100))
+		g.use(EffectHungry)
+	}
 	n = g.weakening(n)
 	m.HP -= n
 	g.say(fmt.Sprintf("%sに%dのダメージ。", m.Name, n))

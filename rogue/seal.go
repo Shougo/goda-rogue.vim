@@ -127,7 +127,7 @@ func (g *Game) sealChance(e SealEffect) bool {
 }
 
 // equippedAbilities are the innate abilities and the seals of the
-// equipped weapon and shield.
+// equipped weapon and shield, and the ability of the equipped bracelet.
 func (g *Game) equippedAbilities() []anAbility {
 	var as []anAbility
 	for _, c := range []Category{CategoryWeapon, CategoryShield} {
@@ -142,6 +142,13 @@ func (g *Game) equippedAbilities() []anAbility {
 			if s := g.Dungeon.SealOn(glyph, c); s != nil {
 				as = append(as, anAbility{s, false})
 			}
+		}
+	}
+	// A bracelet with a seal (会心の腕輪...) has its ability at the
+	// strength it is born with, as a weapon or a shield.
+	if b := g.equipped(CategoryBracelet); b != nil {
+		if s := g.Dungeon.Seal(b.Def.Seal); s != nil {
+			as = append(as, anAbility{s, true})
 		}
 	}
 	return as

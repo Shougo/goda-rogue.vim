@@ -313,8 +313,8 @@ var hungerMessages = []struct {
 }
 
 // getHungry makes the player hungrier as turns pass (twice as fast with a
-// 回復 bracelet), and hurts it once it is starving: no HP comes back, and
-// a point goes every turn.
+// 回復 or ハラヘリ bracelet), and hurts it once it is starving: no HP
+// comes back, and a point goes every turn.
 func (g *Game) getHungry() {
 	if g.Fullness == 0 {
 		// Said again now and then: it is easy to miss once.
@@ -330,7 +330,7 @@ func (g *Game) getHungry() {
 	}
 	// In hundredths of a turn's hunger: ハラヘラズ takes its share off.
 	g.hunger += int(math.Round(100 * (1 - g.sealShare(SealNoHunger))))
-	if g.wears(EffectRegen) {
+	if g.wears(EffectRegen) || g.wears(EffectHungry) {
 		g.hunger += 100
 	}
 	if g.hunger < 100*g.Dungeon.Rules.HungerTurns {

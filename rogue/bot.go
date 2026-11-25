@@ -1612,9 +1612,20 @@ func (b *Bot) bracelet(g *Game, worn *Item) (string, []string) {
 		return "", nil
 	}
 	regen := func(it *Item) bool { return b.known(g, it, EffectRegen) }
+	// A bracelet of hunger (twice as hungry, for stronger blows) comes
+	// off when the food runs short, and goes on again with food for a
+	// few floors, as one of regeneration does.
+	hungry := func(it *Item) bool { return b.known(g, it, EffectHungry) }
+	short := b.foodFloors(g) < regenOn
 	other := carried(g, func(it *Item) bool {
-		return it.Def.Category == CategoryBracelet && !it.Equipped && !regen(it)
+		return it.Def.Category == CategoryBracelet && !it.Equipped && !regen(it) && !(short && hungry(it))
 	})
+	if worn != nil && hungry(worn) && b.foodFloors(g) < regenOff {
+		if other != nil {
+			return b.use(other, commandEquip)
+		}
+		return b.use(worn, commandUnequip)
+	}
 	if worn != nil && regen(worn) {
 		if g.HP < g.MaxHP && b.foodFloors(g) >= regenOff {
 			return "", nil
@@ -1662,7 +1673,7 @@ func foodTotal(g *Game) int {
 // hungerRate is how many times as fast as without a bracelet the player
 // gets hungry.
 func hungerRate(g *Game) int {
-	if g.wears(EffectRegen) {
+	if g.wears(EffectRegen) || g.wears(EffectHungry) {
 		return 2
 	}
 	return 1

@@ -12,6 +12,15 @@
 #     盗みよけ  nothing is stolen nor ruined (the seal: by chance)
 #     睡眠よけ  nothing puts the player to sleep
 #     混乱よけ  nothing confuses the player
+#     呪いよけ  nothing carried is cursed (a trap, a monster)
+#     目つぶしよけ  nothing blinds the player
+#     口封じよけ  nothing seals the mouth of the player
+#     弱りよけ  nothing takes its attack or defense down
+#     ハラヘリ  makes hungry twice as fast, and the blows of the player
+#               do 強さ % more
+#     垂れ流し  the monsters killed drop an item 強さ % more often
+#   A bracelet with a 印 (and no 効果) has its ability while worn, at
+#   the strength an item is born with (seals.txt 強さ).
 #   草, drunk:
 #     HP回復    restores 強さ HP, or raises the max HP if it is full
 #     ちから    under the max strength, restores 強さ of the strength
@@ -63,7 +72,7 @@
 #               floors of the hard dungeons only)
 # 回数 is how many times a staff can be waved, how many arrows there are,
 # how many items a pot holds (min-max; - for others).
-# 印 is the ability a weapon or a shield is born with (素の能力: a seal
+# 印 is the ability a weapon, a shield or a bracelet is born with (素の能力: a seal
 # of seals.txt at its strength 強さ; - for none): it takes no slot, and
 # stays when the item is the base of a synthesis; merged into another,
 # it becomes a seal of that one, at 印の強さ. 印数 is how many seals it
@@ -106,6 +115,18 @@ sabiyoke	腕	サビよけの腕輪	腕輪	0	サビよけ	15	-	-	0	1500
 nusumiyokeu	腕	盗みよけの腕輪	腕輪	0	盗みよけ	15	-	-	0	1500
 suiminyoke	腕	睡眠よけの腕輪	腕輪	0	睡眠よけ	15	-	-	0	1500
 konranyoke	腕	混乱よけの腕輪	腕輪	0	混乱よけ	15	-	-	0	1500
+noroiyoke	腕	呪いよけの腕輪	腕輪	0	呪いよけ	15	-	-	0	1500
+metsubushiyoke	腕	目つぶしよけの腕輪	腕輪	0	目つぶしよけ	15	-	-	0	1500
+kuchifuujiyoke	腕	口封じよけの腕輪	腕輪	0	口封じよけ	15	-	-	0	1500
+yowariyoke	腕	弱りよけの腕輪	腕輪	0	弱りよけ	15	-	-	0	1500
+haraheri	腕	ハラヘリの腕輪	腕輪	20	ハラヘリ	0	-	-	0	1000
+taranagashi	腕	垂れ流しの腕輪	腕輪	100	垂れ流し	0	-	-	0	1000
+haraherazuu	腕	ハラヘラズの腕輪	腕輪	0	-	0	-	腹	0	2000
+kaishinu	腕	会心の腕輪	腕輪	0	-	0	-	会	0	2500
+mikiriu	腕	見切りの腕輪	腕輪	0	-	0	-	避	0	2000
+hangekiu	腕	反撃の腕輪	腕輪	0	-	0	-	反	0	2000
+mikawashiu	腕	身躱しの腕輪	腕輪	0	-	0	-	躱	0	2000
+hicchuuu	腕	必中の腕輪	腕輪	0	-	0	-	必	0	2500
 kiya	矢	木の矢	矢	4	-	0	5-15	-	0	10
 tetsuya	矢	鉄の矢	矢	8	-	0	3-10	-	0	20
 ishi	矢	石	矢	3	-	0	1-1	-	0	2

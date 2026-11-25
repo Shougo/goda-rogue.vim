@@ -92,6 +92,11 @@ func (g *Game) curse(it *Item) bool {
 	if !it.cursable() || it.Cursed || g.shielded(it) {
 		return false
 	}
+	if g.wears(EffectNoCurse) {
+		g.use(EffectNoCurse)
+		g.say("呪いよけの腕輪が呪いをはね返した。")
+		return false
+	}
 	it.Cursed = true
 	return true
 }

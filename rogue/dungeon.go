@@ -259,35 +259,46 @@ const (
 	EffectNoTheft    Effect = "盗みよけ"
 	EffectNoSleep    Effect = "睡眠よけ"
 	EffectNoConfuse  Effect = "混乱よけ"
-	EffectHeal       Effect = "HP回復"
-	EffectLight      Effect = "あかり"
-	EffectIdentify   Effect = "識別"
-	EffectBlowAway   Effect = "吹き飛ばし"
-	EffectRecruit    Effect = "仲間"
-	EffectEyeDrops   Effect = "目薬"
-	EffectMaxHP      Effect = "最大HP"
-	EffectUpWeapon   Effect = "武器強化"
-	EffectUpShield   Effect = "盾強化"
-	EffectSwap       Effect = "場所替え"
-	EffectFood       Effect = "満腹"
-	EffectRotten     Effect = "腐った"
-	EffectKeep       Effect = "保存"
-	EffectSynthesis  Effect = "合成"
-	EffectPlain      Effect = "普通"
-	EffectHealPot    Effect = "全回復"
-	EffectUncurse    Effect = "おはらい"
-	EffectMoreSlots  Effect = "印増大"
-	EffectEraseSeal  Effect = "印消し"
+	EffectNoCurse    Effect = "呪いよけ"
+	EffectNoBlind    Effect = "目つぶしよけ"
+	EffectNoSeal     Effect = "口封じよけ"
+	EffectNoWeak     Effect = "弱りよけ"
+	// EffectHungry: hungry twice as fast, the blows of the player do
+	// its strength in % more.
+	EffectHungry Effect = "ハラヘリ"
+	// EffectDrops: the monsters killed drop an item its strength in %
+	// more often.
+	EffectDrops     Effect = "垂れ流し"
+	EffectHeal      Effect = "HP回復"
+	EffectLight     Effect = "あかり"
+	EffectIdentify  Effect = "識別"
+	EffectBlowAway  Effect = "吹き飛ばし"
+	EffectRecruit   Effect = "仲間"
+	EffectEyeDrops  Effect = "目薬"
+	EffectMaxHP     Effect = "最大HP"
+	EffectUpWeapon  Effect = "武器強化"
+	EffectUpShield  Effect = "盾強化"
+	EffectSwap      Effect = "場所替え"
+	EffectFood      Effect = "満腹"
+	EffectRotten    Effect = "腐った"
+	EffectKeep      Effect = "保存"
+	EffectSynthesis Effect = "合成"
+	EffectPlain     Effect = "普通"
+	EffectHealPot   Effect = "全回復"
+	EffectUncurse   Effect = "おはらい"
+	EffectMoreSlots Effect = "印増大"
+	EffectEraseSeal Effect = "印消し"
 )
 
 // effects are the effects the items of each category can have.
 var effects = map[Category][]Effect{
-	CategoryBracelet: {EffectStrength, EffectRegen, EffectSenseEnemy, EffectSenseItem, EffectNoRust, EffectNoTheft, EffectNoSleep, EffectNoConfuse},
-	CategoryGrass:    {EffectHeal, EffectStrength, EffectEyeDrops, EffectMaxHP},
-	CategoryScroll:   {EffectLight, EffectIdentify, EffectUpWeapon, EffectUpShield, EffectUncurse, EffectMoreSlots, EffectEraseSeal},
-	CategoryStaff:    {EffectBlowAway, EffectRecruit, EffectSwap},
-	CategoryFood:     {EffectFood, EffectRotten},
-	CategoryPot:      {EffectKeep, EffectSynthesis, EffectHealPot, EffectPlain},
+	CategoryBracelet: {EffectStrength, EffectRegen, EffectSenseEnemy, EffectSenseItem, EffectNoRust, EffectNoTheft, EffectNoSleep, EffectNoConfuse,
+		EffectNoCurse, EffectNoBlind, EffectNoSeal, EffectNoWeak, EffectHungry, EffectDrops},
+	CategoryGrass:  {EffectHeal, EffectStrength, EffectEyeDrops, EffectMaxHP},
+	CategoryScroll: {EffectLight, EffectIdentify, EffectUpWeapon, EffectUpShield, EffectUncurse, EffectMoreSlots, EffectEraseSeal},
+	CategoryStaff:  {EffectBlowAway, EffectRecruit, EffectSwap},
+	CategoryFood:   {EffectFood, EffectRotten},
+	CategoryPot:    {EffectKeep, EffectSynthesis, EffectHealPot, EffectPlain},
 }
 
 // FloorRow is a row of an appearance table: id appears on the floors

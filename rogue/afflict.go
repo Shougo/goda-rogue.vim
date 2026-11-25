@@ -37,6 +37,14 @@ func (g *Game) afflict(e MagicEffect) {
 	case e == MagicConfuse && g.wears(EffectNoConfuse):
 		g.say("混乱よけの腕輪が守った。")
 		return
+	case e == MagicBlind && g.wears(EffectNoBlind):
+		g.use(EffectNoBlind)
+		g.say("目つぶしよけの腕輪が守った。")
+		return
+	case e == MagicSeal && g.wears(EffectNoSeal):
+		g.use(EffectNoSeal)
+		g.say("口封じよけの腕輪が守った。")
+		return
 	}
 	g.States.take(e)
 	g.say(stateTexts[e].player)
@@ -88,7 +96,12 @@ func (g *Game) afflictBy(m *Monster, a Ability) bool {
 			g.Confused = turns
 		}
 	case afflictWeaken:
-		g.say(m.Name + "は力を吸い取った！")
+		g.say(m.Name + "は力を吸い取ろうとした！")
+		if g.wears(EffectNoWeak) {
+			g.use(EffectNoWeak)
+			g.say("弱りよけの腕輪が守った。")
+			return true
+		}
 		w, name := &g.AttackDown, "攻撃力"
 		if g.rng.IntN(2) == 0 {
 			w, name = &g.DefenseDown, "防御力"
