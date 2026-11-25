@@ -2,6 +2,7 @@
 開始	終了	ID	頻度
 1	30	otoshiana	3
 3	30	jirai	2
+15	30	oogatajirai	1
 1	30	torabasami	3
 1	30	dokuya	3
 1	30	suimin	2

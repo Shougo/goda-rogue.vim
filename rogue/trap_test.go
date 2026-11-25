@@ -315,3 +315,26 @@ func TestFootCommand(t *testing.T) {
 		t.Errorf("inventory %v, want the grass picked up", g.Inventory)
 	}
 }
+
+// TestBigMine: a big mine leaves a quarter of the HP, of the player and of
+// a monster.
+func TestBigMine(t *testing.T) {
+	g, r := trapGame(t)
+	g.Player = Point{r.X, r.Y}
+	g.HP, g.MaxHP = 100, 100
+	g.spring(trap(g, "oogatajirai", Point{r.X + 1, r.Y}), true)
+	if g.HP != 25 {
+		t.Errorf("HP %d, want 25", g.HP)
+	}
+	g.HP = 1
+	g.spring(trap(g, "oogatajirai", Point{r.X + 2, r.Y}), true)
+	if g.HP != 1 {
+		t.Errorf("HP %d at 1, want 1", g.HP)
+	}
+	m := place(g, kind("nezumi1"), Point{r.X + 3, r.Y})
+	m.HP = 40
+	g.monsterSprings(m, trap(g, "oogatajirai", m.Pos))
+	if m.HP != 10 {
+		t.Errorf("monster HP %d, want 10", m.HP)
+	}
+}

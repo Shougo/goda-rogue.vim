@@ -352,6 +352,11 @@ func TestBlastGuardBracelet(t *testing.T) {
 		t.Errorf("HP %d after a mine, want 75", g.HP)
 	}
 	g.HP = 100
+	g.spring(trap(g, "oogatajirai", Point{r.X + 2, r.Y}), true)
+	if g.HP != 63 {
+		t.Errorf("HP %d after a big mine, want 63", g.HP)
+	}
+	g.HP = 100
 	m := place(g, kind("bakudan1"), Point{r.X + 1, r.Y + 1})
 	g.explode(m)
 	if g.HP != 75 {

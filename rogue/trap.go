@@ -19,19 +19,21 @@ type TrapEffect string
 
 // The effects of traps.
 const (
-	TrapPit    TrapEffect = "落とし穴"
-	TrapMine   TrapEffect = "地雷"
-	TrapSnare  TrapEffect = "トラばさみ"
-	TrapPoison TrapEffect = "毒矢"
-	TrapSleep  TrapEffect = "睡眠"
-	TrapWarp   TrapEffect = "ワープ"
-	TrapHunger TrapEffect = "腹減り"
-	TrapRust   TrapEffect = "サビ"
-	TrapRot    TrapEffect = "腐り"
-	TrapCurse  TrapEffect = "呪い"
+	TrapPit  TrapEffect = "落とし穴"
+	TrapMine TrapEffect = "地雷"
+	// TrapBigMine: as a mine, down to a quarter of the HP.
+	TrapBigMine TrapEffect = "大型地雷"
+	TrapSnare   TrapEffect = "トラばさみ"
+	TrapPoison  TrapEffect = "毒矢"
+	TrapSleep   TrapEffect = "睡眠"
+	TrapWarp    TrapEffect = "ワープ"
+	TrapHunger  TrapEffect = "腹減り"
+	TrapRust    TrapEffect = "サビ"
+	TrapRot     TrapEffect = "腐り"
+	TrapCurse   TrapEffect = "呪い"
 )
 
-var trapEffects = []TrapEffect{TrapPit, TrapMine, TrapSnare, TrapPoison, TrapSleep, TrapWarp, TrapHunger, TrapRust, TrapRot, TrapCurse}
+var trapEffects = []TrapEffect{TrapPit, TrapMine, TrapBigMine, TrapSnare, TrapPoison, TrapSleep, TrapWarp, TrapHunger, TrapRust, TrapRot, TrapCurse}
 
 // Trap is a trap on the floor; Found says whether the player knows it.
 type Trap struct {
@@ -122,16 +124,17 @@ func (g *Game) check(p Point) {
 
 // trapTexts say what each kind of trap does, for look.
 var trapTexts = map[TrapEffect]string{
-	TrapPit:    "落ちて次の階へ。少しダメージを受ける。",
-	TrapMine:   "爆発して HP が半分になる。",
-	TrapSnare:  "しばらく動けなくなる。",
-	TrapPoison: "毒矢でダメージを受け、ちからが下がる。",
-	TrapSleep:  "しばらく眠ってしまう。",
-	TrapWarp:   "フロアのどこかへ飛ばされる。",
-	TrapHunger: "お腹が減る。",
-	TrapRust:   "装備している武器と盾がさびる。",
-	TrapRot:    "持っているおにぎりがすべて腐る（壺の中は無事）。",
-	TrapCurse:  "装備以外の持ち物がどれか呪われる。",
+	TrapPit:     "落ちて次の階へ。少しダメージを受ける。",
+	TrapMine:    "爆発して HP が半分になる。",
+	TrapBigMine: "大爆発して HP が 1/4 になる。",
+	TrapSnare:   "しばらく動けなくなる。",
+	TrapPoison:  "毒矢でダメージを受け、ちからが下がる。",
+	TrapSleep:   "しばらく眠ってしまう。",
+	TrapWarp:    "フロアのどこかへ飛ばされる。",
+	TrapHunger:  "お腹が減る。",
+	TrapRust:    "装備している武器と盾がさびる。",
+	TrapRot:     "持っているおにぎりがすべて腐る（壺の中は無事）。",
+	TrapCurse:   "装備以外の持ち物がどれか呪われる。",
 }
 
 // commandStep steps on the trap under the player on purpose.
@@ -169,9 +172,9 @@ func (g *Game) spring(t *Trap, force bool) bool {
 		}
 		g.wearAndTear()
 		g.descend()
-	case TrapMine:
+	case TrapMine, TrapBigMine:
 		g.say("爆発に巻き込まれた！")
-		lost := g.blastDamage(g.HP - max((g.HP+1)/2, 1))
+		lost := g.blastDamage(g.HP - mineLeft(t.Def.Effect, g.HP))
 		g.HP -= lost
 		g.say(fmt.Sprintf("%dのダメージを受けた。", lost))
 	case TrapSnare:
@@ -250,8 +253,8 @@ func (g *Game) monsterSprings(m *Monster, t *Trap) {
 	case TrapPit:
 		say(m.Name + "は落とし穴に落ちていった。")
 		g.remove(m)
-	case TrapMine:
-		m.HP = max((m.HP+1)/2, 1)
+	case TrapMine, TrapBigMine:
+		m.HP = mineLeft(t.Def.Effect, m.HP)
 		say(m.Name + "は爆発に巻き込まれた。")
 	case TrapPoison:
 		m.HP -= n
@@ -270,6 +273,15 @@ func (g *Game) monsterSprings(m *Monster, t *Trap) {
 	default:
 		say("しかし何も起こらなかった。")
 	}
+}
+
+// mineLeft is what is left of hp after a mine (e): a half, a quarter for
+// a big one, at least 1.
+func mineLeft(e TrapEffect, hp int) int {
+	if e == TrapBigMine {
+		return max((hp+3)/4, 1)
+	}
+	return max((hp+1)/2, 1)
 }
 
 // trapDamage hurts the player by n, by the trap why; it says whether the
