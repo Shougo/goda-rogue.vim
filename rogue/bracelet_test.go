@@ -376,6 +376,13 @@ func TestNoStarveBracelet(t *testing.T) {
 	if g.Fullness != 50 {
 		t.Errorf("fullness %d", g.Fullness)
 	}
+	for _, id := range []string{"harahe", "kuufuku"} {
+		g.spring(trap(g, id, Point{r.X + 2, r.Y}), true)
+		if g.Fullness != 50 {
+			t.Errorf("fullness %d after %s", g.Fullness, id)
+		}
+		g.Traps = nil
+	}
 }
 
 // TestPierceBracelet: a thrown item hits every monster on its line.

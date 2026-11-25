@@ -542,6 +542,8 @@ func (g *Game) pull(m *Monster, a Ability) bool {
 	}
 	g.say(m.Name + "に引き寄せられた！")
 	g.shove(to)
+	// Pulled over the water onto it, the player falls in (as blown).
+	g.overboard()
 	if hit && g.Over == "" && chebyshev(m.Pos, g.Player) == 1 {
 		g.hitPlayer(m)
 	}

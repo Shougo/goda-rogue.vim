@@ -53,7 +53,7 @@ var effectTexts = map[Effect]string{
 	EffectFloat:        "浮いて、水路の上を渡れ、罠を踏まない。",
 	EffectWalls:        "壁の中を歩ける。壁の中では毎ターン HP が 1 減る（1 は残る）。",
 	EffectCursePower:   "持っている呪われた物 1 つにつき、ちからが %d 上がる（壺の中は数えない）。",
-	EffectNoStarve:     "満腹度を吸われない（餓）。",
+	EffectNoStarve:     "満腹度を吸われない（餓、腹減りの罠、空腹の罠）。",
 	EffectPierce:       "投げた物と撃った矢が、当たった敵を貫いて飛ぶ。",
 	EffectHappy:        "敵を倒して得る経験値が %d%% 増える。",
 	EffectStealth:      "部屋に出入りしても、眠っている敵が起きない（モンスターハウスは別）。",

@@ -9,6 +9,7 @@
 1	99	suimin	2
 1	99	warp	3
 1	99	harahe	2
+10	99	kuufuku	2
 5	99	sabi	2
 10	99	kusari	2
 8	99	noroi	2

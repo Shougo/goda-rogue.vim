@@ -8,6 +8,7 @@
 1	30	suimin	2
 1	30	warp	3
 1	30	harahe	2
+10	30	kuufuku	1
 5	30	sabi	2
 10	30	kusari	2
 8	30	noroi	2

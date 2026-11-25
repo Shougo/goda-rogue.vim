@@ -46,7 +46,8 @@
 #               there, the player is pushed out somewhere on the floor
 #     呪い力    each cursed item carried (not in pots) adds 強さ to the
 #               strength
-#     ハラヘリよけ  the monsters that suck the fullness (飢え) fail
+#     ハラヘリよけ  the monsters that suck the fullness (飢え) fail, and
+#               the traps of hunger (腹減り)
 #     遠投      what the player throws or shoots flies through the
 #               monsters it hits (what it does, it does to each)
 #     しあわせ  the EXP of the defeats is 強さ % more

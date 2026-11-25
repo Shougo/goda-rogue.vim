@@ -318,7 +318,8 @@ const (
 	// EffectCursePower: each cursed item carried (the bracelet too, not
 	// what is in pots) adds its strength to the strength (ちから).
 	EffectCursePower Effect = "呪い力"
-	// EffectNoStarve: the monsters that suck the fullness (飢え) fail.
+	// EffectNoStarve: the monsters that suck the fullness (飢え) fail,
+	// and so do the traps of hunger.
 	EffectNoStarve Effect = "ハラヘリよけ"
 	// EffectPierce: what the player throws or shoots flies through the
 	// monsters it hits.

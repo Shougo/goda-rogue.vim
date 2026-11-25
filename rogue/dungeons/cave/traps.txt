@@ -21,6 +21,7 @@ dokuya	毒矢の罠	毒矢	5
 suimin	睡眠ガスの罠	睡眠	5
 warp	ワープの罠	ワープ	0
 harahe	腹減りの罠	腹減り	10
+kuufuku	空腹の罠	腹減り	50
 sabi	サビの罠	サビ	0
 kusari	腐りの罠	腐り	0
 noroi	呪いの罠	呪い	1

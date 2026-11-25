@@ -206,6 +206,11 @@ func (g *Game) spring(t *Trap, force bool) bool {
 	case TrapWarp:
 		g.warpAway()
 	case TrapHunger:
+		if g.wears(EffectNoStarve) {
+			g.use(EffectNoStarve)
+			g.say("ハラヘリよけの腕輪が守った。")
+			break
+		}
 		g.Fullness = max(g.Fullness-n, 0)
 		g.say("お腹が減った。")
 	case TrapRust:

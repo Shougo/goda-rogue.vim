@@ -9,6 +9,7 @@
 1	50	suimin	2
 1	50	warp	3
 1	50	harahe	2
+10	50	kuufuku	2
 5	50	sabi	2
 10	50	kusari	2
 8	50	noroi	2
