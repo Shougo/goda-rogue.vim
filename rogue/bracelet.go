@@ -48,8 +48,9 @@ func (g *Game) warpAway() {
 // blast is the player wearing a bracelet of 爆発 blowing up, a turn in a
 // hundred its strength (Shougo): its HP halves; the monsters around are
 // gone (no EXP), an ally's HP halves, a shopkeeper's too and it is an
-// attack on it; the walls around crumble (not the edge of the floor). It
-// says whether it blew up.
+// attack on it; the items on the floor around (and under it) are gone;
+// the walls around crumble (not the edge of the floor). It says whether
+// it blew up.
 func (g *Game) blast() bool {
 	b := g.equipped(CategoryBracelet)
 	if b == nil || b.Def.Effect != EffectBlast || g.rng.IntN(100) >= b.Def.Strength {
@@ -75,6 +76,7 @@ func (g *Game) blast() bool {
 			g.dropStolen(m)
 		}
 	}
+	g.Items = slices.DeleteFunc(g.Items, func(it *Item) bool { return chebyshev(it.Pos, g.Player) <= 1 })
 	for _, d := range around {
 		p := g.Player.Add(d)
 		if g.Level.At(p) == TileRock && p.X > 0 && p.Y > 0 && p.X < g.Level.W-1 && p.Y < g.Level.H-1 {
@@ -82,4 +84,20 @@ func (g *Game) blast() bool {
 		}
 	}
 	return true
+}
+
+// clumsy is what the player threw or shot missing m, with a bracelet of
+// ヘタ投げ: it falls at m's feet (a pot breaks there), and a trap under m
+// goes off on it, as with a bracelet of the trapper.
+func (g *Game) clumsy(it *Item, m *Monster) {
+	g.use(EffectClumsy)
+	g.say(m.Name + "に当たらなかった。")
+	if it.Def.Category == CategoryPot {
+		g.smash(it, m.Pos)
+	} else {
+		g.land(it, m.Pos)
+	}
+	if t := g.TrapAt(m.Pos); t != nil && slices.Contains(g.Monsters, m) {
+		g.monsterSprings(m, t)
+	}
 }

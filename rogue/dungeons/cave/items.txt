@@ -35,7 +35,11 @@
 #     爆発      a turn in a hundred 強さ, the player blows up: its HP
 #               halves, the monsters next to it are gone (no EXP), an
 #               ally's or a shopkeeper's HP halves (an attack on a
-#               shopkeeper), the walls next to it crumble
+#               shopkeeper), the items around it are gone, the walls
+#               next to it crumble
+#     ヘタ投げ  what the player throws or shoots never hits: it falls at
+#               the feet of the monster it would have hit, and a trap
+#               there goes off on it (as with 罠師)
 #     痛恨      強さ % of the blows of the monsters on the player are
 #               critical, for 150% of the damage (a shield of 防恨 makes
 #               them weaker)
@@ -154,6 +158,7 @@ tsuukon	腕	痛恨の腕輪	腕輪	50	痛恨	0	-	-	0	1000
 mamonoyobi	腕	魔物呼びの腕輪	腕輪	0	魔物呼び	0	-	-	0	1000
 takatobiu	腕	高飛びの腕輪	腕輪	10	高飛び	0	-	-	0	1500
 bakuhatsu	腕	爆発の腕輪	腕輪	10	爆発	0	-	-	0	1500
+hetanage	腕	ヘタ投げの腕輪	腕輪	0	ヘタ投げ	0	-	-	0	1000
 kiya	矢	木の矢	矢	4	-	0	5-15	-	0	10
 tetsuya	矢	鉄の矢	矢	8	-	0	3-10	-	0	20
 ishi	矢	石	矢	3	-	0	1-1	-	0	2

@@ -289,6 +289,12 @@ func TestBlastBracelet(t *testing.T) {
 	ally.Ally = true
 	ally.HP, ally.MaxHP = 20, 20
 	far := place(g, kind("nezumi1"), Point{r.X + 3, r.Y})
+	near := carry(g, "yakusou", 0)
+	g.drop(slices.Index(g.Inventory, near))
+	kept := carry(g, "yakusou", 0)
+	kept.Pos = Point{r.X + 3, r.Y + 1}
+	g.Inventory = slices.DeleteFunc(g.Inventory, func(it *Item) bool { return it == kept })
+	g.Items = append(g.Items, kept)
 	wall := Point{r.X - 1, r.Y - 1}
 	if g.Level.At(wall) != TileRock {
 		t.Fatalf("no wall at %v", wall)
@@ -307,5 +313,28 @@ func TestBlastBracelet(t *testing.T) {
 	}
 	if g.Level.At(wall) != TileCorridor {
 		t.Error("the wall stands")
+	}
+	if slices.Contains(g.Items, near) || !slices.Contains(g.Items, kept) {
+		t.Error("the item under the player stays, or the far one is gone")
+	}
+}
+
+// TestClumsyBracelet: a thrown item misses and falls at the feet of the
+// monster, setting the trap there off on it.
+func TestClumsyBracelet(t *testing.T) {
+	g, r := trapGame(t)
+	g.Player = Point{r.X, r.Y}
+	g.Facing = "right"
+	m := place(g, kind("nezumi1"), Point{r.X + 3, r.Y})
+	m.HP, m.MaxHP = 50, 50
+	poison := trap(g, "dokuya", m.Pos)
+	wear(g, "hetanage")
+	stone := carry(g, "yakusou", 0)
+	g.throwItem(stone)
+	if m.HP != 50-poison.Def.Strength || !poison.Found {
+		t.Errorf("HP %d: the trap did not go off", m.HP)
+	}
+	if !slices.Contains(g.Items, stone) || stone.Pos != m.Pos {
+		t.Errorf("the item at %v, the monster at %v", stone.Pos, m.Pos)
 	}
 }

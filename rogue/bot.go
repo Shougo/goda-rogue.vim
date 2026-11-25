@@ -1620,7 +1620,7 @@ func (b *Bot) bracelet(g *Game, worn *Item) (string, []string) {
 	// The bracelets that are only a price for the bots: they do not use
 	// them (calling monsters to rise, leaping or blowing up on purpose).
 	bad := func(it *Item) bool {
-		for _, e := range []Effect{EffectCall, EffectLeap, EffectBlast, EffectCritTaken} {
+		for _, e := range []Effect{EffectCall, EffectLeap, EffectBlast, EffectCritTaken, EffectClumsy} {
 			if b.known(g, it, e) {
 				return true
 			}

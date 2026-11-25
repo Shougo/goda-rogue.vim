@@ -287,7 +287,11 @@ const (
 	EffectLeap Effect = "高飛び"
 	// EffectBlast: its strength in % of the turns, the player blows up
 	// (blast).
-	EffectBlast     Effect = "爆発"
+	EffectBlast Effect = "爆発"
+	// EffectClumsy: what the player throws or shoots never hits: it falls
+	// at the feet of the monster it would have hit, setting a trap there
+	// off on it.
+	EffectClumsy    Effect = "ヘタ投げ"
 	EffectHeal      Effect = "HP回復"
 	EffectLight     Effect = "あかり"
 	EffectIdentify  Effect = "識別"
@@ -313,7 +317,7 @@ const (
 var effects = map[Category][]Effect{
 	CategoryBracelet: {EffectStrength, EffectRegen, EffectSenseEnemy, EffectSenseItem, EffectNoRust, EffectNoTheft, EffectNoSleep, EffectNoConfuse,
 		EffectNoCurse, EffectNoBlind, EffectNoSeal, EffectNoWeak, EffectHungry, EffectDrops, EffectTrapper, EffectSmallStomach, EffectCritTaken,
-		EffectCall, EffectLeap, EffectBlast},
+		EffectCall, EffectLeap, EffectBlast, EffectClumsy},
 	CategoryGrass:  {EffectHeal, EffectStrength, EffectEyeDrops, EffectMaxHP},
 	CategoryScroll: {EffectLight, EffectIdentify, EffectUpWeapon, EffectUpShield, EffectUncurse, EffectMoreSlots, EffectEraseSeal},
 	CategoryStaff:  {EffectBlowAway, EffectRecruit, EffectSwap},

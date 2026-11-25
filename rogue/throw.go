@@ -51,6 +51,10 @@ func (g *Game) throwItem(it *Item) {
 			continue
 		}
 		m.Dozing = false
+		if g.wears(EffectClumsy) {
+			g.clumsy(thrown, m)
+			return
+		}
 		if !hits(g.rng, r.PlayerThrowRate) {
 			g.say(m.Name + "に当たらなかった。")
 			continue
