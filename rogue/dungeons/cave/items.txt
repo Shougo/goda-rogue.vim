@@ -18,7 +18,9 @@
 #     弱りよけ  nothing takes its attack or defense down
 #     ハラヘリ  makes hungry twice as fast, and the blows of the player
 #               do 強さ % more
-#     垂れ流し  the monsters killed drop an item 強さ % more often
+#     垂れ流し  the monsters killed drop an item 強さ % more often; a
+#               turn in ten, an item carried (not equipped) falls at the
+#               player's feet
 #   A bracelet with a 印 (and no 効果) has its ability while worn, at
 #   the strength an item is born with (seals.txt 強さ).
 #   草, drunk:

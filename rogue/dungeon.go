@@ -267,7 +267,8 @@ const (
 	// its strength in % more.
 	EffectHungry Effect = "ハラヘリ"
 	// EffectDrops: the monsters killed drop an item its strength in %
-	// more often.
+	// more often; the player lets one of its own fall now and then
+	// (leakChance).
 	EffectDrops     Effect = "垂れ流し"
 	EffectHeal      Effect = "HP回復"
 	EffectLight     Effect = "あかり"

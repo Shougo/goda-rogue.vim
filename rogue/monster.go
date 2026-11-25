@@ -605,6 +605,32 @@ func (g *Game) remove(m *Monster) {
 	}
 }
 
+// leakChance is the chance (%) a turn that a bracelet of drops (垂れ流し)
+// lets an item of the player fall at its feet (Shougo: 10%, one item).
+const leakChance = 10
+
+// leak is the player, wearing a bracelet of drops, letting an item fall
+// at its feet now and then: one carried, not equipped nor for sale.
+func (g *Game) leak() {
+	if !g.wears(EffectDrops) || g.rng.IntN(100) >= leakChance {
+		return
+	}
+	var its []*Item
+	for _, it := range g.Inventory {
+		if !it.Equipped && !it.ForSale {
+			its = append(its, it)
+		}
+	}
+	if len(its) == 0 {
+		return
+	}
+	it := its[g.rng.IntN(len(its))]
+	g.Inventory = slices.DeleteFunc(g.Inventory, func(x *Item) bool { return x == it })
+	g.use(EffectDrops)
+	g.say(g.Name(it) + "を落としてしまった。")
+	g.land(it, g.Player)
+}
+
 // dropRate is the chance (%) of a drop, rate by the monster or the rule,
 // with the bracelet worn: more with one of drops (垂れ流し).
 func (g *Game) dropRate(rate int) int {

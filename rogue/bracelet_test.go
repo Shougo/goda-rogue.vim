@@ -2,6 +2,7 @@ package rogue
 
 import (
 	"math"
+	"slices"
 	"testing"
 )
 
@@ -84,7 +85,8 @@ func TestHungryBracelet(t *testing.T) {
 	}
 }
 
-// TestDropBracelet: the monsters drop twice as often.
+// TestDropBracelet: the monsters drop twice as often; the player lets
+// its items fall now and then, not the equipped ones.
 func TestDropBracelet(t *testing.T) {
 	g, _ := roomGame(t, 6, 3)
 	if g.dropRate(30) != 30 {
@@ -93,6 +95,22 @@ func TestDropBracelet(t *testing.T) {
 	wear(g, "taranagashi")
 	if g.dropRate(30) != 60 || g.dropRate(80) != 100 || g.dropRate(0) != 0 {
 		t.Errorf("rates %d %d %d", g.dropRate(30), g.dropRate(80), g.dropRate(0))
+	}
+	g.Inventory = slices.DeleteFunc(g.Inventory, func(it *Item) bool { return !it.Equipped })
+	for range 5 {
+		carry(g, "yakusou", 0)
+	}
+	n := 0
+	for range 200 {
+		before := len(g.Inventory)
+		g.leak()
+		n += before - len(g.Inventory)
+	}
+	if n != 5 || len(g.Inventory) != 1 || !g.Inventory[0].Equipped {
+		t.Errorf("fell %d, left %d", n, len(g.Inventory))
+	}
+	if _, ok := g.ItemAt(g.Player); !ok {
+		t.Error("nothing at the feet")
 	}
 }
 
