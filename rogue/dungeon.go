@@ -311,6 +311,8 @@ const (
 	EffectWaterWalk Effect = "水蜘蛛"
 	EffectHeal      Effect = "HP回復"
 	EffectLight     Effect = "あかり"
+	// EffectDrain: the waterways of the floor dry up (水がれ).
+	EffectDrain     Effect = "水がれ"
 	EffectIdentify  Effect = "識別"
 	EffectBlowAway  Effect = "吹き飛ばし"
 	EffectRecruit   Effect = "仲間"
@@ -336,7 +338,7 @@ var effects = map[Category][]Effect{
 		EffectNoCurse, EffectNoBlind, EffectNoSeal, EffectNoWeak, EffectHungry, EffectDrops, EffectTrapper, EffectSmallStomach, EffectCritTaken,
 		EffectCall, EffectLeap, EffectBlast, EffectClumsy, EffectBlastGuard, EffectWaterWalk},
 	CategoryGrass:  {EffectHeal, EffectStrength, EffectEyeDrops, EffectMaxHP},
-	CategoryScroll: {EffectLight, EffectIdentify, EffectUpWeapon, EffectUpShield, EffectUncurse, EffectMoreSlots, EffectEraseSeal},
+	CategoryScroll: {EffectLight, EffectDrain, EffectIdentify, EffectUpWeapon, EffectUpShield, EffectUncurse, EffectMoreSlots, EffectEraseSeal},
 	CategoryStaff:  {EffectBlowAway, EffectRecruit, EffectSwap},
 	CategoryFood:   {EffectFood, EffectRotten},
 	CategoryPot:    {EffectKeep, EffectSynthesis, EffectHealPot, EffectPlain},

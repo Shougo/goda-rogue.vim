@@ -564,12 +564,14 @@ func (g *Game) playerHurt(n int, m *Monster) bool {
 }
 
 // flingPlayer sends the player flying by d, up to blowAwayTiles, as m did;
-// hitting a wall or a creature hurts it. A trap where it lands goes off.
+// hitting a wall or a creature hurts it. A trap where it lands goes off;
+// landing in water, without a bracelet of 水蜘蛛, it is washed away
+// (overboard).
 func (g *Game) flingPlayer(d Point, m *Monster) {
 	p := g.Player
 	for range blowAwayTiles {
 		next := p.Add(d)
-		if g.clearFrom(p, d) && g.Level.At(next).Walkable() && !g.occupied(next) {
+		if g.clearFrom(p, d) && g.Level.At(next).Open() && !g.occupied(next) {
 			p = next
 			continue
 		}
@@ -581,6 +583,7 @@ func (g *Game) flingPlayer(d Point, m *Monster) {
 	}
 	if p != g.Player {
 		g.shove(p)
+		g.overboard()
 	}
 }
 

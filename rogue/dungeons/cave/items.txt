@@ -39,8 +39,8 @@
 #               next to it crumble
 #     耐爆      an explosion (a monster's, a mine) does half its damage
 #               to the player
-#     水蜘蛛    the player walks on the waterways, and may not take it off
-#               there
+#     水蜘蛛    the player walks on the waterways; taken off there, the
+#               player falls in and is washed away somewhere on the floor
 #     ヘタ投げ  what the player throws or shoots never hits: it falls at
 #               the feet of the monster it would have hit, and a trap
 #               there goes off on it (as with 罠師)
@@ -59,6 +59,7 @@
 #     最大HP    raises the max HP by 強さ
 #   巻物, read:
 #     あかり    lights the floor: its map, items and monsters
+#     水がれ    the waterways of the floor dry up into floor
 #     識別      identifies an item (nothing to identify yet)
 #     武器強化  raises the upgrade value of the equipped weapon by 強さ
 #     盾強化    raises the upgrade value of the equipped shield by 強さ
@@ -181,6 +182,7 @@ metsubushi	草	目つぶし草	草	0	目つぶし	0	-	-	0	100
 suimin	草	睡眠草	草	0	睡眠	0	-	-	0	150
 shikibetsu	巻	識別の巻物	巻物	0	識別	0	-	-	0	100
 akari	巻	あかりの巻物	巻物	0	あかり	0	-	-	0	200
+mizugare	巻	水がれの巻物	巻物	0	水がれ	0	-	-	0	500
 oharai	巻	おはらいの巻物	巻物	0	おはらい	0	-	-	0	300
 inzoudai	巻	印増大の巻物	巻物	0	印増大	0	-	-	0	800
 inkeshi	巻	印消しの巻物	巻物	0	印消し	0	-	-	0	300

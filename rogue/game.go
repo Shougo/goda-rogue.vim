@@ -838,6 +838,7 @@ func (g *Game) tick(rest bool) {
 		return
 	}
 	g.leak()
+	g.overboard()
 	g.trapperSees()
 	g.call()
 	if g.leap() || g.blast() {

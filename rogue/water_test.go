@@ -17,8 +17,8 @@ func waterGame(t *testing.T) (*Game, Room) {
 	return g, r
 }
 
-// TestWaterWalk: the player crosses water only with a bracelet of 水蜘蛛,
-// and may not take it off there.
+// TestWaterWalk: the player crosses water only with a bracelet of 水蜘蛛;
+// taking it off there, it falls in and is washed away onto the floor.
 func TestWaterWalk(t *testing.T) {
 	g, r := waterGame(t)
 	if g.step(Directions["right"], false) {
@@ -28,16 +28,22 @@ func TestWaterWalk(t *testing.T) {
 	if !g.step(Directions["right"], false) || g.Player != (Point{r.X + 3, r.Y + 1}) {
 		t.Fatalf("not on the water: %v", g.Player)
 	}
-	if !g.onWaterWith(b, commandUnequip) {
-		t.Error("may take it off on the water")
+	g.overboard()
+	if g.Level.At(g.Player) != TileWater {
+		t.Fatal("washed away with the bracelet on")
 	}
-	other := carry(g, "kehai", 0)
-	if !g.onWaterWith(other, commandEquip) {
-		t.Error("may put another on, on the water")
+	g.unequip(b)
+	g.overboard()
+	if !g.Level.At(g.Player).Walkable() {
+		t.Errorf("still in the water at %v", g.Player)
 	}
-	g.step(Directions["right"], false)
-	if g.onWaterWith(b, commandUnequip) {
-		t.Error("may not take it off on land")
+}
+
+// TestDrain: the scroll of 水がれ dries the waterways up.
+func TestDrain(t *testing.T) {
+	g, r := waterGame(t)
+	if !g.drain() || g.Level.At(Point{r.X + 3, r.Y}) != TileRoom || g.drain() {
+		t.Error("the water stays, or dries twice")
 	}
 }
 
@@ -183,5 +189,29 @@ func TestIslandItems(t *testing.T) {
 	}
 	if found == 0 {
 		t.Error("no island")
+	}
+}
+
+// TestFlungIntoWater: blown into the water, the player (without the
+// bracelet) and a monster that does not swim are washed away onto the
+// floor; over it, they fly on.
+func TestFlungIntoWater(t *testing.T) {
+	g, r := waterGame(t)
+	g.HP, g.MaxHP = 999, 999
+	m := place(g, kind("nezumi1"), Point{r.X + 1, r.Y + 1})
+	// One beyond the water stops the flight on it.
+	block := place(g, kind("nezumi1"), Point{r.X + 4, r.Y + 1})
+	g.flingPlayer(Directions["right"], m)
+	if !g.Level.At(g.Player).Walkable() {
+		t.Errorf("the player in the water at %v", g.Player)
+	}
+	g.remove(block)
+	g.Player = Point{r.X, r.Y}
+	m.Pos = Point{r.X + 2, r.Y + 2}
+	place(g, kind("nezumi1"), Point{r.X + 4, r.Y + 2})
+	m.HP, m.MaxHP = 999, 999
+	g.fling(m, Directions["right"], true)
+	if !g.Level.At(m.Pos).Walkable() {
+		t.Errorf("the monster in the water at %v", m.Pos)
 	}
 }

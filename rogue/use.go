@@ -88,6 +88,12 @@ func (g *Game) effectOf(it *Item, lucky bool) {
 	case EffectLight:
 		g.light()
 		g.say("フロアが明るくなった。")
+	case EffectDrain:
+		if g.drain() {
+			g.say("フロアの水路の水がかれた。")
+		} else {
+			g.say("しかし何も起こらなかった。")
+		}
 	case EffectIdentify:
 		switch {
 		case lucky && g.identifyAll():
@@ -280,11 +286,20 @@ func (g *Game) blowAway() {
 
 // fling sends m flying by d, up to blowAwayTiles; hitting a wall or another
 // creature on the way hurts it. byPlayer says whether the player (a staff)
-// sent it, who then defeats it.
+// sent it, who then defeats it. It flies over water; one that does not
+// swim, landing in it, is washed away somewhere on the floor.
 func (g *Game) fling(m *Monster, d Point, byPlayer bool) {
+	defer func() {
+		if g.Level.At(m.Pos) == TileWater && !m.swims() && slices.Contains(g.Monsters, m) {
+			if p, ok := g.freeTile(); ok {
+				m.Pos = p
+				g.say(m.Name + "は水路に落ちて、どこかへ流された。")
+			}
+		}
+	}()
 	for range blowAwayTiles {
 		next := m.Pos.Add(d)
-		if g.clearFrom(m.Pos, d) && g.Level.At(next).Walkable() && !g.occupied(next) {
+		if g.clearFrom(m.Pos, d) && g.Level.At(next).Open() && !g.occupied(next) {
 			m.Pos = next
 			continue
 		}

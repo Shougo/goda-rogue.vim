@@ -113,13 +113,27 @@ func (g *Game) clumsy(it *Item, m *Monster) {
 	}
 }
 
-// onWaterWith says whether doing command (to equip or to take off) with
-// the bracelet it would take the bracelet of 水蜘蛛 off the player on
-// water, which it may not.
-func (g *Game) onWaterWith(it *Item, command string) bool {
-	if g.Level.At(g.Player) != TileWater || !g.wears(EffectWaterWalk) {
-		return false
+// overboard is the player on water without the bracelet of 水蜘蛛 (taken
+// off, or another put on there): it falls in and is washed away, to a
+// tile somewhere on the floor (Shougo).
+func (g *Game) overboard() {
+	if g.Level.At(g.Player) != TileWater || g.wears(EffectWaterWalk) {
+		return
 	}
-	worn := g.equipped(CategoryBracelet)
-	return command == commandUnequip && it == worn || command == commandEquip && it != worn
+	g.say("水路に落ちてしまった！")
+	g.warpAway()
+}
+
+// drain is the scroll of 水がれ read: the waterways of the floor dry up
+// into floor; the islands are reached on foot then. It says whether there
+// was water.
+func (g *Game) drain() bool {
+	dried := false
+	for i, t := range g.Level.Tiles {
+		if t == TileWater {
+			g.Level.set(Point{i % g.Level.W, i / g.Level.W}, TileRoom)
+			dried = true
+		}
+	}
+	return dried
 }

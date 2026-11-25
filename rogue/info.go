@@ -21,6 +21,7 @@ var effectTexts = map[Effect]string{
 	EffectEyeDrops:     "フロアの罠と、道具に化けたものが見える。目つぶしも治る。",
 	EffectHeal:         "HP が %d 回復する。HP が満タンなら最大 HP が上がる。",
 	EffectLight:        "フロア全体が明るくなり、地形と道具と敵が見える。",
+	EffectDrain:        "フロアの水路の水がかれて、歩けるようになる。",
 	EffectUncurse:      "持ち物 1 つの呪いを解く。ラッキーなら持ち物すべて。",
 	EffectMoreSlots:    "選んだ武器か盾の印の枠を 1 つ増やす（10 まで）。",
 	EffectEraseSeal:    "選んだ印を 1 つ消す（素の能力は消えない）。",
@@ -48,7 +49,7 @@ var effectTexts = map[Effect]string{
 	EffectBlast:        "毎ターン %d%% の確率で爆発する。自分の HP は半分になり、周りの敵は消え、仲間の HP は半分になり、隣の道具は消え、隣の壁は崩れる。",
 	EffectClumsy:       "投げた物と撃った矢が必ず外れ、狙った敵の足元に落ちる。敵が罠の上にいれば、その罠が敵に働く。",
 	EffectBlastGuard:   "爆発（敵の爆発、地雷）で受けるダメージが半分になる。",
-	EffectWaterWalk:    "水路の上を歩ける。水の上では外せない。",
+	EffectWaterWalk:    "水路の上を歩ける。水の上で外すと、水に落ちてどこかへ流される。",
 	EffectTrapper:      "罠がすべて見え、歩いて罠を踏まない。敵は罠を踏むようになる。",
 	EffectPlain:        "道具を入れられるが、中の道具は使えず、割らないと取り出せない。",
 	EffectSynthesis: "武器と盾は、先に入れた同じ種類のものに印と修正値が合成される。" +
