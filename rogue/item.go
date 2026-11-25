@@ -166,7 +166,7 @@ func (g *Game) describe(it *Item) string {
 		s += "（祝）"
 	}
 	if it.ForSale {
-		s += fmt.Sprintf(" %dG", price(it))
+		s += fmt.Sprintf(" %dG", g.buyPrice(it))
 	}
 	return s
 }
@@ -357,7 +357,7 @@ func (g *Game) pickUp(walked bool) bool {
 	g.say(g.Name(it) + "を拾った。")
 	g.event("pickup %s", it.Def.ID)
 	if it.ForSale {
-		g.say(fmt.Sprintf("店主「%dG です。」", price(it)))
+		g.say(fmt.Sprintf("店主「%dG です。」", g.buyPrice(it)))
 	}
 	return true
 }

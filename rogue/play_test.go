@@ -253,8 +253,8 @@ func checkGame(g *Game) error {
 	if g.Cleared && g.Over == "" {
 		fail("cleared, not over")
 	}
-	if g.Fullness < 0 || g.Fullness > rules.Fullness {
-		fail("fullness %d of %d", g.Fullness, rules.Fullness)
+	if g.Fullness < 0 || g.Fullness > max(rules.Fullness, g.fullnessCap()) {
+		fail("fullness %d of %d", g.Fullness, max(rules.Fullness, g.fullnessCap()))
 	}
 	if g.Gold < 0 || g.PlayerLevel < 1 || g.Strength < 0 || g.EXP < 0 {
 		fail("gold %d, level %d, strength %d, EXP %d", g.Gold, g.PlayerLevel, g.Strength, g.EXP)

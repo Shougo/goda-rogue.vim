@@ -185,3 +185,24 @@ func (g *Game) drain() bool {
 	}
 	return dried
 }
+
+// happy is the EXP n of a defeat, more with a bracelet of しあわせ (its
+// strength in %).
+func (g *Game) happy(n int) int {
+	if b := g.equipped(CategoryBracelet); b != nil && b.Def.Effect == EffectHappy {
+		g.use(EffectHappy)
+		return n * (100 + b.Def.Strength) / 100
+	}
+	return n
+}
+
+// buyPrice is what an item for sale costs the player: less with a
+// bracelet of 値切り (its strength in % off). The price no longer tells
+// the kind as well, then.
+func (g *Game) buyPrice(it *Item) int {
+	n := price(it)
+	if b := g.equipped(CategoryBracelet); b != nil && b.Def.Effect == EffectBargain {
+		return n * (100 - b.Def.Strength) / 100
+	}
+	return n
+}

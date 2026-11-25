@@ -560,7 +560,7 @@ func (g *Game) defeated(m *Monster) {
 	if !stole {
 		g.dropFrom(m)
 	}
-	g.EXP += m.EXP
+	g.EXP += g.happy(m.EXP)
 	growth := g.Dungeon.Growth[g.Dungeon.Rules.Growth]
 	for g.PlayerLevel-1 < len(growth) && g.EXP >= growth[g.PlayerLevel-1].EXP {
 		gr := growth[g.PlayerLevel-1]
@@ -614,8 +614,9 @@ func (g *Game) wake(i int) {
 		return
 	}
 	r := g.Level.Rooms[i]
+	quiet := g.wears(EffectStealth)
 	for _, m := range g.Monsters {
-		if r.Contains(m.Pos) && m.Dozing && (m.House || g.rng.IntN(100) < wakeShare) {
+		if r.Contains(m.Pos) && m.Dozing && (m.House || !quiet && g.rng.IntN(100) < wakeShare) {
 			m.Dozing = false
 		}
 	}

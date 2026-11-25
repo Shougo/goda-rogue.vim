@@ -363,3 +363,91 @@ func TestBlastGuardBracelet(t *testing.T) {
 		t.Errorf("HP %d after a blast, want 75", g.HP)
 	}
 }
+
+// TestNoStarveBracelet: a hungry ghost sucks nothing.
+func TestNoStarveBracelet(t *testing.T) {
+	g, r := roomGame(t, 6, 3)
+	m := place(g, kind("gaki1"), Point{r.X + 1, r.Y})
+	a, _ := m.ability(AbilityHunger)
+	a.Values = []int{100, 10, 0}
+	g.Fullness = 50
+	wear(g, "harahetiyoke")
+	g.starve(m, a)
+	if g.Fullness != 50 {
+		t.Errorf("fullness %d", g.Fullness)
+	}
+}
+
+// TestPierceBracelet: a thrown item hits every monster on its line.
+func TestPierceBracelet(t *testing.T) {
+	g, r := trapGame(t)
+	g.Player = Point{r.X, r.Y}
+	g.Facing = "right"
+	g.Dungeon.Rules.PlayerThrowRate = 100
+	var ms []*Monster
+	for i := 1; i <= 3; i++ {
+		m := place(g, kind("nezumi1"), Point{r.X + i, r.Y})
+		m.HP, m.MaxHP = 999, 999
+		ms = append(ms, m)
+	}
+	wear(g, "entou")
+	g.throwItem(carry(g, "kitate", 0))
+	for i, m := range ms {
+		if m.HP == 999 {
+			t.Errorf("monster %d not hit", i)
+		}
+	}
+}
+
+// TestHappyBracelet: 50% more EXP.
+func TestHappyBracelet(t *testing.T) {
+	g, _ := roomGame(t, 6, 3)
+	if g.happy(10) != 10 {
+		t.Error("without the bracelet")
+	}
+	wear(g, "shiawase")
+	if g.happy(10) != 15 {
+		t.Errorf("EXP %d", g.happy(10))
+	}
+}
+
+// TestStealthBracelet: the monsters asleep in a room do not wake.
+func TestStealthBracelet(t *testing.T) {
+	g, r := roomGame(t, 8, 4)
+	wear(g, "shinobiashi")
+	var ms []*Monster
+	for i := range 6 {
+		m := place(g, kind("nezumi1"), Point{r.X + 1 + i, r.Y + 2})
+		m.Dozing = true
+		ms = append(ms, m)
+	}
+	g.wake(g.Level.RoomAt(Point{r.X, r.Y}))
+	for _, m := range ms {
+		if !m.Dozing {
+			t.Fatal("woke up")
+		}
+	}
+}
+
+// TestBigStomachBracelet: 50 more fullness held.
+func TestBigStomachBracelet(t *testing.T) {
+	g, _ := roomGame(t, 6, 3)
+	wear(g, "ikakuchou")
+	g.Fullness = 100
+	g.fill(100)
+	if g.Fullness != 150 {
+		t.Errorf("fullness %d", g.Fullness)
+	}
+}
+
+// TestBargainBracelet: goods cost 20% less.
+func TestBargainBracelet(t *testing.T) {
+	g, _ := roomGame(t, 6, 3)
+	it := carry(g, "yakusou", 0)
+	it.ForSale = true
+	full := price(it)
+	wear(g, "negiri")
+	if n := g.buyPrice(it); n != full*80/100 || g.debt() != n {
+		t.Errorf("price %d of %d, debt %d", n, full, g.debt())
+	}
+}

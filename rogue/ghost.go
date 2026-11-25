@@ -24,10 +24,13 @@ func (g *Game) fill(n int) {
 const shrinkFullness = 25
 
 // fullnessCap is how full the player can be now: the max fullness, less
-// with a bracelet of 胃縮小 (not under 1).
+// with a bracelet of 胃縮小 (not under 1), more with one of 胃拡張.
 func (g *Game) fullnessCap() int {
 	if g.wears(EffectSmallStomach) {
 		return max(g.MaxFullness-shrinkFullness, 1)
+	}
+	if b := g.equipped(CategoryBracelet); b != nil && b.Def.Effect == EffectBigStomach {
+		return g.MaxFullness + b.Def.Strength
 	}
 	return g.MaxFullness
 }
@@ -55,6 +58,11 @@ const minMaxFullness = 20
 func (g *Game) starve(m *Monster, a Ability) bool {
 	if g.rng.IntN(100) >= a.Values[0] {
 		return false
+	}
+	if g.wears(EffectNoStarve) {
+		g.use(EffectNoStarve)
+		g.say(m.Name + "は満腹度を吸おうとした。しかしハラヘリよけの腕輪が守った。")
+		return true
 	}
 	least := g.Dungeon.Rules.Fullness * minMaxFullness / 100
 	switch n, top := a.Values[1], a.Values[2]; {

@@ -53,6 +53,12 @@ var effectTexts = map[Effect]string{
 	EffectFloat:        "浮いて、水路の上を渡れ、罠を踏まない。",
 	EffectWalls:        "壁の中を歩ける。壁の中では毎ターン HP が 1 減る（1 は残る）。",
 	EffectCursePower:   "持っている呪われた物 1 つにつき、ちからが %d 上がる（壺の中は数えない）。",
+	EffectNoStarve:     "満腹度を吸われない（餓）。",
+	EffectPierce:       "投げた物と撃った矢が、当たった敵を貫いて飛ぶ。",
+	EffectHappy:        "敵を倒して得る経験値が %d%% 増える。",
+	EffectStealth:      "部屋に出入りしても、眠っている敵が起きない（モンスターハウスは別）。",
+	EffectBigStomach:   "最大満腹度が %d 上がる。",
+	EffectBargain:      "店の商品が %d%% 安くなる（値段で正体を見分けにくくなる）。",
 	EffectTrapper:      "罠がすべて見え、歩いて罠を踏まない。敵は罠を踏むようになる。",
 	EffectPlain:        "道具を入れられるが、中の道具は使えず、割らないと取り出せない。",
 	EffectSynthesis: "武器と盾は、先に入れた同じ種類のものに印と修正値が合成される。" +

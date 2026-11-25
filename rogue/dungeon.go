@@ -318,8 +318,22 @@ const (
 	// EffectCursePower: each cursed item carried (the bracelet too, not
 	// what is in pots) adds its strength to the strength (ちから).
 	EffectCursePower Effect = "呪い力"
-	EffectHeal       Effect = "HP回復"
-	EffectLight      Effect = "あかり"
+	// EffectNoStarve: the monsters that suck the fullness (飢え) fail.
+	EffectNoStarve Effect = "ハラヘリよけ"
+	// EffectPierce: what the player throws or shoots flies through the
+	// monsters it hits.
+	EffectPierce Effect = "遠投"
+	// EffectHappy: the EXP of the defeats is its strength in % more.
+	EffectHappy Effect = "しあわせ"
+	// EffectStealth: the monsters asleep in a room do not wake as the
+	// player comes and goes (but in a monster house).
+	EffectStealth Effect = "忍び足"
+	// EffectBigStomach: the player holds its strength more fullness.
+	EffectBigStomach Effect = "胃拡張"
+	// EffectBargain: the goods of shops cost its strength in % less.
+	EffectBargain Effect = "値切り"
+	EffectHeal    Effect = "HP回復"
+	EffectLight   Effect = "あかり"
 	// EffectDrain: the waterways of the floor dry up (水がれ).
 	EffectDrain     Effect = "水がれ"
 	EffectIdentify  Effect = "識別"
@@ -346,7 +360,8 @@ var effects = map[Category][]Effect{
 	CategoryBracelet: {EffectStrength, EffectRegen, EffectSenseEnemy, EffectSenseItem, EffectNoRust, EffectNoTheft, EffectNoSleep, EffectNoConfuse,
 		EffectNoCurse, EffectNoBlind, EffectNoSeal, EffectNoWeak, EffectHungry, EffectDrops, EffectTrapper, EffectSmallStomach, EffectCritTaken,
 		EffectCall, EffectLeap, EffectBlast, EffectClumsy, EffectBlastGuard, EffectWaterWalk,
-		EffectFloat, EffectWalls, EffectCursePower},
+		EffectFloat, EffectWalls, EffectCursePower,
+		EffectNoStarve, EffectPierce, EffectHappy, EffectStealth, EffectBigStomach, EffectBargain},
 	CategoryGrass:  {EffectHeal, EffectStrength, EffectEyeDrops, EffectMaxHP},
 	CategoryScroll: {EffectLight, EffectDrain, EffectIdentify, EffectUpWeapon, EffectUpShield, EffectUncurse, EffectMoreSlots, EffectEraseSeal},
 	CategoryStaff:  {EffectBlowAway, EffectRecruit, EffectSwap},

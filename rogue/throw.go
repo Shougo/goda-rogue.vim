@@ -41,6 +41,10 @@ func (g *Game) throwItem(it *Item) {
 	d := Directions[g.Facing]
 	r := g.Dungeon.Rules
 	p := g.Player
+	// With a bracelet of 遠投 it flies through the monsters it hits, on to
+	// the next (what it does, it does to each); used up, it is gone at
+	// the end.
+	pierce, usedUp := g.wears(EffectPierce) && thrown.Def.Category != CategoryPot, false
 	for range throwRange {
 		if !g.clearFrom(p, d) || !g.Level.At(p.Add(d)).Open() {
 			break
@@ -62,10 +66,19 @@ func (g *Game) throwItem(it *Item) {
 		if g.reflectThrown(m, thrown) || g.burn(m, thrown) || g.swallow(m, thrown) || g.feed(m, thrown) {
 			return
 		}
-		if g.hitBy(thrown, m) {
+		used := g.hitBy(thrown, m)
+		if pierce {
+			g.use(EffectPierce)
+			usedUp = usedUp || used
+			continue
+		}
+		if used {
 			return
 		}
 		break
+	}
+	if usedUp {
+		return
 	}
 	if thrown.Def.Category == CategoryPot {
 		g.smash(thrown, p)

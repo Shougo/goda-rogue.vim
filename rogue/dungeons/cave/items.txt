@@ -46,6 +46,15 @@
 #               there, the player is pushed out somewhere on the floor
 #     呪い力    each cursed item carried (not in pots) adds 強さ to the
 #               strength
+#     ハラヘリよけ  the monsters that suck the fullness (飢え) fail
+#     遠投      what the player throws or shoots flies through the
+#               monsters it hits (what it does, it does to each)
+#     しあわせ  the EXP of the defeats is 強さ % more
+#     忍び足    the monsters asleep in a room do not wake as the player
+#               comes and goes (but in a monster house)
+#     胃拡張    the player holds 強さ more fullness
+#     値切り    the goods of shops cost 強さ % less (their prices tell
+#               the kinds less well)
 #     水蜘蛛    the player walks on the waterways; taken off there, the
 #               player falls in and is washed away somewhere on the floor
 #     ヘタ投げ  what the player throws or shoots never hits: it falls at
@@ -176,6 +185,12 @@ mizugumo	腕	水蜘蛛の腕輪	腕輪	0	水蜘蛛	0	-	-	0	2000
 fuyuu	腕	浮遊の腕輪	腕輪	0	浮遊	0	-	-	0	5000
 kabenuke	腕	壁抜けの腕輪	腕輪	0	壁抜け	0	-	-	0	3000
 noroiryoku	腕	呪い力の腕輪	腕輪	1	呪い力	0	-	-	0	1500
+harahetiyoke	腕	ハラヘリよけの腕輪	腕輪	0	ハラヘリよけ	15	-	-	0	1500
+entou	腕	遠投の腕輪	腕輪	0	遠投	0	-	-	0	2000
+shiawase	腕	しあわせの腕輪	腕輪	50	しあわせ	0	-	-	0	3000
+shinobiashi	腕	忍び足の腕輪	腕輪	0	忍び足	0	-	-	0	1500
+ikakuchou	腕	胃拡張の腕輪	腕輪	50	胃拡張	0	-	-	0	1500
+negiri	腕	値切りの腕輪	腕輪	20	値切り	0	-	-	0	2500
 kiya	矢	木の矢	矢	4	-	0	5-15	-	0	10
 tetsuya	矢	鉄の矢	矢	8	-	0	3-10	-	0	20
 ishi	矢	石	矢	3	-	0	1-1	-	0	2

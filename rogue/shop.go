@@ -194,7 +194,7 @@ func (g *Game) debt() int {
 	n := 0
 	for _, it := range g.Inventory {
 		if it.ForSale {
-			n += price(it)
+			n += g.buyPrice(it)
 		}
 	}
 	return n
@@ -366,7 +366,7 @@ func (g *Game) shopInfo(it *Item) []string {
 	var lines []string
 	switch {
 	case it.ForSale:
-		lines = append(lines, fmt.Sprintf("値段 %dG（店の商品）", price(it)))
+		lines = append(lines, fmt.Sprintf("値段 %dG（店の商品）", g.buyPrice(it)))
 	case g.shopOpen() && sellPrice(it) > 0:
 		lines = append(lines, fmt.Sprintf("売値 %dG（値段 %dG）", sellPrice(it), price(it)))
 	default:
