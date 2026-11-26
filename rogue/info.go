@@ -64,6 +64,41 @@ var effectTexts = map[Effect]string{
 	EffectSynthesis: "武器と盾は、先に入れた同じ種類のものに印と修正値が合成される。" +
 		"同じ腕輪を入れるとひびが直る。中のものは出せない。",
 	EffectHealPot: "道具を入れると HP が全部回復する。入れた道具はなくなり、壺の容量も 1 つ減る。",
+	EffectSlash:   "部屋の敵（通路では隣の敵）に %d のダメージを与える。",
+	EffectWipe:    "部屋の敵（通路では隣の敵）を倒す。店主には効かない。",
+	EffectNoTraps: "フロアの罠がすべて消える。",
+	EffectSeer:    "そのフロアにいる間、フロアの敵の居場所が分かる。",
+	EffectGather:  "フロアの道具（店の商品を除く）が自分の周りに集まる。",
+	EffectLost:    "フロアのどこかへワープする。",
+	EffectOnigiri: "選んだ持ち物 1 つ（装備中の物を除く）がおにぎりになる。",
+	EffectPotUp:   "選んだ壺の容量が 1 つ増える。",
+	EffectSuck:    "選んだ壺の中身がすべて足元の周りに出てくる（どの壺でも）。",
+	EffectBless:   "選んだ持ち物 1 つを祝福する。呪われた物は、呪いが解ける。",
+	EffectPlate:   "装備している武器と盾にメッキがかかり、サビなくなる。",
+}
+
+// magicTexts say what the effect of a bolt does to its target ("%s").
+var magicTexts = map[MagicEffect]string{
+	MagicWarp:    "%sをどこかへワープさせる。",
+	MagicHaste:   "%sを速くする。",
+	MagicBlow:    "%sを 10 マス吹き飛ばす。",
+	MagicConfuse: "%sを混乱させる。",
+	MagicSlow:    "%sを遅くする。",
+	MagicSleep:   "%sを眠らせる。",
+	MagicSeal:    "%sを封印する（敵は特技が、自分は口が封じられる）。",
+	MagicHalf:    "%sの HP を半分にする。",
+	MagicQuarter: "%sの HP を 1/4 にする。",
+	MagicLevel1:  "%sのレベルを 1 下げる。",
+	MagicLevel3:  "%sのレベルを 3 下げる。",
+	MagicBlind:   "%sの目を見えなくする。",
+}
+
+// magicTargets are whom the effect of a bolt takes, by the category of
+// the item that has it.
+var magicTargets = map[Category]string{
+	CategoryGrass:  "飲んだ自分か、投げて当たった相手",
+	CategoryScroll: "読むと、部屋の敵（通路では隣の敵）",
+	CategoryStaff:  "振ると、魔法弾が当たった相手",
 }
 
 // sealTexts say what each seal does ("%d" is its strength).
@@ -95,6 +130,9 @@ var usePrefixes = map[Category]string{
 func effectText(def *ItemDef) string {
 	t, ok := effectTexts[def.Effect]
 	if !ok {
+		if m, ok := magicTexts[MagicEffect(def.Effect)]; ok && castable(def.Category, MagicEffect(def.Effect)) {
+			return fmt.Sprintf(m, magicTargets[def.Category])
+		}
 		return "特に効果はない。"
 	}
 	if def.Category == CategoryPot {

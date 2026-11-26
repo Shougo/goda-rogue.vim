@@ -71,6 +71,9 @@ type Item struct {
 	Cursed bool
 	// Blessed says whether it is blessed (bless.go); never with Cursed.
 	Blessed bool
+	// Plated says whether a weapon or a shield was plated (the scroll of
+	// メッキ): it never rusts.
+	Plated bool
 	// CurseTold says whether the player knows if it is cursed or
 	// blessed, without knowing the rest (Known): it equipped the item
 	// or tried to use it (curse.go).
@@ -141,6 +144,9 @@ func (g *Game) describe(it *Item) string {
 			s += fmt.Sprintf("%+d", it.Upgrade)
 		}
 		s += sealsLabel(it)
+		if it.Plated {
+			s += "［メッキ］"
+		}
 	case it.Def.Category == CategoryPot:
 		s += g.potLabel(it)
 	case it.Def.Category == CategoryArrow:
@@ -638,6 +644,18 @@ func (g *Game) choose(arg string) (bool, error) {
 	case promptErase:
 		g.eraseSeal(p.targets[n], p.items[n])
 		return false, nil
+	case promptOnigiri:
+		g.toOnigiri(p.targets[n])
+		return false, nil
+	case promptPotUp:
+		g.potUp(p.targets[n])
+		return false, nil
+	case promptSuck:
+		g.suckOut(p.targets[n])
+		return false, nil
+	case promptBless:
+		g.bless(p.targets[n])
+		return false, nil
 	case promptPay:
 		if n == 0 {
 			g.pay()
@@ -792,6 +810,9 @@ func (g *Game) sensesMonster(p Point) bool {
 	if g.Blind > 0 {
 		// Blind, nothing is sensed (the light neither: Visible).
 		return false
+	}
+	if g.Seer {
+		return true
 	}
 	b := g.equipped(CategoryBracelet)
 	if b == nil || b.Def.Effect != EffectSenseEnemy {

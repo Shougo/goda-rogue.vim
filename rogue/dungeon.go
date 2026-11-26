@@ -354,6 +354,18 @@ const (
 	EffectUncurse   Effect = "おはらい"
 	EffectMoreSlots Effect = "印増大"
 	EffectEraseSeal Effect = "印消し"
+	// The scrolls of scroll.go.
+	EffectSlash   Effect = "真空斬り"
+	EffectWipe    Effect = "全滅"
+	EffectNoTraps Effect = "罠消し"
+	EffectSeer    Effect = "千里眼"
+	EffectGather  Effect = "道具寄せ"
+	EffectLost    Effect = "迷子"
+	EffectOnigiri Effect = "おにぎり"
+	EffectPotUp   Effect = "壺増大"
+	EffectSuck    Effect = "吸い出し"
+	EffectBless   Effect = "祝福"
+	EffectPlate   Effect = "メッキ"
 )
 
 // effects are the effects the items of each category can have.
@@ -363,11 +375,12 @@ var effects = map[Category][]Effect{
 		EffectCall, EffectLeap, EffectBlast, EffectClumsy, EffectBlastGuard, EffectWaterWalk,
 		EffectFloat, EffectWalls, EffectCursePower,
 		EffectNoStarve, EffectPierce, EffectHappy, EffectStealth, EffectBigStomach, EffectBargain},
-	CategoryGrass:  {EffectHeal, EffectStrength, EffectEyeDrops, EffectMaxHP},
-	CategoryScroll: {EffectLight, EffectDrain, EffectIdentify, EffectUpWeapon, EffectUpShield, EffectUncurse, EffectMoreSlots, EffectEraseSeal},
-	CategoryStaff:  {EffectBlowAway, EffectRecruit, EffectSwap},
-	CategoryFood:   {EffectFood, EffectRotten},
-	CategoryPot:    {EffectKeep, EffectSynthesis, EffectHealPot, EffectPlain},
+	CategoryGrass: {EffectHeal, EffectStrength, EffectEyeDrops, EffectMaxHP},
+	CategoryScroll: {EffectLight, EffectDrain, EffectIdentify, EffectUpWeapon, EffectUpShield, EffectUncurse, EffectMoreSlots, EffectEraseSeal,
+		EffectSlash, EffectWipe, EffectNoTraps, EffectSeer, EffectGather, EffectLost, EffectOnigiri, EffectPotUp, EffectSuck, EffectBless, EffectPlate},
+	CategoryStaff: {EffectBlowAway, EffectRecruit, EffectSwap},
+	CategoryFood:  {EffectFood, EffectRotten},
+	CategoryPot:   {EffectKeep, EffectSynthesis, EffectHealPot, EffectPlain},
 }
 
 // FloorRow is a row of an appearance table: id appears on the floors

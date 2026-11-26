@@ -234,7 +234,11 @@ func TestFloatBracelet(t *testing.T) {
 // (never the last); taken off there, the player is pushed out.
 func TestWallsBracelet(t *testing.T) {
 	g, r := trapGame(t)
+	// (A tile of the top row with rock above, not a door.)
 	g.Player = Point{r.X, r.Y}
+	for g.Level.At(g.Player.Add(Directions["up"])) != TileRock {
+		g.Player.X++
+	}
 	g.HP = 2
 	if g.step(Directions["up"], false) {
 		t.Fatal("into the rock without the bracelet")

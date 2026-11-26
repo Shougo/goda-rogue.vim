@@ -48,7 +48,8 @@ takes no room, and works in full while the item is equipped.  Merged
 into another weapon or shield, it becomes a seal of that one, weaker
 (half or so).  A synthesis keeps the ability of the base.  A scroll of
 印増大 adds a slot for seals (10 at most), one of 印消し takes a seal
-chosen away.
+chosen away.  A scroll of メッキ plates the weapon and the shield
+equipped: they never rust from then on (［メッキ］).
 
 An item of the dungeon, but arrows and money, may be cursed.  A cursed
 weapon, shield or bracelet does not come off once equipped (木刀-1（呪）):
@@ -1005,7 +1006,9 @@ The built-in dungeons:
 				        遠投 しあわせ 忍び足 胃拡張 値切り
 				  草: HP回復 ちから 目薬 最大HP
 				  巻物: あかり 水がれ 識別 武器強化 盾強化 おはらい
-				        印増大 印消し
+				        印増大 印消し 真空斬り 全滅 罠消し
+				        千里眼 道具寄せ 迷子 おにぎり 壺増大
+				        吸い出し 祝福 メッキ
 				  杖: 吹き飛ばし 仲間 場所替え
 				  食料: 満腹 腐った
 				  壺: 保存 合成 全回復 普通

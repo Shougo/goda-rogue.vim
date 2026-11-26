@@ -130,6 +130,26 @@ func readDeath(g *Game, ms []*Monster, def *ItemDef) float64 {
 			return ok && slices.Contains(around, m)
 		}), g.HP, 1)
 	}
+	switch def.Effect {
+	case EffectWipe, EffectSlash:
+		// Those around die (not a shopkeeper), or lose its strength
+		// in HP.
+		around := g.enemiesAround()
+		var out []*Monster
+		for _, m := range ms {
+			switch {
+			case !slices.Contains(around, m):
+				out = append(out, m)
+			case def.Effect == EffectWipe && m.Keeper:
+				out = append(out, m)
+			case def.Effect == EffectSlash && m.HP > def.Strength:
+				c := *m
+				c.MaxHP = m.HP - def.Strength
+				out = append(out, &c)
+			}
+		}
+		return fightDeath(g, out, g.HP, 1)
+	}
 	e := MagicEffect(def.Effect)
 	if !castable(CategoryScroll, e) || e == MagicHaste {
 		return fightDeath(g, ms, g.HP, 1)

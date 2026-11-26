@@ -218,6 +218,18 @@ func (b *Bot) answer(g *Game) (string, []string) {
 		i := max(slices.IndexFunc(p.targets, func(it *Item) bool { return it.Equipped }), 0)
 		return "choose", []string{fmt.Sprint(i)}
 	}
+	if p.kind == promptBless && len(p.Choices) > 0 {
+		// What it knows to be cursed, else the weapon equipped.
+		i := slices.IndexFunc(p.targets, func(it *Item) bool { return it.curseKnown() })
+		if i < 0 {
+			i = max(slices.IndexFunc(p.targets, func(it *Item) bool { return it.Equipped && it.Def.Category == CategoryWeapon }), 0)
+		}
+		return "choose", []string{fmt.Sprint(i)}
+	}
+	if p.kind == promptPotUp && len(p.Choices) > 0 {
+		return "choose", []string{"0"}
+	}
+	// (The prompts of おにぎり and 吸い出し: it keeps what it has.)
 	if len(b.plan) == 0 {
 		return "cancel", nil
 	}

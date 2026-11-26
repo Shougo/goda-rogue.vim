@@ -138,6 +138,25 @@ func (g *Game) effectOf(it *Item, lucky bool) {
 		case !g.askUncurse():
 			g.say("何も起こらなかった。")
 		}
+	case EffectSlash:
+		g.slash(n)
+	case EffectWipe:
+		g.wipe()
+	case EffectNoTraps:
+		g.clearTraps()
+	case EffectSeer:
+		g.seer()
+	case EffectGather:
+		g.gather()
+	case EffectLost:
+		g.lost()
+	case EffectPlate:
+		g.plate()
+	case EffectOnigiri, EffectPotUp, EffectSuck, EffectBless:
+		ask := map[Effect]func() bool{EffectOnigiri: g.askOnigiri, EffectPotUp: g.askPotUp, EffectSuck: g.askSuck, EffectBless: g.askBless}
+		if !ask[it.Def.Effect]() {
+			g.say("何も起こらなかった。")
+		}
 	default:
 		if e := MagicEffect(it.Def.Effect); castable(it.Def.Category, e) {
 			g.cast(it.Def.Category, e)

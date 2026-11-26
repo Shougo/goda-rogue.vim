@@ -86,6 +86,20 @@
 #               (10 at most)
 #     印消し    takes a seal chosen away (not the ability an item is
 #               born with)
+#     真空斬り  does 強さ damage to the enemies of the room (next to the
+#               player, in a corridor)
+#     全滅      the enemies of the room die (not a shopkeeper)
+#     罠消し    takes every trap of the floor away
+#     千里眼    shows the monsters of the floor while the player is on it
+#     道具寄せ  brings the items of the floor (not the goods of a shop) to
+#               the tiles around the player
+#     迷子      sends the player somewhere on the floor
+#     おにぎり  turns an item chosen (not equipped) into an onigiri
+#     壺増大    a pot chosen holds one more
+#     吸い出し  takes out everything in a pot chosen, around the player
+#     祝福      blesses an item chosen (takes the curse of a cursed one
+#               away instead)
+#     メッキ    the equipped weapon and shield never rust
 #   杖, waved (a magic bolt to the front):
 #     吹き飛ばし  blows the monster it hits 10 tiles away
 #     仲間      makes the monster it hits an ally (not a shopkeeper or a
@@ -216,6 +230,19 @@ ten	巻	天の恵みの巻物	巻物	1	武器強化	0	-	-	0	500
 chi	巻	地の恵みの巻物	巻物	1	盾強化	0	-	-	0	500
 konranmaki	巻	混乱の巻物	巻物	0	混乱	0	-	-	0	300
 bakusui	巻	バクスイの巻物	巻物	0	睡眠	0	-	-	0	400
+shinkuu	巻	真空斬りの巻物	巻物	35	真空斬り	0	-	-	0	500
+zenmetsu	巻	全滅の巻物	巻物	0	全滅	0	-	-	0	1000
+tekifuuin	巻	敵封印の巻物	巻物	0	封印	0	-	-	0	500
+tekidonsoku	巻	敵鈍足の巻物	巻物	0	鈍足	0	-	-	0	300
+wanakeshi	巻	罠消しの巻物	巻物	0	罠消し	0	-	-	0	200
+senrigan	巻	千里眼の巻物	巻物	0	千里眼	0	-	-	0	300
+douguyose	巻	道具寄せの巻物	巻物	0	道具寄せ	0	-	-	0	300
+maigo	巻	迷子の巻物	巻物	0	迷子	0	-	-	0	100
+onigirimaki	巻	おにぎりの巻物	巻物	0	おにぎり	0	-	-	0	200
+tsubozoudai	巻	壺増大の巻物	巻物	0	壺増大	0	-	-	0	500
+suidashi	巻	吸い出しの巻物	巻物	0	吸い出し	0	-	-	0	300
+shukufuku	巻	祝福の巻物	巻物	0	祝福	0	-	-	0	800
+mekki	巻	メッキの巻物	巻物	0	メッキ	0	-	-	0	500
 fukitobashi	杖	吹き飛ばしの杖	杖	0	吹き飛ばし	0	4-6	-	0	500
 nakama	杖	仲間の杖	杖	0	仲間	0	1-2	-	0	1500
 bashogae	杖	場所替えの杖	杖	0	場所替え	0	4-6	-	0	400

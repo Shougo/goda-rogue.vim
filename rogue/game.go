@@ -63,6 +63,9 @@ type Game struct {
 	// Lit says whether the floor is lit (a scroll): the player sees it
 	// all.
 	Lit bool
+	// Seer says whether the player senses the monsters of the floor (the
+	// scroll of 千里眼).
+	Seer bool
 	// sights are what the prompt of look lists.
 	sights []sight
 	// ordered is the ally the prompt of orders is about.
@@ -246,7 +249,7 @@ func (g *Game) descend() {
 // newLevel makes the map of a new floor (big room, maze or rooms, as
 // floors.txt says), and leaves the state of the last floor behind.
 func (g *Game) newLevel(rng *rand.Rand) {
-	g.FloorTurns, g.Wind, g.Lit, g.Dark = 0, 0, false, false
+	g.FloorTurns, g.Wind, g.Lit, g.Dark, g.Seer = 0, 0, false, false, false
 	// Weakness (仙) passes with the floor.
 	g.AttackDown, g.DefenseDown = 0, 0
 	// (The seal of the mouth is for the floor.)
