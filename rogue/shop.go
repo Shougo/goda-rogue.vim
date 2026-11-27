@@ -29,6 +29,9 @@ type ShopDef struct {
 type Shop struct {
 	Def  *ShopDef
 	Room int
+	// Area is where the shop is: its room, or the whole floor once it is
+	// a big room (the scroll of 大部屋).
+	Area Room
 	// Keepers are its shopkeepers.
 	Keepers []*Monster
 }
@@ -94,7 +97,7 @@ func (g *Game) openShop(rng *rand.Rand, rooms []int, start int) {
 	// The shop has the room to itself.
 	g.Monsters = slices.DeleteFunc(g.Monsters, func(m *Monster) bool { return r.Contains(m.Pos) })
 	g.Items = slices.DeleteFunc(g.Items, func(it *Item) bool { return r.Contains(it.Pos) })
-	g.Shop = &Shop{Def: def, Room: room}
+	g.Shop = &Shop{Def: def, Room: room, Area: r}
 
 	doors := g.doors(room)
 	// (A shopkeeper for each door at least: each stands in one when the
@@ -186,7 +189,7 @@ func (g *Game) doors(i int) []Point {
 
 // inShop says whether p is in the shop of the floor.
 func (g *Game) inShop(p Point) bool {
-	return g.Shop != nil && g.Level.Rooms[g.Shop.Room].Contains(p)
+	return g.Shop != nil && g.Shop.Area.Contains(p)
 }
 
 // debt is what the player owes the shop: the items for sale it carries.

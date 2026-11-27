@@ -369,3 +369,72 @@ func TestBottomlessPot(t *testing.T) {
 		t.Errorf("depth %d -> %d", depth, g.Depth)
 	}
 }
+
+// TestPowerUpArrow: パワーアップ makes arrows hurt more too.
+func TestPowerUpArrow(t *testing.T) {
+	g, r := trapGame(t)
+	m := place(g, kind("oni1"), Point{r.X + 4, r.Y + 1})
+	m.HP, m.MaxHP = 1000, 1000
+	arrow := &Item{Def: g.Dungeon.Item("kiya"), Glyph: "矢", Count: 1}
+	var plain, strong int
+	for range 200 {
+		hp := m.HP
+		g.hitBy(arrow, m)
+		plain += hp - m.HP
+	}
+	g.PowerUp = 1000
+	for range 200 {
+		hp := m.HP
+		g.hitBy(arrow, m)
+		strong += hp - m.HP
+	}
+	if strong*100 < plain*135 {
+		t.Errorf("damage %d -> %d", plain, strong)
+	}
+}
+
+// TestZowaScroll: under ゾワゾワ, an enemy next to the player hits the
+// one behind it, not the player.
+func TestZowaScroll(t *testing.T) {
+	g, r := trapGame(t)
+	g.Player = Point{r.X + 1, r.Y + 1}
+	a := place(g, kind("oni1"), Point{r.X + 2, r.Y + 1})
+	b := place(g, kind("oni1"), Point{r.X + 3, r.Y + 1})
+	b.HP, b.MaxHP = 1000, 1000
+	read(g, "zowazowa")
+	if g.Zowa != 10 {
+		t.Fatalf("zowa %d", g.Zowa)
+	}
+	hp := g.HP
+	for range 9 {
+		g.act(a)
+	}
+	if g.HP != hp || b.HP == 1000 {
+		t.Errorf("HP %d -> %d, the one behind %d", hp, g.HP, b.HP)
+	}
+}
+
+// TestBigRoomScroll: 大部屋 makes the floor one room; the shopkeeper comes
+// onto the stairs while the player owes, before the player standing
+// there.
+func TestBigRoomScroll(t *testing.T) {
+	g := shopGame(t, "yorozu")
+	goods := forSale(g)
+	if len(goods) == 0 {
+		t.Fatal("no goods")
+	}
+	g.Items = slices.DeleteFunc(g.Items, func(it *Item) bool { return it == goods[0] })
+	g.Inventory = append(g.Inventory, goods[0])
+	g.Player = g.Stairs
+	read(g, "ooheya")
+	if len(g.Level.Rooms) != 1 || g.Level.At(Point{1, 1}) != TileRoom {
+		t.Fatalf("rooms %d", len(g.Level.Rooms))
+	}
+	k := g.Shop.Keepers[0]
+	if k.Pos != g.Stairs || g.Player == g.Stairs || chebyshev(g.Player, g.Stairs) > 2 {
+		t.Errorf("keeper %v, player %v, stairs %v", k.Pos, g.Player, g.Stairs)
+	}
+	if !g.inShop(g.Player) {
+		t.Error("the player owing is out of the shop")
+	}
+}

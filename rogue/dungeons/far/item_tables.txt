@@ -107,6 +107,8 @@
 床	1	99	powerup	1
 床	1	99	yobou	1
 床	1	99	kanashibari	1
+床	1	99	zowazowa	1
+床	1	99	ooheya	1
 床	1	99	fukitobashi	2
 床	1	99	nakama	1
 床	1	99	bashogae	1
@@ -226,6 +228,8 @@
 よろず	1	99	powerup	1
 よろず	1	99	yobou	1
 よろず	1	99	kanashibari	1
+よろず	1	99	zowazowa	1
+よろず	1	99	ooheya	1
 よろず	1	99	fukitobashi	2
 よろず	1	99	nakama	1
 よろず	1	99	bashogae	1

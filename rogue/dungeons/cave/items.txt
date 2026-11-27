@@ -110,6 +110,10 @@
 #     パワーアップ  強さ turns of blows of 1.5 times the damage
 #     予防      the bad states pass, and none comes for the floor
 #     金縛り    the enemies of the room are bound (かなしばり)
+#     ゾワゾワ  for 強さ turns, an enemy about to attack the player attacks
+#               the other way, and uses no ability
+#     大部屋    the floor is one big room; the shopkeepers come by the
+#               stairs (on them, while the player owes)
 #   杖, waved (a magic bolt to the front):
 #     吹き飛ばし  blows the monster it hits 10 tiles away
 #     仲間      makes the monster it hits an ally (not a shopkeeper or a
@@ -260,6 +264,8 @@ komatta	巻	困った時の巻物	巻物	0	困った時	0	-	-	0	500
 powerup	巻	パワーアップの巻物	巻物	50	パワーアップ	0	-	-	0	500
 yobou	巻	予防の巻物	巻物	0	予防	0	-	-	0	300
 kanashibari	巻	金縛りの巻物	巻物	0	金縛り	0	-	-	0	500
+zowazowa	巻	ゾワゾワの巻物	巻物	10	ゾワゾワ	0	-	-	0	500
+ooheya	巻	大部屋の巻物	巻物	0	大部屋	0	-	-	0	200
 fukitobashi	杖	吹き飛ばしの杖	杖	0	吹き飛ばし	0	4-6	-	0	500
 nakama	杖	仲間の杖	杖	0	仲間	0	1-2	-	0	1500
 bashogae	杖	場所替えの杖	杖	0	場所替え	0	4-6	-	0	400

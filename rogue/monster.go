@@ -217,6 +217,9 @@ func (g *Game) act(m *Monster) bool {
 	if m.Ally {
 		return g.actAlly(m)
 	}
+	if g.Zowa > 0 {
+		return g.actZowa(m)
+	}
 	if g.erratic(m) {
 		return false
 	}

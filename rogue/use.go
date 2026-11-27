@@ -195,6 +195,10 @@ func (g *Game) effectOf(it *Item, lucky bool) {
 		g.prevent()
 	case EffectBind:
 		g.bindAround()
+	case EffectZowa:
+		g.zowa(n)
+	case EffectBigRoom:
+		g.bigRoom()
 	case EffectOnigiri, EffectPotUp, EffectSuck, EffectBless, EffectPlate:
 		kinds := map[Effect]string{EffectOnigiri: promptOnigiri, EffectPotUp: promptPotUp, EffectSuck: promptSuck, EffectBless: promptBless, EffectPlate: promptPlate}
 		if !g.asks(it, g.ask(kinds[it.Def.Effect])) {

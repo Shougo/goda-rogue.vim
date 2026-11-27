@@ -374,6 +374,8 @@ const (
 	EffectPowerUp    Effect = "パワーアップ"
 	EffectPrevent    Effect = "予防"
 	EffectBind       Effect = "金縛り"
+	EffectZowa       Effect = "ゾワゾワ"
+	EffectBigRoom    Effect = "大部屋"
 )
 
 // effects are the effects the items of each category can have.
@@ -386,7 +388,8 @@ var effects = map[Category][]Effect{
 	CategoryGrass: {EffectHeal, EffectStrength, EffectEyeDrops, EffectMaxHP},
 	CategoryScroll: {EffectLight, EffectDrain, EffectIdentify, EffectUpWeapon, EffectUpShield, EffectUncurse, EffectMoreSlots, EffectEraseSeal,
 		EffectSlash, EffectWipe, EffectNoTraps, EffectSeer, EffectGather, EffectLost, EffectOnigiri, EffectPotUp, EffectSuck, EffectBless, EffectPlate,
-		EffectGatherFoes, EffectTrouble, EffectPowerUp, EffectPrevent, EffectBind},
+		EffectGatherFoes, EffectTrouble, EffectPowerUp, EffectPrevent, EffectBind,
+		EffectZowa, EffectBigRoom},
 	CategoryStaff: {EffectBlowAway, EffectRecruit, EffectSwap},
 	CategoryFood:  {EffectFood, EffectRotten},
 	CategoryPot:   {EffectKeep, EffectSynthesis, EffectHealPot, EffectPlain, EffectBottomless},

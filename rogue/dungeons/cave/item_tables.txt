@@ -101,6 +101,8 @@
 床	1	30	powerup	1
 床	1	30	yobou	1
 床	1	30	kanashibari	1
+床	1	30	zowazowa	1
+床	1	30	ooheya	1
 床	1	30	fukitobashi	2
 床	1	30	nakama	1
 床	1	30	bashogae	1
@@ -216,6 +218,8 @@
 よろず	1	30	powerup	1
 よろず	1	30	yobou	1
 よろず	1	30	kanashibari	1
+よろず	1	30	zowazowa	1
+よろず	1	30	ooheya	1
 よろず	1	30	fukitobashi	2
 よろず	1	30	nakama	1
 よろず	1	30	bashogae	1

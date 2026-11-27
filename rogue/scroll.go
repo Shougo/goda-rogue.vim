@@ -444,3 +444,100 @@ func (g *Game) prevents(e MagicEffect) bool {
 	g.say("予防の力で防いだ。")
 	return true
 }
+
+// zowa is the scroll of ゾワゾワ (Shougo, 2026-11-27): for n turns (10),
+// the enemies attack the other way (actZowa).
+func (g *Game) zowa(n int) {
+	g.Zowa = n
+	g.say("背中がゾワゾワしてきた……。")
+}
+
+// actZowa is a turn of the enemy m while the player has ゾワゾワ: no
+// ability; next to the player, it attacks the tile on its other side
+// (another monster there takes the blow); else it comes on.
+func (g *Game) actZowa(m *Monster) bool {
+	for _, d := range around {
+		if m.Pos.Add(d) != g.Player || !g.clearFrom(m.Pos, d) {
+			continue
+		}
+		back := Point{-d.X, -d.Y}
+		if f := g.MonsterAt(m.Pos.Add(back)); f != nil && g.clearFrom(m.Pos, back) {
+			g.hitMonster(m, f)
+			return true
+		}
+		if g.sees(g.Player, m.Pos) {
+			g.say(m.Name + "はそっぽを向いて攻撃した。")
+		}
+		return true
+	}
+	m.target, m.hasTarget = g.Player, true
+	g.stepToward(m, m.target)
+	return false
+}
+
+// bigRoom is the scroll of 大部屋: the floor is one big room, but for its
+// edge and its water. The shopkeepers come by the stairs, the first on
+// them while the player owes the shop (Shougo, 2026-11-27: before the
+// player, even on them), and the shop is the whole floor; a monster
+// house, too.
+func (g *Game) bigRoom() {
+	l := g.Level
+	r := Room{X: 1, Y: 1, W: l.W - 2, H: l.H - 2}
+	for y := r.Y; y < r.Y+r.H; y++ {
+		for x := r.X; x < r.X+r.W; x++ {
+			if p := (Point{x, y}); l.At(p) != TileWater && l.At(p) != TileRoom {
+				l.set(p, TileRoom)
+			}
+		}
+	}
+	l.Rooms, l.Maze = []Room{r}, false
+	if g.House >= 0 {
+		g.House = 0
+	}
+	g.say("フロアが大部屋になった！")
+	if g.Shop != nil {
+		g.Shop.Room, g.Shop.Area = 0, r
+		g.keepersToStairs()
+	}
+	g.look()
+}
+
+// keepersToStairs moves the shopkeepers not angry by the stairs (a big
+// room): the first on them if the player owes (the player, there, steps
+// aside), the others next to them; that is their place from then on, the
+// stairs their door.
+func (g *Game) keepersToStairs() {
+	owes := g.debt() > 0
+	for i, m := range g.Shop.Keepers {
+		if m.Angry || !slices.Contains(g.Monsters, m) {
+			continue
+		}
+		to := g.Stairs
+		if i > 0 || !owes {
+			p, ok := g.nearFor(m, g.Stairs)
+			if !ok {
+				continue
+			}
+			to = p
+		}
+		if to == g.Player {
+			if p, ok := g.freeFloor(g.Player); ok && p != g.Player {
+				g.Player = p
+			}
+		}
+		if o := g.MonsterAt(to); o != nil && o != m {
+			if p, ok := g.nearFor(o, to); ok {
+				o.Pos = p
+			}
+		}
+		m.Pos, m.door = to, g.Stairs
+		if i == 0 && owes {
+			// (Its place is still by the stairs, once paid.)
+			if p, ok := g.nearFor(m, g.Stairs); ok {
+				m.home = p
+			}
+			continue
+		}
+		m.home = to
+	}
+}

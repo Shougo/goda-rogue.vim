@@ -93,7 +93,12 @@ func (g *Game) hitBy(it *Item, m *Monster) bool {
 	switch it.Def.Category {
 	case CategoryArrow:
 		attack := playerAttack(g.PlayerLevel, g.CurrentStrength())/2 + it.Def.Strength
-		g.hurt(m, damage(g.rng, attack, m.Defense, r.DefenseK))
+		n := damage(g.rng, attack, m.Defense, r.DefenseK)
+		if g.PowerUp > 0 {
+			// (Arrows too, not other things thrown: Shougo, 2026-11-27.)
+			n = n * powerUpRate / 100
+		}
+		g.hurt(m, n)
 		return true
 	case CategoryGrass:
 		if it.Cursed {
