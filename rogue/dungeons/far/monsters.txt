@@ -117,7 +117,8 @@
 #   状態:C:S:W:T  C% of its actions bring a state to the player for T turns
 #              (W 0: blind, sees only next to it; 1: asleep; 2: confused;
 #              3: its attack or its defense down, at random, 30%, longer
-#              by T if down already, until the next floor): next to it
+#              by T if down already, until the next floor; 4: its mouth
+#              sealed for the floor, T unused): next to it
 #              instead of a blow, or with S 1 from anywhere it sees the
 #              player; the bracelets of 睡眠よけ and 混乱よけ ward off sleep and
 #              confusion
@@ -349,6 +350,10 @@ kiri1	霧	霧	1	10	2	2	4	通常	-	浮遊	状態:25:0:1:4	-	道具:3	-
 kiri2	霧	濃霧	2	22	4	3	12	通常	-	浮遊	状態:25:0:1:5	-	道具:4	-
 kiri3	霧	眠り霧	3	35	6	4	36	通常	-	浮遊	状態:25:1:1:5	-	道具:6	-
 kiri4	霧	魔霧	4	53	8	6	108	通常	-	浮遊	状態:25:1:1:6	-	道具:8	-
+mokuu1	黙	黙り虫	1	14	4	3	4	通常	-	-	状態:25:0:4:1	-	道具:3	-
+mokuu2	黙	大黙り虫	2	28	7	5	12	通常	-	-	状態:25:0:4:1	-	道具:4	-
+mokuu3	黙	黙妖	3	44	10	7	36	通常	-	-	状態:25:1:4:1	-	道具:6	-
+mokuu4	黙	沈黙王	4	64	14	10	108	通常	-	-	状態:25:1:4:1	-	道具:8	-
 manako1	眼	眼	1	22	8	4	5	通常	-	浮遊	状態:25:0:2:6	-	道具:4	-
 manako2	眼	大眼	2	46	14	7	16	通常	-	浮遊	状態:25:0:2:8	-	道具:6	-
 manako3	眼	邪眼	3	74	20	10	48	通常	-	浮遊	状態:25:1:2:10	-	道具:9	-

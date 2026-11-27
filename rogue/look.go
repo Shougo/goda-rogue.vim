@@ -267,6 +267,9 @@ func (g *Game) abilityText(a Ability) string {
 		if v[1] == 1 {
 			where = "見えていると"
 		}
+		if v[2] == afflictMute {
+			return fmt.Sprintf("%s%d%%で、口を封じる（その階のあいだ）", where, v[0])
+		}
 		what := [...]string{"目つぶし（隣しか見えない）にする", "眠らせる", "混乱させる", "攻撃力か防御力を下げる（30%、その階のあいだ）"}[v[2]]
 		return fmt.Sprintf("%s%d%%で、%dターン%s", where, v[0], v[3], what)
 	case AbilityRust:

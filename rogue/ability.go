@@ -256,7 +256,7 @@ var abilityDefs = map[AbilityName]abilityDef{
 	AbilityReflect:   {[]string{"chance %", "what"}, []int{1, reflectStaffs}, []int{100, reflectAll}, 0},
 	AbilityRuin:      {[]string{"chance %", "what"}, []int{1, ruinStaff}, []int{100, ruinAny}, 0},
 	AbilityRust:      {[]string{"chance %", "rust", "how"}, []int{1, 1, rustOne}, []int{100, 9, rustOrSeal}, 0},
-	AbilityAfflict:   {[]string{"chance %", "sight", "what", "turns"}, []int{1, 0, afflictBlind, 1}, []int{100, 1, afflictWeaken, 99}, 0},
+	AbilityAfflict:   {[]string{"chance %", "sight", "what", "turns"}, []int{1, 0, afflictBlind, 1}, []int{100, 1, afflictMute, 99}, 0},
 	AbilityTrap:      {[]string{"chance %"}, []int{1}, []int{100}, 0},
 	AbilityRevive:    {[]string{"HP %"}, []int{1}, []int{100}, 0},
 	AbilityExplode:   {[]string{"HP %", "damage %"}, []int{1, 1}, []int{99, 100}, 0},

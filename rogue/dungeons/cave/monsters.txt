@@ -115,7 +115,8 @@
 #   状態:C:S:W:T  C% of its actions bring a state to the player for T turns
 #              (W 0: blind, sees only next to it; 1: asleep; 2: confused;
 #              3: its attack or its defense down, at random, 30%, longer
-#              by T if down already, until the next floor): next to it
+#              by T if down already, until the next floor; 4: its mouth
+#              sealed for the floor, T unused): next to it
 #              instead of a blow, or with S 1 from anywhere it sees the
 #              player; the bracelets of 睡眠よけ and 混乱よけ ward off sleep and
 #              confusion

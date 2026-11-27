@@ -16,6 +16,7 @@
 #             an
 #             onigiri; a monster stepping on it, too; the trap breaks
 #             then, with a chance of 強さ (%)
+#   封印      the mouth of the player is sealed for the floor (口封じ)
 ID	名前	効果	強さ
 otoshiana	落とし穴	落とし穴	5
 jirai	地雷	地雷	0
@@ -30,3 +31,4 @@ sabi	サビの罠	サビ	0
 kusari	腐りの罠	腐り	0
 noroi	呪いの罠	呪い	1
 onigiriwana	おにぎりの罠	おにぎり	50
+fuuinwana	封印の罠	封印	0

@@ -1374,11 +1374,12 @@ func (b *Bot) threatened(g *Game) bool {
 }
 
 // hungry says whether the player is hungry with nothing to eat: time to
-// go down and find food, not to rest.
+// go down and find food, not to rest. With its mouth sealed (for the
+// floor), what it carries cannot be eaten: going down opens it.
 func (b *Bot) hungry(g *Game) bool {
 	r := g.Dungeon.Rules
 	return g.Fullness*r.HungerTurns/hungerRate(g) < 2*b.floorTurns() &&
-		carried(g, func(it *Item) bool { return it.Def.Category == CategoryFood }) == nil
+		(g.Sealed || carried(g, func(it *Item) bool { return it.Def.Category == CategoryFood }) == nil)
 }
 
 // defaultFloorTurns are the turns the bot expects to spend on a floor

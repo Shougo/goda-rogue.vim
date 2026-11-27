@@ -36,9 +36,11 @@ const (
 	// the trap breaks then with a chance of its strength (Shougo,
 	// 2026-11-27: no endless food).
 	TrapOnigiri TrapEffect = "おにぎり"
+	// TrapSeal seals the mouth of the player for the floor (口封じ).
+	TrapSeal TrapEffect = "封印"
 )
 
-var trapEffects = []TrapEffect{TrapPit, TrapMine, TrapBigMine, TrapSnare, TrapPoison, TrapSleep, TrapWarp, TrapHunger, TrapRust, TrapRot, TrapCurse, TrapOnigiri}
+var trapEffects = []TrapEffect{TrapPit, TrapMine, TrapBigMine, TrapSnare, TrapPoison, TrapSleep, TrapWarp, TrapHunger, TrapRust, TrapRot, TrapCurse, TrapOnigiri, TrapSeal}
 
 // Trap is a trap on the floor; Found says whether the player knows it.
 type Trap struct {
@@ -140,6 +142,7 @@ var trapTexts = map[TrapEffect]string{
 	TrapRust:    "装備している武器と盾がさびる。",
 	TrapRot:     "持っているおにぎりがすべて腐る（壺の中は無事）。",
 	TrapCurse:   "装備以外の持ち物がどれか呪われる。",
+	TrapSeal:    "口が封じられる（そのフロアの間、食べる・飲む・読むができない）。",
 	TrapOnigiri: "持ち物が 1 つおにぎりになる（装備中の物、壺、食料はならない。敵が踏むと、その敵がおにぎりになる）。踏むと壊れることがある。",
 }
 
@@ -244,6 +247,8 @@ func (g *Game) spring(t *Trap, force bool) bool {
 	case TrapOnigiri:
 		g.onigiriTrap()
 		g.mayBreak(t)
+	case TrapSeal:
+		g.afflict(MagicSeal)
 	}
 	return true
 }

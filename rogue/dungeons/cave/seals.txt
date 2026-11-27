@@ -46,6 +46,8 @@
 #             対象 (an attribute of monsters.txt 属性)
 #   間合い    with no one next to it ahead, a blow strikes the monster two
 #             tiles ahead, for its % of the damage
+#   封印よけ  with a chance of its %, the mouth of the player is not
+#             sealed (口封じ), from any source
 #   耐火      fire (the breath of 龍, 火炎草 thrown at the player) does its %
 #             less damage
 # A seal of 印の強さ 0 is no seal: born with it, an item keeps it, and
@@ -106,3 +108,4 @@
 銛	銛の印	特攻	50	25	武器	水棲
 槍	間合いの印	間合い	30	15	武器	-
 鱗	龍鱗の印	耐火	50	25	盾	-
+鍵	封印よけの印	封印よけ	100	50	盾	-

@@ -14,3 +14,4 @@
 10	99	kusari	2
 8	99	noroi	2
 3	99	onigiriwana	1
+5	99	fuuinwana	2

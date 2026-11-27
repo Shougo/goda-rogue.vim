@@ -17,6 +17,9 @@ const (
 	afflictSleep   = 1
 	afflictConfuse = 2
 	afflictWeaken  = 3
+	// afflictMute seals the mouth of the player for the floor (口封じ;
+	// the turns are not used).
+	afflictMute = 4
 )
 
 // The weakening: its turns, and what it takes.
@@ -48,7 +51,7 @@ func (g *Game) afflict(e MagicEffect) {
 		g.say("口封じよけの腕輪が守った。")
 		return
 	case e == MagicSleep && g.sealChance(SealNoSleep), e == MagicConfuse && g.sealChance(SealNoConfuse),
-		e == MagicBlind && g.sealChance(SealNoBlind):
+		e == MagicBlind && g.sealChance(SealNoBlind), e == MagicSeal && g.sealChance(SealNoSealing):
 		g.say("盾が守った。")
 		return
 	}
@@ -101,6 +104,9 @@ func (g *Game) afflictBy(m *Monster, a Ability) bool {
 	turns := a.Values[3]
 	g.event("afflicted %s", m.Def.ID)
 	switch a.Values[2] {
+	case afflictMute:
+		g.say(m.Name + "は口をふさいできた！")
+		g.afflict(MagicSeal)
 	case afflictBlind:
 		g.say(m.Name + "は目をくらませてきた！")
 		g.afflict(MagicBlind)

@@ -108,6 +108,10 @@ const (
 	// SealFireGuard: fire (the breath of 龍, 火炎草 thrown at it) does its
 	// % less damage to the player (龍鱗の盾).
 	SealFireGuard SealEffect = "耐火"
+	// SealNoSealing: a ward of the sealing of the player (口封じ), from
+	// any source: a bolt, a monster, a trap, an item (Shougo, 2026-11-28;
+	// a seal taken away is another thing).
+	SealNoSealing SealEffect = "封印よけ"
 )
 
 var sealEffects = []SealEffect{SealAttack, SealDefense, SealCrit, SealSure, SealCounter, SealNoRust, SealNoHunger,
@@ -115,7 +119,7 @@ var sealEffects = []SealEffect{SealAttack, SealDefense, SealCrit, SealSure, Seal
 	SealSleepBlow, SealConfuseBlow, SealSlowBlow, SealSealBlow, SealPoisonBlow, SealBindBlow, SealBlowAway,
 	SealDig, SealDesperate, SealHappy, SealDouble, SealGrow,
 	SealNoSleep, SealNoConfuse, SealNoBlind, SealNoWeak, SealNoCurse, SealNoStarve, SealNoTrap,
-	SealBlastGuard, SealReflect, SealHeavy, SealFine, SealSlay, SealReach, SealFireGuard}
+	SealBlastGuard, SealReflect, SealHeavy, SealFine, SealSlay, SealReach, SealFireGuard, SealNoSealing}
 
 // sealBolts are the seals of weapons that bring the effect of a bolt with
 // a blow, in a fixed order.

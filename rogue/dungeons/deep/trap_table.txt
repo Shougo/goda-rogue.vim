@@ -14,3 +14,4 @@
 10	50	kusari	2
 8	50	noroi	2
 3	50	onigiriwana	1
+5	50	fuuinwana	2

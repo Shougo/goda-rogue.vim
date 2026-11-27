@@ -192,3 +192,36 @@ func TestBreath(t *testing.T) {
 		t.Error("a breath off its line")
 	}
 }
+
+// TestSealNoSealing: 封印よけ keeps the mouth open, against the trap of
+// 封印 too.
+func TestSealNoSealing(t *testing.T) {
+	g, _, _ := gearGame(t, "fuuinyoke")
+	g.afflict(MagicSeal)
+	if g.Sealed {
+		t.Error("the mouth sealed with 封印よけ")
+	}
+	g, _, _ = gearGame(t, "katana")
+	tr := &Trap{Def: g.Dungeon.Trap("fuuinwana"), Pos: g.Player}
+	g.Traps = append(g.Traps, tr)
+	g.spring(tr, true)
+	if !g.Sealed {
+		t.Errorf("the trap of 封印 did nothing: %q", g.Message)
+	}
+}
+
+// TestAfflictMute: a monster of 状態 W 4 seals the mouth of the player,
+// unless 封印よけ wards it off.
+func TestAfflictMute(t *testing.T) {
+	a := Ability{Name: AbilityAfflict, Values: []int{100, 0, afflictMute, 1}}
+	g, _, _ := gearGame(t, "katana")
+	m := place(g, kind("nezumi1"), g.Player.Add(Point{1, 0}))
+	if !g.afflictBy(m, a) || !g.Sealed {
+		t.Errorf("not sealed: %q", g.Message)
+	}
+	g, _, _ = gearGame(t, "fuuinyoke")
+	m = place(g, kind("nezumi1"), g.Player.Add(Point{1, 0}))
+	if g.afflictBy(m, a); g.Sealed {
+		t.Error("sealed with 封印よけ")
+	}
+}
