@@ -12,8 +12,8 @@
 #   腐り      every onigiri the player carries rots (not those in pots)
 #   呪い      強さ of the items carried that are no equipment, at random,
 #             are cursed
-#   おにぎり  an item carried (no weapon, shield, bracelet, pot or food)
-#             turns into an
+#   おにぎり  an item carried (not equipped, no pot or food) turns into
+#             an
 #             onigiri; a monster stepping on it, too; the trap breaks
 #             then, with a chance of 強さ (%)
 ID	名前	効果	強さ

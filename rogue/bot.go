@@ -1985,7 +1985,14 @@ func wanted(g *Game, p Point) bool {
 	full := len(g.Inventory) >= g.Dungeon.Rules.Capacity
 	it, ok := g.ItemAt(p)
 	return ok && g.IsSeen(p) && p != g.Player && !it.ForSale && !it.Stuck && !g.NoPickup && !useless(g, it) &&
-		(!full || it.Def.Category == CategoryMoney)
+		(!full || it.Def.Category == CategoryMoney) && !keepersSpot(g, p)
+}
+
+// keepersSpot says whether p is where a shopkeeper stands (its place):
+// it goes back there, and a bot after an item there walked in and out of
+// the shop for good.
+func keepersSpot(g *Game, p Point) bool {
+	return g.Shop != nil && slices.ContainsFunc(g.Shop.Keepers, func(k *Monster) bool { return !k.Angry && k.home == p })
 }
 
 // explore walks to the nearest tile seen next to one not seen yet, that
