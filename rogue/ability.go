@@ -490,6 +490,8 @@ func (g *Game) charge(m *Monster, a Ability) bool {
 		}
 		f.Dozing = false
 		f.HP -= n
+		// (A blow frees it of かなしばり.)
+		f.Bound = 0
 		g.say(fmt.Sprintf("%sに%dのダメージ。", f.Name, n))
 		if f.HP <= 0 {
 			g.kill(f, m, false, true)
@@ -648,6 +650,8 @@ func (g *Game) shootAt(m *Monster, a Ability) bool {
 		}
 		n := damage(g.rng, attack, f.Defense, r.DefenseK)
 		f.HP -= n
+		// (A blow frees it of かなしばり.)
+		f.Bound = 0
 		if shown {
 			g.say(fmt.Sprintf("%sが%sに当たった。%dのダメージ。", def.Name, f.Name, n))
 		}

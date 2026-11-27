@@ -268,6 +268,8 @@ func (g *Game) monsterSprings(m *Monster, t *Trap) {
 		say(m.Name + "は爆発に巻き込まれた。")
 	case TrapPoison:
 		m.HP -= n
+		// (A blow frees it of かなしばり.)
+		m.Bound = 0
 		say(fmt.Sprintf("毒矢が刺さった。%sに%dのダメージ。", m.Name, n))
 		if m.HP <= 0 {
 			g.kill(m, nil, true, shown)

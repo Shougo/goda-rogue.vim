@@ -115,6 +115,16 @@ func (g *Game) comesAlong(m *Monster) bool {
 	return false
 }
 
+// alliesBound counts the turns of the allies bound (かなしばり): free
+// after boundTurns.
+func (g *Game) alliesBound() {
+	for _, a := range g.Monsters {
+		if a.Ally && a.Bound > 0 {
+			a.Bound--
+		}
+	}
+}
+
 // alliesRegen is a turn passing for the allies: they restore HP as the
 // player does, 1 HP every so many turns (rules.txt 回復ターン), but every
 // turn, fighting or not (they do not get hungry).

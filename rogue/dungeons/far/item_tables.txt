@@ -102,6 +102,8 @@
 床	1	99	suidashi	1
 床	1	99	shukufuku	1
 床	1	99	mekki	1
+床	1	99	hikiyose	1
+床	1	99	komatta	1
 床	1	99	fukitobashi	2
 床	1	99	nakama	1
 床	1	99	bashogae	1
@@ -215,6 +217,8 @@
 よろず	1	99	suidashi	1
 よろず	1	99	shukufuku	1
 よろず	1	99	mekki	1
+よろず	1	99	hikiyose	1
+よろず	1	99	komatta	1
 よろず	1	99	fukitobashi	2
 よろず	1	99	nakama	1
 よろず	1	99	bashogae	1

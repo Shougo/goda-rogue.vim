@@ -78,9 +78,14 @@ func (g *Game) magicOn(f *Monster, e MagicEffect, d Point) {
 		g.fling(f, d, false)
 	case MagicConfuse, MagicSlow, MagicSleep, MagicSeal, MagicBlind:
 		f.States.take(e)
+		if f.Ally {
+			// (Another state frees an ally of かなしばり.)
+			f.Bound = 0
+		}
 		say(stateTexts[e].monster)
 	case MagicHalf, MagicQuarter:
 		f.HP = max(f.HP/fraction(e), 1)
+		f.Bound = 0
 		say(fmt.Sprintf("のHPが%dになった。", f.HP))
 	case MagicLevel1, MagicLevel3:
 		name := f.Name

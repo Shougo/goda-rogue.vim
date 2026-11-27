@@ -506,6 +506,8 @@ func (g *Game) hitMonster(a, m *Monster) {
 	}
 	n, _ := g.critical(a, damage(g.rng, a.Attack, m.Defense, r.DefenseK), shown)
 	m.HP -= n
+	// (A blow frees it of かなしばり.)
+	m.Bound = 0
 	if shown {
 		g.say(fmt.Sprintf("%sは%sに%dのダメージ。", a.Name, m.Name, n))
 	}

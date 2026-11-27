@@ -14,6 +14,11 @@ type States struct {
 	// Blind is the turns left blind (目つぶし): the player sees only the
 	// tiles next to it; a monster walks at random and attacks no one.
 	Blind int
+	// Bound says that it is bound (かなしばり, the scroll of 困った時): it
+	// does nothing until a blow (any loss of HP) frees it (Shougo,
+	// 2026-11-27, as in Shiren); an ally, also after boundTurns (the
+	// turns left), or when another state comes on it.
+	Bound int
 }
 
 // The turns of the states.
@@ -22,6 +27,9 @@ const (
 	slowTurns    = 10
 	sleepTurns   = 5
 	blindTurns   = 10
+	// boundTurns is how long かなしばり holds an ally (an enemy: until a
+	// blow).
+	boundTurns = 20
 	// hasteTurns is how long the player stays fast (a monster, for
 	// good).
 	hasteTurns = 20
@@ -66,7 +74,7 @@ func (s States) names(sealed string) []string {
 		name string
 	}{
 		{s.Confused > 0, "混乱"}, {s.Slowed > 0, "鈍足"}, {s.Hasted > 0, "倍速"},
-		{s.Asleep > 0, "睡眠"}, {s.Sealed, sealed}, {s.Blind > 0, "目つぶし"},
+		{s.Asleep > 0, "睡眠"}, {s.Sealed, sealed}, {s.Blind > 0, "目つぶし"}, {s.Bound > 0, "かなしばり"},
 	} {
 		if st.on {
 			ns = append(ns, st.name)
@@ -76,9 +84,13 @@ func (s States) names(sealed string) []string {
 }
 
 // actions is how many of its n actions of the turn a monster in these
-// states takes, the turn passing for them: none asleep, and slowed only
+// states takes, the turn passing for them: none bound or asleep, and slowed only
 // every other turn.
 func (s *States) actions(n, turn int) int {
+	if s.Bound > 0 {
+		// (An ally's count is in alliesBound.)
+		return 0
+	}
 	if s.Asleep > 0 {
 		s.Asleep--
 		return 0

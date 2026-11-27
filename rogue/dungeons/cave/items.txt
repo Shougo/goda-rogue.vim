@@ -101,6 +101,12 @@
 #               away instead)
 #     メッキ    a weapon or a shield chosen (with room, no サビよけ yet)
 #               gets the seal of サビよけ (錆)
+#     引き寄せ  brings the enemies of the floor (not a shopkeeper) around
+#               the player
+#     困った時  the HP back in full, and one of the troubles at random
+#               solved (surrounded: those next bound; hungry: full;
+#               cursed gear: uncursed; bad states: gone; strength down:
+#               back)
 #   杖, waved (a magic bolt to the front):
 #     吹き飛ばし  blows the monster it hits 10 tiles away
 #     仲間      makes the monster it hits an ally (not a shopkeeper or a
@@ -244,6 +250,8 @@ tsubozoudai	巻	壺増大の巻物	巻物	0	壺増大	0	-	-	0	500
 suidashi	巻	吸い出しの巻物	巻物	0	吸い出し	0	-	-	0	300
 shukufuku	巻	祝福の巻物	巻物	0	祝福	0	-	-	0	800
 mekki	巻	メッキの巻物	巻物	0	メッキ	0	-	-	0	500
+hikiyose	巻	引き寄せの巻物	巻物	0	引き寄せ	0	-	-	0	200
+komatta	巻	困った時の巻物	巻物	0	困った時	0	-	-	0	500
 fukitobashi	杖	吹き飛ばしの杖	杖	0	吹き飛ばし	0	4-6	-	0	500
 nakama	杖	仲間の杖	杖	0	仲間	0	1-2	-	0	1500
 bashogae	杖	場所替えの杖	杖	0	場所替え	0	4-6	-	0	400

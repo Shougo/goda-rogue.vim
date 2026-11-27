@@ -96,6 +96,8 @@
 床	1	30	suidashi	1
 床	1	30	shukufuku	1
 床	1	30	mekki	1
+床	1	30	hikiyose	1
+床	1	30	komatta	1
 床	1	30	fukitobashi	2
 床	1	30	nakama	1
 床	1	30	bashogae	1
@@ -205,6 +207,8 @@
 よろず	1	30	suidashi	1
 よろず	1	30	shukufuku	1
 よろず	1	30	mekki	1
+よろず	1	30	hikiyose	1
+よろず	1	30	komatta	1
 よろず	1	30	fukitobashi	2
 よろず	1	30	nakama	1
 よろず	1	30	bashogae	1

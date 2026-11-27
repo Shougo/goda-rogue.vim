@@ -53,6 +53,8 @@ func (g *Game) explode(m *Monster) {
 		}
 		n := max(f.HP*share/100, 1)
 		f.HP -= n
+		// (A blow frees it of かなしばり.)
+		f.Bound = 0
 		f.Dozing = false
 		if shown {
 			g.say(fmt.Sprintf("%sに%dのダメージ。", f.Name, n))

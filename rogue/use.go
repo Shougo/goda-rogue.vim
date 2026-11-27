@@ -185,6 +185,10 @@ func (g *Game) effectOf(it *Item, lucky bool) {
 		g.gather()
 	case EffectLost:
 		g.lost()
+	case EffectGatherFoes:
+		g.gatherFoes()
+	case EffectTrouble:
+		g.trouble()
 	case EffectOnigiri, EffectPotUp, EffectSuck, EffectBless, EffectPlate:
 		kinds := map[Effect]string{EffectOnigiri: promptOnigiri, EffectPotUp: promptPotUp, EffectSuck: promptSuck, EffectBless: promptBless, EffectPlate: promptPlate}
 		if !g.asks(it, g.ask(kinds[it.Def.Effect])) {
@@ -356,6 +360,8 @@ func (g *Game) fling(m *Monster, d Point, byPlayer bool) {
 			continue
 		}
 		m.HP -= blowAwayDamage
+		// (A blow frees it of かなしばり.)
+		m.Bound = 0
 		g.say(fmt.Sprintf("%sはぶつかって%dのダメージ。", m.Name, blowAwayDamage))
 		if m.HP > 0 {
 			g.wounded(m)

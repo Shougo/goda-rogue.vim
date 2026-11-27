@@ -753,6 +753,8 @@ func (g *Game) strike(m *Monster, share float64) {
 	}
 	n = g.weakening(n)
 	m.HP -= n
+	// (A blow frees it of かなしばり.)
+	m.Bound = 0
 	g.say(fmt.Sprintf("%sに%dのダメージ。", m.Name, n))
 	if m.HP > 0 {
 		g.wounded(m)
@@ -855,6 +857,7 @@ func (g *Game) tick(rest bool) {
 		}
 	}
 	g.alliesRegen()
+	g.alliesBound()
 	g.monstersAct()
 	g.sense()
 	g.showSensed()

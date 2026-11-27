@@ -213,3 +213,84 @@ func TestChoosingScrollUnknown(t *testing.T) {
 		t.Error("identified, cancelled")
 	}
 }
+
+// TestGatherFoesScroll: 引き寄せ brings the enemies of the floor next to
+// the player, not a shopkeeper.
+func TestGatherFoesScroll(t *testing.T) {
+	g, _ := trapGame(t)
+	far := place(g, kind("nezumi1"), Point{})
+	k := place(g, kind("oni1"), Point{})
+	k.Keeper, k.Angry = true, true
+	for i, m := range []*Monster{far, k} {
+		p, ok := g.find(g.wanderTarget, needNoCreature, func(p Point) bool { return chebyshev(p, g.Player) > 5+i })
+		if !ok {
+			t.Fatal("no tile")
+		}
+		m.Pos = p
+	}
+	kp := k.Pos
+	read(g, "hikiyose")
+	if chebyshev(far.Pos, g.Player) != 1 || k.Pos != kp {
+		t.Errorf("the rat at %v, the keeper %v -> %v (player %v)", far.Pos, kp, k.Pos, g.Player)
+	}
+}
+
+// TestTroubleScroll: 困った時 heals in full and solves one trouble: with
+// only hunger, the belly is full; surrounded, those next are bound.
+func TestTroubleScroll(t *testing.T) {
+	g, r := trapGame(t)
+	g.HP = 1
+	g.Fullness = 10
+	read(g, "komatta")
+	if g.HP != g.MaxHP || g.Fullness != g.fullnessCap() {
+		t.Errorf("HP %d/%d, fullness %d", g.HP, g.MaxHP, g.Fullness)
+	}
+	g.Player = Point{r.X + 2, r.Y + 1}
+	a := place(g, kind("oni1"), Point{r.X + 1, r.Y + 1})
+	b := place(g, kind("nezumi1"), Point{r.X + 3, r.Y + 1})
+	g.Invincible = true
+	read(g, "komatta")
+	if a.Bound == 0 || b.Bound == 0 {
+		t.Fatalf("bound %d %d", a.Bound, b.Bound)
+	}
+	// Bound, an enemy does nothing, for good, until a blow frees it
+	// (Shougo, 2026-11-27, as in Shiren).
+	hp := g.HP
+	for range 40 {
+		if err := g.Do("wait", nil); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if g.HP < hp || a.Bound == 0 || b.Bound == 0 {
+		t.Fatalf("HP %d -> %d, bound %d %d", hp, g.HP, a.Bound, b.Bound)
+	}
+	g.Facing = "left"
+	for range 100 {
+		if a.Bound == 0 || !slices.Contains(g.Monsters, a) {
+			break
+		}
+		if err := g.Do("attack", nil); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if a.Bound != 0 && slices.Contains(g.Monsters, a) {
+		t.Fatal("not freed by blows")
+	}
+	if b.Bound == 0 {
+		t.Error("the other freed too")
+	}
+}
+
+// TestBoundAlly: an ally bound is free after its turns.
+func TestBoundAlly(t *testing.T) {
+	g, r := trapGame(t)
+	m := place(g, kind("nezumi1"), Point{r.X + 3, r.Y + 1})
+	m.Ally = true
+	m.Bound = boundTurns
+	for range boundTurns {
+		g.Do("wait", nil)
+	}
+	if m.Bound != 0 {
+		t.Errorf("still bound: %d", m.Bound)
+	}
+}

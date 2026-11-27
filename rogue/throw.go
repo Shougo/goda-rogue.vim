@@ -147,6 +147,8 @@ func (g *Game) hurt(m *Monster, n int) {
 	n = g.weakening(n)
 	g.provoke(m)
 	m.HP -= n
+	// (A blow frees it of かなしばり.)
+	m.Bound = 0
 	g.say(fmt.Sprintf("%sに%dのダメージ。", m.Name, n))
 	if m.HP > 0 {
 		g.wounded(m)

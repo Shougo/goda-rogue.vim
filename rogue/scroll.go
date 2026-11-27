@@ -38,6 +38,8 @@ func (g *Game) slash(n int) {
 		m.Dozing = false
 		g.provoke(m)
 		m.HP -= n
+		// (A blow frees it of かなしばり.)
+		m.Bound = 0
 		g.say(fmt.Sprintf("%sに%dのダメージ。", m.Name, n))
 		if m.HP > 0 {
 			g.wounded(m)
@@ -284,4 +286,108 @@ func (g *Game) hasNoRust(it *Item) bool {
 		}
 	}
 	return false
+}
+
+// gatherFoes is the scroll of 引き寄せ (Shougo, 2026-11-27): the enemies of
+// the floor (not a shopkeeper, angry or not) come to the tiles around the
+// player, the nearest first, each where it can stand; those with no room
+// left stay. Asleep, they stay asleep.
+func (g *Game) gatherFoes() {
+	var ms []*Monster
+	for _, m := range g.Monsters {
+		if m.hostile() && !m.Keeper && chebyshev(m.Pos, g.Player) > 1 {
+			ms = append(ms, m)
+		}
+	}
+	slices.SortStableFunc(ms, func(a, b *Monster) int { return chebyshev(a.Pos, g.Player) - chebyshev(b.Pos, g.Player) })
+	moved := 0
+	for _, m := range ms {
+		if p, ok := g.nearFor(m, g.Player); ok && chebyshev(p, g.Player) < chebyshev(m.Pos, g.Player) {
+			m.Pos = p
+			moved++
+		}
+	}
+	if moved == 0 {
+		g.say("何も起こらなかった。")
+		return
+	}
+	g.say("フロアの敵が引き寄せられた！")
+}
+
+// nearFor returns the nearest tile to p (not p) where m can stand, with
+// no creature on it.
+func (g *Game) nearFor(m *Monster, p Point) (Point, bool) {
+	for r := 1; r < max(g.Level.W, g.Level.H); r++ {
+		for y := -r; y <= r; y++ {
+			for x := -r; x <= r; x++ {
+				q := p.Add(Point{x, y})
+				if chebyshev(p, q) == r && g.passable(m, q) && !g.occupied(q) {
+					return q, true
+				}
+			}
+		}
+	}
+	return Point{}, false
+}
+
+// trouble is the scroll of 困った時 (Shougo, 2026-11-27): the HP comes back
+// in full, and one of the troubles the player is in, at random, is
+// solved.
+func (g *Game) trouble() {
+	g.HP = g.MaxHP
+	g.say("HPが全回復した。")
+	var fixes []func()
+	var adjacent []*Monster
+	for _, m := range g.Monsters {
+		// (Those hidden in the walls too.)
+		if m.hostile() && chebyshev(m.Pos, g.Player) == 1 {
+			adjacent = append(adjacent, m)
+		}
+	}
+	if len(adjacent) >= 2 {
+		fixes = append(fixes, func() {
+			for _, m := range adjacent {
+				m.Bound = boundTurns
+				m.Dozing = false
+			}
+			g.say("周りの敵がかなしばりになった！")
+		})
+	}
+	if c := g.fullnessCap(); g.Fullness*2 <= c && g.Fullness < c {
+		fixes = append(fixes, func() {
+			g.Fullness, g.hunger = c, 0
+			g.say("お腹がいっぱいになった。")
+		})
+	}
+	var cursed []*Item
+	for _, it := range g.Inventory {
+		if it.Equipped && it.Cursed {
+			cursed = append(cursed, it)
+		}
+	}
+	if len(cursed) > 0 {
+		fixes = append(fixes, func() {
+			for _, it := range g.Inventory {
+				if it.Equipped {
+					it.Cursed, it.CurseTold = false, true
+				}
+			}
+			g.say("装備の呪いが解けた。")
+		})
+	}
+	if g.Confused > 0 || g.Slowed > 0 || g.Blind > 0 || g.AttackDown > 0 || g.DefenseDown > 0 {
+		fixes = append(fixes, func() {
+			g.Confused, g.Slowed, g.Blind, g.AttackDown, g.DefenseDown = 0, 0, 0, 0, 0
+			g.say("体の調子が元に戻った。")
+		})
+	}
+	if g.Strength < g.MaxStrength {
+		fixes = append(fixes, func() {
+			g.Strength = g.MaxStrength
+			g.say("ちからが元に戻った。")
+		})
+	}
+	if len(fixes) > 0 {
+		fixes[g.rng.IntN(len(fixes))]()
+	}
 }

@@ -63,6 +63,8 @@ func TestSeed(t *testing.T) {
 	if !slices.Equal(a.Level.Tiles, b.Level.Tiles) || a.Player != b.Player || a.Stairs != b.Stairs {
 		t.Fatal("the same seed made different first floors")
 	}
+	// (Walking, it must not die: the floor the dead would see.)
+	a.Invincible = true
 	for range 30 {
 		for _, d := range []string{"right", "down", "left", "up"} {
 			if err := a.Do("move", []string{d}); err != nil {
