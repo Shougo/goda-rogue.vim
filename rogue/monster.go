@@ -220,6 +220,9 @@ func (g *Game) act(m *Monster) bool {
 	if m.Zowa > 0 {
 		return g.actZowa(m)
 	}
+	if g.sanctuary(g.Player) {
+		return g.actSanctuary(m)
+	}
 	if g.erratic(m) {
 		return false
 	}

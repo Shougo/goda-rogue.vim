@@ -71,6 +71,9 @@ type Item struct {
 	Cursed bool
 	// Blessed says whether it is blessed (bless.go); never with Cursed.
 	Blessed bool
+	// Stuck says that it sticks to the floor: a scroll of 聖域 the player
+	// put down, which can be picked up no more.
+	Stuck bool
 	// CurseTold says whether the player knows if it is cursed or
 	// blessed, without knowing the rest (Known): it equipped the item
 	// or tried to use it (curse.go).
@@ -337,6 +340,14 @@ func (g *Game) pickUp(walked bool) bool {
 		g.unmask(it, true)
 		return true
 	}
+	if it.Stuck {
+		g.say(g.Name(it) + "は床に貼りついていて拾えない。")
+		return true
+	}
+	if g.NoPickup {
+		g.say(g.Name(it) + "を拾えない！")
+		return true
+	}
 	if it.Def.Category == CategoryMoney && walked {
 		g.toPurse(it)
 		return true
@@ -515,7 +526,10 @@ func (g *Game) itemCommands(it *Item) []string {
 // canSwap says whether the player can swap an item it carries with the
 // one under it: not in a shop, where putting down and picking up are
 // selling and buying.
-func (g *Game) canSwap() bool { return !g.inShop(g.Player) }
+func (g *Game) canSwap() bool {
+	foot := g.foot()
+	return !g.inShop(g.Player) && !g.NoPickup && (foot == nil || !foot.Stuck)
+}
 
 // swap puts it (carried) down where the player stands, and picks up the
 // item that was there, in one turn (as in Shiren).
@@ -749,6 +763,10 @@ func (g *Game) drop(i int) bool {
 	it.Pos = g.Player
 	g.Items = append(g.Items, it)
 	g.say(g.Name(it) + "を置いた。")
+	if it.Def.Effect == EffectSanctuary {
+		// (As in Shiren: put down, it sticks.)
+		it.Stuck = true
+	}
 	if g.inShop(g.Player) {
 		g.offer(it)
 	}

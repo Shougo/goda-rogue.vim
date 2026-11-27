@@ -109,6 +109,13 @@
 床	1	50	kanashibari	1
 床	1	50	zowazowa	1
 床	1	50	ooheya	1
+床	1	50	mamonobeya	1
+床	1	50	tekikasoku	1
+床	1	50	noroimaki	1
+床	1	50	wanamaki	1
+床	1	50	hiroezu	1
+床	1	50	kuchinashi	1
+床	1	50	seiiki	1
 床	1	50	fukitobashi	2
 床	1	50	nakama	1
 床	1	50	bashogae	1
@@ -230,6 +237,13 @@
 よろず	1	50	kanashibari	1
 よろず	1	50	zowazowa	1
 よろず	1	50	ooheya	1
+よろず	1	50	mamonobeya	1
+よろず	1	50	tekikasoku	1
+よろず	1	50	noroimaki	1
+よろず	1	50	wanamaki	1
+よろず	1	50	hiroezu	1
+よろず	1	50	kuchinashi	1
+よろず	1	50	seiiki	1
 よろず	1	50	fukitobashi	2
 よろず	1	50	nakama	1
 よろず	1	50	bashogae	1

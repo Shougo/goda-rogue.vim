@@ -376,6 +376,14 @@ const (
 	EffectBind       Effect = "金縛り"
 	EffectZowa       Effect = "ゾワゾワ"
 	EffectBigRoom    Effect = "大部屋"
+	// The bad scrolls (Shougo, 2026-11-27: each has its use, but 敵加速,
+	// 拾えず and くちなし), and 聖域.
+	EffectMonsterRoom Effect = "魔物部屋"
+	EffectCurse       Effect = "呪い"
+	EffectTraps       Effect = "罠"
+	EffectNoPickup    Effect = "拾えず"
+	EffectMute        Effect = "くちなし"
+	EffectSanctuary   Effect = "聖域"
 )
 
 // effects are the effects the items of each category can have.
@@ -389,7 +397,7 @@ var effects = map[Category][]Effect{
 	CategoryScroll: {EffectLight, EffectDrain, EffectIdentify, EffectUpWeapon, EffectUpShield, EffectUncurse, EffectMoreSlots, EffectEraseSeal,
 		EffectSlash, EffectWipe, EffectNoTraps, EffectSeer, EffectGather, EffectLost, EffectOnigiri, EffectPotUp, EffectSuck, EffectBless, EffectPlate,
 		EffectGatherFoes, EffectTrouble, EffectPowerUp, EffectPrevent, EffectBind,
-		EffectZowa, EffectBigRoom},
+		EffectZowa, EffectBigRoom, EffectMonsterRoom, EffectCurse, EffectTraps, EffectNoPickup, EffectMute, EffectSanctuary},
 	CategoryStaff: {EffectBlowAway, EffectRecruit, EffectSwap},
 	CategoryFood:  {EffectFood, EffectRotten},
 	CategoryPot:   {EffectKeep, EffectSynthesis, EffectHealPot, EffectPlain, EffectBottomless},

@@ -440,3 +440,90 @@ func TestBigRoomScroll(t *testing.T) {
 		t.Error("the player owing is out of the shop")
 	}
 }
+
+// TestBadScrolls: 魔物部屋 fills the room, 呪い curses, 罠 sets traps
+// around, 拾えず keeps items on the floor, くちなし seals the mouth, and
+// 敵加速 speeds the enemies up.
+func TestBadScrolls(t *testing.T) {
+	g, r := trapGame(t)
+	n := len(g.Monsters)
+	read(g, "mamonobeya")
+	if g.House != g.Level.RoomAt(g.Player) || len(g.Monsters) <= n {
+		t.Errorf("house %d, monsters %d -> %d", g.House, n, len(g.Monsters))
+	}
+	g.Monsters, g.Items = nil, nil
+
+	blessed := carry(g, "otogiri", 0)
+	blessed.Blessed = true
+	read(g, "noroimaki")
+	cursed := 0
+	for _, it := range g.Inventory {
+		if it.Cursed {
+			cursed++
+			if it.Blessed {
+				t.Error("blessed and cursed")
+			}
+		}
+	}
+	if cursed == 0 && blessed.Blessed {
+		t.Error("nothing cursed")
+	}
+
+	g.Traps = nil
+	read(g, "wanamaki")
+	if len(g.Traps) == 0 {
+		t.Fatal("no traps")
+	}
+	for _, tr := range g.Traps {
+		if !tr.Found || chebyshev(tr.Pos, g.Player) != 1 {
+			t.Errorf("trap %v found %v", tr.Pos, tr.Found)
+		}
+	}
+	g.Traps = nil
+
+	read(g, "hiroezu")
+	def := g.Dungeon.Item("otogiri")
+	g.Items = append(g.Items, &Item{Def: def, Glyph: def.Glyph, Pos: g.Player})
+	g.pickUp(false)
+	if len(g.Items) != 1 {
+		t.Error("picked up")
+	}
+	g.Items = nil
+
+	read(g, "kuchinashi")
+	if !g.Sealed {
+		t.Error("not sealed")
+	}
+	g.Sealed = false
+
+	m := place(g, kind("nezumi1"), Point{r.X + 4, r.Y + 2})
+	speed := m.Speed
+	read(g, "tekikasoku")
+	if m.Speed == speed {
+		t.Error("not faster")
+	}
+}
+
+// TestSanctuary: a scroll of 聖域 put down sticks; on it, an enemy next to
+// the player does not attack.
+func TestSanctuary(t *testing.T) {
+	g, r := trapGame(t)
+	g.Player = Point{r.X + 1, r.Y + 1}
+	s := carry(g, "seiiki", 0)
+	g.drop(slices.Index(g.Inventory, s))
+	if !s.Stuck {
+		t.Fatal("not stuck")
+	}
+	g.pickUp(false)
+	if slices.Contains(g.Inventory, s) {
+		t.Fatal("picked up")
+	}
+	m := place(g, kind("oni1"), Point{r.X + 2, r.Y + 1})
+	hp := g.HP
+	for range 20 {
+		g.act(m)
+	}
+	if g.HP != hp {
+		t.Errorf("HP %d -> %d", hp, g.HP)
+	}
+}

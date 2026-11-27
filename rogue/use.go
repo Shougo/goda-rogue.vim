@@ -199,6 +199,20 @@ func (g *Game) effectOf(it *Item, lucky bool) {
 		g.zowa(n)
 	case EffectBigRoom:
 		g.bigRoom()
+	case EffectMonsterRoom:
+		g.monsterRoom()
+	case EffectCurse:
+		g.curseCarried(n)
+	case EffectTraps:
+		g.trapsAround()
+	case EffectNoPickup:
+		g.NoPickup = true
+		g.say("道具を拾えなくなった！")
+	case EffectMute:
+		g.afflict(MagicSeal)
+	case EffectSanctuary:
+		// (Read, it does nothing: it works put down.)
+		g.say("何も起こらなかった。")
 	case EffectOnigiri, EffectPotUp, EffectSuck, EffectBless, EffectPlate:
 		kinds := map[Effect]string{EffectOnigiri: promptOnigiri, EffectPotUp: promptPotUp, EffectSuck: promptSuck, EffectBless: promptBless, EffectPlate: promptPlate}
 		if !g.asks(it, g.ask(kinds[it.Def.Effect])) {

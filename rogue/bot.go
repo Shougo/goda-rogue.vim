@@ -1232,7 +1232,7 @@ func (b *Bot) wants(g *Game, p Point) bool {
 	}
 	it, ok := g.ItemAt(p)
 	return ok && g.IsSeen(p) && p != g.Player && len(g.Inventory) >= g.Dungeon.Rules.Capacity &&
-		!g.inShop(p) && b.least(g, it) != nil
+		!g.inShop(p) && !it.Stuck && !g.NoPickup && b.least(g, it) != nil
 }
 
 // fits says whether eating the food it now wastes none of it.
@@ -1975,7 +1975,7 @@ func (b *Bot) pick(g *Game) (string, []string) {
 func wanted(g *Game, p Point) bool {
 	full := len(g.Inventory) >= g.Dungeon.Rules.Capacity
 	it, ok := g.ItemAt(p)
-	return ok && g.IsSeen(p) && p != g.Player && !it.ForSale && !useless(g, it) &&
+	return ok && g.IsSeen(p) && p != g.Player && !it.ForSale && !it.Stuck && !g.NoPickup && !useless(g, it) &&
 		(!full || it.Def.Category == CategoryMoney)
 }
 

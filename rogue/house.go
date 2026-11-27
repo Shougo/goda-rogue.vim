@@ -73,11 +73,17 @@ func (g *Game) fillHouse(rng *rand.Rand, rooms []int, start int) {
 		candidates = rooms
 	}
 	g.House = candidates[rng.IntN(len(candidates))]
-	r := g.Level.Rooms[g.House]
+	g.stockHouse(rng, g.House, true)
+}
+
+// stockHouse puts the monsters (asleep) and items of a monster house in
+// the room i, and its traps with traps.
+func (g *Game) stockHouse(rng *rand.Rand, i int, traps bool) {
+	r := g.Level.Rooms[i]
 	area := r.W * r.H
 	d := g.Dungeon
 	for range min(max(area/5, 5), houseMonsters) {
-		p := g.randomTile(rng, g.House)
+		p := g.randomTile(rng, i)
 		if !g.free(p) || chebyshev(p, g.Player) <= 2 {
 			continue
 		}
@@ -86,10 +92,13 @@ func (g *Game) fillHouse(rng *rand.Rand, rooms []int, start int) {
 		g.Monsters = append(g.Monsters, m)
 	}
 	for range min(max(area/8, 4), houseItems) {
-		p := g.randomTile(rng, g.House)
+		p := g.randomTile(rng, i)
 		if g.free(p) {
 			g.Items = append(g.Items, g.newItem(rng, p))
 		}
+	}
+	if !traps {
+		return
 	}
 	c := d.counts(g.Depth)
 	// (The traps of floors.txt are those of a room; a big room has
@@ -97,7 +106,7 @@ func (g *Game) fillHouse(rng *rand.Rand, rooms []int, start int) {
 	n := between(rng, c.MinHouseTrap, c.MaxHouseTrap) * min(max(area/houseTrapArea, 1), houseTrapTimes)
 	// A few tries a trap: its traps are the point of a monster house.
 	for tries := 4 * n; n > 0 && tries > 0; tries-- {
-		p := g.randomTile(rng, g.House)
+		p := g.randomTile(rng, i)
 		def := d.Trap(pick(rng, d.TrapRows, g.Depth))
 		if !g.trapSpot(p, def) {
 			continue

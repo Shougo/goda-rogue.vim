@@ -93,7 +93,7 @@ func (g *Game) seer() {
 func (g *Game) gather() {
 	var its []*Item
 	for _, it := range g.Items {
-		if !it.ForSale && chebyshev(it.Pos, g.Player) > 0 {
+		if !it.ForSale && !it.Stuck && chebyshev(it.Pos, g.Player) > 0 {
 			its = append(its, it)
 		}
 	}
@@ -562,4 +562,87 @@ func (g *Game) keepersToStairs() {
 		}
 		m.home = to
 	}
+}
+
+// monsterRoom is the scroll of 魔物部屋 (Shougo, 2026-11-27: for EXP and
+// items): the room the player is in becomes the monster house of the
+// floor, its monsters asleep and its items, no traps. Not in a corridor,
+// nor in a shop.
+func (g *Game) monsterRoom() {
+	i := g.Level.RoomAt(g.Player)
+	if i < 0 || g.inShop(g.Player) {
+		g.say("何も起こらなかった。")
+		return
+	}
+	g.House, g.houseFound = i, true
+	g.stockHouse(g.rng, i, false)
+	g.say("モンスターハウスだ！")
+}
+
+// curseCarried is the scroll of 呪い (Shougo, 2026-11-27: with 呪い力): n
+// of the items carried (3), at random, are cursed, equipped or not (a
+// blessed one loses its blessing instead).
+func (g *Game) curseCarried(n int) {
+	done := false
+	for range max(n, 1) {
+		var can []*Item
+		for _, it := range g.Inventory {
+			if !it.Cursed && it.cursable() && !it.ForSale {
+				can = append(can, it)
+			}
+		}
+		if len(can) == 0 {
+			break
+		}
+		done = true
+		g.curseShown(can[g.rng.IntN(len(can))])
+	}
+	if !done {
+		g.say("何も起こらなかった。")
+	}
+}
+
+// trapsAround is the scroll of 罠 (Shougo, 2026-11-27: for the traps, and
+// with 罠師): traps of the floor's kinds on the tiles around the player
+// where one may lie, found (seen).
+func (g *Game) trapsAround() {
+	d := g.Dungeon
+	n := 0
+	for _, dir := range around {
+		p := g.Player.Add(dir)
+		def := d.Trap(pick(g.rng, d.TrapRows, g.Depth))
+		if def == nil || !g.Level.At(p).Walkable() || !g.trapSpot(p, def) || g.inShop(p) {
+			continue
+		}
+		g.Traps = append(g.Traps, &Trap{Def: def, Pos: p, Found: true})
+		n++
+	}
+	if n == 0 {
+		g.say("何も起こらなかった。")
+		return
+	}
+	g.say("周りに罠ができた！")
+}
+
+// sanctuary says whether a scroll of 聖域 lies on p.
+func (g *Game) sanctuary(p Point) bool {
+	it, ok := g.ItemAt(p)
+	return ok && it.Mimic == nil && it.Def.Effect == EffectSanctuary
+}
+
+// actSanctuary is a turn of the enemy m while the player stands on a
+// scroll of 聖域: it attacks no one but an ally next to it, uses no
+// ability on the player, and comes on.
+func (g *Game) actSanctuary(m *Monster) bool {
+	for _, d := range around {
+		if f := g.MonsterAt(m.Pos.Add(d)); f != nil && f.Ally && g.clearFrom(m.Pos, d) {
+			g.hitMonster(m, f)
+			return true
+		}
+	}
+	if chebyshev(m.Pos, g.Player) > 1 {
+		m.target, m.hasTarget = g.Player, true
+		g.stepToward(m, m.target)
+	}
+	return false
 }

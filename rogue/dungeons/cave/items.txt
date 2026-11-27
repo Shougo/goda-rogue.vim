@@ -114,6 +114,14 @@
 #               attack it, attack the other way, and use no ability
 #     大部屋    the floor is one big room; the shopkeepers come by the
 #               stairs (on them, while the player owes)
+#     魔物部屋  the room of the player becomes a monster house (its
+#               monsters asleep, items, no traps)
+#     呪い      curses 強さ items carried at random
+#     罠        traps (seen) on the tiles around the player
+#     拾えず    nothing is picked up for the floor
+#     くちなし  the mouth of the player is sealed (口封じ)
+#     聖域      read, nothing; put down, it sticks, and the enemies do
+#               not attack the player on it
 #   杖, waved (a magic bolt to the front):
 #     吹き飛ばし  blows the monster it hits 10 tiles away
 #     仲間      makes the monster it hits an ally (not a shopkeeper or a
@@ -266,6 +274,13 @@ yobou	巻	予防の巻物	巻物	0	予防	0	-	-	0	300
 kanashibari	巻	金縛りの巻物	巻物	0	金縛り	0	-	-	0	500
 zowazowa	巻	ゾワゾワの巻物	巻物	10	ゾワゾワ	0	-	-	0	500
 ooheya	巻	大部屋の巻物	巻物	0	大部屋	0	-	-	0	200
+mamonobeya	巻	魔物部屋の巻物	巻物	0	魔物部屋	0	-	-	0	300
+tekikasoku	巻	敵加速の巻物	巻物	0	倍速	0	-	-	0	100
+noroimaki	巻	呪いの巻物	巻物	3	呪い	0	-	-	0	200
+wanamaki	巻	罠の巻物	巻物	0	罠	0	-	-	0	100
+hiroezu	巻	拾えずの巻物	巻物	0	拾えず	0	-	-	0	100
+kuchinashi	巻	くちなしの巻物	巻物	0	くちなし	0	-	-	0	100
+seiiki	巻	聖域の巻物	巻物	0	聖域	0	-	-	0	1000
 fukitobashi	杖	吹き飛ばしの杖	杖	0	吹き飛ばし	0	4-6	-	0	500
 nakama	杖	仲間の杖	杖	0	仲間	0	1-2	-	0	1500
 bashogae	杖	場所替えの杖	杖	0	場所替え	0	4-6	-	0	400

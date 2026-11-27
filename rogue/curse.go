@@ -97,6 +97,12 @@ func (g *Game) curse(it *Item) bool {
 		g.say("呪いよけの腕輪が呪いをはね返した。")
 		return false
 	}
+	if it.Blessed {
+		// (Never both: the blessing takes the curse.)
+		it.Blessed = false
+		g.say(g.Name(it) + "の祝福が消えた。")
+		return false
+	}
 	it.Cursed = true
 	return true
 }

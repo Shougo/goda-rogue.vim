@@ -102,7 +102,10 @@ type Game struct {
 	// Prevent says whether the player is warded against bad states for
 	// the floor (the scroll of 予防).
 	Prevent bool
-	sprung  bool
+	// NoPickup says that the player picks nothing up for the floor (the
+	// scroll of 拾えず).
+	NoPickup bool
+	sprung   bool
 	// heldBy is the monster that holds the player (AbilityHold), while
 	// Stuck; nil for a snare.
 	heldBy *Monster
@@ -257,7 +260,7 @@ func (g *Game) descend() {
 func (g *Game) newLevel(rng *rand.Rand) {
 	g.FloorTurns, g.Wind, g.Lit, g.Dark, g.Seer = 0, 0, false, false, false
 	// Weakness (仙) passes with the floor, and the ward of 予防.
-	g.AttackDown, g.DefenseDown, g.Prevent = 0, 0, false
+	g.AttackDown, g.DefenseDown, g.Prevent, g.NoPickup = 0, 0, false, false
 	// (The seal of the mouth is for the floor.)
 	g.Sealed = false
 	c := g.Dungeon.counts(g.Depth)
@@ -1168,6 +1171,9 @@ func (g *Game) Status() string {
 	}
 	if g.Prevent {
 		s += "  予防"
+	}
+	if g.NoPickup {
+		s += "  拾えず"
 	}
 
 	if g.Debugged {

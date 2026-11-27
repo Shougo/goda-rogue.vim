@@ -871,7 +871,9 @@ func TestGearWorth(t *testing.T) {
 func TestTraceBot(t *testing.T) {
 	var lines []string
 	over := TraceBot(cave(), "trace", NewBot(BotCareful, 1), 30, func(l string) { lines = append(lines, l) })
-	if over != "" || len(lines) == 0 || !strings.Contains(lines[0], "1F T0") || !strings.Contains(lines[0], "[") {
+	// (A line of the danger may come before that of the turn.)
+	i := slices.IndexFunc(lines, func(l string) bool { return strings.HasPrefix(l, "1F T0") })
+	if over != "" || i < 0 || !strings.Contains(lines[i], "[") {
 		t.Errorf("over %q, lines %q", over, lines)
 	}
 }
