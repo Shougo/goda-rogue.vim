@@ -140,7 +140,7 @@ var trapTexts = map[TrapEffect]string{
 	TrapRust:    "装備している武器と盾がさびる。",
 	TrapRot:     "持っているおにぎりがすべて腐る（壺の中は無事）。",
 	TrapCurse:   "装備以外の持ち物がどれか呪われる。",
-	TrapOnigiri: "装備以外の持ち物が 1 つおにぎりになる（敵が踏むと、その敵がおにぎりになる）。踏むと壊れることがある。",
+	TrapOnigiri: "持ち物が 1 つおにぎりになる（武器、盾、腕輪、壺、食料はならない。敵が踏むと、その敵がおにぎりになる）。踏むと壊れることがある。",
 }
 
 // commandStep steps on the trap under the player on purpose.
@@ -238,12 +238,18 @@ func (g *Game) spring(t *Trap, force bool) bool {
 	return true
 }
 
-// onigiriTrap is the trap of おにぎり on the player: an item carried, not
-// equipped nor for sale, at random, turns into an onigiri.
+// onigiriTrap is the trap of おにぎり on the player: an item carried, at
+// random, turns into an onigiri; not equipment (a weapon, a shield or a
+// bracelet, worn or not), a pot (Shougo, 2026-11-27: too unfair), food or
+// goods for sale.
 func (g *Game) onigiriTrap() {
 	var can []*Item
 	for _, it := range g.Inventory {
-		if !it.Equipped && !it.ForSale && it.Def.Effect != EffectFood {
+		switch it.Def.Category {
+		case CategoryWeapon, CategoryShield, CategoryBracelet, CategoryPot, CategoryFood:
+			continue
+		}
+		if !it.ForSale {
 			can = append(can, it)
 		}
 	}

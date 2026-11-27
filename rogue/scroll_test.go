@@ -568,15 +568,22 @@ func TestBlankScroll(t *testing.T) {
 // half the time.
 func TestOnigiriTrap(t *testing.T) {
 	g, r := trapGame(t)
-	sword := carry(g, "doutanuki", 0)
-	sword.Equipped = true
-	grass := carry(g, "otogiri", 0)
+	// Not equipment, worn or not, nor a pot: the grass, every time.
+	keep := []*Item{carry(g, "doutanuki", 0), carry(g, "kitate", 0), carry(g, "hozon", 0)}
 	p := Point{r.X + 3, r.Y + 1}
 	trap(g, "onigiriwana", p)
 	tr := g.TrapAt(p)
-	g.spring(tr, true)
-	if grass.Def.ID != "onigiri" || sword.Def.ID != "doutanuki" {
-		t.Errorf("grass %s, sword %s", grass.Def.ID, sword.Def.ID)
+	for range 10 {
+		grass := carry(g, "otogiri", 0)
+		g.spring(tr, true)
+		if grass.Def.ID != "onigiri" {
+			t.Fatalf("grass %s", grass.Def.ID)
+		}
+	}
+	for _, it := range keep {
+		if it.Def.Category == CategoryFood {
+			t.Errorf("%v turned", it)
+		}
 	}
 	m := place(g, kind("nezumi1"), Point{r.X + 4, r.Y + 2})
 	g.monsterSprings(m, tr)
