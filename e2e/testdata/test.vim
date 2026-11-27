@@ -481,6 +481,14 @@ function! s:debug() abort
   call goda_rogue#do('inventory')
   call s:check('named', len(filter(copy(s:asked.choices), {_, c -> c =~# '「混乱?」'})), 1)
   call goda_rogue#do('cancel')
+
+  " A state file: the scene written, and a run started from it.
+  let path = goda_rogue#dump_state('e2e')
+  call s:check('state written', filereadable(path), 1)
+  call s:check('state floor', index(readfile(path), "階\t4") >= 0, 1)
+  call goda_rogue#load_state('e2e')
+  call s:check('state loaded', getline(1) =~# '^4F ', 1)
+  call s:check('state status', s:status() =~# '  デバッグ$', 1)
   unlet g:goda_rogue#prompt_func
   unlet g:goda_rogue#debug
 endfunction

@@ -18,6 +18,7 @@ Dungeons		|goda-rogue-dungeons|
 Mini-map		|goda-rogue-mini-map|
 Item list		|goda-rogue-item-list|
 Replays			|goda-rogue-replays|
+State files		|goda-rogue-states|
 
 ==============================================================================
 INTRODUCTION                                         *goda-rogue-introduction*
@@ -531,6 +532,8 @@ debug [{command} [{arg}]]                                   *goda-rogue-debug*
 		  identify	Identify every item.
 		  invincible	The player cannot fall (again: it can).
 		  gold		Give 1000G.
+		  state {text}	Set the scene of the text of a state file
+				(|goda-rogue-states|).
 		  freeze	The monsters do nothing and none comes
 				("停止" on the status line; again: they
 				move), as in the dojo of Shiren 6.
@@ -1265,6 +1268,66 @@ to attach it to a bug report: it reproduces the run.  A replay holds no
 personal data.  The last runs are kept by themselves too, for a while: when
 a run went wrong, its replay is in "replays/auto"
 (|g:goda_rogue#kept_replays|).
+
+==============================================================================
+STATE FILES                                                *goda-rogue-states*
+
+A state file is a scene of the debug mode written as text, as the dojo of
+Shiren 6: the floor, the player, its items, the monsters and the traps.
+Start from one to try an item or a monster at once, and share it: it does
+not depend on a seed, so it stays good when the data of the dungeon change
+(a replay does not).  They are kept in "states" of |g:goda_rogue#data_dir|.
+
+                                                    *goda_rogue#load_state()*
+goda_rogue#load_state([{name}])
+		Start a run in the debug mode from the state file {name}: a
+		path, or a name in "states" (".txt" may be left out).
+		Without {name}, it asks, completing the names in "states".
+		The replay of the run keeps the text of the file.
+
+                                                    *goda_rogue#dump_state()*
+goda_rogue#dump_state([{name}])
+		Write the scene of the run as the state file {name}
+		(default: the date and time) in "states", and return its
+		path: the whole floor, seen or not, and all on it, to
+		reproduce a bug or to share a scene.  The shop is not
+		written, nor the states of the monsters (only their kind,
+		place, sleep, side and HP).
+
+The file is text, a line a thing, its key and its values separated by a
+tab ("#" begins a comment): >
+	ダンジョン	cave
+	階	12
+	主人公	5,2
+	レベル	10
+	HP	80/80
+	ちから	8/8
+	満腹度	100/100
+	お金	1000
+	識別	yakusou otogiri
+	持ち物	doutanuki +3 印=会,錆 装備
+	道具	7,3 otogiri 呪い
+	敵	5,3 unagi2 眠り HP=20
+	罠	7,4 onigiriwana 見える
+	地形
+	##########
+	#....~~..#
+	#....>...++++
+	##########
+<
+Coordinates are x,y on the floor, from 0.  "識別" takes IDs of items.txt,
+or すべて.  The terrain (after "地形", to the end or a blank line) is a
+character a tile: "#" rock, "." the floor of a room, "+" a corridor, "~"
+water, ">" the stairs.  The rooms are the rectangles around the floor and
+water that touch.  With a terrain, the floor is that, with only what the
+file lists; without one, the floor 階 is made as usual and what the file
+lists is added to it.  The lines of 持ち物 replace the items carried.
+
+The attributes of an item: +N or -N (the upgrade value), 印=会,錆 (seals),
+枠+N (more slots), 装備, 祝福, 呪い, 識別 (its value and charges known),
+回数=N or 容量=N (the charges of a staff, the room of a pot), 数=N (arrows),
+金額=N (money), 中身=id;id (in a pot), 売り物, 貼りつき, ミミック=id (a
+mimic hidden as it).  Of a monster: 眠り, 仲間, HP=N.  Of a trap: 見える.
 
 ==============================================================================
 vim:tw=78:ts=8:noet:ft=help:norl:

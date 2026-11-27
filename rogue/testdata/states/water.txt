@@ -1,0 +1,22 @@
+# A pond, a crab and an onigiri trap: for the tests (debugstate_test.go).
+ダンジョン	cave
+階	12
+主人公	2,2
+レベル	5
+HP	40/50
+ちから	9/10
+満腹度	80/100
+お金	300
+識別	yakusou otogiri
+持ち物	doutanuki +3 印=会,錆 装備
+持ち物	hozon 容量=3 中身=yakusou;otogiri
+道具	8,1 otogiri 呪い
+敵	6,3 kani1 眠り HP=5
+罠	3,3 onigiriwana 見える
+地形
+############
+#..........#
+#....~~~...#
+#....~.~..>#++++
+#....~~~...#
+############

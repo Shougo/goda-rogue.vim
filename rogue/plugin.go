@@ -26,7 +26,7 @@ const PluginName = "rogue"
 // ScriptVersion is the version of the Vim script (autoload/goda_rogue.vim)
 // this binary goes with (sdk.ScriptVersioner). Bump it with s:version there
 // when they no longer work together.
-const ScriptVersion = 5
+const ScriptVersion = 6
 
 // Plugin serves the game.
 type Plugin struct {
@@ -143,6 +143,10 @@ type StartOptions struct {
 	Replay string `json:"replay"`
 	// Debug enables the debug mode (debug.go).
 	Debug bool `json:"debug"`
+	// State is the text of a state file (debugstate.go) to start from:
+	// the run is in the debug mode, in the dungeon the file names (but
+	// for Dungeon).
+	State string `json:"state"`
 	// Keep is how many replays of the runs before are kept, when the
 	// replay file is made anew (keepReplay); 0 for none.
 	Keep int `json:"keep"`
@@ -383,6 +387,12 @@ func (p *Plugin) Handlers() map[string]sdk.Handler {
 			}
 			p.mu.Lock()
 			defer p.mu.Unlock()
+			if opts.State != "" {
+				opts.Debug = true
+				if opts.Dungeon == "" {
+					opts.Dungeon = StateDungeon(opts.State)
+				}
+			}
 			if opts.Dungeon == "" {
 				opts.Dungeon = DefaultDungeon
 			}
@@ -404,7 +414,20 @@ func (p *Plugin) Handlers() map[string]sdk.Handler {
 				p.rec = rec
 			}
 			p.game = g
+			if opts.State != "" {
+				if err := p.do("debug", []string{debugState, opts.State}); err != nil {
+					return nil, err
+				}
+			}
 			return sdk.Generic(g.Render(size))
+		},
+		"dump": func(ctx context.Context, h sdk.Host, params []any) (any, error) {
+			p.mu.Lock()
+			defer p.mu.Unlock()
+			if p.game == nil {
+				return nil, fmt.Errorf("no game: start one with goda_rogue#start()")
+			}
+			return p.game.DumpState(), nil
 		},
 		"dungeons": func(ctx context.Context, h sdk.Host, params []any) (any, error) {
 			var list []map[string]any

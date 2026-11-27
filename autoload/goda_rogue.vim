@@ -6,7 +6,7 @@
 
 " The version of this Vim script that the binary goes with (ScriptVersion of
 " its Go side): goda.vim refuses a binary of another one, and builds it again.
-let s:version = #{version: 5, module: 'github.com/Shougo/goda-rogue.vim'}
+let s:version = #{version: 6, module: 'github.com/Shougo/goda-rogue.vim'}
 
 " The repository: the Go module of the binary.
 let s:root = expand('<sfile>:p:h:h', 1)
@@ -351,6 +351,64 @@ function! goda_rogue#save_replay(name = '', file = '') abort
   endif
   echomsg '[goda-rogue] the replay is saved: ' . dst
   return dst
+endfunction
+
+" State files (|goda-rogue-states|): a scene of the debug mode, as text.
+function! s:state_dir() abort
+  return s:data_dir() . '/states'
+endfunction
+
+" The path of the state file {name}: a file, or a name in the state
+" directory (".txt" may be left out).
+function! s:state_path(name) abort
+  if filereadable(expand(a:name, 1))
+    return expand(a:name, 1)
+  endif
+  let path = s:state_dir() . '/' . a:name
+  return filereadable(path) || a:name =~# '\.txt$' ? path : path . '.txt'
+endfunction
+
+" Start a run in the debug mode from the state file {name} (a path, or a
+" name in the state directory; asked, with completion, if empty).
+function! goda_rogue#load_state(name = '') abort
+  let name = a:name
+  if empty(name)
+    let s:complete = map(glob(s:state_dir() . '/*.txt', 1, 1),
+          \ {_, v -> fnamemodify(v, ':t:r')})
+    let name = input('状態ファイル: ', '', 'customlist,goda_rogue#_complete_text')
+    if empty(name)
+      return
+    endif
+  endif
+  let path = s:state_path(name)
+  if !filereadable(path)
+    call s:print_error('no state file: ' . path)
+    return
+  endif
+  call s:start_game(#{state: join(readfile(path), "\n")})
+endfunction
+
+" Write the scene of the run as the state file {name} in the state
+" directory (default: the date and time), and return its path.
+function! goda_rogue#dump_state(name = '') abort
+  try
+    let text = goda#request('rogue', 'dump')
+  catch
+    call s:print_error(v:exception)
+    return ''
+  endtry
+  let name = empty(a:name) ? strftime('%Y%m%d-%H%M%S') : a:name
+  if name !~# '\.txt$'
+    let name .= '.txt'
+  endif
+  call mkdir(s:state_dir(), 'p')
+  let path = s:state_dir() . '/' . name
+  if writefile(split(text, "\n"), path) != 0
+    call s:print_error('could not write ' . path)
+    return ''
+  endif
+  echomsg '[goda-rogue] the state is saved: ' . path
+  return path
 endfunction
 
 " Show the records of the finished runs (番付) in the buffer

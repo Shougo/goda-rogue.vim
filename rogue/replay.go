@@ -177,8 +177,14 @@ func ParseReplay(r io.Reader) (*Replay, error) {
 		if err != nil {
 			return nil, fmt.Errorf("%d: the time of an action: %w", n, err)
 		}
+		args := fields[2:]
+		for i, a := range args {
+			if args[i], err = unquoteArg(a); err != nil {
+				return nil, fmt.Errorf("%d: %w", n, err)
+			}
+		}
 		rp.Actions = append(rp.Actions, ReplayAction{
-			Time: time.Duration(ms) * time.Millisecond, Action: fields[1], Args: fields[2:], Line: n,
+			Time: time.Duration(ms) * time.Millisecond, Action: fields[1], Args: args, Line: n,
 		})
 	}
 	if err := sc.Err(); err != nil {
@@ -321,7 +327,7 @@ func (r *Recorder) Action(t time.Duration, action string, args []string, events 
 	var b strings.Builder
 	b.WriteString(strconv.FormatInt(t.Milliseconds(), 10))
 	for _, s := range append([]string{action}, args...) {
-		b.WriteString("\t" + s)
+		b.WriteString("\t" + quoteArg(s))
 	}
 	b.WriteString("\n")
 	writeEvents(&b, events)
@@ -340,4 +346,22 @@ func writeEvents(b *strings.Builder, events []string) {
 	for _, e := range events {
 		b.WriteString("# " + e + "\n")
 	}
+}
+
+// quoteArg is an argument of an action in a replay file: as it is, but
+// quoted as a Go string if it has a tab or a line break (the text of a
+// state file, debug state), or begins with a quote.
+func quoteArg(s string) string {
+	if strings.ContainsAny(s, "\t\n\r") || strings.HasPrefix(s, `"`) {
+		return strconv.Quote(s)
+	}
+	return s
+}
+
+// unquoteArg reads an argument quoted by quoteArg.
+func unquoteArg(s string) (string, error) {
+	if !strings.HasPrefix(s, `"`) {
+		return s, nil
+	}
+	return strconv.Unquote(s)
 }

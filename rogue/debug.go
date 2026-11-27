@@ -151,6 +151,15 @@ func (g *Game) debug(args []string) error {
 		g.debugUsed(args)
 		g.Gold += 1000
 		g.say("1000G 得た。")
+	case debugState:
+		// (The text of a state file: the replay keeps it, quoted.)
+		if len(args) < 2 {
+			return fmt.Errorf("debug state: the text of a state file expected")
+		}
+		if err := g.loadState(args[1]); err != nil {
+			return err
+		}
+		g.debugUsed([]string{debugState})
 	case debugFreeze:
 		g.debugUsed(args)
 		g.Frozen = !g.Frozen
