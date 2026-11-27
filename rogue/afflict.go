@@ -31,6 +31,8 @@ const (
 // off.
 func (g *Game) afflict(e MagicEffect) {
 	switch {
+	case g.prevents(e):
+		return
 	case e == MagicSleep && g.wears(EffectNoSleep):
 		g.say("睡眠よけの腕輪が眠気を払った。")
 		return
@@ -107,6 +109,10 @@ func (g *Game) afflictBy(m *Monster, a Ability) bool {
 		}
 	case afflictWeaken:
 		g.say(m.Name + "は力を吸い取ろうとした！")
+		if g.Prevent {
+			g.say("予防の力で防いだ。")
+			return true
+		}
 		if g.wears(EffectNoWeak) {
 			g.use(EffectNoWeak)
 			g.say("弱りよけの腕輪が守った。")

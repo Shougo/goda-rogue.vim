@@ -2,6 +2,7 @@ package rogue
 
 import (
 	"slices"
+	"strings"
 	"testing"
 )
 
@@ -292,5 +293,79 @@ func TestBoundAlly(t *testing.T) {
 	}
 	if m.Bound != 0 {
 		t.Errorf("still bound: %d", m.Bound)
+	}
+}
+
+// TestPowerUpScroll: パワーアップ: blows of 1.5 times the damage, for its
+// turns.
+func TestPowerUpScroll(t *testing.T) {
+	g, _ := trapGame(t)
+	read(g, "powerup")
+	if g.PowerUp != 50 || !strings.Contains(g.Status(), "パワーアップ") {
+		t.Fatalf("power up %d: %q", g.PowerUp, g.Status())
+	}
+	for range 50 {
+		g.Do("wait", nil)
+	}
+	if g.PowerUp != 0 {
+		t.Errorf("still %d", g.PowerUp)
+	}
+}
+
+// TestPreventScroll: 予防 cures, and wards the bad states off for the
+// floor.
+func TestPreventScroll(t *testing.T) {
+	g, _ := trapGame(t)
+	g.Confused = 5
+	read(g, "yobou")
+	if g.Confused != 0 || !g.Prevent {
+		t.Fatalf("confused %d, prevent %v", g.Confused, g.Prevent)
+	}
+	g.afflict(MagicSleep)
+	g.afflict(MagicBlind)
+	if g.Asleep > 0 || g.Blind > 0 {
+		t.Errorf("asleep %d, blind %d", g.Asleep, g.Blind)
+	}
+	g.descend()
+	if g.Prevent {
+		t.Error("prevent on the next floor")
+	}
+}
+
+// TestBindScroll: 金縛り binds the enemies of the room.
+func TestBindScroll(t *testing.T) {
+	g, r := trapGame(t)
+	m := place(g, kind("nezumi1"), Point{r.X + 4, r.Y + 2})
+	read(g, "kanashibari")
+	if m.Bound == 0 {
+		t.Error("not bound")
+	}
+}
+
+// TestBottomlessPot: what is put in a pot of 底抜け is gone; thrown at a
+// monster, it breaks and the monster falls through the pit it leaves.
+func TestBottomlessPot(t *testing.T) {
+	g, r := trapGame(t)
+	pot := carry(g, "sokonuke", 0)
+	pot.Charges = 3
+	grass := carry(g, "otogiri", 0)
+	g.putIn(pot, grass)
+	if len(pot.Contents) != 0 || pot.Charges != 2 || slices.Contains(g.Inventory, grass) {
+		t.Fatalf("contents %d, charges %d", len(pot.Contents), pot.Charges)
+	}
+	m := place(g, kind("nezumi1"), Point{r.X + 4, r.Y + 2})
+	g.smash(pot, m.Pos)
+	if tr := g.TrapAt(Point{r.X + 4, r.Y + 2}); tr == nil || tr.Def.Effect != TrapPit || !tr.Found {
+		t.Fatalf("trap %+v", tr)
+	}
+	if slices.Contains(g.Monsters, m) {
+		t.Error("the rat did not fall")
+	}
+	// Broken under the player: it falls.
+	depth := g.Depth
+	pot = carry(g, "sokonuke", 0)
+	g.smash(pot, g.Player)
+	if g.Depth != depth+1 {
+		t.Errorf("depth %d -> %d", depth, g.Depth)
 	}
 }

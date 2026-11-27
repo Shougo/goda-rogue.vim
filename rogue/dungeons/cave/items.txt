@@ -107,6 +107,9 @@
 #               solved (surrounded: those next bound; hungry: full;
 #               cursed gear: uncursed; bad states: gone; strength down:
 #               back)
+#     パワーアップ  強さ turns of blows of 1.5 times the damage
+#     予防      the bad states pass, and none comes for the floor
+#     金縛り    the enemies of the room are bound (かなしばり)
 #   杖, waved (a magic bolt to the front):
 #     吹き飛ばし  blows the monster it hits 10 tiles away
 #     仲間      makes the monster it hits an ally (not a shopkeeper or a
@@ -137,6 +140,8 @@
 #     普通      keeps them, not to use nor take out: they come out when
 #               the pot breaks (a crow makes one of another pot; on the
 #               floors of the hard dungeons only)
+#     底抜け    what is put in is gone, with its room; broken, it leaves
+#               a pit where it breaks
 # 回数 is how many times a staff can be waved, how many arrows there are,
 # how many items a pot holds (min-max; - for others).
 # 印 is the ability a weapon, a shield or a bracelet is born with (素の能力: a seal
@@ -252,6 +257,9 @@ shukufuku	巻	祝福の巻物	巻物	0	祝福	0	-	-	0	800
 mekki	巻	メッキの巻物	巻物	0	メッキ	0	-	-	0	500
 hikiyose	巻	引き寄せの巻物	巻物	0	引き寄せ	0	-	-	0	200
 komatta	巻	困った時の巻物	巻物	0	困った時	0	-	-	0	500
+powerup	巻	パワーアップの巻物	巻物	50	パワーアップ	0	-	-	0	500
+yobou	巻	予防の巻物	巻物	0	予防	0	-	-	0	300
+kanashibari	巻	金縛りの巻物	巻物	0	金縛り	0	-	-	0	500
 fukitobashi	杖	吹き飛ばしの杖	杖	0	吹き飛ばし	0	4-6	-	0	500
 nakama	杖	仲間の杖	杖	0	仲間	0	1-2	-	0	1500
 bashogae	杖	場所替えの杖	杖	0	場所替え	0	4-6	-	0	400
@@ -262,6 +270,7 @@ hozon	壺	保存の壺	壺	0	保存	0	3-5	-	0	300
 gousei	壺	合成の壺	壺	0	合成	0	2-3	-	0	1000
 kaifukutsubo	壺	回復の壺	壺	0	全回復	0	2-3	-	0	800
 futsuu	壺	普通の壺	壺	0	普通	0	2-3	-	0	50
+sokonuke	壺	底抜けの壺	壺	0	底抜け	0	3-5	-	0	300
 onigiri	食	おにぎり	食料	50	満腹	0	-	-	0	100
 ookiionigiri	食	大きなおにぎり	食料	100	満腹	0	-	-	0	200
 kusatta	食	腐ったおにぎり	食料	30	腐った	0	-	-	0	10

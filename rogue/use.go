@@ -189,6 +189,12 @@ func (g *Game) effectOf(it *Item, lucky bool) {
 		g.gatherFoes()
 	case EffectTrouble:
 		g.trouble()
+	case EffectPowerUp:
+		g.powerUp(n)
+	case EffectPrevent:
+		g.prevent()
+	case EffectBind:
+		g.bindAround()
 	case EffectOnigiri, EffectPotUp, EffectSuck, EffectBless, EffectPlate:
 		kinds := map[Effect]string{EffectOnigiri: promptOnigiri, EffectPotUp: promptPotUp, EffectSuck: promptSuck, EffectBless: promptBless, EffectPlate: promptPlate}
 		if !g.asks(it, g.ask(kinds[it.Def.Effect])) {

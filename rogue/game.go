@@ -96,7 +96,13 @@ type Game struct {
 	// AttackDown and DefenseDown are the turns left weakened (仙,
 	// afflict.go): the player deals 30% less damage, takes 30% more.
 	AttackDown, DefenseDown int
-	sprung                  bool
+	// PowerUp is the turns left powered up (the scroll of パワーアップ):
+	// the blows of the player deal 1.5 times the damage.
+	PowerUp int
+	// Prevent says whether the player is warded against bad states for
+	// the floor (the scroll of 予防).
+	Prevent bool
+	sprung  bool
 	// heldBy is the monster that holds the player (AbilityHold), while
 	// Stuck; nil for a snare.
 	heldBy *Monster
@@ -250,8 +256,8 @@ func (g *Game) descend() {
 // floors.txt says), and leaves the state of the last floor behind.
 func (g *Game) newLevel(rng *rand.Rand) {
 	g.FloorTurns, g.Wind, g.Lit, g.Dark, g.Seer = 0, 0, false, false, false
-	// Weakness (仙) passes with the floor.
-	g.AttackDown, g.DefenseDown = 0, 0
+	// Weakness (仙) passes with the floor, and the ward of 予防.
+	g.AttackDown, g.DefenseDown, g.Prevent = 0, 0, false
 	// (The seal of the mouth is for the floor.)
 	g.Sealed = false
 	c := g.Dungeon.counts(g.Depth)
@@ -751,6 +757,9 @@ func (g *Game) strike(m *Monster, share float64) {
 		n = int(math.Round(float64(n) * float64(100+b.Def.Strength) / 100))
 		g.use(EffectHungry)
 	}
+	if g.PowerUp > 0 {
+		n = n * powerUpRate / 100
+	}
 	n = g.weakening(n)
 	m.HP -= n
 	// (A blow frees it of かなしばり.)
@@ -824,6 +833,11 @@ func (g *Game) tick(rest bool) {
 	for _, w := range []*int{&g.AttackDown, &g.DefenseDown} {
 		if *w > 0 {
 			*w--
+		}
+	}
+	if g.PowerUp > 0 {
+		if g.PowerUp--; g.PowerUp == 0 {
+			g.say("パワーアップの効果が切れた。")
 		}
 	}
 	g.Turn++
@@ -1144,6 +1158,12 @@ func (g *Game) Status() string {
 	}
 	if g.DefenseDown > 0 {
 		s += "  防御ダウン"
+	}
+	if g.PowerUp > 0 {
+		s += "  パワーアップ"
+	}
+	if g.Prevent {
+		s += "  予防"
 	}
 	if g.Debugged {
 		s += "  デバッグ"

@@ -345,13 +345,7 @@ func (g *Game) trouble() {
 		}
 	}
 	if len(adjacent) >= 2 {
-		fixes = append(fixes, func() {
-			for _, m := range adjacent {
-				m.Bound = boundTurns
-				m.Dozing = false
-			}
-			g.say("周りの敵がかなしばりになった！")
-		})
+		fixes = append(fixes, func() { g.bind(adjacent) })
 	}
 	if c := g.fullnessCap(); g.Fullness*2 <= c && g.Fullness < c {
 		fixes = append(fixes, func() {
@@ -375,11 +369,8 @@ func (g *Game) trouble() {
 			g.say("装備の呪いが解けた。")
 		})
 	}
-	if g.Confused > 0 || g.Slowed > 0 || g.Blind > 0 || g.AttackDown > 0 || g.DefenseDown > 0 {
-		fixes = append(fixes, func() {
-			g.Confused, g.Slowed, g.Blind, g.AttackDown, g.DefenseDown = 0, 0, 0, 0, 0
-			g.say("体の調子が元に戻った。")
-		})
+	if g.badStates() {
+		fixes = append(fixes, g.cure)
 	}
 	if g.Strength < g.MaxStrength {
 		fixes = append(fixes, func() {
@@ -390,4 +381,66 @@ func (g *Game) trouble() {
 	if len(fixes) > 0 {
 		fixes[g.rng.IntN(len(fixes))]()
 	}
+}
+
+// bind binds the monsters ms (かなしばり).
+func (g *Game) bind(ms []*Monster) {
+	for _, m := range ms {
+		m.Bound = boundTurns
+		m.Dozing = false
+	}
+	g.say("敵がかなしばりになった！")
+}
+
+// bindAround is the scroll of 金縛り (Shougo, 2026-11-27: the binding of
+// 困った時): the enemies around are bound.
+func (g *Game) bindAround() {
+	ms := g.enemiesAround()
+	if len(ms) == 0 {
+		g.say("何も起こらなかった。")
+		return
+	}
+	g.bind(ms)
+}
+
+// badStates says whether the player is in a bad state (those 予防 wards
+// off; 睡眠 and 口封じ keep it from reading a scroll anyway).
+func (g *Game) badStates() bool {
+	return g.Confused > 0 || g.Slowed > 0 || g.Blind > 0 || g.AttackDown > 0 || g.DefenseDown > 0
+}
+
+// cure takes the bad states of the player away.
+func (g *Game) cure() {
+	g.Confused, g.Slowed, g.Blind, g.AttackDown, g.DefenseDown = 0, 0, 0, 0, 0
+	g.say("体の調子が元に戻った。")
+}
+
+// powerUpRate is the damage (%) of a blow of the player powered up.
+const powerUpRate = 150
+
+// powerUp is the scroll of パワーアップ (Shougo, 2026-11-27): n turns (50)
+// of blows of 1.5 times the damage.
+func (g *Game) powerUp(n int) {
+	g.PowerUp = n
+	g.say("力がみなぎってきた！")
+}
+
+// prevent is the scroll of 予防 (Shougo, 2026-11-27): the bad states pass,
+// and none comes on the player for the floor.
+func (g *Game) prevent() {
+	if g.badStates() {
+		g.cure()
+	}
+	g.Prevent = true
+	g.say("悪い状態を防ぐようになった。")
+}
+
+// prevents says, with the ward of 予防, that the state e does not come on
+// the player (a good one, as 倍速, does).
+func (g *Game) prevents(e MagicEffect) bool {
+	if !g.Prevent || !slices.Contains([]MagicEffect{MagicConfuse, MagicSlow, MagicSleep, MagicSeal, MagicBlind}, e) {
+		return false
+	}
+	g.say("予防の力で防いだ。")
+	return true
 }

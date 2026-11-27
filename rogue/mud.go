@@ -114,6 +114,9 @@ func (g *Game) eatRotten(n int) {
 	g.fill(n)
 	g.say("お腹がふくれたが、腐っていた……。")
 	e := rottenStates[g.rng.IntN(len(rottenStates))]
+	if g.prevents(e) {
+		return
+	}
 	g.States.take(e)
 	g.say(stateTexts[e].player)
 }

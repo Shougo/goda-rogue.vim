@@ -195,6 +195,9 @@ func (g *Game) spring(t *Trap, force bool) bool {
 			g.say("ちからが1下がった。")
 		}
 	case TrapSleep:
+		if g.prevents(MagicSleep) {
+			break
+		}
 		g.say("眠ってしまった……。")
 		for range n {
 			g.endTurn(false)

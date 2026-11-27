@@ -350,10 +350,13 @@ const (
 	EffectKeep      Effect = "保存"
 	EffectSynthesis Effect = "合成"
 	EffectPlain     Effect = "普通"
-	EffectHealPot   Effect = "全回復"
-	EffectUncurse   Effect = "おはらい"
-	EffectMoreSlots Effect = "印増大"
-	EffectEraseSeal Effect = "印消し"
+	// EffectBottomless: what is put in is gone; broken, the pot leaves a
+	// pit (Shougo, 2026-11-27).
+	EffectBottomless Effect = "底抜け"
+	EffectHealPot    Effect = "全回復"
+	EffectUncurse    Effect = "おはらい"
+	EffectMoreSlots  Effect = "印増大"
+	EffectEraseSeal  Effect = "印消し"
 	// The scrolls of scroll.go.
 	EffectSlash      Effect = "真空斬り"
 	EffectWipe       Effect = "全滅"
@@ -368,6 +371,9 @@ const (
 	EffectPlate      Effect = "メッキ"
 	EffectGatherFoes Effect = "引き寄せ"
 	EffectTrouble    Effect = "困った時"
+	EffectPowerUp    Effect = "パワーアップ"
+	EffectPrevent    Effect = "予防"
+	EffectBind       Effect = "金縛り"
 )
 
 // effects are the effects the items of each category can have.
@@ -380,10 +386,10 @@ var effects = map[Category][]Effect{
 	CategoryGrass: {EffectHeal, EffectStrength, EffectEyeDrops, EffectMaxHP},
 	CategoryScroll: {EffectLight, EffectDrain, EffectIdentify, EffectUpWeapon, EffectUpShield, EffectUncurse, EffectMoreSlots, EffectEraseSeal,
 		EffectSlash, EffectWipe, EffectNoTraps, EffectSeer, EffectGather, EffectLost, EffectOnigiri, EffectPotUp, EffectSuck, EffectBless, EffectPlate,
-		EffectGatherFoes, EffectTrouble},
+		EffectGatherFoes, EffectTrouble, EffectPowerUp, EffectPrevent, EffectBind},
 	CategoryStaff: {EffectBlowAway, EffectRecruit, EffectSwap},
 	CategoryFood:  {EffectFood, EffectRotten},
-	CategoryPot:   {EffectKeep, EffectSynthesis, EffectHealPot, EffectPlain},
+	CategoryPot:   {EffectKeep, EffectSynthesis, EffectHealPot, EffectPlain, EffectBottomless},
 }
 
 // FloorRow is a row of an appearance table: id appears on the floors

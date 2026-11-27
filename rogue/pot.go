@@ -92,6 +92,12 @@ func (g *Game) putIn(pot, it *Item) {
 			}
 		}
 	}
+	if pot.Def.Effect == EffectBottomless {
+		// (As a pot of healing: its room goes with the item.)
+		pot.Charges--
+		g.say(g.Name(it) + "は底から抜けて消えた。")
+		return
+	}
 	if pot.Def.Effect == EffectHealPot {
 		// The item is gone, and its room with it: the pot heals as many
 		// times as it holds, whatever is put in it.
@@ -251,11 +257,40 @@ func (g *Game) discard(it *Item) {
 	}
 }
 
-// smash breaks a thrown pot on p: what was in it falls around.
+// smash breaks a thrown pot on p: what was in it falls around; a pot of
+// 底抜け leaves a pit there.
 func (g *Game) smash(pot *Item, p Point) {
 	g.say(g.Name(pot) + "は割れた。")
 	for _, it := range pot.Contents {
 		g.land(it, p)
 	}
 	pot.Contents = nil
+	if pot.Def.Effect == EffectBottomless {
+		g.pitAt(p)
+	}
+}
+
+// pitAt opens a pit on p (a pot of 底抜け broken), seen: who stands on it
+// falls, the player (forced) or a monster. Not on water or stairs, a trap
+// already there, in a shop, nor on the last floor.
+func (g *Game) pitAt(p Point) {
+	var def *TrapDef
+	for _, d := range g.Dungeon.Traps {
+		if d.Effect == TrapPit {
+			def = d
+			break
+		}
+	}
+	if def == nil || !g.Level.At(p).Walkable() || g.stairsAt(p) || g.TrapAt(p) != nil || g.inShop(p) || g.Depth >= g.Dungeon.Floors {
+		return
+	}
+	t := &Trap{Def: def, Pos: p, Found: true}
+	g.Traps = append(g.Traps, t)
+	g.say("落とし穴ができた。")
+	switch m := g.MonsterAt(p); {
+	case p == g.Player:
+		g.spring(t, true)
+	case m != nil:
+		g.monsterSprings(m, t)
+	}
 }
