@@ -120,6 +120,8 @@ type Game struct {
 	// naming the kind it is naming now (naming.go).
 	names  map[string]string
 	naming string
+	// blanking is the scroll of 白紙 the player is writing (blank.go).
+	blanking *Item
 	// Over is why the run is over ("" while it goes on), and Cleared
 	// whether the player went down the last stairs.
 	Over    string
@@ -535,6 +537,14 @@ func (g *Game) Do(action string, args []string) error {
 	default:
 		g.Prompt = nil
 	}
+	if action == "name" && g.blanking != nil {
+		// Writing a scroll of 白紙: reading it, a turn.
+		g.beginAction()
+		if g.writeBlank(strings.Join(args, " ")) {
+			g.endTurn(false)
+		}
+		return nil
+	}
 	if action == "name" {
 		// Naming costs no turn.
 		g.beginAction()
@@ -572,7 +582,7 @@ func (g *Game) Do(action string, args []string) error {
 			g.endTurn(false)
 		}
 	case "cancel":
-		g.Prompt = nil
+		g.Prompt, g.blanking = nil, nil
 	case "pickup":
 		g.beginAction()
 		if !g.pickUp(false) {

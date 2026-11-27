@@ -618,15 +618,19 @@ function! s:ask(prompt) abort
         \ {idx -> goda_rogue#_answer(winid, idx)})
 endfunction
 
-" Ask for a text ({prompt}.input: a name), starting with {prompt}.default:
-" with g:goda_rogue#prompt_func (#{title, input: v:true, default}, whose
-" callback gets the text, or v:null to cancel), else on the command line.
-" The answer goes back as the action "name", or "cancel".
+" Ask for a text ({prompt}.input: a name), starting with {prompt}.default,
+" completing {prompt}.complete if any (the scroll of 白紙: the scrolls
+" known): with g:goda_rogue#prompt_func (#{title, input: v:true, default,
+" complete}, whose callback gets the text, or v:null to cancel), else on
+" the command line.  The answer goes back as the action "name", or
+" "cancel".
 function! s:input_text(prompt, winid) abort
   let default = get(a:prompt, 'default', '')
+  let complete = get(a:prompt, 'complete', [])
   if !empty(get(g:, 'goda_rogue#prompt_func', ''))
     call call(g:goda_rogue#prompt_func,
-          \ [#{title: a:prompt.title, input: v:true, default: default},
+          \ [#{title: a:prompt.title, input: v:true, default: default,
+          \    complete: complete},
           \ {text -> goda_rogue#_answer_text(a:winid, text)}])
     return
   endif
@@ -634,15 +638,32 @@ function! s:input_text(prompt, winid) abort
   " Once the current action is over: input() does not wait for an answer
   " inside win_execute().
   call timer_start(0, {-> goda_rogue#_answer_text(a:winid,
-        \ s:read_text(a:prompt.title, default))})
+        \ s:read_text(a:prompt.title, default, complete))})
 endfunction
 
-" The text typed after {title} (v:null when cancelled with <Esc>).
-function! s:read_text(title, default) abort
+" The texts the command line completes (s:read_text).
+let s:complete = []
+
+" The text typed after {title} (v:null when cancelled with <Esc>), with
+" <Tab> completing {complete} if not empty (then an empty text cancels
+" too: input() does not tell <Esc>).
+function! s:read_text(title, default, complete = []) abort
   redraw
+  if !empty(a:complete)
+    let s:complete = a:complete
+    let text = input(a:title . ': ', a:default,
+          \ 'customlist,goda_rogue#_complete_text')
+    return empty(text) ? v:null : text
+  endif
   let cancel = "\x01"
   let text = inputdialog(a:title . ': ', a:default, cancel)
   return text ==# cancel ? v:null : text
+endfunction
+
+" Complete {arglead} with the texts of s:complete that have it (anywhere:
+" "識別" finds 識別の巻物).
+function! goda_rogue#_complete_text(arglead, cmdline, cursorpos) abort
+  return filter(copy(s:complete), {_, v -> stridx(v, a:arglead) >= 0})
 endfunction
 
 " Answer the text prompt shown in the window {winid} with {text} (v:null

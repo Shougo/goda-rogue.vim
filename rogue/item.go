@@ -204,6 +204,9 @@ type Prompt struct {
 	Input bool `json:"input,omitempty"`
 	// Default is the text an Input prompt starts with.
 	Default string `json:"default,omitempty"`
+	// Complete are the texts an Input prompt completes (the scroll of
+	// 白紙: the names of the scrolls known).
+	Complete []string `json:"complete,omitempty"`
 
 	// What the choice is for: the inventory, what to do with the item at
 	// index item, or which item to identify (items are the indexes of
@@ -706,6 +709,9 @@ func (g *Game) choose(arg string) (bool, error) {
 			g.throwItem(g.Inventory[p.item])
 			return true, nil
 		case commandDrink, commandRead, commandWave, commandEat:
+			if g.blank(g.Inventory[p.item]) {
+				return g.askBlank(g.Inventory[p.item]), nil
+			}
 			g.useItem(g.Inventory[p.item])
 			return true, nil
 		}
@@ -738,6 +744,9 @@ func (g *Game) doAtFoot(c string) bool {
 	case commandThrow:
 		g.throwItem(it)
 	case commandDrink, commandRead, commandWave, commandEat:
+		if g.blank(it) {
+			return g.askBlank(it)
+		}
 		g.useItem(it)
 	default:
 		return false

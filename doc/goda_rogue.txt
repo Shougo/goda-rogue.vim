@@ -595,7 +595,10 @@ g:goda_rogue#prompt_func
 		|List| of choices when "multi" is true.  A prompt for a
 		text (a name) has "input" true, "default" (the text to
 		start with) and no "choices": call the function with the
-		text, or |v:null| to cancel.
+		text, or |v:null| to cancel.  It may have "complete": the
+		texts to complete (the scroll of 白紙: the names of the
+		scrolls known, which the command line completes with
+		<Tab>).
 
 ==============================================================================
 HIGHLIGHTS                                             *goda-rogue-highlights*
@@ -1020,7 +1023,7 @@ The built-in dungeons:
 				        吸い出し 祝福 メッキ 引き寄せ 困った時
 				        パワーアップ 予防 金縛り ゾワゾワ 大部屋
 				        魔物部屋 敵加速 呪い 罠 拾えず くちなし
-				        聖域
+				        聖域 白紙
 				  杖: 吹き飛ばし 仲間 場所替え
 				  食料: 満腹 腐った
 				  壺: 保存 合成 全回復 普通 底抜け

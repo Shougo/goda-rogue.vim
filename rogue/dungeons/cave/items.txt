@@ -122,6 +122,8 @@
 #     くちなし  the mouth of the player is sealed (口封じ)
 #     聖域      read, nothing; put down, it sticks, and the enemies do
 #               not attack the player on it
+#     白紙      read, the player writes the name of a scroll it knows
+#               (typed, with completion), and reads it as that scroll
 #   杖, waved (a magic bolt to the front):
 #     吹き飛ばし  blows the monster it hits 10 tiles away
 #     仲間      makes the monster it hits an ally (not a shopkeeper or a
@@ -281,6 +283,7 @@ wanamaki	巻	罠の巻物	巻物	0	罠	0	-	-	0	100
 hiroezu	巻	拾えずの巻物	巻物	0	拾えず	0	-	-	0	100
 kuchinashi	巻	くちなしの巻物	巻物	0	くちなし	0	-	-	0	100
 seiiki	巻	聖域の巻物	巻物	0	聖域	0	-	-	0	1000
+hakushi	巻	白紙の巻物	巻物	0	白紙	0	-	-	0	1000
 fukitobashi	杖	吹き飛ばしの杖	杖	0	吹き飛ばし	0	4-6	-	0	500
 nakama	杖	仲間の杖	杖	0	仲間	0	1-2	-	0	1500
 bashogae	杖	場所替えの杖	杖	0	場所替え	0	4-6	-	0	400

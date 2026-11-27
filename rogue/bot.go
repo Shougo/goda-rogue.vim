@@ -214,6 +214,14 @@ func (b *Bot) answer(g *Game) (string, []string) {
 		return "cancel", nil
 	}
 	switch p.kind {
+	case promptBlank:
+		// What helps most of what it knows; else the first.
+		for _, want := range []string{"困った時の巻物", "全滅の巻物", "天の恵みの巻物", "識別の巻物"} {
+			if slices.Contains(p.Complete, want) {
+				return "name", []string{want}
+			}
+		}
+		return "name", []string{p.Complete[0]}
 	case promptIdentify:
 		// A kind it does not know first; else whether one is cursed.
 		return pick(func(it *Item) bool { return !g.identified[it.Def.ID] }, g.unknown)

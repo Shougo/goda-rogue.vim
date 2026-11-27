@@ -110,6 +110,7 @@
 床	1	30	hiroezu	1
 床	1	30	kuchinashi	1
 床	1	30	seiiki	1
+床	1	30	hakushi	1
 床	1	30	fukitobashi	2
 床	1	30	nakama	1
 床	1	30	bashogae	1
@@ -234,6 +235,7 @@
 よろず	1	30	hiroezu	1
 よろず	1	30	kuchinashi	1
 よろず	1	30	seiiki	1
+よろず	1	30	hakushi	1
 よろず	1	30	fukitobashi	2
 よろず	1	30	nakama	1
 よろず	1	30	bashogae	1

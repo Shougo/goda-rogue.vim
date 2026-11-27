@@ -527,3 +527,38 @@ func TestSanctuary(t *testing.T) {
 		t.Errorf("HP %d -> %d", hp, g.HP)
 	}
 }
+
+// TestBlankScroll: 白紙 asks for the name of a scroll known (completed),
+// and reads it as that scroll; a name not known asks again; cancelled, it
+// stays.
+func TestBlankScroll(t *testing.T) {
+	g, _ := trapGame(t)
+	blank := carry(g, "hakushi", 0)
+	if g.askBlank(blank) || g.Prompt == nil || !g.Prompt.Input || !slices.Contains(g.Prompt.Complete, "困った時の巻物") {
+		t.Fatalf("prompt %+v", g.Prompt)
+	}
+	if err := g.Do("cancel", nil); err != nil || !slices.Contains(g.Inventory, blank) {
+		t.Fatal("cancelled: gone")
+	}
+	g.HP = 1
+	g.askBlank(blank)
+	turn := g.Turn
+	if err := g.Do("name", []string{"知らない巻物"}); err != nil {
+		t.Fatal(err)
+	}
+	if g.Prompt == nil || g.Turn != turn || !slices.Contains(g.Inventory, blank) {
+		t.Fatalf("a name not known: prompt %v, turn %d -> %d", g.Prompt, turn, g.Turn)
+	}
+	if err := g.Do("name", []string{"困った時"}); err != nil {
+		t.Fatal(err)
+	}
+	if slices.Contains(g.Inventory, blank) || g.HP != g.MaxHP || g.Turn != turn+1 {
+		t.Errorf("HP %d/%d, turn %d -> %d", g.HP, g.MaxHP, turn, g.Turn)
+	}
+	// Nothing known: it says so, and stays.
+	g.identified = map[string]bool{}
+	blank = carry(g, "hakushi", 0)
+	if !g.askBlank(blank) || g.Prompt != nil || !slices.Contains(g.Inventory, blank) {
+		t.Error("nothing to write")
+	}
+}
