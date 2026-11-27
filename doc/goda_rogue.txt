@@ -521,12 +521,19 @@ debug [{command} [{arg}]]                                   *goda-rogue-debug*
 		in rules.txt, |goda-rogue-dungeons|).  Without {command}, it
 		asks which, with the selection UI.  {command}:
 		  floor {n}	Go to the floor {n}.
-		  item {id}	Give an item (its ID in items.txt).
-		  monster {id}	Put a monster near the player.
+		  item [{id}]	Give an item (its ID in items.txt).
+				Without {id}, it asks its name or ID,
+				completed with <Tab>.
+		  monster [{id}]
+				Put a monster near the player; without
+				{id}, as item.
 		  reveal	Show the whole floor.
 		  identify	Identify every item.
 		  invincible	The player cannot fall (again: it can).
 		  gold		Give 1000G.
+		  freeze	The monsters do nothing and none comes
+				("停止" on the status line; again: they
+				move), as in the dojo of Shiren 6.
 		It costs no turn.  A run that used it is marked "デバッグ"
 		on its status line, its result and its summary, and its
 		replay replays the debug actions too.

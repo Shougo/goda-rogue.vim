@@ -114,7 +114,16 @@ func TestDebugMenu(t *testing.T) {
 		t.Fatal(err)
 	}
 	chooseLabel(t, g, "道具を出す")
-	chooseLabel(t, g, "草 薬草")
+	if g.Prompt == nil || !g.Prompt.Input || !slices.Contains(g.Prompt.Complete, "薬草") {
+		t.Fatalf("prompt %+v", g.Prompt)
+	}
+	// A name not known asks again; a name or an ID gives it.
+	if err := g.Do("name", []string{"ないもの"}); err != nil || g.Prompt == nil {
+		t.Fatalf("asked again: %v %+v", err, g.Prompt)
+	}
+	if err := g.Do("name", []string{"薬草"}); err != nil {
+		t.Fatal(err)
+	}
 	if len(g.Inventory) != 1 || g.Inventory[0].Def.ID != "yakusou" {
 		t.Fatalf("inventory %v", g.Inventory)
 	}
@@ -130,10 +139,25 @@ func TestDebugMenu(t *testing.T) {
 		t.Fatal(err)
 	}
 	chooseLabel(t, g, "敵を出す")
-	i := slices.IndexFunc(g.Dungeon.Monsters, func(d *MonsterDef) bool { return d.ID == "nezumi1" })
-	chooseLabel(t, g, g.Prompt.Choices[i])
-	if !slices.ContainsFunc(g.Monsters, func(m *Monster) bool { return m.Def.ID == "nezumi1" && !m.Ally }) {
-		t.Errorf("monsters %v", g.Monsters)
+	if err := g.Do("name", []string{"nezumi1"}); err != nil {
+		t.Fatal(err)
+	}
+	m := g.Monsters[slices.IndexFunc(g.Monsters, func(m *Monster) bool { return m.Def.ID == "nezumi1" && !m.Ally })]
+
+	// Frozen, the monsters do nothing.
+	if err := g.Do("debug", []string{"freeze"}); err != nil || !g.Frozen || !strings.Contains(g.Status(), "停止") {
+		t.Fatalf("freeze: %v %v", err, g.Frozen)
+	}
+	pos, n := m.Pos, len(g.Monsters)
+	for range 30 {
+		g.Do("wait", nil)
+	}
+	if m.Pos != pos || len(g.Monsters) != n {
+		t.Errorf("moved %v -> %v, monsters %d -> %d", pos, m.Pos, n, len(g.Monsters))
+	}
+	g.Do("debug", []string{"freeze"})
+	if g.Frozen {
+		t.Error("still frozen")
 	}
 }
 

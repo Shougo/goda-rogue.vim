@@ -145,8 +145,14 @@ type Game struct {
 	// DebugMode says whether the run may use the debug mode (debug.go),
 	// Debugged whether it did, and Invincible whether the player cannot
 	// fall (a debug command).
-	DebugMode  bool
-	Debugged   bool
+	DebugMode bool
+	Debugged  bool
+	// Frozen says that the monsters do nothing, and none comes (the debug
+	// command freeze, as the dojo of Shiren 6).
+	Frozen bool
+	// debugInput is the prompt of the debug mode waiting for a text: the
+	// item or the monster to put (with completion).
+	debugInput string
 	Invincible bool
 	// Steps are the steps the player has taken.
 	Steps int
@@ -537,6 +543,11 @@ func (g *Game) Do(action string, args []string) error {
 	default:
 		g.Prompt = nil
 	}
+	if action == "name" && g.debugInput != "" {
+		// (The debug mode costs no turn.)
+		g.beginAction()
+		return g.debugText(strings.Join(args, " "))
+	}
 	if action == "name" && g.blanking != nil {
 		// Writing a scroll of 白紙: reading it, a turn.
 		g.beginAction()
@@ -582,7 +593,7 @@ func (g *Game) Do(action string, args []string) error {
 			g.endTurn(false)
 		}
 	case "cancel":
-		g.Prompt, g.blanking = nil, nil
+		g.Prompt, g.blanking, g.debugInput = nil, nil, ""
 	case "pickup":
 		g.beginAction()
 		if !g.pickUp(false) {
@@ -889,7 +900,9 @@ func (g *Game) tick(rest bool) {
 	}
 	g.alliesRegen()
 	g.alliesBound()
-	g.monstersAct()
+	if !g.Frozen {
+		g.monstersAct()
+	}
 	g.sense()
 	g.showSensed()
 	if g.Over == "" {
@@ -907,7 +920,7 @@ func (g *Game) linger() {
 	if g.wears(EffectCall) {
 		spawn = max(spawn/2, 1)
 	}
-	if g.FloorTurns%spawn == 0 && len(g.Monsters) < r.MaxMonsters {
+	if g.FloorTurns%spawn == 0 && len(g.Monsters) < r.MaxMonsters && !g.Frozen {
 		def := d.Monster(pick(g.rng, d.MonsterRows, g.Depth))
 		if a, ok := mimicOf(def); ok {
 			g.spawnHidden(def, a)
@@ -1188,6 +1201,9 @@ func (g *Game) Status() string {
 
 	if g.Debugged {
 		s += "  デバッグ"
+	}
+	if g.Frozen {
+		s += "  停止"
 	}
 	return s
 }

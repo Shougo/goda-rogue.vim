@@ -3,6 +3,7 @@ package rogue
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 // The debug mode: actions to test a dungeon or the game quickly (go to a
@@ -21,6 +22,7 @@ const (
 	debugIdentify   = "identify"
 	debugInvincible = "invincible"
 	debugGold       = "gold"
+	debugFreeze     = "freeze"
 )
 
 // debugMenu is the prompt of the action "debug" without arguments: the
@@ -33,6 +35,7 @@ var debugMenu = []struct{ label, command string }{
 	{"すべて識別する", debugIdentify},
 	{"不死身を切り替える", debugInvincible},
 	{"1000G 得る", debugGold},
+	{"敵を止める・動かす", debugFreeze},
 }
 
 // The prompts of the debug mode: the menu, and the floor, item or monster
@@ -76,6 +79,11 @@ func (g *Game) debug(args []string) error {
 			return "", fmt.Errorf("debug %s: an ID expected", args[0])
 		}
 		return args[1], nil
+	}
+	if len(args) == 1 && (args[0] == debugItem || args[0] == debugMonster) {
+		// Without its ID: asked, with completion.
+		g.askDebugInput(args[0])
+		return nil
 	}
 	switch args[0] {
 	case debugFloor:
@@ -143,6 +151,14 @@ func (g *Game) debug(args []string) error {
 		g.debugUsed(args)
 		g.Gold += 1000
 		g.say("1000G 得た。")
+	case debugFreeze:
+		g.debugUsed(args)
+		g.Frozen = !g.Frozen
+		if g.Frozen {
+			g.say("敵の動きを止めた。")
+		} else {
+			g.say("敵が動き出した。")
+		}
 	default:
 		return fmt.Errorf("debug: unknown command %q", args[0])
 	}
@@ -188,29 +204,65 @@ func (g *Game) chooseDebug(p *Prompt, n int) error {
 				q.Choices = append(q.Choices, fmt.Sprintf("%dF", f))
 			}
 			g.Prompt = q
-		case debugItem:
-			q := &Prompt{Title: "どの道具？", kind: promptDebugItem}
-			for _, def := range g.Dungeon.Items {
-				q.Choices = append(q.Choices, def.Glyph+" "+def.Name)
-			}
-			g.Prompt = q
-		case debugMonster:
-			q := &Prompt{Title: "どの敵？", kind: promptDebugMonster}
-			for _, def := range g.Dungeon.Monsters {
-				q.Choices = append(q.Choices, fmt.Sprintf("%s %s（ランク%d）", def.Glyph, def.Name, def.Rank))
-			}
-			g.Prompt = q
+		case debugItem, debugMonster:
+			g.askDebugInput(c)
 		default:
 			return g.debug([]string{c})
 		}
 	case promptDebugFloor:
 		return g.debug([]string{debugFloor, strconv.Itoa(n + 1)})
-	case promptDebugItem:
-		return g.debug([]string{debugItem, g.Dungeon.Items[n].ID})
-	case promptDebugMonster:
-		return g.debug([]string{debugMonster, g.Dungeon.Monsters[n].ID})
 	}
 	return nil
+}
+
+// askDebugInput asks the item or the monster (c: debugItem or
+// debugMonster) to put, typed with completion (there are too many to
+// choose from a list): its name or its ID.
+func (g *Game) askDebugInput(c string) {
+	p := &Prompt{Title: "どの道具？（名前か ID）", Input: true, kind: promptDebugItem}
+	if c == debugMonster {
+		p.Title, p.kind = "どの敵？（名前か ID）", promptDebugMonster
+		for _, def := range g.Dungeon.Monsters {
+			p.Complete = append(p.Complete, def.Name)
+		}
+	} else {
+		for _, def := range g.Dungeon.Items {
+			p.Complete = append(p.Complete, def.Name)
+		}
+	}
+	g.debugInput = c
+	g.Prompt = p
+}
+
+// debugText is the text typed for the debug mode (askDebugInput): the
+// name or the ID of the item or the monster to put. A name not known asks
+// again.
+func (g *Game) debugText(text string) error {
+	c := g.debugInput
+	g.debugInput = ""
+	text = strings.TrimSpace(text)
+	id := ""
+	if c == debugMonster {
+		for _, def := range g.Dungeon.Monsters {
+			if def.ID == text || def.Name == text {
+				id = def.ID
+				break
+			}
+		}
+	} else {
+		for _, def := range g.Dungeon.Items {
+			if def.ID == text || def.Name == text {
+				id = def.ID
+				break
+			}
+		}
+	}
+	if id == "" {
+		g.say("「" + text + "」は見つからない。")
+		g.askDebugInput(c)
+		return nil
+	}
+	return g.debug([]string{c, id})
 }
 
 // spared is the player falling while invincible (the debug mode): it
