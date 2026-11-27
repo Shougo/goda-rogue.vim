@@ -30,7 +30,7 @@
 #              it, a monster walks at random), かなしばり (an enemy until a
 #              blow; the player and allies until they lose HP, or for 20
 #              turns), レベル+1, 無敵 (20 turns: no damage), 毒 (5 damage,
-#              and a point of strength; a monster: half its attack)
+#              and a point of strength; a monster: half its attack, and slowed)
 #   分裂:C     a blow of the player that leaves it with 2 HP or more
 #              splits it C% of the time: its HP halves, and another with
 #              that HP appears next to it (it gives nothing when defeated)

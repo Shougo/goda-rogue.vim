@@ -1014,7 +1014,7 @@ The built-in dungeons:
 				             レベル+1, 無敵 (20 turns: no
 				             damage), 毒 (5 damage, and a
 				             point of strength, or half the
-				             attack of a monster)
+				             attack of a monster, slowed)
 				眠り, optional, is the share of the kind
 				asleep on a new floor, a percent (- for a
 				third).  落とし物, optional, is what it

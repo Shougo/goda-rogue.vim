@@ -110,7 +110,9 @@ func (g *Game) magicOn(f *Monster, e MagicEffect, d Point) {
 		f.HP -= n
 		f.Bound = 0
 		f.Attack = max(f.Attack/2, 1)
-		say(fmt.Sprintf("に%dのダメージ。攻撃力が下がった。", n))
+		// (Slowed too: Shougo, 2026-11-28.)
+		f.Slowed, f.Hasted = slowTurns, 0
+		say(fmt.Sprintf("に%dのダメージ。攻撃力が下がり、遅くなった。", n))
 		if f.HP <= 0 {
 			g.kill(f, nil, true, shown)
 		} else {
@@ -120,7 +122,7 @@ func (g *Game) magicOn(f *Monster, e MagicEffect, d Point) {
 }
 
 // poisonDamage is the damage of 毒草: on the player, with a point of its
-// strength; on a monster, with half its attack (Shiren).
+// strength; on a monster, with half its attack, and slowed.
 const poisonDamage = 5
 
 // poisoned is the poison of a bolt of m (nil: 毒草 drunk) on the player:

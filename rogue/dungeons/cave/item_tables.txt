@@ -63,8 +63,8 @@
 床	1	30	dougu	1
 床	1	30	kiya	3
 床	1	30	tetsuya	1
-床	1	30	yakusou	6
-床	1	30	otogiri	3
+床	1	30	yakusou	9
+床	1	30	otogiri	4
 床	1	30	chikarakusa	2
 床	1	30	megusuri	2
 床	1	30	inochi	1
@@ -206,8 +206,8 @@
 よろず	15	30	dougu	3
 よろず	1	30	kiya	2
 よろず	5	30	tetsuya	2
-よろず	1	30	yakusou	5
-よろず	1	30	otogiri	3
+よろず	1	30	yakusou	8
+よろず	1	30	otogiri	5
 よろず	1	9	chikarakusa	1
 よろず	10	30	chikarakusa	3
 よろず	1	30	megusuri	2
@@ -287,8 +287,8 @@
 よろず	2	30	henka	1
 よろず	1	30	onigiri	1
 よろず	1	30	ookiionigiri	2
-草	1	30	yakusou	5
-草	1	30	otogiri	3
+草	1	30	yakusou	8
+草	1	30	otogiri	5
 草	1	9	chikarakusa	1
 草	10	30	chikarakusa	3
 草	1	30	megusuri	2
@@ -431,8 +431,8 @@
 変化	1	30	dougu	1
 変化	1	30	kiya	3
 変化	1	30	tetsuya	1
-変化	1	30	yakusou	6
-変化	1	30	otogiri	3
+変化	1	30	yakusou	9
+変化	1	30	otogiri	4
 変化	1	30	chikarakusa	2
 変化	1	30	megusuri	2
 変化	1	30	inochi	1

@@ -56,7 +56,8 @@ const fireAround = 5
 // (thrown) not.
 func (g *Game) fireDamage(n int, drunk bool) int {
 	if !drunk {
-		n /= 2
+		// (About half: 40 of 75.)
+		n = (n + fireAround) / 2
 	}
 	return between(g.rng, max(n-fireAround, 1), n+fireAround)
 }

@@ -26,7 +26,7 @@ func TestHappyGrass(t *testing.T) {
 }
 
 // TestPoisonGrass: 毒草 takes 5 HP and a point of strength of who drinks
-// it; thrown, 5 HP and half the attack of the monster.
+// it; thrown, 5 HP and half the attack of the monster, which is slowed.
 func TestPoisonGrass(t *testing.T) {
 	g, r := roomGame(t, 6, 3)
 	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.PlayerThrowRate = 100 })
@@ -41,8 +41,8 @@ func TestPoisonGrass(t *testing.T) {
 	m.HP, m.MaxHP = 100, 100
 	attack := m.Attack
 	command(t, g, carry(g, "dokusou", 0), commandThrow)
-	if m.HP != 95 || m.Attack != max(attack/2, 1) {
-		t.Errorf("thrown: HP %d, attack %d (was %d)", m.HP, m.Attack, attack)
+	if m.HP != 95 || m.Attack != max(attack/2, 1) || m.Slowed == 0 {
+		t.Errorf("thrown: HP %d, attack %d (was %d), slowed %d", m.HP, m.Attack, attack, m.Slowed)
 	}
 }
 

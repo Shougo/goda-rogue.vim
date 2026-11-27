@@ -120,7 +120,7 @@ var magicTexts = map[MagicEffect]string{
 	MagicBind:    "%sをかなしばりにする（敵は攻撃を受けるまで動けない。自分と仲間は、HP が減るか 20 ターンで解ける）。",
 	MagicLevelUp: "%sのレベルを 1 上げる。",
 	MagicUnhurt:  "%sを 20 ターンの間無敵にする（ダメージを受けない）。",
-	MagicPoison:  "%sに 5 のダメージを与え、自分ならちからを 1、敵なら攻撃力を半分に下げる。",
+	MagicPoison:  "%sに 5 のダメージを与え、自分ならちからを 1、敵なら攻撃力を半分に下げて遅くする。",
 }
 
 // magicTargets are whom the effect of a bolt takes, by the category of
