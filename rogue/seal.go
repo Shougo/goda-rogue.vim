@@ -1,6 +1,7 @@
 package rogue
 
 import (
+	"slices"
 	"strings"
 )
 
@@ -19,6 +20,9 @@ type SealDef struct {
 	// for either, when seals.txt does not say). A seal goes on one of
 	// them, so that the two never add up the same effect.
 	For Category
+	// Target is the attribute of the monsters a seal of slaying (特攻)
+	// goes for (seals.txt 対象, monsters.txt 属性); "" for the others.
+	Target string
 }
 
 // SealEffect is what a seal does while its weapon or shield is equipped.
@@ -95,6 +99,15 @@ const (
 	// SealFine: with its HP full, the player takes its % less damage
 	// (絶好調; Shougo: only while full, so the first blow after resting).
 	SealFine SealEffect = "絶好調"
+	// SealSlay: the blows of the player do its % more to the monsters of
+	// its Target (特攻).
+	SealSlay SealEffect = "特攻"
+	// SealReach: with no one next to it ahead, a blow reaches the monster
+	// two tiles ahead, for its % of the damage (長槍).
+	SealReach SealEffect = "間合い"
+	// SealFireGuard: fire (the breath of 龍, 火炎草 thrown at it) does its
+	// % less damage to the player (龍鱗の盾).
+	SealFireGuard SealEffect = "耐火"
 )
 
 var sealEffects = []SealEffect{SealAttack, SealDefense, SealCrit, SealSure, SealCounter, SealNoRust, SealNoHunger,
@@ -102,7 +115,7 @@ var sealEffects = []SealEffect{SealAttack, SealDefense, SealCrit, SealSure, Seal
 	SealSleepBlow, SealConfuseBlow, SealSlowBlow, SealSealBlow, SealPoisonBlow, SealBindBlow, SealBlowAway,
 	SealDig, SealDesperate, SealHappy, SealDouble, SealGrow,
 	SealNoSleep, SealNoConfuse, SealNoBlind, SealNoWeak, SealNoCurse, SealNoStarve, SealNoTrap,
-	SealBlastGuard, SealReflect, SealHeavy, SealFine}
+	SealBlastGuard, SealReflect, SealHeavy, SealFine, SealSlay, SealReach, SealFireGuard}
 
 // sealBolts are the seals of weapons that bring the effect of a bolt with
 // a blow, in a fixed order.
@@ -193,6 +206,18 @@ func (g *Game) sealShare(e SealEffect) float64 {
 func (g *Game) sealChance(e SealEffect) bool {
 	share := g.sealShare(e)
 	return share >= 1 || share > 0 && g.rng.Float64() < share
+}
+
+// slayShare is how much more (a share) the blows of the player do to m
+// by the seals of slaying of its attributes, adding up as chances do.
+func (g *Game) slayShare(m *Monster) float64 {
+	not := 1.0
+	for _, a := range g.equippedAbilities() {
+		if a.def.Effect == SealSlay && slices.Contains(m.Def.Attrs, a.def.Target) {
+			not *= 1 - float64(min(a.strength(), 100))/100
+		}
+	}
+	return 1 - not
 }
 
 // itemShare is the share of the abilities of the effect e of the item it

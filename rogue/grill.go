@@ -1,6 +1,9 @@
 package rogue
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
 // 焼きおにぎり (Shougo, 2026-11-27): an onigiri the player carries (any:
 // big or rotten too, not one in a pot) becomes a grilled one in a blast
@@ -101,6 +104,9 @@ func (g *Game) burnMonster(m *Monster, n int) {
 // onigiri carried are grilled. It says whether the player fell.
 func (g *Game) burnPlayer(n int, m *Monster) bool {
 	g.say("炎に包まれた！")
+	if s := g.sealShare(SealFireGuard); s > 0 && n > 0 {
+		n = max(int(math.Round(float64(n)*(1-s))), 1)
+	}
 	if g.playerHurt(n, m) {
 		return true
 	}

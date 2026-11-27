@@ -168,6 +168,19 @@ var sealTexts = map[SealEffect]string{
 	SealReflect:     "敵が振った杖の魔法弾を、%d%% の確率ではね返す。",
 	SealHeavy:       "お腹が減る速さが %d%% 速くなる。",
 	SealFine:        "HP が満タンのとき、受けるダメージを %d%% 減らす。",
+	SealSlay:        "%s の敵に与えるダメージが %d%% 増える。",
+	SealReach:       "正面の隣に敵がいなければ、2 マス先の敵を %d%% のダメージで攻撃する。",
+	SealFireGuard:   "炎（龍の炎、投げられた火炎草）で受けるダメージを %d%% 減らす。",
+}
+
+// sealText says what the seal sd does at the strength n (a seal of
+// slaying names its target).
+func sealText(sd *SealDef, n int) string {
+	t := sealTexts[sd.Effect]
+	if sd.Effect == SealSlay {
+		return fmt.Sprintf(t, sd.Target, n)
+	}
+	return withStrength(t, n)
 }
 
 // usePrefixes say when the effect of an item of each category happens.
@@ -237,25 +250,25 @@ func (g *Game) info(it *Item) []string {
 			lines = append(lines, "呪われている（装備すると外せない）")
 		}
 		if sd := g.Dungeon.SealOn(def.Seal, def.Category); sd != nil {
-			merged := fmt.Sprintf("　別の%sに合成すると【%s】：%s", def.Category, sd.Glyph, withStrength(sealTexts[sd.Effect], sd.AsSeal))
+			merged := fmt.Sprintf("　別の%sに合成すると【%s】：%s", def.Category, sd.Glyph, sealText(sd, sd.AsSeal))
 			if sd.AsSeal == 0 {
 				merged = "　別の" + string(def.Category) + "に合成しても、印にはならない。"
 			}
 			lines = append(lines,
-				fmt.Sprintf("[%s]素の能力：%s", sd.Glyph, withStrength(sealTexts[sd.Effect], sd.Strength)), merged)
+				fmt.Sprintf("[%s]素の能力：%s", sd.Glyph, sealText(sd, sd.Strength)), merged)
 		}
 		for _, s := range it.Seals {
 			sd := g.Dungeon.SealOn(s, def.Category)
 			if sd == nil {
 				continue
 			}
-			lines = append(lines, fmt.Sprintf("【%s】%s：%s", s, sd.Name, withStrength(sealTexts[sd.Effect], sd.AsSeal)))
+			lines = append(lines, fmt.Sprintf("【%s】%s：%s", s, sd.Name, sealText(sd, sd.AsSeal)))
 		}
 	case CategoryArrow:
 		lines = append(lines, fmt.Sprintf("攻撃力 %d。%d 本。装備すると撃てる。", def.Strength, it.Count))
 	case CategoryBracelet:
 		if sd := g.Dungeon.Seal(def.Seal); sd != nil && def.Effect == "" {
-			lines = append(lines, usePrefixes[def.Category]+withStrength(sealTexts[sd.Effect], sd.Strength))
+			lines = append(lines, usePrefixes[def.Category]+sealText(sd, sd.Strength))
 		} else {
 			lines = append(lines, effectText(def))
 		}

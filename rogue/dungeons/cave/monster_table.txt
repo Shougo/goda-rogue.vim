@@ -207,3 +207,5 @@
 # The hungry ghost: rare, over many floors.
 4	14	gaki1	1
 15	30	gaki2	1
+# 龍 (fire from afar): rare, a weight of 1, at its rank's floors.
+28	30	ryuu1	1

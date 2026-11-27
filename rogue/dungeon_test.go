@@ -255,19 +255,19 @@ func TestDungeonErrors(t *testing.T) {
 			m["items.txt"].Data = append(m["items.txt"].Data, "x\t金\tx\tお金\t0\t-\t0\t-\t会\t0\t0\n"...)
 		}, `印: money is no material`},
 		{"a seal twice for weapons", func(m fstest.MapFS) {
-			m["seals.txt"].Data = append(m["seals.txt"].Data, "会\t会心の印\t会心\t5\t3\t武器\n"...)
+			m["seals.txt"].Data = append(m["seals.txt"].Data, "会\t会心の印\t会心\t5\t3\t武器\t-\n"...)
 		}, `the seal "会" again`},
 		{"a weapon seal on a shield", func(m fstest.MapFS) {
 			m["items.txt"].Data = append(m["items.txt"].Data, "x\t盾\tx\t盾\t1\t-\t0\t-\t会\t2\t0\n"...)
 		}, `印: the seal "会" goes on a 武器, not a 盾`},
 		{"a seal on neither", func(m fstest.MapFS) {
-			m["seals.txt"].Data = append(m["seals.txt"].Data, "炎\t炎の印\t攻撃\t1\t1\t草\n"...)
+			m["seals.txt"].Data = append(m["seals.txt"].Data, "炎\t炎の印\t攻撃\t1\t1\t草\t-\n"...)
 		}, `付く先: want 武器 or 盾`},
 		{"unknown seal effect", func(m fstest.MapFS) {
-			m["seals.txt"].Data = append(m["seals.txt"].Data, "炎\t炎の印\t炎\t1\t1\t武器\n"...)
+			m["seals.txt"].Data = append(m["seals.txt"].Data, "炎\t炎の印\t炎\t1\t1\t武器\t-\n"...)
 		}, `効果: unknown "炎"`},
 		{"seal of two characters", func(m fstest.MapFS) {
-			m["seals.txt"].Data = append(m["seals.txt"].Data, "炎炎\t炎の印\t攻撃\t1\t1\t武器\n"...)
+			m["seals.txt"].Data = append(m["seals.txt"].Data, "炎炎\t炎の印\t攻撃\t1\t1\t武器\t-\n"...)
 		}, `印: want one character`},
 		{"cracking grass", func(m fstest.MapFS) {
 			m["items.txt"].Data = append(m["items.txt"].Data, "x\t草\tx\t草\t0\t-\t5\t-\t-\t0\t0\n"...)

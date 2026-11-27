@@ -200,9 +200,18 @@ const (
 	AttrAquatic = "水棲"
 	// AttrFloating: it floats, over the waterways too.
 	AttrFloating = "浮遊"
+	// The kinds that seals of slaying (特攻, seals.txt 対象) go for
+	// (Shougo, 2026-11-28: the attributes say both how a monster moves
+	// and what it is). Each is of few families, so that a seal covers
+	// few.
+	AttrDragon = "ドラゴン"
+	AttrUndead = "不死"
+	AttrOgre   = "鬼族"
+	AttrMetal  = "金属"
+	AttrPlant  = "植物"
 )
 
-var attrs = []string{AttrAquatic, AttrFloating}
+var attrs = []string{AttrAquatic, AttrFloating, AttrDragon, AttrUndead, AttrOgre, AttrMetal, AttrPlant}
 
 // Drop is what a kind of monster drops when killed, and how often.
 type Drop struct {
@@ -991,6 +1000,15 @@ func (l *loader) loadSeals() {
 		s.AsSeal = s.Strength
 		if v, ok := row.cols["印の強さ"]; ok && v != "" && v != "-" {
 			s.AsSeal = l.int(row, "印の強さ", 0)
+		}
+		if t, ok := row.cols["対象"]; ok && t != "" && t != "-" {
+			if !slices.Contains(attrs, t) {
+				l.errorf(row.file, row.n, "対象: want one of %s, not %q", strings.Join(attrs, ", "), t)
+			}
+			s.Target = t
+		}
+		if s.Effect == SealSlay && s.Target == "" {
+			l.errorf(row.file, row.n, "対象: a seal of %s needs one", SealSlay)
 		}
 		if f, ok := row.cols["付く先"]; ok {
 			s.For = Category(f)

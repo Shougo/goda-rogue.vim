@@ -745,6 +745,9 @@ func (g *Game) attack() bool {
 	if m == nil && g.sealShare(SealDig) > 0 && g.digAhead(d) {
 		return true
 	}
+	if m == nil && g.reachAhead(d) {
+		return true
+	}
 	// No attack around a corner of rock.
 	if m == nil || !g.clearFrom(g.Player, d) {
 		g.say("空振りした。")
@@ -804,6 +807,9 @@ func (g *Game) blow(m *Monster, share float64, ahead bool) {
 	if g.PowerUp > 0 {
 		n = n * powerUpRate / 100
 	}
+	if s := g.slayShare(m); s > 0 {
+		n = int(math.Round(float64(n) * (1 + s)))
+	}
 	if s := g.sealShare(SealDesperate); s > 0 && g.HP*3 <= g.MaxHP {
 		n = int(math.Round(float64(n) * (1 + s)))
 	}
@@ -838,6 +844,27 @@ func (g *Game) sealBlow(m *Monster) {
 			g.magicOn(m, sb.bolt, d)
 		}
 	}
+}
+
+// reachAhead is a blow of a weapon of 間合い (長槍) with no one next to
+// the player ahead (d): it reaches the enemy two tiles ahead, for the
+// share of the damage, with nothing but floor between; it says whether it
+// struck. Not a shopkeeper at peace, nor an ally.
+func (g *Game) reachAhead(d Point) bool {
+	share := g.sealShare(SealReach)
+	if share <= 0 || !g.clearFrom(g.Player, d) {
+		return false
+	}
+	mid := g.Player.Add(d)
+	if !g.Level.At(mid).Open() || !g.clearFrom(mid, d) {
+		return false
+	}
+	o := g.MonsterAt(mid.Add(d))
+	if o == nil || o.Ally || o.Keeper && !o.Angry {
+		return false
+	}
+	g.blow(o, share, false)
+	return true
 }
 
 // digAhead is a blow at the rock ahead (d) with a weapon of 掘る: it digs

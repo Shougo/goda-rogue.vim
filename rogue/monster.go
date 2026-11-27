@@ -87,6 +87,9 @@ type Monster struct {
 	Revived, Fused bool
 	// regen counts the turns toward the next HP of an ally (alliesRegen).
 	regen int
+	// breathWait is the actions it waits before it breathes again
+	// (AbilityBreath).
+	breathWait int
 	// States are its states that pass with time (state.go).
 	States
 	// EXP is what defeating it gives. An ally has Gained EXP, and its

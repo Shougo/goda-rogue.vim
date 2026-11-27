@@ -42,52 +42,67 @@
 #             at the player goes back to it
 #   腹減り    the player gets hungry its % faster
 #   絶好調    with its HP full, the player takes its % less damage
+#   特攻      the blows of the player do its % more to the monsters of
+#             対象 (an attribute of monsters.txt 属性)
+#   間合い    with no one next to it ahead, a blow strikes the monster two
+#             tiles ahead, for its % of the damage
+#   耐火      fire (the breath of 龍, 火炎草 thrown at the player) does its %
+#             less damage
 # A seal of 印の強さ 0 is no seal: born with it, an item keeps it, and
 # merged into another, it is not passed on (掘る, 腹減り).
 # The same seal may be there more than once (and with the ability the
 # item is born with): 攻撃 and 防御 add up, the others add up as chances
 # do (two of 50% make 75%), never past 100%.
+# 対象 is what a seal of 特攻 goes for (- for the others).
 # 付く先 is what it goes on, a weapon (武器) or a shield (盾): the seals of
 # weapons and of shields have different effects, so the two never add up.
 # A seal may have two rows, one for weapons and one for shields: the seal
 # of a material (items.txt) is the one for what it is merged into.
-印	名前	効果	強さ	印の強さ	付く先
-攻	攻撃の印	攻撃	3	2	武器
-防	防御の印	防御	3	2	盾
-会	会心の印	会心	25	12	武器
-必	必中の印	必中	100	50	武器
-反	反撃の印	反撃	30	15	盾
-錆	サビよけの印	サビよけ	100	100	武器
-錆	サビよけの印	サビよけ	100	100	盾
-腹	節食の印	節食	50	25	盾
-力	力の印	攻撃	2	2	武器
-力	力の印	反撃	15	15	盾
-三	三方向の印	三方向	50	25	武器
-盗	盗みよけの印	盗みよけ	100	50	盾
-避	見切りの印	見切り	15	8	盾
-躱	身躱しの印	身躱し	50	25	盾
-恨	防恨の印	防恨	67	50	盾
-睡	眠りの印	睡眠	10	5	武器
-混	混乱の印	混乱	10	5	武器
-鈍	鈍足の印	鈍足	10	5	武器
-封	封印の印	封印	10	5	武器
-毒	毒の印	毒	15	8	武器
-縛	金縛りの印	かなしばり	8	4	武器
-飛	吹き飛ばしの印	吹き飛ばし	25	12	武器
-掘	掘る力	掘る	100	0	武器
-背	捨て身の印	捨て身	50	25	武器
-幸	しあわせの印	しあわせ	25	12	武器
-連	連撃の印	連撃	15	10	武器
-成	成長の印	成長	25	15	武器
-成	成長の印	成長	25	15	盾
-眠	睡眠よけの印	睡眠よけ	100	50	盾
-乱	混乱よけの印	混乱よけ	100	50	盾
-眩	目つぶしよけの印	目つぶしよけ	100	50	盾
-弱	弱りよけの印	弱りよけ	100	50	盾
-祓	呪いよけの印	呪いよけ	100	50	盾
-飢	空腹よけの印	空腹よけ	100	50	盾
-踏	罠よけの印	罠よけ	100	50	盾
-耐	耐爆の印	耐爆	50	25	盾
-返	反射の印	反射	50	25	盾
-重	重さ	腹減り	50	0	盾
-絶	絶好調の印	絶好調	50	25	盾
+印	名前	効果	強さ	印の強さ	付く先	対象
+攻	攻撃の印	攻撃	3	2	武器	-
+防	防御の印	防御	3	2	盾	-
+会	会心の印	会心	25	12	武器	-
+必	必中の印	必中	100	50	武器	-
+反	反撃の印	反撃	30	15	盾	-
+錆	サビよけの印	サビよけ	100	100	武器	-
+錆	サビよけの印	サビよけ	100	100	盾	-
+腹	節食の印	節食	50	25	盾	-
+力	力の印	攻撃	2	2	武器	-
+力	力の印	反撃	15	15	盾	-
+三	三方向の印	三方向	50	25	武器	-
+盗	盗みよけの印	盗みよけ	100	50	盾	-
+避	見切りの印	見切り	15	8	盾	-
+躱	身躱しの印	身躱し	50	25	盾	-
+恨	防恨の印	防恨	67	50	盾	-
+睡	眠りの印	睡眠	10	5	武器	-
+混	混乱の印	混乱	10	5	武器	-
+鈍	鈍足の印	鈍足	10	5	武器	-
+封	封印の印	封印	10	5	武器	-
+毒	毒の印	毒	15	8	武器	-
+縛	金縛りの印	かなしばり	8	4	武器	-
+飛	吹き飛ばしの印	吹き飛ばし	25	12	武器	-
+掘	掘る力	掘る	100	0	武器	-
+背	捨て身の印	捨て身	50	25	武器	-
+幸	しあわせの印	しあわせ	25	12	武器	-
+連	連撃の印	連撃	15	10	武器	-
+成	成長の印	成長	25	15	武器	-
+成	成長の印	成長	25	15	盾	-
+眠	睡眠よけの印	睡眠よけ	100	50	盾	-
+乱	混乱よけの印	混乱よけ	100	50	盾	-
+眩	目つぶしよけの印	目つぶしよけ	100	50	盾	-
+弱	弱りよけの印	弱りよけ	100	50	盾	-
+祓	呪いよけの印	呪いよけ	100	50	盾	-
+飢	空腹よけの印	空腹よけ	100	50	盾	-
+踏	罠よけの印	罠よけ	100	50	盾	-
+耐	耐爆の印	耐爆	50	25	盾	-
+返	反射の印	反射	50	25	盾	-
+重	重さ	腹減り	50	0	盾	-
+絶	絶好調の印	絶好調	50	25	盾	-
+屠	竜殺しの印	特攻	50	25	武器	ドラゴン
+鎮	鎮魂の印	特攻	50	25	武器	不死
+退	鬼退治の印	特攻	50	25	武器	鬼族
+砕	鎧砕きの印	特攻	50	25	武器	金属
+刈	草刈りの印	特攻	50	25	武器	植物
+銛	銛の印	特攻	50	25	武器	水棲
+槍	間合いの印	間合い	30	15	武器	-
+鱗	龍鱗の印	耐火	50	25	盾	-

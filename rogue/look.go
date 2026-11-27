@@ -161,6 +161,19 @@ func (g *Game) abilityText(a Ability) string {
 			s += "（そのあと殴る）"
 		}
 		return s
+	case AbilityBreath:
+		var from string
+		switch {
+		case v[0] == 0:
+			from = "直線上から"
+		case v[0] == 1:
+			from = "同じ部屋のどこからでも"
+		case v[0] >= breathFloor:
+			from = "フロアのどこからでも"
+		default:
+			from = fmt.Sprintf("%dマス以内から壁ごしにも", v[0])
+		}
+		return from + fmt.Sprintf("%d%%で炎を吐く（ダメージ%d、防御力は関係ない）", v[1], v[2])
 	case AbilityShoot:
 		s := line(v[0]) + g.Dungeon.Item(a.Item).Name + "を撃つ"
 		if v[1] < 100 {

@@ -64,6 +64,14 @@
 床	5	50	hansha	1
 床	5	50	zekkouchou	1
 床	1	50	seichoutate	1
+床	8	50	ryuugoroshi	1
+床	3	50	chinkon	1
+床	3	50	onikiri	1
+床	8	50	yoroikudaki	1
+床	3	50	kusakari	1
+床	9	50	mori	1
+床	5	50	nagayari	1
+床	15	50	ryuurin	1
 床	1	50	chikara	1
 床	1	50	kaifuku	1
 床	1	50	kehai	1
@@ -229,6 +237,14 @@
 よろず	5	50	hansha	2
 よろず	5	50	zekkouchou	2
 よろず	1	50	seichoutate	2
+よろず	8	50	ryuugoroshi	2
+よろず	3	50	chinkon	2
+よろず	3	50	onikiri	2
+よろず	8	50	yoroikudaki	2
+よろず	3	50	kusakari	2
+よろず	9	50	mori	2
+よろず	5	50	nagayari	2
+よろず	15	50	ryuurin	2
 よろず	1	50	chikara	1
 よろず	1	50	kaifuku	1
 よろず	1	14	kehai	1
@@ -405,6 +421,14 @@
 武具	5	50	hansha	2
 武具	5	50	zekkouchou	2
 武具	1	50	seichoutate	2
+武具	8	50	ryuugoroshi	2
+武具	3	50	chinkon	2
+武具	3	50	onikiri	2
+武具	8	50	yoroikudaki	2
+武具	3	50	kusakari	2
+武具	9	50	mori	2
+武具	5	50	nagayari	2
+武具	15	50	ryuurin	2
 # The bracelet shop: rarer bracelets.
 腕輪	1	50	chikara	1
 腕輪	1	50	kaifuku	1

@@ -157,6 +157,14 @@ const (
 	// defense down) for so many turns: next to it, instead of a blow, or
 	// (with sight: 1) from anywhere it sees the player (afflict.go).
 	AbilityAfflict AbilityName = "状態"
+	// AbilityBreath: by a chance (a percent), it breathes fire on the
+	// player for so much damage, defense aside (龍, Shougo 2026-11-21):
+	// reach 0 along one of its lines, 1 anywhere in its room, 2 to 98
+	// within so many tiles, 99 anywhere on the floor; the fire of the
+	// last three flies over the walls. Never next to the player. It
+	// waits half the distance (in tiles) before the next, none in its
+	// room on a line (breath.go).
+	AbilityBreath AbilityName = "炎"
 )
 
 // MagicEffect is an effect of the bolt of AbilityMagic.
@@ -255,6 +263,7 @@ var abilityDefs = map[AbilityName]abilityDef{
 	AbilityHunger:    {[]string{"chance %", "fullness", "max fullness"}, []int{1, 0, 0}, []int{100, 999, 999}, 0},
 	AbilityCurse:     {[]string{"chance %", "what", "items"}, []int{1, curseArms, 1}, []int{100, curseAny, 5}, 0},
 	AbilitySteal:     {[]string{"chance %", "what", "items", "equipped"}, []int{1, stealGold, 0, 0}, []int{100, stealItems, 5, 1}, 0},
+	AbilityBreath:    {[]string{"reach", "chance %", "damage"}, []int{0, 1, 1}, []int{breathFloor, 100, 999}, 0},
 }
 
 // maxReach is the farthest reach of an ability along a line.
@@ -262,7 +271,7 @@ const maxReach = 20
 
 // abilityNames are the abilities in a fixed order, for the error that
 // lists them.
-var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot, AbilitySynthesis, AbilityCurse, AbilityHunger, AbilityStill, AbilityHold, AbilityBurn, AbilityHeal, AbilityCheer, AbilityRevive, AbilityExplode, AbilityPack, AbilityFlee, AbilityTrap, AbilityLong, AbilityBlink, AbilityKnight, AbilityInvisible, AbilityWalls, AbilityThrow, AbilityReflect, AbilityRuin, AbilityRust, AbilityAfflict}
+var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot, AbilitySynthesis, AbilityCurse, AbilityHunger, AbilityStill, AbilityHold, AbilityBurn, AbilityHeal, AbilityCheer, AbilityRevive, AbilityExplode, AbilityPack, AbilityFlee, AbilityTrap, AbilityLong, AbilityBlink, AbilityKnight, AbilityInvisible, AbilityWalls, AbilityThrow, AbilityReflect, AbilityRuin, AbilityRust, AbilityAfflict, AbilityBreath}
 
 // lineAbilities are the abilities that reach the player from afar along
 // a line, their reach their first number.
@@ -454,6 +463,9 @@ func (g *Game) reachAbility(m *Monster) bool {
 		return true
 	}
 	if a, ok := m.ability(AbilityPull); ok && g.pull(m, a) {
+		return true
+	}
+	if a, ok := m.ability(AbilityBreath); ok && g.breathe(m, a) {
 		return true
 	}
 	if a, ok := m.ability(AbilityShoot); ok && g.shootAt(m, a) {

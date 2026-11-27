@@ -1527,7 +1527,7 @@ func (b *Bot) await(g *Game) (string, []string) {
 // a knight's move away (the eagles: the bots waited for one that hit them
 // to death, never coming), one that strikes two tiles away.
 func strikesFromAfar(m *Monster) bool {
-	for _, a := range []AbilityName{AbilityShoot, AbilityMagic, AbilityKnight, AbilityLong} {
+	for _, a := range []AbilityName{AbilityShoot, AbilityMagic, AbilityKnight, AbilityLong, AbilityBreath} {
 		if _, ok := m.ability(a); ok {
 			return true
 		}
@@ -1834,6 +1834,10 @@ func abilityWorth(e SealEffect, n int) float64 {
 		return f / 20
 	case SealHeavy:
 		return -f / 10
+	case SealSlay, SealReach:
+		return f / 20
+	case SealFireGuard:
+		return f / 25
 	}
 	return f / 50
 }

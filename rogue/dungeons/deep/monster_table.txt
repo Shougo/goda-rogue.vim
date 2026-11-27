@@ -903,3 +903,7 @@
 37	37	sennin3	2
 38	38	sennin3	3
 39	50	sennin3	4
+# 龍 (fire from afar): rare, a weight of 1, at its rank's floors.
+15	30	ryuu1	1
+25	45	ryuu2	1
+40	50	ryuu3	1

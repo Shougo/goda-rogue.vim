@@ -132,3 +132,63 @@ func TestSealNoSeal(t *testing.T) {
 		t.Errorf("seals %v, want none", base.Seals)
 	}
 }
+
+// TestSealSlay: 竜殺し does more to a ドラゴン than to another.
+func TestSealSlay(t *testing.T) {
+	g, _, _ := gearGame(t, "ryuugoroshi")
+	m := place(g, kind("ryu1"), g.Player.Add(Point{1, 0}))
+	o := place(g, kind("nezumi1"), g.Player.Add(Point{0, 1}))
+	if s := g.slayShare(m); s != 1 {
+		t.Errorf("share on 竜 %v, want 1 (the test's 100%%)", s)
+	}
+	if s := g.slayShare(o); s != 0 {
+		t.Errorf("share on 鼠 %v, want 0", s)
+	}
+}
+
+// TestSealReach: 長槍 strikes the enemy two tiles ahead, not past one
+// next to the player.
+func TestSealReach(t *testing.T) {
+	g, _, _ := gearGame(t, "nagayari")
+	m := place(g, kind("nezumi4"), g.Player.Add(Point{2, 0}))
+	m.HP, m.MaxHP, m.Asleep = 9999, 9999, 99
+	if err := g.Do("attack", nil); err != nil {
+		t.Fatal(err)
+	}
+	if m.HP == 9999 {
+		t.Errorf("not struck two tiles ahead: %q", g.Message)
+	}
+	g.Dungeon = withSealStrength(g.Dungeon, "槍", CategoryWeapon, 0)
+	hp := m.HP
+	if err := g.Do("attack", nil); err != nil {
+		t.Fatal(err)
+	}
+	if m.HP != hp {
+		t.Error("struck two tiles ahead without the seal")
+	}
+}
+
+// TestBreath: 若龍 breathes fire along its line, not next to the player,
+// and 龍鱗 halves it.
+func TestBreath(t *testing.T) {
+	g, _, _ := gearGame(t, "ryuurin")
+	g.Dungeon = withSealStrength(g.Dungeon, "鱗", CategoryShield, 50)
+	m := place(g, kind("ryuu1"), g.Player.Add(Point{3, 0}))
+	a, _ := m.ability(AbilityBreath)
+	a.Values = []int{0, 100, 20}
+	g.HP, g.MaxHP = 100, 100
+	if !g.breathe(m, a) {
+		t.Fatalf("no breath on its line: %q", g.Message)
+	}
+	if g.HP != 90 {
+		t.Errorf("HP %d, want 90 (20 halved)", g.HP)
+	}
+	m.Pos = g.Player.Add(Point{1, 0})
+	if g.breathe(m, a) {
+		t.Error("a breath next to the player")
+	}
+	m.Pos = g.Player.Add(Point{3, 1})
+	if g.breathe(m, a) {
+		t.Error("a breath off its line")
+	}
+}
