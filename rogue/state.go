@@ -19,6 +19,9 @@ type States struct {
 	// 2026-11-27, as in Shiren); an ally, also after boundTurns (the
 	// turns left), or when another state comes on it.
 	Bound int
+	// Zowa is the turns left of ゾワゾワ (the scroll): about to attack the
+	// player, a monster attacks the other way, and uses no ability.
+	Zowa int
 }
 
 // The turns of the states.
@@ -74,7 +77,7 @@ func (s States) names(sealed string) []string {
 		name string
 	}{
 		{s.Confused > 0, "混乱"}, {s.Slowed > 0, "鈍足"}, {s.Hasted > 0, "倍速"},
-		{s.Asleep > 0, "睡眠"}, {s.Sealed, sealed}, {s.Blind > 0, "目つぶし"}, {s.Bound > 0, "かなしばり"},
+		{s.Asleep > 0, "睡眠"}, {s.Sealed, sealed}, {s.Blind > 0, "目つぶし"}, {s.Bound > 0, "かなしばり"}, {s.Zowa > 0, "ゾワゾワ"},
 	} {
 		if st.on {
 			ns = append(ns, st.name)

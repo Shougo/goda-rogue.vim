@@ -109,9 +109,9 @@
 #               back)
 #     パワーアップ  強さ turns of blows of 1.5 times the damage
 #     予防      the bad states pass, and none comes for the floor
-#     金縛り    the enemies of the room are bound (かなしばり)
-#     ゾワゾワ  for 強さ turns, an enemy about to attack the player attacks
-#               the other way, and uses no ability
+#     金縛り    the enemies next to the player are bound (かなしばり)
+#     ゾワゾワ  for 強さ turns, the enemies next to the player, about to
+#               attack it, attack the other way, and use no ability
 #     大部屋    the floor is one big room; the shopkeepers come by the
 #               stairs (on them, while the player owes)
 #   杖, waved (a magic bolt to the front):

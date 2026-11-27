@@ -337,14 +337,7 @@ func (g *Game) trouble() {
 	g.HP = g.MaxHP
 	g.say("HPが全回復した。")
 	var fixes []func()
-	var adjacent []*Monster
-	for _, m := range g.Monsters {
-		// (Those hidden in the walls too.)
-		if m.hostile() && chebyshev(m.Pos, g.Player) == 1 {
-			adjacent = append(adjacent, m)
-		}
-	}
-	if len(adjacent) >= 2 {
+	if adjacent := g.adjacentEnemies(); len(adjacent) >= 2 {
 		fixes = append(fixes, func() { g.bind(adjacent) })
 	}
 	if c := g.fullnessCap(); g.Fullness*2 <= c && g.Fullness < c {
@@ -392,10 +385,22 @@ func (g *Game) bind(ms []*Monster) {
 	g.say("敵がかなしばりになった！")
 }
 
+// adjacentEnemies are the enemies next to the player (those hidden in
+// the walls too).
+func (g *Game) adjacentEnemies() []*Monster {
+	var ms []*Monster
+	for _, m := range g.Monsters {
+		if m.hostile() && chebyshev(m.Pos, g.Player) == 1 {
+			ms = append(ms, m)
+		}
+	}
+	return ms
+}
+
 // bindAround is the scroll of 金縛り (Shougo, 2026-11-27: the binding of
-// 困った時): the enemies around are bound.
+// 困った時): the enemies next to the player are bound.
 func (g *Game) bindAround() {
-	ms := g.enemiesAround()
+	ms := g.adjacentEnemies()
 	if len(ms) == 0 {
 		g.say("何も起こらなかった。")
 		return
@@ -445,14 +450,31 @@ func (g *Game) prevents(e MagicEffect) bool {
 	return true
 }
 
-// zowa is the scroll of ゾワゾワ (Shougo, 2026-11-27): for n turns (10),
-// the enemies attack the other way (actZowa).
+// zowa is the scroll of ゾワゾワ (Shougo, 2026-11-27: the enemies next to
+// the player, as 金縛り): for n turns (10), they attack the other way
+// (actZowa).
 func (g *Game) zowa(n int) {
-	g.Zowa = n
-	g.say("背中がゾワゾワしてきた……。")
+	ms := g.adjacentEnemies()
+	if len(ms) == 0 {
+		g.say("何も起こらなかった。")
+		return
+	}
+	for _, m := range ms {
+		m.Zowa = n
+	}
+	g.say("敵はゾワゾワしている……。")
 }
 
-// actZowa is a turn of the enemy m while the player has ゾワゾワ: no
+// zowaPasses is a turn passing for the monsters of ゾワゾワ.
+func (g *Game) zowaPasses() {
+	for _, m := range g.Monsters {
+		if m.Zowa > 0 {
+			m.Zowa--
+		}
+	}
+}
+
+// actZowa is a turn of the enemy m of ゾワゾワ: no
 // ability; next to the player, it attacks the tile on its other side
 // (another monster there takes the blow); else it comes on.
 func (g *Game) actZowa(m *Monster) bool {

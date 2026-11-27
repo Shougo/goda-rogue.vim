@@ -332,13 +332,15 @@ func TestPreventScroll(t *testing.T) {
 	}
 }
 
-// TestBindScroll: 金縛り binds the enemies of the room.
+// TestBindScroll: 金縛り binds the enemies next to the player only.
 func TestBindScroll(t *testing.T) {
 	g, r := trapGame(t)
-	m := place(g, kind("nezumi1"), Point{r.X + 4, r.Y + 2})
+	g.Player = Point{r.X + 1, r.Y + 1}
+	near := place(g, kind("nezumi1"), Point{r.X + 2, r.Y + 2})
+	far := place(g, kind("nezumi1"), Point{r.X + 4, r.Y + 2})
 	read(g, "kanashibari")
-	if m.Bound == 0 {
-		t.Error("not bound")
+	if near.Bound == 0 || far.Bound != 0 {
+		t.Errorf("bound %d %d", near.Bound, far.Bound)
 	}
 }
 
@@ -402,8 +404,8 @@ func TestZowaScroll(t *testing.T) {
 	b := place(g, kind("oni1"), Point{r.X + 3, r.Y + 1})
 	b.HP, b.MaxHP = 1000, 1000
 	read(g, "zowazowa")
-	if g.Zowa != 10 {
-		t.Fatalf("zowa %d", g.Zowa)
+	if a.Zowa != 10 || b.Zowa != 0 {
+		t.Fatalf("zowa %d %d (only the one next to the player)", a.Zowa, b.Zowa)
 	}
 	hp := g.HP
 	for range 9 {

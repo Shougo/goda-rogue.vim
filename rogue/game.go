@@ -102,10 +102,7 @@ type Game struct {
 	// Prevent says whether the player is warded against bad states for
 	// the floor (the scroll of 予防).
 	Prevent bool
-	// Zowa is the turns left of ゾワゾワ (the scroll): an enemy about to
-	// attack the player attacks the other way, and uses no ability.
-	Zowa   int
-	sprung bool
+	sprung  bool
 	// heldBy is the monster that holds the player (AbilityHold), while
 	// Stuck; nil for a snare.
 	heldBy *Monster
@@ -846,11 +843,7 @@ func (g *Game) tick(rest bool) {
 			g.say("パワーアップの効果が切れた。")
 		}
 	}
-	if g.Zowa > 0 {
-		if g.Zowa--; g.Zowa == 0 {
-			g.say("ゾワゾワが収まった。")
-		}
-	}
+	g.zowaPasses()
 	g.Turn++
 	if rest && g.HP < g.MaxHP && g.Fullness > 0 {
 		g.regen++
@@ -1176,9 +1169,7 @@ func (g *Game) Status() string {
 	if g.Prevent {
 		s += "  予防"
 	}
-	if g.Zowa > 0 {
-		s += "  ゾワゾワ"
-	}
+
 	if g.Debugged {
 		s += "  デバッグ"
 	}
