@@ -67,5 +67,6 @@ func (g *Game) explode(m *Monster) {
 	}
 	if chebyshev(g.Player, m.Pos) <= 1 {
 		g.playerHurt(g.blastDamage(max(g.HP*share/100, 1)), m)
+		g.grillCarried()
 	}
 }

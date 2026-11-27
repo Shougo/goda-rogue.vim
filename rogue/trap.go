@@ -3,6 +3,7 @@ package rogue
 import (
 	"fmt"
 	"math/rand/v2"
+	"slices"
 )
 
 // TrapDef is a kind of trap.
@@ -31,9 +32,13 @@ const (
 	TrapRust    TrapEffect = "サビ"
 	TrapRot     TrapEffect = "腐り"
 	TrapCurse   TrapEffect = "呪い"
+	// TrapOnigiri: an item carried turns into an onigiri, a monster too;
+	// the trap breaks then with a chance of its strength (Shougo,
+	// 2026-11-27: no endless food).
+	TrapOnigiri TrapEffect = "おにぎり"
 )
 
-var trapEffects = []TrapEffect{TrapPit, TrapMine, TrapBigMine, TrapSnare, TrapPoison, TrapSleep, TrapWarp, TrapHunger, TrapRust, TrapRot, TrapCurse}
+var trapEffects = []TrapEffect{TrapPit, TrapMine, TrapBigMine, TrapSnare, TrapPoison, TrapSleep, TrapWarp, TrapHunger, TrapRust, TrapRot, TrapCurse, TrapOnigiri}
 
 // Trap is a trap on the floor; Found says whether the player knows it.
 type Trap struct {
@@ -135,6 +140,7 @@ var trapTexts = map[TrapEffect]string{
 	TrapRust:    "装備している武器と盾がさびる。",
 	TrapRot:     "持っているおにぎりがすべて腐る（壺の中は無事）。",
 	TrapCurse:   "装備以外の持ち物がどれか呪われる。",
+	TrapOnigiri: "装備以外の持ち物が 1 つおにぎりになる（敵が踏むと、その敵がおにぎりになる）。踏むと壊れることがある。",
 }
 
 // commandStep steps on the trap under the player on purpose.
@@ -182,6 +188,7 @@ func (g *Game) spring(t *Trap, force bool) bool {
 		lost := g.blastDamage(g.HP - mineLeft(t.Def.Effect, g.HP))
 		g.HP -= lost
 		g.say(fmt.Sprintf("%dのダメージを受けた。", lost))
+		g.grillCarried()
 	case TrapSnare:
 		g.Stuck, g.heldBy = n, nil
 		g.say("トラばさみにかかった。")
@@ -224,8 +231,38 @@ func (g *Game) spring(t *Trap, force bool) bool {
 		g.rotTrap()
 	case TrapCurse:
 		g.curseTrap(n)
+	case TrapOnigiri:
+		g.onigiriTrap()
+		g.mayBreak(t)
 	}
 	return true
+}
+
+// onigiriTrap is the trap of おにぎり on the player: an item carried, not
+// equipped nor for sale, at random, turns into an onigiri.
+func (g *Game) onigiriTrap() {
+	var can []*Item
+	for _, it := range g.Inventory {
+		if !it.Equipped && !it.ForSale && it.Def.Effect != EffectFood {
+			can = append(can, it)
+		}
+	}
+	if len(can) == 0 || g.Dungeon.plainOnigiri() == nil {
+		g.say("何も起こらなかった。")
+		return
+	}
+	g.toOnigiri(can[g.rng.IntN(len(can))])
+}
+
+// mayBreak breaks the trap t, with the chance of its strength.
+func (g *Game) mayBreak(t *Trap) {
+	if g.rng.IntN(100) >= t.Def.Strength {
+		return
+	}
+	g.Traps = slices.DeleteFunc(g.Traps, func(x *Trap) bool { return x == t })
+	if g.sees(g.Player, t.Pos) {
+		g.say(t.Def.Name + "は壊れた。")
+	}
 }
 
 // trapperSees shows every trap of the floor to the player wearing a
@@ -285,6 +322,15 @@ func (g *Game) monsterSprings(m *Monster, t *Trap) {
 			m.Pos = p
 			say(m.Name + "はどこかへ飛ばされた。")
 		}
+	case TrapOnigiri:
+		// (No EXP: it is not defeated.)
+		if o := g.Dungeon.plainOnigiri(); o != nil {
+			say(m.Name + "はおにぎりになった！")
+			p := m.Pos
+			g.remove(m)
+			g.land(&Item{Def: o, Glyph: o.Glyph}, p)
+		}
+		g.mayBreak(t)
 	default:
 		say("しかし何も起こらなかった。")
 	}

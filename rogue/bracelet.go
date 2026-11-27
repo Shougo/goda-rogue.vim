@@ -60,6 +60,7 @@ func (g *Game) blast() bool {
 	g.say("腕輪が爆発した！")
 	g.HP = max((g.HP+1)/2, 1)
 	g.say("HPが半分になった。")
+	g.grillCarried()
 	g.event("blast")
 	for _, m := range slices.Clone(g.Monsters) {
 		if chebyshev(m.Pos, g.Player) != 1 {

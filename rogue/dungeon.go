@@ -336,16 +336,19 @@ const (
 	EffectHeal    Effect = "HP回復"
 	EffectLight   Effect = "あかり"
 	// EffectDrain: the waterways of the floor dry up (水がれ).
-	EffectDrain     Effect = "水がれ"
-	EffectIdentify  Effect = "識別"
-	EffectBlowAway  Effect = "吹き飛ばし"
-	EffectRecruit   Effect = "仲間"
-	EffectEyeDrops  Effect = "目薬"
-	EffectMaxHP     Effect = "最大HP"
-	EffectUpWeapon  Effect = "武器強化"
-	EffectUpShield  Effect = "盾強化"
-	EffectSwap      Effect = "場所替え"
-	EffectFood      Effect = "満腹"
+	EffectDrain    Effect = "水がれ"
+	EffectIdentify Effect = "識別"
+	EffectBlowAway Effect = "吹き飛ばし"
+	EffectRecruit  Effect = "仲間"
+	EffectEyeDrops Effect = "目薬"
+	EffectMaxHP    Effect = "最大HP"
+	EffectUpWeapon Effect = "武器強化"
+	EffectUpShield Effect = "盾強化"
+	EffectSwap     Effect = "場所替え"
+	EffectFood     Effect = "満腹"
+	// EffectGrilled: 強さ of fullness and of HP (焼きおにぎり, Shougo
+	// 2026-11-27: 50 and 50); an onigiri carried becomes one in a blast.
+	EffectGrilled   Effect = "焼き"
 	EffectRotten    Effect = "腐った"
 	EffectKeep      Effect = "保存"
 	EffectSynthesis Effect = "合成"
@@ -400,7 +403,7 @@ var effects = map[Category][]Effect{
 		EffectGatherFoes, EffectTrouble, EffectPowerUp, EffectPrevent, EffectBind,
 		EffectZowa, EffectBigRoom, EffectMonsterRoom, EffectCurse, EffectTraps, EffectNoPickup, EffectMute, EffectSanctuary, EffectBlank},
 	CategoryStaff: {EffectBlowAway, EffectRecruit, EffectSwap},
-	CategoryFood:  {EffectFood, EffectRotten},
+	CategoryFood:  {EffectFood, EffectRotten, EffectGrilled},
 	CategoryPot:   {EffectKeep, EffectSynthesis, EffectHealPot, EffectPlain, EffectBottomless},
 }
 

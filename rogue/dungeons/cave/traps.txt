@@ -12,6 +12,9 @@
 #   腐り      every onigiri the player carries rots (not those in pots)
 #   呪い      強さ of the items carried that are no equipment, at random,
 #             are cursed
+#   おにぎり  an item carried (not equipped, not food) turns into an
+#             onigiri; a monster stepping on it, too; the trap breaks
+#             then, with a chance of 強さ (%)
 ID	名前	効果	強さ
 otoshiana	落とし穴	落とし穴	5
 jirai	地雷	地雷	0
@@ -25,3 +28,4 @@ kuufuku	空腹の罠	腹減り	50
 sabi	サビの罠	サビ	0
 kusari	腐りの罠	腐り	0
 noroi	呪いの罠	呪い	1
+onigiriwana	おにぎりの罠	おにぎり	50

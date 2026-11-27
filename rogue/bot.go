@@ -1701,9 +1701,10 @@ func (b *Bot) bracelet(g *Game, worn *Item) (string, []string) {
 	hungry := func(it *Item) bool { return b.known(g, it, EffectHungry) }
 	short := b.foodFloors(g) < regenOn
 	// The bracelets that are only a price for the bots: they do not use
-	// them (calling monsters to rise, leaping or blowing up on purpose).
+	// them (calling monsters to rise, leaping or blowing up on purpose;
+	// 垂れ流し: it walked back to what it dropped, again and again).
 	bad := func(it *Item) bool {
-		for _, e := range []Effect{EffectCall, EffectLeap, EffectBlast, EffectCritTaken, EffectClumsy} {
+		for _, e := range []Effect{EffectCall, EffectLeap, EffectBlast, EffectCritTaken, EffectClumsy, EffectDrops} {
 			if b.known(g, it, e) {
 				return true
 			}

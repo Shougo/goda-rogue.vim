@@ -143,6 +143,11 @@ func (g *Game) effectOf(it *Item, lucky bool) {
 		g.say("お腹がふくれた。")
 	case EffectRotten:
 		g.eatRotten(n)
+	case EffectGrilled:
+		g.fill(n)
+		healed := min(n, g.MaxHP-g.HP)
+		g.HP += healed
+		g.say(fmt.Sprintf("お腹がふくれて、HPが%d回復した。", healed))
 	case EffectMaxHP:
 		g.MaxHP += n
 		g.HP += n

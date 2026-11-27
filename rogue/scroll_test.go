@@ -562,3 +562,66 @@ func TestBlankScroll(t *testing.T) {
 		t.Error("nothing to write")
 	}
 }
+
+// TestOnigiriTrap: the trap of おにぎり turns an item carried into an
+// onigiri (not one equipped), and a monster stepping on it; it breaks
+// half the time.
+func TestOnigiriTrap(t *testing.T) {
+	g, r := trapGame(t)
+	sword := carry(g, "doutanuki", 0)
+	sword.Equipped = true
+	grass := carry(g, "otogiri", 0)
+	p := Point{r.X + 3, r.Y + 1}
+	trap(g, "onigiriwana", p)
+	tr := g.TrapAt(p)
+	g.spring(tr, true)
+	if grass.Def.ID != "onigiri" || sword.Def.ID != "doutanuki" {
+		t.Errorf("grass %s, sword %s", grass.Def.ID, sword.Def.ID)
+	}
+	m := place(g, kind("nezumi1"), Point{r.X + 4, r.Y + 2})
+	g.monsterSprings(m, tr)
+	if slices.Contains(g.Monsters, m) {
+		t.Fatal("the rat stays")
+	}
+	if it, ok := g.ItemAt(m.Pos); !ok || it.Def.ID != "onigiri" {
+		t.Errorf("no onigiri at %v", m.Pos)
+	}
+	broke := 0
+	for range 200 {
+		g.Traps = []*Trap{tr}
+		g.mayBreak(tr)
+		if len(g.Traps) == 0 {
+			broke++
+		}
+	}
+	if broke < 60 || broke > 140 {
+		t.Errorf("broke %d of 200", broke)
+	}
+}
+
+// TestGrilledOnigiri: a mine grills the onigiri carried (big and rotten
+// too), not those in a pot; one thrown at a monster that burns things
+// lands grilled; eaten, it fills and heals by 50.
+func TestGrilledOnigiri(t *testing.T) {
+	g, r := trapGame(t)
+	a, b, c := carry(g, "onigiri", 0), carry(g, "ookiionigiri", 0), carry(g, "kusatta", 0)
+	pot := carry(g, "hozon", 0)
+	in := &Item{Def: g.Dungeon.Item("onigiri"), Glyph: "食"}
+	pot.Contents = []*Item{in}
+	p := Point{r.X + 3, r.Y + 1}
+	trap(g, "jirai", p)
+	g.spring(g.TrapAt(p), true)
+	for _, it := range []*Item{a, b, c} {
+		if it.Def.ID != "yakionigiri" {
+			t.Errorf("%s not grilled", it.Def.ID)
+		}
+	}
+	if in.Def.ID != "onigiri" {
+		t.Error("grilled in the pot")
+	}
+	g.HP, g.Fullness = 1, 10
+	g.useItem(a)
+	if g.HP != min(51, g.MaxHP) || g.Fullness != 60 {
+		t.Errorf("HP %d, fullness %d", g.HP, g.Fullness)
+	}
+}

@@ -139,6 +139,8 @@
 #     腐った    restores 強さ of fullness, and brings confusion, slowness
 #               or sleep (the rotten onigiri; mud and the trap of rot
 #               make it)
+#     焼き      restores 強さ of fullness and of HP, and never rots (the
+#               grilled onigiri: a blast makes it of an onigiri carried)
 # ひび is how easily a bracelet cracks (a percent, 0 for never): leaving
 # a floor where it had its effect, it cracks with ひび x (cracks + 1) %
 # (times 腕輪の傷みやすさ in rules.txt), and breaks with too many cracks
@@ -298,4 +300,5 @@ sokonuke	壺	底抜けの壺	壺	0	底抜け	0	3-5	-	0	300
 onigiri	食	おにぎり	食料	50	満腹	0	-	-	0	100
 ookiionigiri	食	大きなおにぎり	食料	100	満腹	0	-	-	0	200
 kusatta	食	腐ったおにぎり	食料	30	腐った	0	-	-	0	10
+yakionigiri	食	焼きおにぎり	食料	50	焼き	0	-	-	0	150
 okane	金	お金	お金	0	-	0	-	-	0	0

@@ -42,6 +42,13 @@ func (g *Game) burn(m *Monster, it *Item) bool {
 		return false
 	}
 	g.provoke(m)
+	if grillable(it) && g.Dungeon.grilledDef() != nil {
+		// (An onigiri is grilled, and falls by it.)
+		g.grill(it)
+		g.say(m.Name + "に焼かれて、焼きおにぎりになった。")
+		g.land(it, m.Pos)
+		return true
+	}
 	g.say(g.Name(it) + "は" + m.Name + "に燃やされた！")
 	return true
 }

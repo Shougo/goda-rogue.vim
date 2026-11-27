@@ -30,6 +30,7 @@ var effectTexts = map[Effect]string{
 	EffectIdentify:     "持ち物を 1 つ識別する。ラッキーなら持ち物すべて。",
 	EffectBlowAway:     "魔法弾が当たった敵を 10 マス吹き飛ばす。",
 	EffectFood:         "満腹度が %d 回復する。",
+	EffectGrilled:      "満腹度と HP が %d 回復する。腐らない。",
 	EffectRotten:       "満腹度が %d 回復するが、混乱、鈍足、睡眠のどれかになる。",
 	EffectKeep:         "入れた道具をしまっておける。「見る」で中の道具を使える。",
 	EffectNoRust:       "装備している武器と盾がサビない。",

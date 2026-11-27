@@ -12,3 +12,4 @@
 5	30	sabi	2
 10	30	kusari	2
 8	30	noroi	2
+3	30	onigiriwana	1
