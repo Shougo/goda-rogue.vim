@@ -296,3 +296,43 @@ func TestHungerShown(t *testing.T) {
 		t.Errorf("told %d times in %d turns", n, 3*starveWarning)
 	}
 }
+
+// TestBoltItems: くちなし草 seals the mouth of who drinks it and the
+// abilities of the monster it hits; the staffs of 一時しのぎ, 混乱, 睡眠
+// and 目つぶし warp, confuse, put to sleep and blind the monster their
+// bolt hits.
+func TestBoltItems(t *testing.T) {
+	g, r := roomGame(t, 10, 3)
+	g.Monsters = nil
+	g.HP, g.MaxHP = 9999, 9999
+	use(t, g, "kuchinashisou")
+	if !g.Sealed {
+		t.Error("くちなし草: the mouth is not sealed")
+	}
+	g.Sealed = false
+	g.Facing = "right"
+	g.Player = Point{r.X, r.Y + 1}
+	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.PlayerThrowRate = 100 })
+	for _, tc := range []struct {
+		id   string
+		done func(m *Monster) bool
+	}{
+		{"kuchinashisou", func(m *Monster) bool { return m.Sealed }},
+		{"ichijishinogi", func(m *Monster) bool { return m.Pos != Point{r.X + 2, r.Y + 1} }},
+		{"konranzue", func(m *Monster) bool { return m.Confused > 0 }},
+		{"suiminzue", func(m *Monster) bool { return m.Asleep > 0 }},
+		{"metsubushizue", func(m *Monster) bool { return m.Blind > 0 }},
+	} {
+		g.Monsters = nil
+		m := place(g, kind("nezumi4"), Point{r.X + 2, r.Y + 1})
+		m.HP, m.MaxHP = 999, 999
+		if tc.id == "kuchinashisou" {
+			command(t, g, carry(g, tc.id, 0), commandThrow)
+		} else {
+			wave(t, g, tc.id)
+		}
+		if !tc.done(m) {
+			t.Errorf("%s: %+v", tc.id, m)
+		}
+	}
+}

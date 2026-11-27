@@ -96,7 +96,7 @@ func (b *Bot) bestHeal(g *Game) (aHeal, bool) {
 // healUnknown is the least share of healing grasses among the kinds an
 // unknown grass may be for the bot to drink one to heal: less, it keeps
 // it for a safer time (drinking it at full HP to learn it).
-const healUnknown = 0.2
+const healUnknown = 0.15
 
 // unknownHeal returns an unknown grass to drink to heal, when no healing
 // is known: one whose kinds are healing grasses often enough; nil if none.
