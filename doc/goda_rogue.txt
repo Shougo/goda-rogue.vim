@@ -139,8 +139,8 @@ down), sleeping gas, warping, hunger, rust (the upgrade values of the
 weapon and the shield down).  A trap the player has found shows as 罠,
 a dash stops before it, and by the rule of the built-in dungeon it never
 goes off by itself: standing on it, the inventory lists it (marked
-[足元]), to step on it on purpose (踏む).  |goda-rogue-look| tells its kind and
-what it does.
+[足元]), to step on it on purpose (踏む).  |goda-rogue-look| tells its
+kind and what it does.
 
 The player gets hungry: the fullness (満腹, on the top line) goes down a
 point every few turns.  Food restores it.  Starving, the player restores
@@ -880,85 +880,98 @@ The built-in dungeons:
 				             step away for T turns, or until
 				             the monster is gone or no more
 				             next to it
-				  燃える  what is thrown or shot at it burns, with
-				             no effect: only blows hurt it
-				  回復:C:N  C% of its actions heal another hurt
-				             monster it sees by N HP
+				  燃える  what is thrown or shot at it burns,
+				             with no effect: only blows hurt
+				             it
+				  回復:C:N  C% of its actions heal another
+				             hurt monster it sees by N HP
 				  鼓舞:C  C% of its actions rank up another
-				             monster of the floors it sees (not one
-				             that cheers)
+				             monster of the floors it sees
+				             (not one that cheers)
 				  復活:P  defeated the first time, it gets up
-				             again with P% of its max HP (and gives
-				             nothing yet)
-				  爆発:H:D  hurt down to H% of its max HP or below,
-				             it explodes at its next action: every
-				             creature next to it loses D% of its HP,
-				             the items next to it and under it burn,
-				             and it is gone, giving nothing
-				  群れ:N  it comes with N more of its kind next to
-				             it, on a new floor and when it appears
-				             later
-				  逃げる  it keeps away from the player it sees,
-				             and fights only when it cannot; the
-				             other monsters that see it hunt it
-				             before the player, and rank up by
-				             killing it
+				             again with P% of its max HP (and
+				             gives nothing yet)
+				  爆発:H:D  hurt down to H% of its max HP or
+				             below, it explodes at its next
+				             action: every creature next to it
+				             loses D% of its HP, the items
+				             next to it and under it burn, and
+				             it is gone, giving nothing
+				  群れ:N  it comes with N more of its kind
+				             next to it, on a new floor and
+				             when it appears later
+				  逃げる  it keeps away from the player it
+				             sees, and fights only when it
+				             cannot; the other monsters that
+				             see it hunt it before the player,
+				             and rank up by killing it
 				  罠:C  C% of its actions, out of the player's
-				             reach, hide a trap of the floor's table
-				             where it stands; defeated, it leaves one
-				             there
-				  長柄  it hits the player two tiles away on one
-				             of its lines, with nothing in between
-				  瞬間移動:C  with the player in sight and not next to
-				             it, C% of its actions take it next to
-				             the player
-				  桂馬:D  it moves as a knight of shogi or chess,
-				             over what is in the way; with the player
-				             a knight's move away, it swoops on it
-				             for D damage, which defense does not
+				             reach, hide a trap of the floor's
+				             table where it stands; defeated,
+				             it leaves one there
+				  長柄  it hits the player two tiles away on
+				             one of its lines, with nothing in
+				             between
+				  瞬間移動:C  with the player in sight and not
+				             next to it, C% of its actions
+				             take it next to the player
+				  桂馬:D  it moves as a knight of shogi or
+				             chess, over what is in the way;
+				             with the player a knight's move
+				             away, it swoops on it for D
+				             damage, which defense does not
 				             lower
 				  透明  the player does not see it, unless eye
-				             drops cleared its eyes on the floor
+				             drops cleared its eyes on the
+				             floor
 				  壁抜け  it goes through rock toward the
 				             player, wherever it is; it
 				             fights only out of rock
 				  投げつけ:R:C:A  standing on an item, with
-				             the player on one of its lines within R
-				             tiles (with A 1, anywhere within them in
-				             sight), C% of its actions throw the item
-				             at the player (a grass has its effect on
-				             the player); it goes for the items it
-				             sees before the player
-				  反射:C:W  C% of the bolts of staffs waved at it go
-				             back to the player; with W 1 the arrows
-				             too, with W 2 any item thrown (it falls
-				             at the player's feet)
-				  荒らし:C:W  next to the player, C% of its actions
-				             ruin an item carried instead of a blow:
-				             W 0 empties a staff, 1 takes a grass or
-				             a scroll away, 2 makes a pot a plain pot
-				             (普通の壺: what is in it comes out only
-				             when it breaks), 3 any of those; the
-				             seal 盗みよけ
-				             wards it off
+				             the player on one of its lines
+				             within R tiles (with A 1,
+				             anywhere within them in sight),
+				             C% of its actions throw the item
+				             at the player (a grass has its
+				             effect on the player); it goes
+				             for the items it sees before the
+				             player
+				  反射:C:W  C% of the bolts of staffs waved at
+				             it go back to the player; with W
+				             1 the arrows too, with W 2 any
+				             item thrown (it falls at the
+				             player's feet)
+				  荒らし:C:W  next to the player, C% of its
+				             actions ruin an item carried
+				             instead of a blow: W 0 empties a
+				             staff, 1 takes a grass or a
+				             scroll away, 2 makes a pot a
+				             plain pot (普通の壺: what is in
+				             it comes out only when it
+				             breaks), 3 any of those; the seal
+				             盗みよけ wards it off
 				  サビ:C:N:H  it never attacks: next to the
-				             player, C% of its actions rust what the
-				             player has equipped by N (H 0: the
-				             weapon or the shield, 1: both, 2: one,
-				             or half of the time a seal of one taken
-				             away), the others watch; a seal of
-				             サビよけ is taken away first, one born
-				             with it makes it fail
-				  状態:C:S:W:T  C% of its actions bring a state to the
-				             player for T turns (W 0: blind, sees
-				             only next to it; 1: asleep; 2: confused;
-				             3: its attack or its defense down, at
-				             random, 30%, longer by T if down
-				             already, until the next floor): next to
-				             it instead of a blow, or with S 1 from
-				             anywhere it sees the player; the
-				             bracelets of 睡眠よけ, 混乱よけ,
-					     目つぶしよけ and 弱りよけ ward them off
+				             player, C% of its actions rust
+				             what the player has equipped by N
+				             (H 0: the weapon or the shield,
+				             1: both, 2: one, or half of the
+				             time a seal of one taken away),
+				             the others watch; a seal of
+				             サビよけ is taken away first, one
+				             born with it makes it fail
+				  状態:C:S:W:T  C% of its actions bring a
+				             state to the player for T turns
+				             (W 0: blind, sees only next to
+				             it; 1: asleep; 2: confused; 3:
+				             its attack or its defense down,
+				             at random, 30%, longer by T if
+				             down already, until the next
+				             floor): next to it instead of a
+				             blow, or with S 1 from anywhere
+				             it sees the player; the bracelets
+				             of 睡眠よけ, 混乱よけ,
+				             目つぶしよけ and 弱りよけ ward
+				             them off
 				  擬態:D:S:K  on a new floor it hides as
 				             an item of the floor's table,
 				             or (S%) as stairs, or (K%, with
@@ -1026,9 +1039,10 @@ The built-in dungeons:
 				        サビよけ 盗みよけ 睡眠よけ 混乱よけ
 				        呪いよけ 目つぶしよけ 口封じよけ
 				        弱りよけ ハラヘリ 垂れ流し 罠師 胃縮小
-				        痛恨 魔物呼び 高飛び 爆発 ヘタ投げ 耐爆
-				        水蜘蛛 浮遊 壁抜け 呪い力 ハラヘリよけ
-				        遠投 しあわせ 忍び足 胃拡張 値切り
+				        痛恨 魔物呼び 高飛び 爆発 ヘタ投げ
+				        耐爆 水蜘蛛 浮遊 壁抜け 呪い力
+				        ハラヘリよけ 遠投 しあわせ 忍び足
+				        胃拡張 値切り
 				  草: HP回復 ちから 目薬 最大HP
 				  巻物: あかり 水がれ 識別 武器強化 盾強化
 				        おはらい印増大 印消し 真空斬り 全滅
@@ -1160,56 +1174,19 @@ monsters, items and counts, levels go in order.
 To see how a dungeon plays, let bots play it, from this repository: >
 	go run ./cmd/analyze -dungeon cave -runs 200
 <	Bots play the runs through the actions, like a player, with what a
-player knows: a careful one (it explores, rests, and leaves when the
-wind comes, when its food would not last two floors, or when it sees an
-enemy it would likely lose to) and a reckless one (it goes down as soon
-as it finds the stairs).  Both shoot arrows, and answer enemies next to
-them that would kill them: they reckon the chance of dying in the fight
-(by the hit rates, the spread of the damage and the speeds of the kinds,
-as a player who knows the kinds would) and answer it from 5% (careful)
-or 20% (reckless) by the cheapest answer that is enough (by the prices
-of the items, cheaper the more of a kind they carry and the deeper they
-are; a staff's last wave costs the most): the stairs, a step back into
-a corridor to fight two enemies one by one, a healing grass, a pot of
-healing (with what they value least in it), a staff, food thrown at a
-hungry ghost, a scroll of おはらい near a monster that curses, walking
-away to the stairs.  A healing grass is worth to them the share of their
-max HP it heals: 50 HP heal a player of 40 in full, a third of one of
-150.  They shoot arrows at enemies worth them (any with ten arrows or
-more), read unknown scrolls on the stairs (anywhere on the first third
-of the floors) and drink unknown grasses at full HP (at 70% on the first
-third), walk into a shop to learn by their prices what the unknown items
-they carry may be, use an item they do not know in a danger only when
-nothing they know helps, wait for an enemy two tiles away to come (so
-as to strike first), check for traps before
-stepping in a monster house whose monsters sleep, and the careful one
-leaves a floor whose fights cost more answers than it gave.  Out of a fight
-they heal when their HP is below what the monsters of the floor could take in
-two turns (one and a half when none of them would likely beat them, three when
-a quarter would; the careful one rests in a room, not in a corridor), with
-what fits what is missing best (the cheapest of what heals it all, else what
-heals most), and they wait for an enemy coming at them rather than step next
-to it, to strike first. With no room left in the inventory they do not walk
-past what is worth more than the least they carry: standing on it, they eat
-food that is not wasted, drink an unknown grass at full HP, or swap what they
-value least for it (an empty staff is worth nothing; food is worth the more
-the less fullness they hold in the belly, the bag and the pots: 5 to 8 times
-its price below 200, less and less to 300, next to nothing beyond); and what
-they carry is cheaper to use while there is no room. They walk straight where
-a straight way is as short, leave the corridors that can lead to no room not
-seen yet (a floor is three by three sections, a room at most in each), and
-keep off for a while the tile they stepped away from a danger on, and two
-tiles they walked back and forth between.
-It prints how many cleared, where and why they fell (by monster, trap,
-hunger or the wind; deaths from full HP in one action or just after
-arriving count as unfair), the HP on arriving on each floor, the turns
-spent on it and the answers (grasses, scrolls, staffs) picked up and used
-on it, the items picked up and used, the items left at a clear and at a
-death, the chance of dying the bot reckoned at the start of its last fight
-and at its last choice (0: a surprise), and the items used on the last
-floors before a death.  The runs are the same for
-the same seeds (-seed), so a change of the data shows in the numbers.
-The bots are simple: they measure, they do not play well.
+player knows.  The careful one explores, rests, and leaves a floor when
+the wind comes, when its food runs short, or when an enemy would likely
+beat it; the reckless one goes down as soon as it finds the stairs
+(-bots chooses them).  In a fight they reckon the chance of dying and
+answer it with the cheapest item that is enough.  The comments of
+rogue/bot.go tell the details.
+
+It prints how many cleared, where and why they fell (deaths from full HP
+in one action count as unfair), for each floor the HP on arriving, the
+turns spent and the items picked up and used, and the items used on the
+last floors before a death.  The runs are the same for the same seeds
+(-seed), so a change of the data shows in the numbers.  The bots are
+simple: they measure, they do not play well.
 
 ==============================================================================
 MINI-MAP                                                 *goda-rogue-mini-map*
