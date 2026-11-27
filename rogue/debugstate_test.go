@@ -71,7 +71,7 @@ func TestDumpState(t *testing.T) {
 func TestStateErrors(t *testing.T) {
 	g := NewGame(cave(), "state")
 	g.DebugMode = true
-	for _, text := range []string{"ダンジョン\tdeep", "階\t999", "持ち物\tnothing", "敵\t1,1 nothing", "主人公\t0,0\n地形\n###\n#.#\n###", "地形\n#X#", "持ち物\tyakusou 祝福 呪い"} {
+	for _, text := range []string{"ダンジョン\tdeep", "階\t999", "持ち物\tnothing", "敵\t1,1 nothing", "主人公\t0,0\n地形\n###\n#.#\n###", "地形\n#X#", "持ち物\tyakusou 祝福 呪い", "店\tnothing 1,1,2,2", "状態\t空腹", "敵\t1,1 nezumi1 速さ=光速", "敵\t1,1 nezumi1 混乱=x"} {
 		if err := g.Do("debug", []string{"state", text}); err == nil {
 			t.Errorf("%q was accepted", text)
 		}
@@ -118,5 +118,33 @@ func TestReplayState(t *testing.T) {
 	}
 	if h.Depth != 12 || h.Player != (Point{2, 2}) {
 		t.Errorf("replayed: depth %d, player %v", h.Depth, h.Player)
+	}
+}
+
+// TestDumpShopState: the shop, its shopkeepers, the monster house and the
+// states of the player and the monsters are written and read again.
+func TestDumpShopState(t *testing.T) {
+	g := shopGame(t, "yorozu")
+	g.DebugMode = true
+	m := g.spawnNear(g.Dungeon.Monster("nezumi1"))
+	m.Confused, m.Bound, m.Enraged, m.Speed = 5, 3, true, SpeedDouble
+	g.Shop.Keepers[0].Angry = true
+	g.Confused, g.PowerUp, g.Prevent, g.Frozen = 4, 20, true, true
+	text := g.DumpState()
+	for _, want := range []string{"店\tyorozu ", "店主 家=", "敵対", "混乱=5", "かなしばり=3", "怒り", "速さ=倍速", "状態\t混乱=4 パワーアップ=20 予防 停止"} {
+		if !strings.Contains(text, want) {
+			t.Errorf("no %q in\n%s", want, text)
+		}
+	}
+	h := NewGame(cave(), "other")
+	h.DebugMode = true
+	if err := h.Do("debug", []string{"state", text}); err != nil {
+		t.Fatal(err)
+	}
+	if h.Shop == nil || len(h.Shop.Keepers) != len(g.Shop.Keepers) || !h.inShop(h.Shop.Keepers[0].home) {
+		t.Fatalf("shop %+v", h.Shop)
+	}
+	if again := h.DumpState(); strings.SplitN(again, "\n", 2)[1] != strings.SplitN(text, "\n", 2)[1] {
+		t.Errorf("dumped again:\n%s\nfirst:\n%s", again, text)
 	}
 }

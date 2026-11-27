@@ -1289,10 +1289,9 @@ goda_rogue#load_state([{name}])
 goda_rogue#dump_state([{name}])
 		Write the scene of the run as the state file {name}
 		(default: the date and time) in "states", and return its
-		path: the whole floor, seen or not, and all on it, to
-		reproduce a bug or to share a scene.  The shop is not
-		written, nor the states of the monsters (only their kind,
-		place, sleep, side and HP).
+		path: the whole floor, seen or not, and all on it, its shop
+		and monster house, and the states of the player and of the
+		monsters, to reproduce a bug or to share a scene.
 
 The file is text, a line a thing, its key and its values separated by a
 tab ("#" begins a comment): >
@@ -1304,6 +1303,9 @@ tab ("#" begins a comment): >
 	ちから	8/8
 	満腹度	100/100
 	お金	1000
+	状態	混乱=5 予防
+	店	yorozu 20,3,6,4
+	モンスターハウス	40,10 見つけた
 	識別	yakusou otogiri
 	持ち物	doutanuki +3 印=会,錆 装備
 	道具	7,3 otogiri 呪い
@@ -1327,7 +1329,20 @@ The attributes of an item: +N or -N (the upgrade value), 印=会,錆 (seals),
 枠+N (more slots), 装備, 祝福, 呪い, 識別 (its value and charges known),
 回数=N or 容量=N (the charges of a staff, the room of a pot), 数=N (arrows),
 金額=N (money), 中身=id;id (in a pot), 売り物, 貼りつき, ミミック=id (a
-mimic hidden as it).  Of a monster: 眠り, 仲間, HP=N.  Of a trap: 見える.
+mimic hidden as it).  Of a monster: 眠り, 仲間, HP=N, its states (below),
+速さ=鈍足, 通常, 倍速 or 移動倍速 (other than its kind's), 怒り (enraged),
+逃げ (fled), 導火 (about to explode), ハウス (of the monster house), 店主
+with 家=x,y and 戸=x,y (its place and the door it guards), 敵対 (an angry
+shopkeeper).  Of a trap: 見える.
+
+The states, of a monster or of the player (the line 状態): 混乱=N, 鈍足=N,
+倍速=N, 睡眠=N, 封印, 目つぶし=N, かなしばり=N, ゾワゾワ=N (the turns
+left); of the player only: 攻撃ダウン=N, 防御ダウン=N, パワーアップ=N, 予防,
+拾えず, 千里眼, あかり, 停止 (debug freeze), 不死身 (debug invincible).
+
+The shop is its ID in shops.txt and its area x,y,w,h; its shopkeepers are
+the monsters with 店主.  The monster house is a tile of its room, and
+見つけた once the player has entered it.
 
 ==============================================================================
 vim:tw=78:ts=8:noet:ft=help:norl:

@@ -44,7 +44,20 @@ import (
 // 枠+N (more slots), 装備, 祝福, 呪い, 識別 (its upgrade and charges
 // known), 回数=N or 容量=N (charges), 数=N (arrows), 金額=N (money),
 // 中身=id;id (in a pot), 売り物, 貼りつき, ミミック=id (a mimic hidden as
-// it). Of a monster: 眠り, 仲間, HP=N. Of a trap: 見える.
+// it). Of a monster: 眠り, 仲間, HP=N, its states (below), 速さ=鈍足,
+// 通常, 倍速 or 移動倍速 (other than its kind's, as look names them), 怒り (enraged), 逃げ
+// (fled), 導火 (about to explode), ハウス (of the monster house), 店主
+// with 家=x,y and 戸=x,y (its place and its door), 敵対 (an angry
+// shopkeeper). Of a trap: 見える.
+//
+// The states, of a monster or of the player (the line 状態): 混乱=N,
+// 鈍足=N, 倍速=N, 睡眠=N, 封印, 目つぶし=N, かなしばり=N, ゾワゾワ=N (the
+// turns left); of the player only: 攻撃ダウン=N, 防御ダウン=N,
+// パワーアップ=N, 予防, 拾えず, 千里眼, あかり, 停止, 不死身.
+//
+// The shop: 店 its ID (shops.txt) and its area x,y,w,h; its shopkeepers
+// are the monsters with 店主. The monster house: モンスターハウス x,y (a
+// tile of its room), and 見つけた once the player entered it.
 
 // The terrain characters of a state file.
 const (
@@ -150,6 +163,30 @@ func (g *Game) loadState(text string) error {
 	for _, l := range lines {
 		switch l.key {
 		case "ダンジョン", "階":
+		case "状態":
+			for _, a := range l.fields {
+				if err := g.playerState(a); err != nil {
+					return errf(l, "%v", err)
+				}
+			}
+		case "店":
+			if len(l.fields) < 2 || g.Dungeon.Shop(l.fields[0]) == nil {
+				return errf(l, "a shop and its area expected")
+			}
+			var r Room
+			if _, err := fmt.Sscanf(l.fields[1], "%d,%d,%d,%d", &r.X, &r.Y, &r.W, &r.H); err != nil {
+				return errf(l, "x,y,w,h expected: %q", l.fields[1])
+			}
+			g.Shop = &Shop{Def: g.Dungeon.Shop(l.fields[0]), Room: g.Level.RoomAt(Point{r.X, r.Y}), Area: r}
+		case "モンスターハウス":
+			p, err := statePoint(l, 0)
+			if err != nil {
+				return errf(l, "%v", err)
+			}
+			if g.House = g.Level.RoomAt(p); g.House < 0 {
+				return errf(l, "%v is in no room", p)
+			}
+			g.houseFound = slices.Contains(l.fields, "見つけた")
 		case "主人公":
 			p, err := statePoint(l, 0)
 			if err != nil {
@@ -239,21 +276,8 @@ func (g *Game) loadState(text string) error {
 			m := newMonster(g.Dungeon.Monster(l.fields[1]))
 			m.Pos = p
 			for _, a := range l.fields[2:] {
-				k, v, _ := strings.Cut(a, "=")
-				switch k {
-				case "眠り":
-					m.Dozing = true
-				case "仲間":
-					m.Ally = true
-				case "HP":
-					n, err := strconv.Atoi(v)
-					if err != nil || n < 1 {
-						return errf(l, "HP=%q", v)
-					}
-					m.HP = n
-					m.MaxHP = max(m.MaxHP, n)
-				default:
-					return errf(l, "unknown attribute %q", a)
+				if err := monsterAttr(m, a); err != nil {
+					return errf(l, "%v", err)
 				}
 			}
 			g.Monsters = append(g.Monsters, m)
@@ -276,6 +300,14 @@ func (g *Game) loadState(text string) error {
 			g.Traps = append(g.Traps, t)
 		default:
 			return errf(l, "unknown line")
+		}
+	}
+	if g.Shop != nil {
+		g.Shop.Keepers = nil
+		for _, m := range g.Monsters {
+			if m.Keeper {
+				g.Shop.Keepers = append(g.Shop.Keepers, m)
+			}
 		}
 	}
 	if !placed && !g.Level.At(g.Player).Open() {
@@ -457,14 +489,29 @@ func stateTerrain(rows []string) (*Level, Point, error) {
 }
 
 // DumpState writes the scene as a state file: the terrain of the whole
-// floor, seen or not, and all that is on it (not the shop itself, nor the
-// states of the monsters: their kind, place, sleep, side and HP).
+// floor, seen or not, and all that is on it, its shop and monster house,
+// the states of the player and of the monsters.
 func (g *Game) DumpState() string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "# goda-rogue state: %s, %dF, turn %d\n", g.Dungeon.Name, g.Depth, g.Turn)
 	fmt.Fprintf(&b, "ダンジョン\t%s\n階\t%d\n", g.Dungeon.ID, g.Depth)
 	fmt.Fprintf(&b, "主人公\t%d,%d\nレベル\t%d\n経験値\t%d\n", g.Player.X, g.Player.Y, g.PlayerLevel, g.EXP)
 	fmt.Fprintf(&b, "HP\t%d/%d\nちから\t%d/%d\n満腹度\t%d/%d\nお金\t%d\n", g.HP, g.MaxHP, g.Strength, g.MaxStrength, g.Fullness, g.MaxFullness, g.Gold)
+	if s := g.playerStates(); len(s) > 0 {
+		fmt.Fprintf(&b, "状態\t%s\n", strings.Join(s, " "))
+	}
+	if g.Shop != nil {
+		a := g.Shop.Area
+		fmt.Fprintf(&b, "店\t%s %d,%d,%d,%d\n", g.Shop.Def.ID, a.X, a.Y, a.W, a.H)
+	}
+	if g.House >= 0 {
+		r := g.Level.Rooms[g.House]
+		s := fmt.Sprintf("%d,%d", r.X, r.Y)
+		if g.houseFound {
+			s += " 見つけた"
+		}
+		fmt.Fprintf(&b, "モンスターハウス\t%s\n", s)
+	}
 	var ids []string
 	for _, d := range g.Dungeon.Items {
 		if g.identified[d.ID] {
@@ -479,17 +526,8 @@ func (g *Game) DumpState() string {
 		fmt.Fprintf(&b, "道具\t%d,%d %s\n", it.Pos.X, it.Pos.Y, stateItemText(it))
 	}
 	for _, m := range g.Monsters {
-		if m.Keeper {
-			continue
-		}
-		s := fmt.Sprintf("%d,%d %s HP=%d", m.Pos.X, m.Pos.Y, m.Def.ID, m.HP)
-		if m.Dozing {
-			s += " 眠り"
-		}
-		if m.Ally {
-			s += " 仲間"
-		}
-		fmt.Fprintf(&b, "敵\t%s\n", s)
+		s := append([]string{fmt.Sprintf("%d,%d", m.Pos.X, m.Pos.Y), m.Def.ID, fmt.Sprintf("HP=%d", m.HP)}, monsterAttrs(m)...)
+		fmt.Fprintf(&b, "敵\t%s\n", strings.Join(s, " "))
 	}
 	for _, t := range g.Traps {
 		s := fmt.Sprintf("%d,%d %s", t.Pos.X, t.Pos.Y, t.Def.ID)
@@ -563,4 +601,174 @@ func stateItemText(it *Item) string {
 		s = append(s, "中身="+strings.Join(ids, ";"))
 	}
 	return strings.Join(s, " ")
+}
+
+// statesAttrs are the states s in a state file.
+func statesAttrs(s States) []string {
+	var a []string
+	for _, f := range []struct {
+		n    int
+		name string
+	}{{s.Confused, "混乱"}, {s.Slowed, "鈍足"}, {s.Hasted, "倍速"}, {s.Asleep, "睡眠"}, {s.Blind, "目つぶし"}, {s.Bound, "かなしばり"}, {s.Zowa, "ゾワゾワ"}} {
+		if f.n > 0 {
+			a = append(a, fmt.Sprintf("%s=%d", f.name, f.n))
+		}
+	}
+	if s.Sealed {
+		a = append(a, "封印")
+	}
+	return a
+}
+
+// stateAttr sets the state of the attribute a (k=v) on s; it says whether
+// a is one.
+func stateAttr(s *States, k, v string) (bool, error) {
+	if k == "封印" {
+		s.Sealed = true
+		return true, nil
+	}
+	turns := map[string]*int{"混乱": &s.Confused, "鈍足": &s.Slowed, "倍速": &s.Hasted, "睡眠": &s.Asleep,
+		"目つぶし": &s.Blind, "かなしばり": &s.Bound, "ゾワゾワ": &s.Zowa}
+	p, ok := turns[k]
+	if !ok {
+		return false, nil
+	}
+	n, err := strconv.Atoi(v)
+	if err != nil || n < 0 {
+		return true, fmt.Errorf("%s=%q: turns expected", k, v)
+	}
+	*p = n
+	return true, nil
+}
+
+// monsterAttrs are the attributes of m in a state file (not its place,
+// kind and HP).
+func monsterAttrs(m *Monster) []string {
+	var a []string
+	for _, f := range []struct {
+		on   bool
+		attr string
+	}{{m.Dozing, "眠り"}, {m.Ally, "仲間"}, {m.Enraged, "怒り"}, {m.Fled, "逃げ"}, {m.Fused, "導火"}, {m.House, "ハウス"}} {
+		if f.on {
+			a = append(a, f.attr)
+		}
+	}
+	if m.Speed != m.Def.Speed {
+		a = append(a, "速さ="+speedNames[m.Speed])
+	}
+	if m.Keeper {
+		a = append(a, "店主", fmt.Sprintf("家=%d,%d", m.home.X, m.home.Y), fmt.Sprintf("戸=%d,%d", m.door.X, m.door.Y))
+		if m.Angry {
+			a = append(a, "敵対")
+		}
+	}
+	return append(a, statesAttrs(m.States)...)
+}
+
+// monsterAttr sets the attribute a of a monster in a state file on m.
+func monsterAttr(m *Monster, a string) error {
+	k, v, _ := strings.Cut(a, "=")
+	point := func() (Point, error) {
+		var p Point
+		_, err := fmt.Sscanf(v, "%d,%d", &p.X, &p.Y)
+		return p, err
+	}
+	var err error
+	switch k {
+	case "眠り":
+		m.Dozing = true
+	case "仲間":
+		m.Ally = true
+	case "怒り":
+		m.Enraged = true
+	case "逃げ":
+		m.Fled = true
+	case "導火":
+		m.Fused = true
+	case "ハウス":
+		m.House = true
+	case "店主":
+		m.Keeper = true
+	case "敵対":
+		m.Angry = true
+	case "家":
+		m.home, err = point()
+	case "戸":
+		m.door, err = point()
+	case "HP":
+		n, e := strconv.Atoi(v)
+		if e != nil || n < 1 {
+			return fmt.Errorf("HP=%q", v)
+		}
+		m.HP, m.MaxHP = n, max(m.MaxHP, n)
+	case "速さ":
+		found := false
+		for s, name := range speedNames {
+			if name == v {
+				m.Speed, found = s, true
+			}
+		}
+		if !found {
+			return fmt.Errorf("速さ=%q", v)
+		}
+	default:
+		ok, e := stateAttr(&m.States, k, v)
+		if !ok {
+			return fmt.Errorf("unknown attribute %q", a)
+		}
+		err = e
+	}
+	if err != nil {
+		return fmt.Errorf("%s: %w", a, err)
+	}
+	return nil
+}
+
+// playerStates are the states of the player in a state file (the line
+// 状態).
+func (g *Game) playerStates() []string {
+	a := statesAttrs(g.States)
+	for _, f := range []struct {
+		n    int
+		name string
+	}{{g.AttackDown, "攻撃ダウン"}, {g.DefenseDown, "防御ダウン"}, {g.PowerUp, "パワーアップ"}} {
+		if f.n > 0 {
+			a = append(a, fmt.Sprintf("%s=%d", f.name, f.n))
+		}
+	}
+	for _, f := range []struct {
+		on   bool
+		attr string
+	}{{g.Prevent, "予防"}, {g.NoPickup, "拾えず"}, {g.Seer, "千里眼"}, {g.Lit, "あかり"}, {g.Frozen, "停止"}, {g.Invincible, "不死身"}} {
+		if f.on {
+			a = append(a, f.attr)
+		}
+	}
+	return a
+}
+
+// playerState sets the state a (of the line 状態) on the player.
+func (g *Game) playerState(a string) error {
+	k, v, _ := strings.Cut(a, "=")
+	turns := map[string]*int{"攻撃ダウン": &g.AttackDown, "防御ダウン": &g.DefenseDown, "パワーアップ": &g.PowerUp}
+	flags := map[string]*bool{"予防": &g.Prevent, "拾えず": &g.NoPickup, "千里眼": &g.Seer, "停止": &g.Frozen, "不死身": &g.Invincible}
+	switch {
+	case k == "あかり":
+		g.light()
+	case flags[k] != nil:
+		*flags[k] = true
+	case turns[k] != nil:
+		n, err := strconv.Atoi(v)
+		if err != nil || n < 0 {
+			return fmt.Errorf("%s=%q: turns expected", k, v)
+		}
+		*turns[k] = n
+	default:
+		ok, err := stateAttr(&g.States, k, v)
+		if !ok {
+			return fmt.Errorf("unknown state %q", a)
+		}
+		return err
+	}
+	return nil
 }
