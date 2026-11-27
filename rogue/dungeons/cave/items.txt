@@ -74,6 +74,13 @@
 #               items that a sensing bracelet would show; cures
 #               blindness
 #     最大HP    raises the max HP by 強さ
+#     最大満腹度+  raises the max fullness by 強さ (200 at most)
+#     最大満腹度-  lowers it by 強さ (50 at least)
+#     復活      carried (not in a pot), brings the player back once with
+#               full HP when it falls (not from the wind); drunk, nothing
+#     火炎      the player breathes fire to its front: the first monster
+#               on the line takes 強さ (+-5) damage, defense aside; thrown,
+#               half of it (at the player: its onigiri grill)
 #   巻物, read:
 #     あかり    lights the floor: its map, items and monsters
 #     水がれ    the waterways of the floor dry up into floor
@@ -129,11 +136,14 @@
 #     仲間      makes the monster it hits an ally (not a shopkeeper or a
 #               guard, and not past rules.txt 仲間の上限)
 #     場所替え  the player and the monster it hits change places
+#     トンネル  digs 強さ tiles of rock to the front into a corridor (not
+#               the edge of the floor nor a shop; it stops at a creature)
 #   草, 巻物 and 杖 can also have an effect of the bolts of monsters
 #   (monsters.txt 魔法: ワープ 倍速 混乱 鈍足 睡眠 封印 HP1/2 HP1/4 レベル-1
-#   レベル-3 目つぶし): a grass on who drinks it, or on the monster it is thrown
-#   at; a scroll on the enemies of the room (next to the player, in a
-#   corridor); a staff on the monster its bolt hits
+#   レベル-3 目つぶし かなしばり レベル+1 無敵 毒): a grass on who drinks it,
+#   or on the monster it is thrown at; a scroll on the enemies of the room
+#   (next to the player, in a corridor); a staff on the monster its bolt
+#   hits
 #   食料, eaten:
 #     満腹      restores 強さ of fullness (an onigiri: it may rot)
 #     腐った    restores 強さ of fullness, and brings confusion, slowness
@@ -158,6 +168,12 @@
 #               floors of the hard dungeons only)
 #     底抜け    what is put in is gone, with its room; broken, it leaves
 #               a pit where it breaks
+#   (these keep what is put in, to take out, changed:)
+#     鑑定      identified (its upgrade value or charges, and its curse)
+#     強化      a weapon or a shield: its upgrade value up by 強さ
+#     弱化      a weapon or a shield: its upgrade value down by 強さ
+#     換金      money: what a shop would pay for it
+#     変化      another item, of the item table 変化 (item_tables.txt)
 # 回数 is how many times a staff can be waved, how many arrows there are,
 # how many items a pot holds (min-max; - for others).
 # 印 is the ability a weapon, a shield or a bracelet is born with (素の能力: a seal
@@ -249,6 +265,13 @@ konran	草	混乱草	草	0	混乱	0	-	-	0	100
 metsubushi	草	目つぶし草	草	0	目つぶし	0	-	-	0	100
 suimin	草	睡眠草	草	0	睡眠	0	-	-	0	150
 kuchinashisou	草	くちなし草	草	0	封印	0	-	-	0	100
+shiawasesou	草	しあわせ草	草	0	レベル+1	0	-	-	0	1000
+dokusou	草	毒草	草	0	毒	0	-	-	0	100
+mutekisou	草	無敵草	草	0	無敵	0	-	-	0	1500
+ikakuchoutane	草	胃拡張の種	草	5	最大満腹度+	0	-	-	0	300
+ishukushoutane	草	胃縮小の種	草	5	最大満腹度-	0	-	-	0	300
+fukkatsu	草	復活の草	草	0	復活	0	-	-	0	2500
+kaensou	草	火炎草	草	75	火炎	0	-	-	0	500
 shikibetsu	巻	識別の巻物	巻物	0	識別	0	-	-	0	100
 akari	巻	あかりの巻物	巻物	0	あかり	0	-	-	0	200
 mizugare	巻	水がれの巻物	巻物	0	水がれ	0	-	-	0	500
@@ -297,11 +320,18 @@ ichijishinogi	杖	一時しのぎの杖	杖	0	ワープ	0	4-6	-	0	400
 konranzue	杖	混乱の杖	杖	0	混乱	0	4-6	-	0	400
 suiminzue	杖	睡眠の杖	杖	0	睡眠	0	3-5	-	0	500
 metsubushizue	杖	目つぶしの杖	杖	0	目つぶし	0	4-6	-	0	400
+kanashibarizue	杖	かなしばりの杖	杖	0	かなしばり	0	4-6	-	0	500
+tonneru	杖	トンネルの杖	杖	10	トンネル	0	4-6	-	0	400
 hozon	壺	保存の壺	壺	0	保存	0	3-5	-	0	300
 gousei	壺	合成の壺	壺	0	合成	0	2-3	-	0	1000
 kaifukutsubo	壺	回復の壺	壺	0	全回復	0	2-3	-	0	800
 futsuu	壺	普通の壺	壺	0	普通	0	2-3	-	0	50
 sokonuke	壺	底抜けの壺	壺	0	底抜け	0	3-5	-	0	300
+shikibetsutsubo	壺	識別の壺	壺	0	鑑定	0	3-5	-	0	600
+kyoukatsubo	壺	強化の壺	壺	1	強化	0	2-3	-	0	1000
+jakkatsubo	壺	弱化の壺	壺	1	弱化	0	2-3	-	0	300
+kankin	壺	換金の壺	壺	0	換金	0	3-5	-	0	500
+henka	壺	変化の壺	壺	0	変化	0	2-4	-	0	800
 onigiri	食	おにぎり	食料	50	満腹	0	-	-	0	100
 ookiionigiri	食	大きなおにぎり	食料	100	満腹	0	-	-	0	200
 kusatta	食	腐ったおにぎり	食料	30	腐った	0	-	-	0	10

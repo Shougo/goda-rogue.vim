@@ -19,6 +19,10 @@ var effectTexts = map[Effect]string{
 	EffectSenseEnemy:   "%d マス以内の敵の居場所が分かる。",
 	EffectSenseItem:    "フロアの道具の場所が分かる。",
 	EffectEyeDrops:     "フロアの罠と、道具に化けたものが見える。目つぶしも治る。",
+	EffectMaxFull:      "最大満腹度が %d 上がる（200 まで）。",
+	EffectLessFull:     "最大満腹度が %d 下がる（50 未満にはならない）。",
+	EffectRevive:       "持っていると（壺の中は除く）、倒れたときに一度だけ HP が全回復して生き返る（未識別でも、口封じでも）。飲んでも何も起こらない。",
+	EffectFire:         "正面に炎を吐き、最初に当たった敵に %d 前後のダメージ（防御力は関係ない）。投げて当てると、その半分のダメージ。",
 	EffectHeal:         "HP が %d 回復する。HP が満タンなら最大 HP が上がる。",
 	EffectLight:        "フロア全体が明るくなり、地形と道具と敵が見える。",
 	EffectDrain:        "フロアの水路の水がかれて、歩けるようになる。",
@@ -66,6 +70,12 @@ var effectTexts = map[Effect]string{
 	EffectSynthesis: "武器と盾は、先に入れた同じ種類のものに印と修正値が合成される。" +
 		"同じ腕輪を入れるとひびが直る。中のものは出せない。",
 	EffectHealPot:     "道具を入れると HP が全部回復する。入れた道具はなくなり、壺の容量も 1 つ減る。",
+	EffectAppraise:    "入れた道具が識別される（修正値や回数、呪いも分かる）。取り出せる。",
+	EffectStronger:    "入れた武器と盾の修正値が上がる（ほかの道具はそのまま）。取り出せる。",
+	EffectWeaker:      "入れた武器と盾の修正値が下がる（ほかの道具はそのまま）。取り出せる。",
+	EffectCash:        "入れた道具がお金（店の買い取り値）になる。取り出せる。",
+	EffectChange:      "入れた道具が別の道具に変わる（変わる先は専用の表から選ばれる）。取り出せる。",
+	EffectTunnel:      "正面の壁を %d マス掘って通路にする（フロアの端、店、敵の手前まで）。",
 	EffectSlash:       "部屋の敵（通路では隣の敵）に %d のダメージを与える。",
 	EffectWipe:        "部屋の敵（通路では隣の敵）を倒す。店主には効かない。",
 	EffectNoTraps:     "フロアの罠がすべて消える。",
@@ -107,6 +117,10 @@ var magicTexts = map[MagicEffect]string{
 	MagicLevel1:  "%sのレベルを 1 下げる。",
 	MagicLevel3:  "%sのレベルを 3 下げる。",
 	MagicBlind:   "%sの目を見えなくする。",
+	MagicBind:    "%sをかなしばりにする（敵は攻撃を受けるまで動けない。自分と仲間は、HP が減るか 20 ターンで解ける）。",
+	MagicLevelUp: "%sのレベルを 1 上げる。",
+	MagicUnhurt:  "%sを 20 ターンの間無敵にする（ダメージを受けない）。",
+	MagicPoison:  "%sに 5 のダメージを与え、自分ならちからを 1、敵なら攻撃力を半分に下げる。",
 }
 
 // magicTargets are whom the effect of a bolt takes, by the category of

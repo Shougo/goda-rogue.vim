@@ -1007,7 +1007,14 @@ The built-in dungeons:
 				             on the floor; a monster: no
 				             abilities), HP1/2, HP1/4,
 				             レベル-1, レベル-3 (a monster:
-				             ranks)
+				             ranks), 目つぶし, かなしばり
+				             (an enemy: until a blow; the
+				             player and allies: until they
+				             lose HP, or 20 turns),
+				             レベル+1, 無敵 (20 turns: no
+				             damage), 毒 (5 damage, and a
+				             point of strength, or half the
+				             attack of a monster)
 				眠り, optional, is the share of the kind
 				asleep on a new floor, a percent (- for a
 				third).  落とし物, optional, is what it
@@ -1043,17 +1050,19 @@ The built-in dungeons:
 				        耐爆 水蜘蛛 浮遊 壁抜け 呪い力
 				        ハラヘリよけ 遠投 しあわせ 忍び足
 				        胃拡張 値切り
-				  草: HP回復 ちから 目薬 最大HP
+				  草: HP回復 ちから 目薬 最大HP 最大満腹度+
+				      最大満腹度- 復活 火炎
 				  巻物: あかり 水がれ 識別 武器強化 盾強化
-				        おはらい印増大 印消し 真空斬り 全滅
+				        おはらい 印増大 印消し 真空斬り 全滅
 				        罠消し 千里眼 道具寄せ 迷子 おにぎり
 				        壺増大 吸い出し 祝福 メッキ 引き寄せ
 				        困った時 パワーアップ 予防 金縛り
 				        ゾワゾワ 大部屋 魔物部屋 敵加速 呪い
 				        罠 拾えず くちなし 聖域 白紙
-				  杖: 吹き飛ばし 仲間 場所替え
-				  食料: 満腹 腐った
-				  壺: 保存 合成 全回復 普通 底抜け
+				  杖: 吹き飛ばし 仲間 場所替え トンネル
+				  食料: 満腹 腐った 焼き
+				  壺: 保存 合成 全回復 普通 底抜け 鑑定
+				      強化 弱化 換金 変化
 				A bracelet with a 印 (and no 効果) has the
 				ability of the seal while worn, at the
 				strength an item is born with (seals.txt
@@ -1062,6 +1071,7 @@ The built-in dungeons:
 				an effect of the bolts of monsters (能力
 				魔法 of monsters.txt: ワープ 倍速 混乱 鈍足
 				睡眠 封印 HP1/2 HP1/4 レベル-1 レベル-3
+				かなしばり レベル+1 無敵 毒
 				目つぶし: 10 turns, the player sees only
 				next to it, a monster walks at random):
 				a grass on who drinks it, or on the monster

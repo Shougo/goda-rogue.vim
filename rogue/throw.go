@@ -117,6 +117,9 @@ func (g *Game) hitBy(it *Item, m *Monster) bool {
 			m.HP += it.Def.Strength
 			g.say(m.Name + "の最大HPが上がった。")
 			g.identify(it)
+		case EffectFire:
+			g.identify(it)
+			g.burnMonster(m, g.fireDamage(it.Def.Strength, false))
 		default:
 			e := MagicEffect(it.Def.Effect)
 			if !castable(CategoryGrass, e) {
@@ -149,7 +152,7 @@ func (g *Game) hitBy(it *Item, m *Monster) bool {
 
 // hurt gives m n damage from the player.
 func (g *Game) hurt(m *Monster, n int) {
-	n = g.weakening(n)
+	n = m.harm(g.weakening(n))
 	g.provoke(m)
 	m.HP -= n
 	// (A blow frees it of かなしばり.)

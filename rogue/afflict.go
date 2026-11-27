@@ -52,8 +52,12 @@ func (g *Game) afflict(e MagicEffect) {
 	g.say(stateTexts[e].player)
 }
 
-// weakened is the damage n the player takes, more with its defense down.
+// weakened is the damage n the player takes, more with its defense down;
+// none while unhurt (無敵).
 func (g *Game) weakened(n int) int {
+	if g.Unhurt > 0 {
+		return 0
+	}
 	if g.DefenseDown > 0 {
 		n = int(math.Ceil(float64(n) * (1 + weakShare)))
 	}

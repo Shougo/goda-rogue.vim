@@ -98,6 +98,11 @@ func (g *Game) putIn(pot, it *Item) {
 		g.say(g.Name(it) + "は底から抜けて消えた。")
 		return
 	}
+	switch pot.Def.Effect {
+	case EffectAppraise, EffectStronger, EffectWeaker, EffectCash, EffectChange:
+		pot.Contents = append(pot.Contents, g.changedIn(pot, it))
+		return
+	}
 	if pot.Def.Effect == EffectHealPot {
 		// The item is gone, and its room with it: the pot heals as many
 		// times as it holds, whatever is put in it.
@@ -293,4 +298,65 @@ func (g *Game) pitAt(p Point) {
 	case m != nil:
 		g.monsterSprings(m, t)
 	}
+}
+
+// changedIn is what it becomes in pot, a pot of 鑑定 (identified, its
+// curse told), 強化 or 弱化 (a weapon or a shield: its upgrade value by
+// the pot's strength), 換金 (money: what a shop would pay for it) or 変化
+// (an item of the item table 変化, Shougo 2026-11-27: some items come
+// only of it, some never).
+func (g *Game) changedIn(pot, it *Item) *Item {
+	n := pot.Def.Strength
+	switch pot.Def.Effect {
+	case EffectAppraise:
+		g.learn(it)
+		it.CurseTold = true
+	case EffectStronger, EffectWeaker:
+		if !it.upgradable() {
+			break
+		}
+		if pot.Def.Effect == EffectWeaker {
+			n = -n
+		}
+		it.Upgrade += n
+		if n > 0 {
+			g.say(fmt.Sprintf("%sは%d強くなった。", g.Name(it), n))
+		} else {
+			g.say(fmt.Sprintf("%sは%d弱くなった。", g.Name(it), -n))
+		}
+	case EffectCash:
+		money := g.Dungeon.moneyDef()
+		if money == nil || it.Def.Category == CategoryMoney {
+			break
+		}
+		cash := &Item{Def: money, Glyph: money.Glyph, Amount: max(sellPrice(it), 1)}
+		g.say(fmt.Sprintf("%sは%dGになった。", g.Name(it), cash.Amount))
+		return cash
+	case EffectChange:
+		t := g.Dungeon.ItemTable(changeTable)
+		if t == nil || len(t.categories(g.Depth)) == 0 {
+			break
+		}
+		def := t.pick(g.rng, g.Dungeon, g.Depth)
+		if def == nil {
+			break
+		}
+		to := g.newItemOf(g.rng, def, Point{})
+		g.say(g.Name(it) + "は別の物に変わった。")
+		return to
+	}
+	return it
+}
+
+// changeTable is the item table of the pots of 変化.
+const changeTable = "変化"
+
+// moneyDef is the kind of money, or nil.
+func (d *Dungeon) moneyDef() *ItemDef {
+	for _, def := range d.Items {
+		if def.Category == CategoryMoney {
+			return def
+		}
+	}
+	return nil
 }

@@ -94,9 +94,11 @@ func (b *Bot) bestHeal(g *Game) (aHeal, bool) {
 }
 
 // healUnknown is the least share of healing grasses among the kinds an
-// unknown grass may be for the bot to drink one to heal: less, it keeps
-// it for a safer time (drinking it at full HP to learn it).
-const healUnknown = 0.15
+// unknown grass may be, by their weights on the floor (floorWeight), for
+// the bot to drink one to heal: less, it keeps it for a safer time
+// (drinking it at full HP to learn it). (By the count of the kinds, the
+// share fell as grasses were added: 2 of 18.)
+const healUnknown = 0.2
 
 // unknownHeal returns an unknown grass to drink to heal, when no healing
 // is known: one whose kinds are healing grasses often enough; nil if none.
@@ -105,14 +107,15 @@ func (b *Bot) unknownHeal(g *Game) *Item {
 		if it.Def.Category != CategoryGrass || g.identified[it.Def.ID] || spoiled(it) {
 			return false
 		}
-		kinds := b.mayBe(g, it)
-		heals := 0
-		for _, def := range kinds {
+		heals, all := 0, 0
+		for _, def := range b.mayBe(g, it) {
+			w := floorWeight(g, def)
+			all += w
 			if def.Effect == EffectHeal {
-				heals++
+				heals += w
 			}
 		}
-		return float64(heals) >= healUnknown*float64(len(kinds))
+		return float64(heals) >= healUnknown*float64(all)
 	})
 }
 
@@ -151,4 +154,19 @@ func (b *Bot) healingPot(g *Game) (*Item, *Item, bool) {
 func (b *Bot) putIn(pot, fuel *Item) (string, []string) {
 	b.plan = []botStep{{item: pot}, {label: commandPutIn}, {item: fuel}}
 	return "inventory", nil
+}
+
+// floorWeight is the weight of the kind def among those of its category
+// in the item table of the floor (at least 1: one may come of elsewhere).
+func floorWeight(g *Game, def *ItemDef) int {
+	d := g.Dungeon
+	w := 0
+	if t := d.ItemTable(d.counts(g.Depth).ItemTable); t != nil {
+		for _, r := range t.Items {
+			if r.ID == def.ID && on(g.Depth, r.First, r.Last) {
+				w += r.Weight
+			}
+		}
+	}
+	return max(w, 1)
 }

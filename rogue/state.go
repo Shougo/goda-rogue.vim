@@ -22,6 +22,8 @@ type States struct {
 	// Zowa is the turns left of ゾワゾワ (the scroll): about to attack the
 	// player, a monster attacks the other way, and uses no ability.
 	Zowa int
+	// Unhurt is the turns left of 無敵 (無敵草): nothing takes HP away.
+	Unhurt int
 }
 
 // The turns of the states.
@@ -36,6 +38,8 @@ const (
 	// hasteTurns is how long the player stays fast (a monster, for
 	// good).
 	hasteTurns = 20
+	// unhurtTurns is how long 無敵草 keeps from harm (Shiren 1 DS).
+	unhurtTurns = 20
 )
 
 // stateTexts are what is said when a bolt brings a state: to the player,
@@ -46,6 +50,8 @@ var stateTexts = map[MagicEffect]struct{ player, monster string }{
 	MagicSleep:   {"眠ってしまった……。", "は眠ってしまった。"},
 	MagicSeal:    {"口が封じられた！", "は能力を封印された。"},
 	MagicBlind:   {"目が見えなくなった！", "は目が見えなくなった。"},
+	MagicBind:    {"かなしばりになった！", "はかなしばりになった！"},
+	MagicUnhurt:  {"無敵になった！", "は無敵になった！"},
 }
 
 // take brings the state of the bolt e, and says whether e is one of a
@@ -62,6 +68,12 @@ func (s *States) take(e MagicEffect) bool {
 		s.Sealed = true
 	case MagicBlind:
 		s.Blind = blindTurns
+	case MagicBind:
+		// (An enemy is freed by a blow only; the count is for the
+		// player and the allies.)
+		s.Bound = boundTurns
+	case MagicUnhurt:
+		s.Unhurt = unhurtTurns
 	default:
 		return false
 	}
@@ -77,7 +89,7 @@ func (s States) names(sealed string) []string {
 		name string
 	}{
 		{s.Confused > 0, "混乱"}, {s.Slowed > 0, "鈍足"}, {s.Hasted > 0, "倍速"},
-		{s.Asleep > 0, "睡眠"}, {s.Sealed, sealed}, {s.Blind > 0, "目つぶし"}, {s.Bound > 0, "かなしばり"}, {s.Zowa > 0, "ゾワゾワ"},
+		{s.Asleep > 0, "睡眠"}, {s.Sealed, sealed}, {s.Blind > 0, "目つぶし"}, {s.Bound > 0, "かなしばり"}, {s.Zowa > 0, "ゾワゾワ"}, {s.Unhurt > 0, "無敵"},
 	} {
 		if st.on {
 			ns = append(ns, st.name)
@@ -90,6 +102,9 @@ func (s States) names(sealed string) []string {
 // states takes, the turn passing for them: none bound or asleep, and slowed only
 // every other turn.
 func (s *States) actions(n, turn int) int {
+	if s.Unhurt > 0 {
+		s.Unhurt--
+	}
 	if s.Bound > 0 {
 		// (An ally's count is in alliesBound.)
 		return 0
@@ -101,6 +116,14 @@ func (s *States) actions(n, turn int) int {
 	if s.Slowed > 0 {
 		s.Slowed--
 		n = min(n, turn%2)
+	}
+	return n
+}
+
+// harm is the damage n it takes: none while unhurt (無敵).
+func (s *States) harm(n int) int {
+	if s.Unhurt > 0 {
+		return 0
 	}
 	return n
 }

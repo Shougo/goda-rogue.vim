@@ -90,6 +90,9 @@ func (g *Game) blast() bool {
 // blastDamage is the damage n of an explosion on the player, halved with a
 // bracelet of 耐爆 (not under 1).
 func (g *Game) blastDamage(n int) int {
+	if g.Unhurt > 0 {
+		return 0
+	}
 	if n > 0 && g.wears(EffectBlastGuard) {
 		g.use(EffectBlastGuard)
 		g.say("耐爆の腕輪が爆風を和らげた。")

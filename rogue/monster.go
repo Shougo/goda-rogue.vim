@@ -511,6 +511,7 @@ func (g *Game) hitMonster(a, m *Monster) {
 		return
 	}
 	n, _ := g.critical(a, damage(g.rng, a.Attack, m.Defense, r.DefenseK), shown)
+	n = m.harm(n)
 	m.HP -= n
 	// (A blow frees it of かなしばり.)
 	m.Bound = 0
@@ -569,15 +570,7 @@ func (g *Game) defeated(m *Monster) {
 		g.dropFrom(m)
 	}
 	g.EXP += g.happy(m.EXP)
-	growth := g.Dungeon.Growth[g.Dungeon.Rules.Growth]
-	for g.PlayerLevel-1 < len(growth) && g.EXP >= growth[g.PlayerLevel-1].EXP {
-		gr := growth[g.PlayerLevel-1]
-		g.PlayerLevel++
-		g.MaxHP += gr.HP
-		g.HP += gr.HP
-		g.event("level %d", g.PlayerLevel)
-		g.say(fmt.Sprintf("主はレベル%dに上がった。", g.PlayerLevel))
-	}
+	g.levelUps()
 	for _, a := range g.Monsters {
 		if !a.Ally {
 			continue
@@ -717,4 +710,29 @@ func (g *Game) dropFrom(m *Monster) {
 		return
 	}
 	g.land(g.newItemOf(g.rng, def, m.Pos), m.Pos)
+}
+
+// levelUps raises the player's level as far as its EXP goes.
+func (g *Game) levelUps() {
+	growth := g.Dungeon.Growth[g.Dungeon.Rules.Growth]
+	for g.PlayerLevel-1 < len(growth) && g.EXP >= growth[g.PlayerLevel-1].EXP {
+		gr := growth[g.PlayerLevel-1]
+		g.PlayerLevel++
+		g.MaxHP += gr.HP
+		g.HP += gr.HP
+		g.event("level %d", g.PlayerLevel)
+		g.say(fmt.Sprintf("主はレベル%dに上がった。", g.PlayerLevel))
+	}
+}
+
+// levelUp raises the player one level (しあわせ草): its EXP becomes the
+// least of the next level; at the top, nothing.
+func (g *Game) levelUp() {
+	growth := g.Dungeon.Growth[g.Dungeon.Rules.Growth]
+	if g.PlayerLevel-1 >= len(growth) {
+		g.say("何も起こらなかった。")
+		return
+	}
+	g.EXP = max(g.EXP, growth[g.PlayerLevel-1].EXP)
+	g.levelUps()
 }

@@ -152,12 +152,23 @@ func (g *Game) effectOf(it *Item, lucky bool) {
 		g.MaxHP += n
 		g.HP += n
 		g.say(fmt.Sprintf("最大HPが%d上がった。", n))
+	case EffectMaxFull:
+		g.stomach(n)
+	case EffectLessFull:
+		g.stomach(-n)
+	case EffectRevive:
+		// (It works carried: drunk, it does nothing, as in Shiren.)
+		g.say("何も起こらなかった。")
+	case EffectFire:
+		g.breatheFire(n)
 	case EffectUpWeapon:
 		g.upgrade(CategoryWeapon, n+luckyUpgrade*boolInt(lucky), lucky)
 	case EffectUpShield:
 		g.upgrade(CategoryShield, n+luckyUpgrade*boolInt(lucky), lucky)
 	case EffectSwap:
 		g.swapPlaces()
+	case EffectTunnel:
+		g.tunnel(n)
 	case EffectMoreSlots:
 		if !g.asks(it, g.ask(promptSlot)) {
 			g.say("何も起こらなかった。")
@@ -388,10 +399,11 @@ func (g *Game) fling(m *Monster, d Point, byPlayer bool) {
 			m.Pos = next
 			continue
 		}
-		m.HP -= blowAwayDamage
+		n := m.harm(blowAwayDamage)
+		m.HP -= n
 		// (A blow frees it of かなしばり.)
 		m.Bound = 0
-		g.say(fmt.Sprintf("%sはぶつかって%dのダメージ。", m.Name, blowAwayDamage))
+		g.say(fmt.Sprintf("%sはぶつかって%dのダメージ。", m.Name, n))
 		if m.HP > 0 {
 			g.wounded(m)
 			return
@@ -454,5 +466,27 @@ func (g *Game) light() {
 	g.Lit, g.Dark = true, false
 	for i := range g.Seen {
 		g.Seen[i] = true
+	}
+}
+
+// The bounds of the max fullness (胃拡張の種 and 胃縮小の種), as in Shiren.
+const (
+	leastFullness = 50
+	mostFullness  = 200
+)
+
+// stomach is 胃拡張の種 or 胃縮小の種: the max fullness by n (5 or -5),
+// within its bounds; the fullness stays under it.
+func (g *Game) stomach(n int) {
+	from := g.MaxFullness
+	g.MaxFullness = min(max(g.MaxFullness+n, leastFullness), mostFullness)
+	g.Fullness = min(g.Fullness, g.fullnessCap())
+	switch {
+	case g.MaxFullness > from:
+		g.say(fmt.Sprintf("最大満腹度が%d上がった。", g.MaxFullness-from))
+	case g.MaxFullness < from:
+		g.say(fmt.Sprintf("最大満腹度が%d下がった。", from-g.MaxFullness))
+	default:
+		g.say("何も起こらなかった。")
 	}
 }

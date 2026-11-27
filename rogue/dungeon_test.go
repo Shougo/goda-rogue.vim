@@ -181,7 +181,7 @@ func TestDungeonErrors(t *testing.T) {
 		}, `回数: 杖 needs some`},
 		{"too few fake names", func(m fstest.MapFS) {
 			m["fake_names.txt"].Data = []byte("種類\t名前\n草\t赤い草\n")
-		}, `too few names: 1 for the 11 items of 草`},
+		}, `too few names: 1 for the 18 items of 草`},
 		{"fake name of an item", func(m fstest.MapFS) {
 			m["fake_names.txt"].Data = append(m["fake_names.txt"].Data, "草\t薬草\n"...)
 		}, `"薬草" is the name of an item`},

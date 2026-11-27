@@ -37,10 +37,11 @@ func (g *Game) slash(n int) {
 		}
 		m.Dozing = false
 		g.provoke(m)
-		m.HP -= n
+		k := m.harm(n)
+		m.HP -= k
 		// (A blow frees it of かなしばり.)
 		m.Bound = 0
-		g.say(fmt.Sprintf("%sに%dのダメージ。", m.Name, n))
+		g.say(fmt.Sprintf("%sに%dのダメージ。", m.Name, k))
 		if m.HP > 0 {
 			g.wounded(m)
 			continue
@@ -443,7 +444,7 @@ func (g *Game) prevent() {
 // prevents says, with the ward of 予防, that the state e does not come on
 // the player (a good one, as 倍速, does).
 func (g *Game) prevents(e MagicEffect) bool {
-	if !g.Prevent || !slices.Contains([]MagicEffect{MagicConfuse, MagicSlow, MagicSleep, MagicSeal, MagicBlind}, e) {
+	if !g.Prevent || !slices.Contains([]MagicEffect{MagicConfuse, MagicSlow, MagicSleep, MagicSeal, MagicBlind, MagicBind, MagicPoison}, e) {
 		return false
 	}
 	g.say("予防の力で防いだ。")

@@ -27,7 +27,10 @@
 #              drinking, reading or talking on the floor; a monster: no
 #              abilities), HP1/2, HP1/4, レベル-1, レベル-3 (a monster:
 #              ranks), 目つぶし (10 turns: the player sees only next to
-#              it, a monster walks at random)
+#              it, a monster walks at random), かなしばり (an enemy until a
+#              blow; the player and allies until they lose HP, or for 20
+#              turns), レベル+1, 無敵 (20 turns: no damage), 毒 (5 damage,
+#              and a point of strength; a monster: half its attack)
 #   分裂:C     a blow of the player that leaves it with 2 HP or more
 #              splits it C% of the time: its HP halves, and another with
 #              that HP appears next to it (it gives nothing when defeated)

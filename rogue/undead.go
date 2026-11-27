@@ -52,6 +52,7 @@ func (g *Game) explode(m *Monster) {
 			continue
 		}
 		n := max(f.HP*share/100, 1)
+		n = f.harm(n)
 		f.HP -= n
 		// (A blow frees it of かなしばり.)
 		f.Bound = 0

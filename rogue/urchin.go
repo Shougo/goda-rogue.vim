@@ -105,6 +105,10 @@ func (g *Game) hitPlayerWith(it *Item, m *Monster) {
 	case it.Def.Category == CategoryArrow:
 		g.playerHurt(damage(g.rng, m.Attack/2+it.Def.Strength, g.Defense(), r.DefenseK), m)
 		return
+	case it.Def.Category == CategoryGrass && it.Def.Effect == EffectFire && !it.Cursed:
+		g.identify(it)
+		g.burnPlayer(g.fireDamage(it.Def.Strength, false), m)
+		return
 	case it.Def.Category == CategoryGrass && !it.Cursed:
 		g.identify(it)
 		g.effectOf(it, false)

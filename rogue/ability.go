@@ -176,6 +176,12 @@ const (
 	MagicLevel1  MagicEffect = "レベル-1"
 	MagicLevel3  MagicEffect = "レベル-3"
 	MagicBlind   MagicEffect = "目つぶし"
+	// The bolts of the items that came later (2026-11-28): the staff of
+	// かなしばり, しあわせ草, 無敵草, 毒草.
+	MagicBind    MagicEffect = "かなしばり"
+	MagicLevelUp MagicEffect = "レベル+1"
+	MagicUnhurt  MagicEffect = "無敵"
+	MagicPoison  MagicEffect = "毒"
 )
 
 // magicEffects are the effects, in a fixed order, for the error that lists
@@ -183,6 +189,7 @@ const (
 var magicEffects = []MagicEffect{
 	MagicWarp, MagicHaste, MagicBlow, MagicConfuse, MagicSlow, MagicSleep,
 	MagicSeal, MagicHalf, MagicQuarter, MagicLevel1, MagicLevel3, MagicBlind,
+	MagicBind, MagicLevelUp, MagicUnhurt, MagicPoison,
 }
 
 // parseMagic reads the effects of AbilityMagic: separated by commas.
@@ -489,6 +496,7 @@ func (g *Game) charge(m *Monster, a Ability) bool {
 			return true
 		}
 		f.Dozing = false
+		n = f.harm(n)
 		f.HP -= n
 		// (A blow frees it of かなしばり.)
 		f.Bound = 0
@@ -568,7 +576,8 @@ func (g *Game) playerHurt(n int, m *Monster) bool {
 	if g.HP <= 0 {
 		g.HP = 0
 		g.end(m.Name+"に倒された", false)
-		return true
+		// (Brought back by 復活の草, it did not.)
+		return g.Over != ""
 	}
 	return false
 }
@@ -649,6 +658,7 @@ func (g *Game) shootAt(m *Monster, a Ability) bool {
 			continue
 		}
 		n := damage(g.rng, attack, f.Defense, r.DefenseK)
+		n = f.harm(n)
 		f.HP -= n
 		// (A blow frees it of かなしばり.)
 		f.Bound = 0

@@ -342,6 +342,12 @@ const (
 	EffectRecruit  Effect = "仲間"
 	EffectEyeDrops Effect = "目薬"
 	EffectMaxHP    Effect = "最大HP"
+	// The grasses that came later (2026-11-28): 胃拡張の種 and 胃縮小の種
+	// (the max fullness up and down by 強さ), 復活の草, 火炎草.
+	EffectMaxFull  Effect = "最大満腹度+"
+	EffectLessFull Effect = "最大満腹度-"
+	EffectRevive   Effect = "復活"
+	EffectFire     Effect = "火炎"
 	EffectUpWeapon Effect = "武器強化"
 	EffectUpShield Effect = "盾強化"
 	EffectSwap     Effect = "場所替え"
@@ -357,9 +363,18 @@ const (
 	// pit (Shougo, 2026-11-27).
 	EffectBottomless Effect = "底抜け"
 	EffectHealPot    Effect = "全回復"
-	EffectUncurse    Effect = "おはらい"
-	EffectMoreSlots  Effect = "印増大"
-	EffectEraseSeal  Effect = "印消し"
+	// The pots that came later (2026-11-28): 識別 (鑑定), 強化 and 弱化
+	// (強さ the upgrade value), 換金, 変化 (its own item table, 変化).
+	EffectAppraise Effect = "鑑定"
+	EffectStronger Effect = "強化"
+	EffectWeaker   Effect = "弱化"
+	EffectCash     Effect = "換金"
+	EffectChange   Effect = "変化"
+	// EffectTunnel is the staff of トンネル: it digs to its front.
+	EffectTunnel    Effect = "トンネル"
+	EffectUncurse   Effect = "おはらい"
+	EffectMoreSlots Effect = "印増大"
+	EffectEraseSeal Effect = "印消し"
 	// The scrolls of scroll.go.
 	EffectSlash      Effect = "真空斬り"
 	EffectWipe       Effect = "全滅"
@@ -397,14 +412,15 @@ var effects = map[Category][]Effect{
 		EffectCall, EffectLeap, EffectBlast, EffectClumsy, EffectBlastGuard, EffectWaterWalk,
 		EffectFloat, EffectWalls, EffectCursePower,
 		EffectNoStarve, EffectPierce, EffectHappy, EffectStealth, EffectBigStomach, EffectBargain},
-	CategoryGrass: {EffectHeal, EffectStrength, EffectEyeDrops, EffectMaxHP},
+	CategoryGrass: {EffectHeal, EffectStrength, EffectEyeDrops, EffectMaxHP, EffectMaxFull, EffectLessFull, EffectRevive, EffectFire},
 	CategoryScroll: {EffectLight, EffectDrain, EffectIdentify, EffectUpWeapon, EffectUpShield, EffectUncurse, EffectMoreSlots, EffectEraseSeal,
 		EffectSlash, EffectWipe, EffectNoTraps, EffectSeer, EffectGather, EffectLost, EffectOnigiri, EffectPotUp, EffectSuck, EffectBless, EffectPlate,
 		EffectGatherFoes, EffectTrouble, EffectPowerUp, EffectPrevent, EffectBind,
 		EffectZowa, EffectBigRoom, EffectMonsterRoom, EffectCurse, EffectTraps, EffectNoPickup, EffectMute, EffectSanctuary, EffectBlank},
-	CategoryStaff: {EffectBlowAway, EffectRecruit, EffectSwap},
+	CategoryStaff: {EffectBlowAway, EffectRecruit, EffectSwap, EffectTunnel},
 	CategoryFood:  {EffectFood, EffectRotten, EffectGrilled},
-	CategoryPot:   {EffectKeep, EffectSynthesis, EffectHealPot, EffectPlain, EffectBottomless},
+	CategoryPot: {EffectKeep, EffectSynthesis, EffectHealPot, EffectPlain, EffectBottomless,
+		EffectAppraise, EffectStronger, EffectWeaker, EffectCash, EffectChange},
 }
 
 // FloorRow is a row of an appearance table: id appears on the floors

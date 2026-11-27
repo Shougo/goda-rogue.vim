@@ -309,9 +309,12 @@ func (g *Game) monsterSprings(m *Monster, t *Trap) {
 		say(m.Name + "は落とし穴に落ちていった。")
 		g.remove(m)
 	case TrapMine, TrapBigMine:
-		m.HP = mineLeft(t.Def.Effect, m.HP)
+		if m.Unhurt == 0 {
+			m.HP = mineLeft(t.Def.Effect, m.HP)
+		}
 		say(m.Name + "は爆発に巻き込まれた。")
 	case TrapPoison:
+		n = m.harm(n)
 		m.HP -= n
 		// (A blow frees it of かなしばり.)
 		m.Bound = 0
@@ -360,7 +363,8 @@ func (g *Game) trapDamage(n int, why string) bool {
 	if g.HP <= 0 {
 		g.HP = 0
 		g.end(why+"で倒れた", false)
-		return true
+		// (Brought back by 復活の草, it did not.)
+		return g.Over != ""
 	}
 	return false
 }

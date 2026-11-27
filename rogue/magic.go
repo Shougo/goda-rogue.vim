@@ -38,8 +38,12 @@ func (g *Game) magicOnPlayer(e MagicEffect, d Point, m *Monster) {
 	case MagicBlow:
 		g.say("吹き飛ばされた。")
 		g.flingPlayer(d, m)
-	case MagicConfuse, MagicSlow, MagicSleep, MagicSeal, MagicBlind:
+	case MagicConfuse, MagicSlow, MagicSleep, MagicSeal, MagicBlind, MagicBind, MagicUnhurt:
 		g.afflict(e)
+	case MagicLevelUp:
+		g.levelUp()
+	case MagicPoison:
+		g.poisoned(m)
 	case MagicHalf, MagicQuarter:
 		g.HP = max(g.HP/fraction(e), 1)
 		g.say(fmt.Sprintf("HPが%dになった。", g.HP))
@@ -76,9 +80,9 @@ func (g *Game) magicOn(f *Monster, e MagicEffect, d Point) {
 	case MagicBlow:
 		say("は吹き飛ばされた。")
 		g.fling(f, d, false)
-	case MagicConfuse, MagicSlow, MagicSleep, MagicSeal, MagicBlind:
+	case MagicConfuse, MagicSlow, MagicSleep, MagicSeal, MagicBlind, MagicBind, MagicUnhurt:
 		f.States.take(e)
-		if f.Ally {
+		if f.Ally && e != MagicBind {
 			// (Another state frees an ally of かなしばり.)
 			f.Bound = 0
 		}
@@ -95,6 +99,45 @@ func (g *Game) magicOn(f *Monster, e MagicEffect, d Point) {
 		if shown && f.Name != name {
 			g.say(name + "は" + f.Name + "になった。")
 		}
+	case MagicLevelUp:
+		name := f.Name
+		g.rankUp(f)
+		if shown && f.Name != name {
+			g.say(name + "は" + f.Name + "になった。")
+		}
+	case MagicPoison:
+		n := f.harm(poisonDamage)
+		f.HP -= n
+		f.Bound = 0
+		f.Attack = max(f.Attack/2, 1)
+		say(fmt.Sprintf("に%dのダメージ。攻撃力が下がった。", n))
+		if f.HP <= 0 {
+			g.kill(f, nil, true, shown)
+		} else {
+			g.wounded(f)
+		}
+	}
+}
+
+// poisonDamage is the damage of 毒草: on the player, with a point of its
+// strength; on a monster, with half its attack (Shiren).
+const poisonDamage = 5
+
+// poisoned is the poison of a bolt of m (nil: 毒草 drunk) on the player:
+// poisonDamage, and a point of its strength (not under 1).
+func (g *Game) poisoned(m *Monster) {
+	var fell bool
+	if m != nil {
+		fell = g.playerHurt(poisonDamage, m)
+	} else {
+		fell = g.trapDamage(poisonDamage, "毒")
+	}
+	if fell {
+		return
+	}
+	if g.Strength > 1 {
+		g.Strength--
+		g.say("ちからが1下がった。")
 	}
 }
 

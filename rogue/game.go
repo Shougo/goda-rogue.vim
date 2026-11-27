@@ -122,6 +122,9 @@ type Game struct {
 	naming string
 	// blanking is the scroll of 白紙 the player is writing (blank.go).
 	blanking *Item
+	// blown says that the wind of the floor blew the player away: 復活の
+	// 草 does not help then.
+	blown bool
 	// Over is why the run is over ("" while it goes on), and Cleared
 	// whether the player went down the last stairs.
 	Over    string
@@ -787,7 +790,7 @@ func (g *Game) strike(m *Monster, share float64) {
 	if g.PowerUp > 0 {
 		n = n * powerUpRate / 100
 	}
-	n = g.weakening(n)
+	n = m.harm(g.weakening(n))
 	m.HP -= n
 	// (A blow frees it of かなしばり.)
 	m.Bound = 0
@@ -841,6 +844,19 @@ func (g *Game) endTurn(rest bool) {
 			g.say("目が覚めた。")
 		}
 	}
+	// Bound (かなしばり), the player waits until it loses HP (a blow,
+	// hunger), or for boundTurns (Shougo, 2026-11-27).
+	for g.Bound > 0 && g.Over == "" {
+		hp := g.HP
+		g.Bound--
+		g.tick(true)
+		if g.HP < hp {
+			g.Bound = 0
+		}
+		if g.Bound == 0 && g.Over == "" {
+			g.say("かなしばりが解けた。")
+		}
+	}
 }
 
 // tick is a turn passing: HP and fullness, the monsters, the floor.
@@ -855,6 +871,11 @@ func (g *Game) tick(rest bool) {
 		g.Blind--
 		if g.Blind == 0 {
 			g.say("目が見えるようになった。")
+		}
+	}
+	if g.Unhurt > 0 {
+		if g.Unhurt--; g.Unhurt == 0 {
+			g.say("無敵の効果が切れた。")
 		}
 	}
 	for _, w := range []*int{&g.AttackDown, &g.DefenseDown} {
@@ -949,6 +970,8 @@ func (g *Game) linger() {
 			m.Hunter = true
 		}
 	case 3:
+		// (No grass of 復活 against it.)
+		g.blown = true
 		g.end("クロンの風に吹き飛ばされた", false)
 	}
 }
@@ -972,7 +995,7 @@ func (g *Game) spawn(def *MonsterDef) *Monster {
 
 // end ends the run, for why.
 func (g *Game) end(why string, cleared bool) {
-	if !cleared && g.spared() {
+	if !cleared && (g.spared() || !g.blown && g.revived()) {
 		return
 	}
 	g.Over, g.Cleared, g.Ended = why, cleared, time.Now()
