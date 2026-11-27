@@ -83,13 +83,12 @@ scroll of identification identifies everything carried, a scroll of
 
 An item that can be cursed may be blessed instead (薬草（祝）), never
 both.  A blessing takes a bad effect on its item in its place, once:
-rust, rot, a curse (of a monster or of a trap; not a theft).  A blessed grass, scroll or food is not
-used up: used, or thrown at a monster, it has its effect and loses its
-blessing.  A blessed staff keeps its charges when waved, and loses its
-blessing half of the time.  A blessing shows as a curse does; a shop
-sells and buys a blessed item at twice its price.  Synthesis does not
-carry a blessing over, but the blessing of either item takes the curse of
-the other.
+rust, rot, a curse (of a monster or of a trap; not a theft).  A blessed grass,
+scroll or food is not used up: used, or thrown at a monster, it has its effect
+and loses its blessing.  A blessed staff keeps its charges when waved, and
+loses its blessing half of the time.  A blessing shows as a curse does; a shop
+sells and buys a blessed item at twice its price.  Synthesis does not carry a
+blessing over, but the blessing of either item takes the curse of the other.
 
 Grasses, scrolls, staffs, bracelets and pots are unidentified at first:
 they go by names such as 赤い草 (with a "?" in the inventory), different
@@ -140,7 +139,8 @@ down), sleeping gas, warping, hunger, rust (the upgrade values of the
 weapon and the shield down).  A trap the player has found shows as 罠,
 a dash stops before it, and by the rule of the built-in dungeon it never
 goes off by itself: standing on it, the inventory lists it (marked
-[足元]), to step on it on purpose (踏む).  |goda-rogue-look| tells its kind and what it does.
+[足元]), to step on it on purpose (踏む).  |goda-rogue-look| tells its kind and
+what it does.
 
 The player gets hungry: the fullness (満腹, on the top line) goes down a
 point every few turns.  Food restores it.  Starving, the player restores
@@ -161,10 +161,10 @@ hits an ally, up to the dungeon's limit (3 in the cave).  Looking at an
 ally (|goda-rogue-look|) asks what to tell it: ついてきて (follow the
 player and fight the enemies near it; so it does at first), 自由に (go
 where it likes and fight the enemies it sees) or 待って (stay there and
-fight the enemies next to it).  A sealed mouth gives no orders.  At the end of a run, the result screen
-shows how it ended, the floor, the level, the enemies defeated, the
-turns, the play time and the seed, and under it the floor as it was at
-the end, with the last messages, to see what happened.
+fight the enemies next to it).  A sealed mouth gives no orders.  At the end of
+a run, the result screen shows how it ended, the floor, the level, the enemies
+defeated, the turns, the play time and the seed, and under it the floor as it
+was at the end, with the last messages, to see what happened.
 
 Lingering on a floor does not pay: now and then a monster appears out of
 sight, and it gives nothing for defeating it.  Then Kron's wind blows:
@@ -182,14 +182,15 @@ https://github.com/Shougo/goda.vim
 
 The binary is built on the first start, by goda.vim (|goda#configured#new()|,
 with "dir": a goda.vim that has it is needed), into a cache directory: the
-directory "goda-rogue" under |stdpath()| "cache" in Neovim, $XDG_CACHE_HOME/vim
-or ~/.cache/vim in Vim.  Build it again with |goda_rogue#build()|.
+directory "goda-rogue" under |stdpath()| "cache" in Neovim,
+$XDG_CACHE_HOME/vim or ~/.cache/vim in Vim.  Build it again with
+|goda_rogue#build()|.
 
 ==============================================================================
 EXAMPLES                                                 *goda-rogue-examples*
 
-There are no default mappings: map the actions in the game buffer. >vim
-
+There are no default mappings: map the actions in the game buffer.
+>vim
 	autocmd FileType goda-rogue call s:goda_rogue_settings()
 	function s:goda_rogue_settings() abort
 	  const dirs = #{h: 'left', j: 'down', k: 'up', l: 'right',
@@ -284,8 +285,9 @@ goda_rogue#save_replay([{name} [, {file}]])
 		added; default: the date and time) in the directory
 		"replays" of |g:goda_rogue#data_dir|, and return its path.
 		With {file}, that replay is saved instead: the run of a bot,
-		say: >
-			call goda_rogue#save_replay('bot1', goda_rogue#bot_replay())
+		say:
+>vim
+		call goda_rogue#save_replay('bot1', goda_rogue#bot_replay())
 <
 
                                                          *goda_rogue#replay()*
@@ -364,7 +366,7 @@ goda_rogue#records()
 		time in milliseconds, debug).  Records are only a record:
 		nothing of them goes into a run.
 
-                                                  *goda_rogue#last_replay()*
+                                                    *goda_rogue#last_replay()*
 goda_rogue#last_replay()
 		The path of the replay file of the last run.
 
@@ -448,9 +450,10 @@ inventory                                               *goda-rogue-inventory*
 		identified; asked on the command line, or by
 		g:goda_rogue#prompt_func with "input"; an empty name takes
 		it away; no turn), 説明 (what it is and does: the attack of
-		a weapon, its seals, the effect of a grass; no turn).  The items are sorted by
-		kind, each with the glyph of its kind as an icon; a pot
-		shows the icons of what is in it (保存の壺[1]【草草巻】).
+		a weapon, its seals, the effect of a grass; no turn).
+		The items are sorted by kind, each with the glyph of its kind
+		as an icon; a pot shows the icons of what is in it
+		(保存の壺[1]【草草巻】).
 		The item under the player comes last, marked [足元]: it can
 		be picked up (拾う; money: 財布に入れる too), swapped with
 		an item carried (交換: one turn, also offered on the items
@@ -571,7 +574,7 @@ g:goda_rogue#data_dir
 		$XDG_DATA_HOME/vim, $LOCALAPPDATA/vim (Windows) or
 		~/.local/share/vim (Vim).
 
-                                                 *g:goda_rogue#kept_replays*
+                                                   *g:goda_rogue#kept_replays*
 g:goda_rogue#kept_replays
 		How many replays of the runs before are kept.  When a new
 		run replaces the replay file of the last run, that one is
@@ -581,7 +584,7 @@ g:goda_rogue#kept_replays
 		not resumed, a bug, the editor killed.  The oldest are
 		removed past this number; 0 keeps none.  Default: 50.
 
-                                             *g:goda_rogue#kept_bot_replays*
+                                               *g:goda_rogue#kept_bot_replays*
 g:goda_rogue#kept_bot_replays
 		How many replays of the runs of bots before are kept
 		(|goda_rogue#watch_bot()|): when a bot starts a run, the
@@ -676,17 +679,16 @@ Every tile is one full-width character, two cells wide:
 The background of the tile the player faces (and attacks) is
 "GodaRogueFacing".
 
-The top line shows what matters all the time: the floor, the level, HP
-with a bar, the fullness, and the gold.  Then the window shows the part of the floor
-around the player that fits.  Under the map are the status line (the
-attack, the defense and the strength (now / max: poison lowers it
-under its max), the items carried (of how many at most), the turn and
-the turns on this
-floor, the steps, the play time (as of the last action), the direction
-the player faces as an arrow, the seed, and the turns until the next
-wind once it has blown) and the last three messages, those of the
-actions before the last one dimmed ("GodaRogueOldMessage").  The result
-screen shows the turns, the steps and the play time too.
+The top line shows what matters all the time: the floor, the level, HP with a
+bar, the fullness, and the gold.  Then the window shows the part of the floor
+around the player that fits.  Under the map are the status line (the attack,
+the defense and the strength (now / max: poison lowers it under its max), the
+items carried (of how many at most), the turn and the turns on this floor, the
+steps, the play time (as of the last action), the direction the player faces
+as an arrow, the seed, and the turns until the next wind once it has blown)
+and the last three messages, those of the actions before the last one dimmed
+("GodaRogueOldMessage").  The result screen shows the turns, the steps and the
+play time too.
 
 ==============================================================================
 PROMPTS                                                   *goda-rogue-prompts*
@@ -719,8 +721,8 @@ floors once the files change.
 
 The built-in dungeons:
 
-	cave	はじまりの洞窟: 30 floors.  Monsters of ranks 1 and 2 (the higher
-		ranks come only by a rank-up).
+	cave	はじまりの洞窟: 30 floors.  Monsters of ranks 1 and 2 (the
+		higher ranks come only by a rank-up).
 	deep	奈落の洞窟: 50 floors, based on the cave.  The deep floors
 		are made of rank 3; rank 4 is only the weak families, on the
 		last floors.  Its ranks 3 and 4 are gentler than the cave's.
@@ -770,8 +772,8 @@ The built-in dungeons:
 				敵の命中), of what the player throws and
 				shoots (主の投擲命中, default 主の命中) and
 				of what the monsters shoot (敵の投擲命中,
-				default 敵の命中): key<TAB>value.  A later line
-				overrides an earlier one.
+				default 敵の命中): key<TAB>value.  A later
+				line overrides an earlier one.
 	monsters.txt		The monsters, a table.  A family is a glyph
 				(字), a kind of it a rank (ランク, 1 to 4).
 				速度 is 鈍足 (every other turn), 通常, 倍速
@@ -873,10 +875,11 @@ The built-in dungeons:
 				             defeats it
 				  不動  it never moves by itself (a staff or a
 				             blow may move it)
-				  捕縛:C:T  a blow of it that hits holds the player
-				             C% of the time: it cannot step away for
-				             T turns, or until the monster is gone or
-				             no more next to it
+				  捕縛:C:T  a blow of it that hits holds the
+				             player C% of the time: it cannot
+				             step away for T turns, or until
+				             the monster is gone or no more
+				             next to it
 				  燃える  what is thrown or shot at it burns, with
 				             no effect: only blows hurt it
 				  回復:C:N  C% of its actions heal another hurt
@@ -954,8 +957,8 @@ The built-in dungeons:
 				             already, until the next floor): next to
 				             it instead of a blow, or with S 1 from
 				             anywhere it sees the player; the
-				             bracelets of 睡眠よけ, 混乱よけ, 目つぶしよけ
-				             and 弱りよけ ward them off
+				             bracelets of 睡眠よけ, 混乱よけ,
+					     目つぶしよけ and 弱りよけ ward them off
 				  擬態:D:S:K  on a new floor it hides as
 				             an item of the floor's table,
 				             or (S%) as stairs, or (K%, with
@@ -1027,13 +1030,13 @@ The built-in dungeons:
 				        水蜘蛛 浮遊 壁抜け 呪い力 ハラヘリよけ
 				        遠投 しあわせ 忍び足 胃拡張 値切り
 				  草: HP回復 ちから 目薬 最大HP
-				  巻物: あかり 水がれ 識別 武器強化 盾強化 おはらい
-				        印増大 印消し 真空斬り 全滅 罠消し
-				        千里眼 道具寄せ 迷子 おにぎり 壺増大
-				        吸い出し 祝福 メッキ 引き寄せ 困った時
-				        パワーアップ 予防 金縛り ゾワゾワ 大部屋
-				        魔物部屋 敵加速 呪い 罠 拾えず くちなし
-				        聖域 白紙
+				  巻物: あかり 水がれ 識別 武器強化 盾強化
+				        おはらい印増大 印消し 真空斬り 全滅
+				        罠消し 千里眼 道具寄せ 迷子 おにぎり
+				        壺増大 吸い出し 祝福 メッキ 引き寄せ
+				        困った時 パワーアップ 予防 金縛り
+				        ゾワゾワ 大部屋 魔物部屋 敵加速 呪い
+				        罠 拾えず くちなし 聖域 白紙
 				  杖: 吹き飛ばし 仲間 場所替え
 				  食料: 満腹 腐った
 				  壺: 保存 合成 全回復 普通 底抜け
@@ -1061,9 +1064,10 @@ The built-in dungeons:
 				none): it takes no slot and stays on the
 				base of a synthesis; merged into another,
 				it becomes a seal (at its 印の強さ).  印数
-				is how many seals it can have.  On another item, 印 makes it a
-				material: merged into a weapon or a shield
-				by mixed synthesis (異種合成, by a monster;
+				is how many seals it can have.  On another
+				item, 印 makes it a material: merged into a
+				weapon or a shield by mixed synthesis (異種合
+				成, by a monster;
 				a pot of synthesis merges items of a kind
 				only), it gives its seal for weapons or for
 				shields, and is used up.  ひび is how easily a
@@ -1179,24 +1183,23 @@ they carry may be, use an item they do not know in a danger only when
 nothing they know helps, wait for an enemy two tiles away to come (so
 as to strike first), check for traps before
 stepping in a monster house whose monsters sleep, and the careful one
-leaves a floor whose fights cost more answers than it gave.  Out of a fight they heal when their HP is below what the
-monsters of the floor could take in two turns (one and a half when none
-of them would likely beat them, three when a quarter would; the careful
-one rests in a room, not in a corridor), with what fits what is missing
-best (the cheapest of what heals it all, else what heals most), and they wait for an
-enemy coming at them rather than step next to it, to strike first.
-With no room left in the inventory they do not walk past what is worth
-more than the least they carry: standing on it, they eat food that is
-not wasted, drink an unknown grass at full HP, or swap what they value
-least for it (an empty staff is worth nothing; food is worth the more
-the less fullness they hold in the belly, the bag and the pots: 5 to 8
-times its price below 200, less and less to 300, next to nothing
-beyond); and what they carry is cheaper to use while there is no room.
-They walk straight where a straight way is as short, leave the
-corridors that can lead to no room not seen yet (a floor is three by
-three sections, a room at most in each), and keep off for a while the
-tile they stepped away from a danger on, and two tiles they walked back
-and forth between.
+leaves a floor whose fights cost more answers than it gave.  Out of a fight
+they heal when their HP is below what the monsters of the floor could take in
+two turns (one and a half when none of them would likely beat them, three when
+a quarter would; the careful one rests in a room, not in a corridor), with
+what fits what is missing best (the cheapest of what heals it all, else what
+heals most), and they wait for an enemy coming at them rather than step next
+to it, to strike first. With no room left in the inventory they do not walk
+past what is worth more than the least they carry: standing on it, they eat
+food that is not wasted, drink an unknown grass at full HP, or swap what they
+value least for it (an empty staff is worth nothing; food is worth the more
+the less fullness they hold in the belly, the bag and the pots: 5 to 8 times
+its price below 200, less and less to 300, next to nothing beyond); and what
+they carry is cheaper to use while there is no room. They walk straight where
+a straight way is as short, leave the corridors that can lead to no room not
+seen yet (a floor is three by three sections, a room at most in each), and
+keep off for a while the tile they stepped away from a danger on, and two
+tiles they walked back and forth between.
 It prints how many cleared, where and why they fell (by monster, trap,
 hunger or the wind; deaths from full HP in one action or just after
 arriving count as unfair), the HP on arriving on each floor, the turns
@@ -1278,14 +1281,14 @@ Start from one to try an item or a monster at once, and share it: it does
 not depend on a seed, so it stays good when the data of the dungeon change
 (a replay does not).  They are kept in "states" of |g:goda_rogue#data_dir|.
 
-                                                    *goda_rogue#load_state()*
+                                                     *goda_rogue#load_state()*
 goda_rogue#load_state([{name}])
 		Start a run in the debug mode from the state file {name}: a
 		path, or a name in "states" (".txt" may be left out).
 		Without {name}, it asks, completing the names in "states".
 		The replay of the run keeps the text of the file.
 
-                                                    *goda_rogue#dump_state()*
+                                                     *goda_rogue#dump_state()*
 goda_rogue#dump_state([{name}])
 		Write the scene of the run as the state file {name}
 		(default: the date and time) in "states", and return its
