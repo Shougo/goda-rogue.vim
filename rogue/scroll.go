@@ -17,6 +17,7 @@ const (
 	promptPotUp   = "pot up"
 	promptSuck    = "suck"
 	promptBless   = "bless"
+	promptPlate   = "plate"
 )
 
 // slash is the scroll of 真空斬り: n damage to each enemy around, from the
@@ -140,17 +141,48 @@ func (g *Game) lost() {
 	g.warpAway()
 }
 
-// askItems asks, with the title, for an item carried that ok allows (not
-// the goods of a shop), as the prompt of kind; it says whether there was
-// any.
-func (g *Game) askItems(title, kind string, ok func(*Item) bool) bool {
-	p := &Prompt{Title: title, kind: kind}
+// A scroll that chooses (Shougo, 2026-11-27) lists every item carried,
+// whatever it does: unknown, the scroll must not tell by its choices.
+// One it cannot work on (nor the goods of a shop) does nothing, and the
+// scroll stays unknown.
+type chooser struct {
+	title string
+	// valid says whether it works on the item.
+	valid func(g *Game, it *Item) bool
+	apply func(g *Game, it *Item)
+}
+
+// promptEraseItem asks for the item of the scroll of 印消し, and then
+// promptErase for its seal (seals.go).
+const promptEraseItem = "erase item"
+
+var choosers = map[string]chooser{
+	promptOnigiri: {"どれをおにぎりにする？", func(g *Game, it *Item) bool { return !it.Equipped && g.Dungeon.plainOnigiri() != nil }, (*Game).toOnigiri},
+	promptPotUp:   {"どの壺を大きくする？", func(g *Game, it *Item) bool { return it.Def.Category == CategoryPot }, (*Game).potUp},
+	promptSuck: {"どの壺の中身を出す？", func(g *Game, it *Item) bool {
+		return it.Def.Category == CategoryPot && len(it.Contents) > 0
+	}, (*Game).suckOut},
+	promptBless: {"どれを祝福する？", func(g *Game, it *Item) bool { return it.cursable() && !it.Blessed }, (*Game).bless},
+	promptPlate: {"どれにメッキする？", func(g *Game, it *Item) bool {
+		return it.upgradable() && len(it.Seals) < it.slots() && !g.hasNoRust(it)
+	}, (*Game).plate},
+	promptSlot: {"どれの印の枠を増やす？", func(g *Game, it *Item) bool {
+		return it.upgradable() && it.slots() < maxSlots
+	}, (*Game).addSlot},
+	// (Any that can be cursed: not cursed, it says so.)
+	promptUncurse:   {"どれの呪いを解く？", func(g *Game, it *Item) bool { return it.cursable() }, (*Game).uncurseOne},
+	promptEraseItem: {"どれの印を消す？", func(g *Game, it *Item) bool { return it.upgradable() && len(it.Seals) > 0 }, nil},
+}
+
+// ask asks for an item carried, for the scroll that chooses of kind; it
+// says whether there is any.
+func (g *Game) ask(kind string) bool {
+	c := choosers[kind]
+	p := &Prompt{Title: c.title, kind: kind}
 	for i, it := range g.Inventory {
-		if !it.ForSale && ok(it) {
-			p.Choices = append(p.Choices, g.Entry(it))
-			p.items = append(p.items, i)
-			p.targets = append(p.targets, it)
-		}
+		p.Choices = append(p.Choices, g.Entry(it))
+		p.items = append(p.items, i)
+		p.targets = append(p.targets, it)
 	}
 	if len(p.Choices) == 0 {
 		return false
@@ -159,13 +191,24 @@ func (g *Game) askItems(title, kind string, ok func(*Item) bool) bool {
 	return true
 }
 
-// askOnigiri asks which item carried the scroll of おにぎり turns into an
-// onigiri: any not equipped (money, food and all).
-func (g *Game) askOnigiri() bool {
-	if g.Dungeon.plainOnigiri() == nil {
-		return false
+// chosen is it chosen for the scroll of the prompt p: its effect, if it
+// works on it (then the scroll is known).
+func (g *Game) chosen(p *Prompt, it *Item) {
+	c := choosers[p.kind]
+	if !slices.Contains(g.Inventory, it) {
+		g.say("それはもう手元にない。")
+		return
 	}
-	return g.askItems("どれをおにぎりにする？", promptOnigiri, func(it *Item) bool { return !it.Equipped })
+	if it.ForSale || !c.valid(g, it) {
+		g.say("何も起こらなかった。")
+		return
+	}
+	if p.kind == promptEraseItem {
+		g.askSeal(it, p.scroll)
+		return
+	}
+	c.apply(g, it)
+	g.used(p)
 }
 
 // plainOnigiri returns the kind of the onigiri: the food of the effect
@@ -189,23 +232,10 @@ func (g *Game) toOnigiri(it *Item) {
 	g.say(name + "がおにぎりになった。")
 }
 
-// askPotUp asks which pot carried the scroll of 壺増大 makes bigger.
-func (g *Game) askPotUp() bool {
-	return g.askItems("どの壺を大きくする？", promptPotUp, func(it *Item) bool { return it.Def.Category == CategoryPot })
-}
-
 // potUp makes the pot it hold one more.
 func (g *Game) potUp(it *Item) {
 	it.Charges++
 	g.say(g.Name(it) + "が大きくなった。")
-}
-
-// askSuck asks from which pot carried the scroll of 吸い出し takes out
-// what is in it.
-func (g *Game) askSuck() bool {
-	return g.askItems("どの壺の中身を出す？", promptSuck, func(it *Item) bool {
-		return it.Def.Category == CategoryPot && len(it.Contents) > 0
-	})
 }
 
 // suckOut takes everything out of the pot it, to the tiles around the
@@ -225,12 +255,6 @@ func (g *Game) suckOut(it *Item) {
 	g.say(g.Name(it) + "の中身が飛び出した。")
 }
 
-// askBless asks which item carried the scroll of 祝福 blesses: any that
-// can be, not blessed yet.
-func (g *Game) askBless() bool {
-	return g.askItems("どれを祝福する？", promptBless, func(it *Item) bool { return it.cursable() && !it.Blessed })
-}
-
 // bless blesses it; a cursed item loses its curse instead (an item is
 // never both).
 func (g *Game) bless(it *Item) {
@@ -244,18 +268,20 @@ func (g *Game) bless(it *Item) {
 	g.say(g.Name(it) + "は祝福された。")
 }
 
-// plate is the scroll of メッキ: the weapon and the shield equipped never
-// rust from then on.
-func (g *Game) plate() {
-	done := false
-	for _, c := range []Category{CategoryWeapon, CategoryShield} {
-		if it := g.equipped(c); it != nil && !it.Plated {
-			it.Plated = true
-			done = true
-			g.say(g.Name(it) + "にメッキがかかった。")
+// plate puts 錆 on it (Shougo, 2026-11-27: メッキ is a seal, as in
+// Shiren 6; 錆 does not add up, and its risk is a monster of rust taking
+// it away).
+func (g *Game) plate(it *Item) {
+	it.Seals = append(it.Seals, "錆")
+	g.say(g.Name(it) + "にサビよけの印が付いた。")
+}
+
+// hasNoRust says whether it has サビよけ, as a seal or born with it.
+func (g *Game) hasNoRust(it *Item) bool {
+	for _, glyph := range append([]string{it.Def.Seal}, it.Seals...) {
+		if s := g.Dungeon.SealOn(glyph, it.Def.Category); s != nil && s.Effect == SealNoRust {
+			return true
 		}
 	}
-	if !done {
-		g.say("何も起こらなかった。")
-	}
+	return false
 }

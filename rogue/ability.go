@@ -465,11 +465,17 @@ func (g *Game) reachAbility(m *Monster) bool {
 }
 
 // charge is m rushing along its line to the player: it stops next to the
-// first creature in the way, hurts it and blows it away.
+// first creature in the way, hurts it and blows it away. It does not rush
+// over water it cannot stand on (the line itself may cross it).
 func (g *Game) charge(m *Monster, a Ability) bool {
 	d, _, ok := g.lineTo(m.Pos, g.Player, a.Values[0])
 	if !ok {
 		return false
+	}
+	for p := m.Pos.Add(d); p != g.Player && g.MonsterAt(p) == nil; p = p.Add(d) {
+		if !g.passable(m, p) {
+			return false
+		}
 	}
 	for next := m.Pos.Add(d); next != g.Player && g.MonsterAt(next) == nil; next = m.Pos.Add(d) {
 		m.Pos = next

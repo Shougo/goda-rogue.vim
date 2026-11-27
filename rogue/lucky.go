@@ -53,25 +53,6 @@ func (g *Game) identifyAll() bool {
 	return found
 }
 
-// askUncurse asks from which item carried to take the curse away (a
-// scroll): any that can be cursed, as the player may not know which are.
-// It says whether there is any.
-func (g *Game) askUncurse() bool {
-	p := &Prompt{Title: "どれの呪いを解く？", kind: promptUncurse}
-	for i, it := range g.Inventory {
-		if it.cursable() {
-			p.Choices = append(p.Choices, g.Entry(it))
-			p.items = append(p.items, i)
-			p.targets = append(p.targets, it)
-		}
-	}
-	if len(p.Choices) == 0 {
-		return false
-	}
-	g.Prompt = p
-	return true
-}
-
 // uncurseOne takes the curse of it away, and of what is in it (a pot);
 // the player knows from then on that it is not cursed.
 func (g *Game) uncurseOne(it *Item) {

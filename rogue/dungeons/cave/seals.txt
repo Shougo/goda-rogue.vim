@@ -8,8 +8,9 @@
 #   必中      its % of the attacks of the player that would miss hit
 #   反撃      with a chance of its %, the damage the player takes goes
 #             back to the attacker
-#   サビよけ  with a chance of its %, the weapon and the shield do not
-#             rust
+#   サビよけ  the weapon and the shield do not rust; a monster of rust
+#             takes the seal away instead (one born with it, never). It
+#             does not add up: never twice on one item
 #   ハラヘラズ  the player gets hungry its % less fast
 #   三方向    a blow also strikes the two tiles beside the one the player
 #             faces, ahead of it, for its % of the damage
@@ -33,7 +34,8 @@
 会	会心の印	会心	25	12	武器
 必	必中の印	必中	100	50	武器
 反	反撃の印	反撃	30	15	盾
-錆	サビよけの印	サビよけ	100	50	盾
+錆	サビよけの印	サビよけ	100	100	武器
+錆	サビよけの印	サビよけ	100	100	盾
 腹	ハラヘラズの印	ハラヘラズ	50	25	盾
 力	力の印	攻撃	2	2	武器
 力	力の印	反撃	15	15	盾

@@ -74,7 +74,7 @@ var effectTexts = map[Effect]string{
 	EffectPotUp:   "選んだ壺の容量が 1 つ増える。",
 	EffectSuck:    "選んだ壺の中身がすべて足元の周りに出てくる（どの壺でも）。",
 	EffectBless:   "選んだ持ち物 1 つを祝福する。呪われた物は、呪いが解ける。",
-	EffectPlate:   "装備している武器と盾にメッキがかかり、サビなくなる。",
+	EffectPlate:   "選んだ武器か盾にサビよけの印【錆】が付く（枠が空いていて、サビよけのない物）。",
 }
 
 // magicTexts say what the effect of a bolt does to its target ("%s").
@@ -108,7 +108,7 @@ var sealTexts = map[SealEffect]string{
 	SealCrit:        "%d%% の確率で会心の一撃（2 倍のダメージ）。",
 	SealSure:        "外れるはずの攻撃の %d%% が当たる。",
 	SealCounter:     "%d%% の確率で受けたダメージを相手に返す。",
-	SealNoRust:      "%d%% の確率で武器と盾のサビを防ぐ。",
+	SealNoRust:      "武器と盾がサビない（サビを吹きかける敵には、代わりに印を消される）。",
 	SealNoHunger:    "お腹が減る速さが %d%% 遅くなる。",
 	SealThree:       "正面に加えて、左右の斜め前にも %d%% のダメージで攻撃する。",
 	SealNoTheft:     "%d%% の確率で盗みを防ぐ。",

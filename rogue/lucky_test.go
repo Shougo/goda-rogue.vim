@@ -51,6 +51,7 @@ func TestLucky(t *testing.T) {
 	g.Dungeon = withRules(g.Dungeon, func(r *Rules) {
 		r.Lucky, r.Bless, r.CurseItem, r.CurseGear, r.CurseFood, r.CurseBracelet = 1, 0, 0, 0, 0, 0
 	})
+	g.Inventory = nil
 	used(t, g, "shikibetsu")
 	if !strings.Contains(g.Message, "識別するものはなかった。") || strings.Contains(g.Message, "ラッキー") {
 		t.Errorf("nothing to identify: %q", g.Message)

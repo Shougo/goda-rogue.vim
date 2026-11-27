@@ -1,7 +1,6 @@
 package rogue
 
 import (
-	"fmt"
 	"slices"
 	"strings"
 	"testing"
@@ -169,34 +168,39 @@ func TestIdentifyScroll(t *testing.T) {
 	grass := carry(g, "otogiri", 0)
 	sword := carry(g, "bokutou", 1)
 	sword.Known = false
-	carry(g, "onigiri", 0) // Known: nothing to identify.
+	onigiri := carry(g, "onigiri", 0) // Known: nothing to identify.
 	scroll := carry(g, "shikibetsu", 0)
 	fake := g.Name(scroll)
 	turn := g.Turn
 	command(t, g, scroll, commandRead)
-	if !strings.Contains(g.Message, fake+"は識別の巻物だった。") || g.Turn != turn+1 {
+	// Unknown, it tells what it is once it worked, and asks for any item
+	// (Shougo, 2026-11-27).
+	if strings.Contains(g.Message, "識別の巻物") || g.Turn != turn+1 {
 		t.Errorf("message %q, turn %d", g.Message, g.Turn)
 	}
 	p := g.Prompt
-	if p == nil || p.Title != "何を識別する？" || len(p.Choices) != 2 {
+	if p == nil || p.Title != "どれに使う？" || len(p.Choices) != 3 {
 		t.Fatalf("prompt %+v", p)
 	}
-	i := slices.Index(p.Choices, g.Entry(grass))
-	if err := g.Do("choose", []string{fmt.Sprint(i)}); err != nil {
-		t.Fatal(err)
-	}
-	if g.Name(grass) != "弟切草" || !strings.Contains(g.Message, "は弟切草だった。") || g.Turn != turn+1 {
+	choose(t, g, grass)
+	if g.Name(grass) != "弟切草" || !strings.Contains(g.Message, "は弟切草だった。") ||
+		!strings.Contains(g.Message, fake+"は識別の巻物だった。") || g.Turn != turn+1 {
 		t.Errorf("message %q, turn %d", g.Message, g.Turn)
+	}
+
+	// Known already: nothing happens.
+	command(t, g, carry(g, "shikibetsu", 0), commandRead)
+	if g.Prompt == nil || g.Prompt.Title != "何を識別する？" {
+		t.Fatalf("prompt %+v", g.Prompt)
+	}
+	choose(t, g, onigiri)
+	if g.Message != "何も起こらなかった。" {
+		t.Errorf("message %q", g.Message)
 	}
 
 	// The sword: its upgrade value.
 	command(t, g, carry(g, "shikibetsu", 0), commandRead)
-	if len(g.Prompt.Choices) != 1 {
-		t.Fatalf("prompt %+v", g.Prompt)
-	}
-	if err := g.Do("choose", []string{"0"}); err != nil {
-		t.Fatal(err)
-	}
+	choose(t, g, sword)
 	if g.Message != "木刀+1を識別した。" {
 		t.Errorf("message %q", g.Message)
 	}
@@ -204,18 +208,17 @@ func TestIdentifyScroll(t *testing.T) {
 	// An item under the player too.
 	foot := putAtFoot(g, "chikarakusa")
 	command(t, g, carry(g, "shikibetsu", 0), commandRead)
-	if !slices.Equal(g.Prompt.Choices, []string{g.Entry(foot) + " [足元]"}) {
-		t.Fatalf("choices %q", g.Prompt.Choices)
+	if c := g.Prompt.Choices; c[len(c)-1] != g.Entry(foot)+" [足元]" {
+		t.Fatalf("choices %q", c)
 	}
-	if err := g.Do("choose", []string{"0"}); err != nil {
-		t.Fatal(err)
-	}
+	choose(t, g, foot)
 	if g.unknown(foot) {
 		t.Error("the item under the player is still unknown")
 	}
 	g.discard(foot)
 
-	// Nothing left to identify.
+	// Nothing carried, nothing under the player.
+	g.Inventory = nil
 	command(t, g, carry(g, "shikibetsu", 0), commandRead)
 	if g.Prompt != nil || !strings.Contains(g.Message, "識別するものはなかった。") {
 		t.Errorf("prompt %+v, message %q", g.Prompt, g.Message)

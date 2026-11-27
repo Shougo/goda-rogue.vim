@@ -79,13 +79,16 @@ func (g *Game) curseTrap(n int) {
 
 // exorcise is a scroll of おはらい read with monsters that curse around
 // (enemiesAround): they are no more.
-func (g *Game) exorcise() {
+func (g *Game) exorcise() bool {
+	gone := false
 	for _, m := range g.enemiesAround() {
 		if _, ok := m.ability(AbilityCurse); ok {
 			g.say(m.Name + "は消え去った。")
 			g.kill(m, nil, true, true)
+			gone = true
 		}
 	}
+	return gone
 }
 
 // curseText describes the ability.

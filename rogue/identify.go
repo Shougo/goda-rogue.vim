@@ -95,18 +95,17 @@ func (g *Game) curses(it *Item) bool {
 	return r.CurseItem > 0
 }
 
-// askIdentify asks which item to identify (a scroll), and says whether
-// there is any.
+// askIdentify asks which item to identify (a scroll): any carried, and
+// the one under the player (one known already: nothing happens). It says
+// whether there is any.
 func (g *Game) askIdentify() bool {
 	p := &Prompt{Title: "何を識別する？", kind: promptIdentify}
 	for i, it := range g.Inventory {
-		if g.unknown(it) {
-			p.Choices = append(p.Choices, g.Entry(it))
-			p.items = append(p.items, i)
-			p.targets = append(p.targets, it)
-		}
+		p.Choices = append(p.Choices, g.Entry(it))
+		p.items = append(p.items, i)
+		p.targets = append(p.targets, it)
 	}
-	if foot := g.foot(); foot != nil && g.unknown(foot) {
+	if foot := g.foot(); foot != nil {
 		p.Choices = append(p.Choices, g.footEntry(foot))
 		p.items = append(p.items, footIndex)
 		p.targets = append(p.targets, foot)

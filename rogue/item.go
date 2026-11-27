@@ -71,9 +71,6 @@ type Item struct {
 	Cursed bool
 	// Blessed says whether it is blessed (bless.go); never with Cursed.
 	Blessed bool
-	// Plated says whether a weapon or a shield was plated (the scroll of
-	// メッキ): it never rusts.
-	Plated bool
 	// CurseTold says whether the player knows if it is cursed or
 	// blessed, without knowing the rest (Known): it equipped the item
 	// or tried to use it (curse.go).
@@ -144,9 +141,6 @@ func (g *Game) describe(it *Item) string {
 			s += fmt.Sprintf("%+d", it.Upgrade)
 		}
 		s += sealsLabel(it)
-		if it.Plated {
-			s += "［メッキ］"
-		}
 	case it.Def.Category == CategoryPot:
 		s += g.potLabel(it)
 	case it.Def.Category == CategoryArrow:
@@ -217,6 +211,9 @@ type Prompt struct {
 	// targets are the items of a prompt that stays open while the turn
 	// passes (identify: a thief may take one meanwhile).
 	targets []*Item
+	// scroll is the scroll read that asks (a scroll that chooses): it is
+	// identified once its effect is had (Shougo, 2026-11-27).
+	scroll *Item
 }
 
 // chooseMany answers the prompt p with the choices of arg, separated by
@@ -622,6 +619,9 @@ func (g *Game) choose(arg string) (bool, error) {
 		return false, nil
 	case promptInPot:
 		return g.doInPot(p.item, p.items[0], p.Choices[n]), nil
+	case promptOnigiri, promptPotUp, promptSuck, promptBless, promptPlate, promptSlot, promptUncurse, promptEraseItem:
+		g.chosen(p, p.targets[n])
+		return false, nil
 	case promptIdentify:
 		it := p.targets[n]
 		if !slices.Contains(g.Inventory, it) && g.foot() != it {
@@ -630,31 +630,20 @@ func (g *Game) choose(arg string) (bool, error) {
 		}
 		if it.Mimic != nil {
 			g.label(it)
+			g.used(p)
+			return false, nil
+		}
+		if !g.unknown(it) {
+			g.say("何も起こらなかった。")
 			return false, nil
 		}
 		g.learn(it)
 		g.say(g.describe(it) + "を識別した。")
-		return false, nil
-	case promptUncurse:
-		g.uncurseOne(p.targets[n])
-		return false, nil
-	case promptSlot:
-		g.addSlot(p.targets[n])
+		g.used(p)
 		return false, nil
 	case promptErase:
 		g.eraseSeal(p.targets[n], p.items[n])
-		return false, nil
-	case promptOnigiri:
-		g.toOnigiri(p.targets[n])
-		return false, nil
-	case promptPotUp:
-		g.potUp(p.targets[n])
-		return false, nil
-	case promptSuck:
-		g.suckOut(p.targets[n])
-		return false, nil
-	case promptBless:
-		g.bless(p.targets[n])
+		g.used(p)
 		return false, nil
 	case promptPay:
 		if n == 0 {

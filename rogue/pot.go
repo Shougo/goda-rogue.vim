@@ -147,8 +147,12 @@ func (g *Game) merge(base, it *Item, mixed bool) bool {
 }
 
 // addSeal adds the seal glyph to base, if it has room (the same seal
-// again too: they add up, seal.go).
+// again too: they add up, seal.go), but サビよけ (錆), which does not add
+// up (Shougo, 2026-11-27): not on one with サビよけ already.
 func (g *Game) addSeal(base *Item, glyph string) {
+	if s := g.Dungeon.SealOn(glyph, base.Def.Category); s != nil && s.Effect == SealNoRust && g.hasNoRust(base) {
+		return
+	}
 	if len(base.Seals) < base.slots() {
 		base.Seals = append(base.Seals, glyph)
 	}

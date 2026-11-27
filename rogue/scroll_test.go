@@ -1,7 +1,6 @@
 package rogue
 
 import (
-	"fmt"
 	"slices"
 	"testing"
 )
@@ -123,65 +122,94 @@ func TestItemScrolls(t *testing.T) {
 	sword.Cursed, sword.Equipped = true, true
 	rotten := carry(g, "kusatta", 0)
 
-	choose := func(id string, target *Item) {
+	use := func(id string, target *Item) {
 		t.Helper()
 		read(g, id)
-		if g.Prompt == nil {
-			t.Fatalf("%s: no prompt", id)
-		}
-		for i, it := range g.Prompt.targets {
-			if it == target {
-				if _, err := g.choose(fmt.Sprint(i)); err != nil {
-					t.Fatal(err)
-				}
-				return
-			}
-		}
-		t.Fatalf("%s: %s not offered", id, target.Def.ID)
+		choose(t, g, target)
 	}
 
-	choose("onigirimaki", rotten)
+	use("onigirimaki", rotten)
 	if rotten.Def.ID != "onigiri" {
 		t.Errorf("おにぎり: %s", rotten.Def.ID)
 	}
-	read(g, "onigirimaki")
-	for _, it := range g.Prompt.targets {
-		if it.Equipped {
-			t.Error("おにぎり: the equipped sword offered")
-		}
+	use("onigirimaki", sword)
+	if sword.Def.ID != "doutanuki" {
+		t.Error("おにぎり: the equipped sword turned")
 	}
-	g.Prompt = nil
 
-	choose("tsubozoudai", pot)
+	use("tsubozoudai", pot)
 	if pot.Charges != 4 {
 		t.Errorf("壺増大: %d", pot.Charges)
 	}
-	choose("suidashi", pot)
+	use("suidashi", pot)
 	if len(pot.Contents) != 0 || len(g.Items) != 2 {
 		t.Errorf("吸い出し: %d in the pot, %d on the floor", len(pot.Contents), len(g.Items))
 	}
 
-	choose("shukufuku", sword)
+	use("shukufuku", sword)
 	if sword.Cursed || sword.Blessed {
 		t.Errorf("祝福 on a cursed sword: cursed %v, blessed %v", sword.Cursed, sword.Blessed)
 	}
-	choose("shukufuku", sword)
+	use("shukufuku", sword)
 	if !sword.Blessed {
 		t.Error("祝福: not blessed")
 	}
 }
 
-// TestPlateScroll: メッキ keeps the weapon and the shield from rust.
+// TestPlateScroll: メッキ asks for any item, and puts 錆 on a weapon or a
+// shield with room and no サビよけ yet; with it, nothing rusts. Unknown,
+// it asks "どれに使う？" and is identified once it worked.
 func TestPlateScroll(t *testing.T) {
 	g, _ := trapGame(t)
 	sword := carry(g, "doutanuki", 0)
 	sword.Equipped = true
+	gold := carry(g, "kintate", 0)
+	delete(g.identified, "mekki")
 	read(g, "mekki")
-	if !sword.Plated {
-		t.Fatal("not plated")
+	if g.Prompt == nil || g.Prompt.Title != "どれに使う？" || g.identified["mekki"] {
+		t.Fatalf("prompt %+v, identified %v", g.Prompt, g.identified["mekki"])
 	}
-	g.rust([]Category{CategoryWeapon}, 1)
+	if len(g.Prompt.targets) != len(g.Inventory) {
+		t.Fatalf("offered %d of %d", len(g.Prompt.targets), len(g.Inventory))
+	}
+	choose(t, g, gold)
+	if len(gold.Seals) != 0 || g.identified["mekki"] {
+		t.Fatalf("the gold shield (born with 錆): %v, identified %v", gold.Seals, g.identified["mekki"])
+	}
+	read(g, "mekki")
+	choose(t, g, sword)
+	if !slices.Equal(sword.Seals, []string{"錆"}) || !g.identified["mekki"] {
+		t.Fatalf("seals %v, identified %v", sword.Seals, g.identified["mekki"])
+	}
+	for range 20 {
+		g.rust([]Category{CategoryWeapon}, 1)
+	}
 	if sword.Upgrade != 0 {
 		t.Errorf("rusted: %+d", sword.Upgrade)
+	}
+	// 錆 does not add up: not by メッキ again, nor merged twice.
+	read(g, "mekki")
+	choose(t, g, sword)
+	g.addSeal(sword, "錆")
+	if !slices.Equal(sword.Seals, []string{"錆"}) {
+		t.Errorf("seals %v", sword.Seals)
+	}
+}
+
+// TestChoosingScrollUnknown: a scroll that chooses, unknown and
+// cancelled, stays unknown.
+func TestChoosingScrollUnknown(t *testing.T) {
+	g, _ := trapGame(t)
+	carry(g, "hozon", 0)
+	delete(g.identified, "tsubozoudai")
+	read(g, "tsubozoudai")
+	if g.Prompt == nil || g.Prompt.Title != "どれに使う？" {
+		t.Fatalf("prompt %+v", g.Prompt)
+	}
+	if err := g.Do("cancel", nil); err != nil {
+		t.Fatal(err)
+	}
+	if g.identified["tsubozoudai"] {
+		t.Error("identified, cancelled")
 	}
 }

@@ -99,7 +99,8 @@
 #     吸い出し  takes out everything in a pot chosen, around the player
 #     祝福      blesses an item chosen (takes the curse of a cursed one
 #               away instead)
-#     メッキ    the equipped weapon and shield never rust
+#     メッキ    a weapon or a shield chosen (with room, no サビよけ yet)
+#               gets the seal of サビよけ (錆)
 #   杖, waved (a magic bolt to the front):
 #     吹き飛ばし  blows the monster it hits 10 tiles away
 #     仲間      makes the monster it hits an ally (not a shopkeeper or a

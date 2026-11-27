@@ -1,6 +1,7 @@
 package rogue
 
 import (
+	"fmt"
 	"slices"
 	"testing"
 )
@@ -23,13 +24,18 @@ func TestSealScrolls(t *testing.T) {
 		t.Errorf("slots %d, %q", sword.slots(), g.info(sword))
 	}
 	sword.MoreSlots = maxSlots - sword.Def.Slots
-	if g.askSlot() {
-		t.Error("an 11th slot")
+	command(t, g, carry(g, "inzoudai", 0), commandRead)
+	choose(t, g, sword)
+	if sword.slots() != maxSlots || g.Message != "何も起こらなかった。" {
+		t.Errorf("slots %d: %q", sword.slots(), g.Message)
 	}
-	g.Prompt = nil
 
 	erase := carry(g, "inkeshi", 0)
 	command(t, g, erase, commandRead)
+	if g.Prompt == nil || g.Prompt.kind != promptEraseItem || len(g.Prompt.Choices) != len(g.Inventory) {
+		t.Fatalf("prompt %+v", g.Prompt)
+	}
+	choose(t, g, sword)
 	if g.Prompt == nil || g.Prompt.kind != promptErase || len(g.Prompt.Choices) != 3 {
 		t.Fatalf("prompt %+v", g.Prompt)
 	}
@@ -41,7 +47,24 @@ func TestSealScrolls(t *testing.T) {
 	}
 	// The ability born with is no seal: nothing to take away.
 	sword.Seals = nil
-	if g.askErase() {
+	command(t, g, carry(g, "inkeshi", 0), commandRead)
+	choose(t, g, sword)
+	if g.Prompt != nil {
 		t.Error("asked to erase the ability born with")
+	}
+}
+
+// choose chooses it in the prompt of g.
+func choose(t *testing.T, g *Game, it *Item) {
+	t.Helper()
+	if g.Prompt == nil {
+		t.Fatal("no prompt")
+	}
+	i := slices.Index(g.Prompt.targets, it)
+	if i < 0 {
+		t.Fatalf("%s not offered: %v", it.Def.ID, g.Prompt.Choices)
+	}
+	if err := g.Do("choose", []string{fmt.Sprint(i)}); err != nil {
+		t.Fatal(err)
 	}
 }

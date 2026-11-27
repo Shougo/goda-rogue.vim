@@ -51,10 +51,41 @@ func (g *Game) useItem(it *Item) {
 		g.say("祝福の力で" + name + "はなくならなかった。")
 	}
 
-	// Using it tells what it is.
-	g.identify(it)
+	// Using it tells what it is; a scroll that chooses, once its effect
+	// is had (asks).
+	if !slices.Contains(choosingEffects, it.Def.Effect) {
+		g.identify(it)
+	}
 
 	g.effectOf(it, g.lucky(it, blessed))
+}
+
+// choosingEffects are those of the scrolls that ask for an item: the
+// scroll is identified once its effect is had, not when it is read
+// (Shougo, 2026-11-27); with nothing to choose, or the choice cancelled,
+// it stays unknown.
+var choosingEffects = []Effect{EffectIdentify, EffectUncurse, EffectMoreSlots, EffectEraseSeal,
+	EffectOnigiri, EffectPotUp, EffectSuck, EffectBless, EffectPlate}
+
+// asks is the scroll it that asks for an item: whether it opened its
+// prompt (ok), which identifies it once chosen. Unknown, the prompt does
+// not tell what it is for.
+func (g *Game) asks(it *Item, ok bool) bool {
+	if !ok {
+		return false
+	}
+	g.Prompt.scroll = it
+	if !g.identified[it.Def.ID] {
+		g.Prompt.Title = "どれに使う？"
+	}
+	return true
+}
+
+// used is the effect of the scroll of the prompt p had: it is identified.
+func (g *Game) used(p *Prompt) {
+	if p.scroll != nil {
+		g.identify(p.scroll)
+	}
 }
 
 // effectOf is the effect of it, used by the player (or a grass thrown at
@@ -97,7 +128,8 @@ func (g *Game) effectOf(it *Item, lucky bool) {
 	case EffectIdentify:
 		switch {
 		case lucky && g.identifyAll():
-		case !g.askIdentify():
+			g.identify(it)
+		case !g.asks(it, g.askIdentify()):
 			g.say("識別するものはなかった。")
 		}
 	case EffectBlowAway:
@@ -122,20 +154,23 @@ func (g *Game) effectOf(it *Item, lucky bool) {
 	case EffectSwap:
 		g.swapPlaces()
 	case EffectMoreSlots:
-		if !g.askSlot() {
+		if !g.asks(it, g.ask(promptSlot)) {
 			g.say("何も起こらなかった。")
 		}
 	case EffectEraseSeal:
-		if !g.askErase() {
+		if !g.asks(it, g.ask(promptEraseItem)) {
 			g.say("何も起こらなかった。")
 		}
 	case EffectUncurse:
-		g.exorcise()
+		if g.exorcise() {
+			g.identify(it)
+		}
 		switch {
 		case lucky:
 			g.say(sayLucky)
 			g.uncurse()
-		case !g.askUncurse():
+			g.identify(it)
+		case !g.asks(it, g.ask(promptUncurse)):
 			g.say("何も起こらなかった。")
 		}
 	case EffectSlash:
@@ -150,11 +185,9 @@ func (g *Game) effectOf(it *Item, lucky bool) {
 		g.gather()
 	case EffectLost:
 		g.lost()
-	case EffectPlate:
-		g.plate()
-	case EffectOnigiri, EffectPotUp, EffectSuck, EffectBless:
-		ask := map[Effect]func() bool{EffectOnigiri: g.askOnigiri, EffectPotUp: g.askPotUp, EffectSuck: g.askSuck, EffectBless: g.askBless}
-		if !ask[it.Def.Effect]() {
+	case EffectOnigiri, EffectPotUp, EffectSuck, EffectBless, EffectPlate:
+		kinds := map[Effect]string{EffectOnigiri: promptOnigiri, EffectPotUp: promptPotUp, EffectSuck: promptSuck, EffectBless: promptBless, EffectPlate: promptPlate}
+		if !g.asks(it, g.ask(kinds[it.Def.Effect])) {
 			g.say("何も起こらなかった。")
 		}
 	default:

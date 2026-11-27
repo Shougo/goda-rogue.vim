@@ -276,3 +276,15 @@ func TestCursePowerBracelet(t *testing.T) {
 		t.Errorf("strength %d, want %d", g.CurrentStrength(), s+2)
 	}
 }
+
+// TestChargeOverWater: a boar does not rush over water to the player; a
+// crab (aquatic) would.
+func TestChargeOverWater(t *testing.T) {
+	g, r := waterGame(t)
+	g.Player = Point{r.X + 5, r.Y + 1}
+	m := place(g, kind("inoshishi2"), Point{r.X + 1, r.Y + 1})
+	a, _ := m.ability(AbilityCharge)
+	if g.charge(m, a) || m.Pos != (Point{r.X + 1, r.Y + 1}) {
+		t.Errorf("charged over the water to %v", m.Pos)
+	}
+}

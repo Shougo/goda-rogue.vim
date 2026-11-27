@@ -48,8 +48,17 @@ takes no room, and works in full while the item is equipped.  Merged
 into another weapon or shield, it becomes a seal of that one, weaker
 (half or so).  A synthesis keeps the ability of the base.  A scroll of
 印増大 adds a slot for seals (10 at most), one of 印消し takes a seal
-chosen away.  A scroll of メッキ plates the weapon and the shield
-equipped: they never rust from then on (［メッキ］).
+chosen away.  A scroll of メッキ puts the seal of サビよけ (錆) on a
+weapon or a shield chosen.  With 錆 the weapon and the shield never rust,
+but a monster of rust takes the seal away instead.
+
+A scroll that asks for an item (識別, おはらい, 印増大, 印消し, おにぎり,
+壺増大, 吸い出し, 祝福, メッキ) offers every item carried (識別, the one
+under the player too), and tells what it is once its effect is had:
+unknown, it asks "どれに使う？".  An item it cannot work on (or the goods
+of a shop, but for 識別) does nothing, and the scroll stays unknown, as
+when the choice is cancelled.  A seal of サビよけ does not add up: never
+twice on one item.
 
 An item of the dungeon, but arrows and money, may be cursed.  A cursed
 weapon, shield or bracelet does not come off once equipped (木刀-1（呪）):

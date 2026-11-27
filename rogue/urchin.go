@@ -277,10 +277,6 @@ func (g *Game) rust(cs []Category, n int) bool {
 		return true
 	}
 	for _, it := range its {
-		if it.Plated {
-			g.say(g.Name(it) + "はメッキで守られた。")
-			continue
-		}
 		if g.shielded(it) {
 			continue
 		}
@@ -319,10 +315,6 @@ func (g *Game) rustBy(m *Monster, a Ability) bool {
 	failed := m.Name + "はサビを吹きかけたが、何も起こらなかった。"
 	if len(its) == 0 || g.wears(EffectNoRust) {
 		g.say(failed)
-		return true
-	}
-	if its = slices.DeleteFunc(its, func(it *Item) bool { return it.Plated }); len(its) == 0 {
-		g.say(m.Name + "はサビを吹きかけたが、メッキがはじいた。")
 		return true
 	}
 	g.event("rusted %s", m.Def.ID)

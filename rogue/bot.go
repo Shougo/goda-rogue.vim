@@ -203,31 +203,37 @@ var botRules = []string{
 // answer answers the prompt of g by the plan, or cancels it.
 func (b *Bot) answer(g *Game) (string, []string) {
 	p := g.Prompt
-	if p.kind == promptIdentify && len(p.Choices) > 0 {
-		// A kind it does not know first; else whether one is cursed.
-		i := max(slices.IndexFunc(p.targets, func(it *Item) bool { return !g.identified[it.Def.ID] }), 0)
-		return "choose", []string{fmt.Sprint(i)}
-	}
-	if p.kind == promptUncurse && len(p.Choices) > 0 {
-		// What it knows to be cursed.
-		i := max(slices.IndexFunc(p.targets, func(it *Item) bool { return it.curseKnown() }), 0)
-		return "choose", []string{fmt.Sprint(i)}
-	}
-	if p.kind == promptSlot && len(p.Choices) > 0 {
-		// The weapon or the shield equipped first.
-		i := max(slices.IndexFunc(p.targets, func(it *Item) bool { return it.Equipped }), 0)
-		return "choose", []string{fmt.Sprint(i)}
-	}
-	if p.kind == promptBless && len(p.Choices) > 0 {
-		// What it knows to be cursed, else the weapon equipped.
-		i := slices.IndexFunc(p.targets, func(it *Item) bool { return it.curseKnown() })
-		if i < 0 {
-			i = max(slices.IndexFunc(p.targets, func(it *Item) bool { return it.Equipped && it.Def.Category == CategoryWeapon }), 0)
+	// (A scroll that chooses lists every item: it picks one the scroll
+	// works on.)
+	pick := func(oks ...func(*Item) bool) (string, []string) {
+		for _, ok := range oks {
+			if i := slices.IndexFunc(p.targets, ok); i >= 0 {
+				return "choose", []string{fmt.Sprint(i)}
+			}
 		}
-		return "choose", []string{fmt.Sprint(i)}
+		return "cancel", nil
 	}
-	if p.kind == promptPotUp && len(p.Choices) > 0 {
-		return "choose", []string{"0"}
+	switch p.kind {
+	case promptIdentify:
+		// A kind it does not know first; else whether one is cursed.
+		return pick(func(it *Item) bool { return !g.identified[it.Def.ID] }, g.unknown)
+	case promptUncurse:
+		// What it knows to be cursed.
+		return pick((*Item).curseKnown, (*Item).cursable)
+	case promptSlot:
+		// The weapon or the shield equipped first.
+		ok := choosers[promptSlot].valid
+		return pick(func(it *Item) bool { return it.Equipped && ok(g, it) }, func(it *Item) bool { return ok(g, it) })
+	case promptBless:
+		// What it knows to be cursed, else the weapon equipped.
+		return pick((*Item).curseKnown, func(it *Item) bool { return it.Equipped && it.Def.Category == CategoryWeapon && !it.Blessed })
+	case promptPotUp:
+		return pick(func(it *Item) bool { return it.Def.Category == CategoryPot })
+	case promptPlate:
+		// The shield equipped, else the weapon.
+		ok := choosers[promptPlate].valid
+		return pick(func(it *Item) bool { return it.Equipped && it.Def.Category == CategoryShield && ok(g, it) },
+			func(it *Item) bool { return it.Equipped && ok(g, it) })
 	}
 	// (The prompts of おにぎり and 吸い出し: it keeps what it has.)
 	if len(b.plan) == 0 {

@@ -15,53 +15,27 @@ func (it *Item) slots() int {
 	return it.Def.Slots + it.MoreSlots
 }
 
-// askSlot asks which weapon or shield carried gets one more slot; false
-// with none that can.
-func (g *Game) askSlot() bool {
-	p := &Prompt{Title: "どれの印の枠を増やす？", kind: promptSlot}
-	for i, it := range g.Inventory {
-		if it.upgradable() && !it.ForSale && it.slots() < maxSlots {
-			p.Choices = append(p.Choices, g.Entry(it))
-			p.items = append(p.items, i)
-			p.targets = append(p.targets, it)
-		}
-	}
-	if len(p.Choices) == 0 {
-		return false
-	}
-	g.Prompt = p
-	return true
-}
-
 // addSlot adds a slot to it.
 func (g *Game) addSlot(it *Item) {
 	it.MoreSlots++
 	g.say(fmt.Sprintf("%sの印の枠が%dになった。", g.Name(it), it.slots()))
 }
 
-// askErase asks which seal of the weapons and shields carried to take
-// away, one choice a seal; false with none.
-func (g *Game) askErase() bool {
-	p := &Prompt{Title: "どの印を消す？", kind: promptErase}
-	for _, it := range g.Inventory {
-		if !it.upgradable() || it.ForSale {
-			continue
+// askSeal asks which seal of it (a weapon or shield, chosen for the
+// scroll of 印消し) to take away; the prompt keeps the scroll, to be
+// identified once a seal is gone.
+func (g *Game) askSeal(it *Item, scroll *Item) {
+	p := &Prompt{Title: "どの印を消す？", kind: promptErase, scroll: scroll}
+	for i, s := range it.Seals {
+		name := s
+		if sd := g.Dungeon.SealOn(s, it.Def.Category); sd != nil {
+			name = sd.Name
 		}
-		for i, s := range it.Seals {
-			name := s
-			if sd := g.Dungeon.SealOn(s, it.Def.Category); sd != nil {
-				name = sd.Name
-			}
-			p.Choices = append(p.Choices, fmt.Sprintf("%s：【%s】%s", g.Name(it), s, name))
-			p.items = append(p.items, i)
-			p.targets = append(p.targets, it)
-		}
-	}
-	if len(p.Choices) == 0 {
-		return false
+		p.Choices = append(p.Choices, fmt.Sprintf("【%s】%s", s, name))
+		p.items = append(p.items, i)
+		p.targets = append(p.targets, it)
 	}
 	g.Prompt = p
-	return true
 }
 
 // eraseSeal takes the seal at i away from it.
