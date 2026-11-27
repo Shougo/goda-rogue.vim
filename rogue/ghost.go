@@ -64,6 +64,10 @@ func (g *Game) starve(m *Monster, a Ability) bool {
 		g.say(m.Name + "は満腹度を吸おうとした。しかしハラヘリよけの腕輪が守った。")
 		return true
 	}
+	if g.sealChance(SealNoStarve) {
+		g.say(m.Name + "は満腹度を吸おうとした。しかし盾が守った。")
+		return true
+	}
 	least := g.Dungeon.Rules.Fullness * minMaxFullness / 100
 	switch n, top := a.Values[1], a.Values[2]; {
 	case top > 0 && g.MaxFullness > least:

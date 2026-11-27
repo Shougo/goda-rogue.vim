@@ -2,6 +2,7 @@ package rogue
 
 import (
 	"fmt"
+	"math"
 	"slices"
 )
 
@@ -96,7 +97,10 @@ func (g *Game) blastDamage(n int) int {
 	if n > 0 && g.wears(EffectBlastGuard) {
 		g.use(EffectBlastGuard)
 		g.say("耐爆の腕輪が爆風を和らげた。")
-		return max(n/2, 1)
+		n = max(n/2, 1)
+	}
+	if s := g.sealShare(SealBlastGuard); s > 0 && n > 0 {
+		n = max(int(math.Round(float64(n)*(1-s))), 1)
 	}
 	return n
 }
@@ -191,11 +195,14 @@ func (g *Game) drain() bool {
 }
 
 // happy is the EXP n of a defeat, more with a bracelet of しあわせ (its
-// strength in %).
+// strength in %), and with the seal of しあわせ.
 func (g *Game) happy(n int) int {
 	if b := g.equipped(CategoryBracelet); b != nil && b.Def.Effect == EffectHappy {
 		g.use(EffectHappy)
-		return n * (100 + b.Def.Strength) / 100
+		n = n * (100 + b.Def.Strength) / 100
+	}
+	if s := g.sealShare(SealHappy); s > 0 {
+		n = int(math.Round(float64(n) * (1 + s)))
 	}
 	return n
 }

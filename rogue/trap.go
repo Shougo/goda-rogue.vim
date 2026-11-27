@@ -167,6 +167,12 @@ func (g *Game) spring(t *Trap, force bool) bool {
 		g.say(t.Def.Name + "がある。")
 		return false
 	}
+	if !force && g.sealChance(SealNoTrap) {
+		// A ward of the shield: the trap is found, and does not go off.
+		t.Found = true
+		g.say(t.Def.Name + "を踏んだが、盾が守った。")
+		return false
+	}
 	if t.Found && g.Dungeon.Rules.FoundTrapsSafe && !force {
 		g.say(t.Def.Name + "がある。")
 		return false
@@ -219,6 +225,10 @@ func (g *Game) spring(t *Trap, force bool) bool {
 		if g.wears(EffectNoStarve) {
 			g.use(EffectNoStarve)
 			g.say("ハラヘリよけの腕輪が守った。")
+			break
+		}
+		if g.sealChance(SealNoStarve) {
+			g.say("盾が守った。")
 			break
 		}
 		g.Fullness = max(g.Fullness-n, 0)

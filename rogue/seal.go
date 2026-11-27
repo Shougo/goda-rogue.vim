@@ -48,10 +48,76 @@ const (
 	// SealCritGuard: a critical blow on the player (痛恨) does its %
 	// less damage.
 	SealCritGuard SealEffect = "防恨"
+
+	// The seals of weapons that came with the weapons of 2026-11-28.
+	// A blow that hits (the one ahead, not the side blows of 三方向 nor
+	// the second of 連撃) brings, by a chance of its %, the state of the
+	// bolt of the same name on the monster (sealBolts).
+	SealSleepBlow   SealEffect = "睡眠"
+	SealConfuseBlow SealEffect = "混乱"
+	SealSlowBlow    SealEffect = "鈍足"
+	SealSealBlow    SealEffect = "封印"
+	SealPoisonBlow  SealEffect = "毒"
+	SealBindBlow    SealEffect = "かなしばり"
+	SealBlowAway    SealEffect = "吹き飛ばし"
+	// SealDig: a blow at the rock ahead digs it into a corridor (not the
+	// edge of the floor, nor a shop).
+	SealDig SealEffect = "掘る"
+	// SealDesperate: with its HP at a third of the max or less, the
+	// player's blows do its % more.
+	SealDesperate SealEffect = "捨て身"
+	// SealHappy: the EXP of the defeats is its % more.
+	SealHappy SealEffect = "しあわせ"
+	// SealDouble: by a chance of its %, the player strikes the one ahead
+	// a second time in the turn (Shougo: by a chance, not always).
+	SealDouble SealEffect = "連撃"
+	// SealGrow: going down the stairs with it equipped, by a chance of
+	// its %, the upgrade value of its weapon or shield goes up by one,
+	// up to growCap (Shougo, 2026-11-28).
+	SealGrow SealEffect = "成長"
+
+	// The seals of shields of 2026-11-28. A ward (Shougo: 100% born with
+	// it, 50% as a seal) keeps a thing off by a chance of its %.
+	SealNoSleep   SealEffect = "睡眠よけ"
+	SealNoConfuse SealEffect = "混乱よけ"
+	SealNoBlind   SealEffect = "目つぶしよけ"
+	SealNoWeak    SealEffect = "弱りよけ"
+	SealNoCurse   SealEffect = "呪いよけ"
+	SealNoStarve  SealEffect = "ハラヘリよけ"
+	SealNoTrap    SealEffect = "罠よけ"
+	// SealBlastGuard: an explosion does its % less damage to the player.
+	SealBlastGuard SealEffect = "耐爆"
+	// SealReflect: by a chance of its %, the bolt of a staff waved at the
+	// player by a monster goes back to it.
+	SealReflect SealEffect = "反射"
+	// SealHeavy: the player gets hungry its % faster (a heavy shield).
+	SealHeavy SealEffect = "腹減り"
+	// SealFine: with its HP full, the player takes its % less damage
+	// (絶好調; Shougo: only while full, so the first blow after resting).
+	SealFine SealEffect = "絶好調"
 )
 
 var sealEffects = []SealEffect{SealAttack, SealDefense, SealCrit, SealSure, SealCounter, SealNoRust, SealNoHunger,
-	SealThree, SealNoTheft, SealDodge, SealDodgeThrown, SealCritGuard}
+	SealThree, SealNoTheft, SealDodge, SealDodgeThrown, SealCritGuard,
+	SealSleepBlow, SealConfuseBlow, SealSlowBlow, SealSealBlow, SealPoisonBlow, SealBindBlow, SealBlowAway,
+	SealDig, SealDesperate, SealHappy, SealDouble, SealGrow,
+	SealNoSleep, SealNoConfuse, SealNoBlind, SealNoWeak, SealNoCurse, SealNoStarve, SealNoTrap,
+	SealBlastGuard, SealReflect, SealHeavy, SealFine}
+
+// sealBolts are the seals of weapons that bring the effect of a bolt with
+// a blow, in a fixed order.
+var sealBolts = []struct {
+	seal SealEffect
+	bolt MagicEffect
+}{
+	{SealSleepBlow, MagicSleep}, {SealConfuseBlow, MagicConfuse}, {SealSlowBlow, MagicSlow},
+	{SealSealBlow, MagicSeal}, {SealPoisonBlow, MagicPoison}, {SealBindBlow, MagicBind},
+	{SealBlowAway, MagicBlow},
+}
+
+// growCap is the upgrade value up to which 成長 raises an item (Shougo,
+// 2026-11-28: for now).
+const growCap = 20
 
 // No seal heals: not on a blow given, not on a blow taken. Such seals
 // (弟 and 回 of Shiren 2 and Asuka, stacked) make trading blows pay, and a
@@ -127,6 +193,37 @@ func (g *Game) sealShare(e SealEffect) float64 {
 func (g *Game) sealChance(e SealEffect) bool {
 	share := g.sealShare(e)
 	return share >= 1 || share > 0 && g.rng.Float64() < share
+}
+
+// itemShare is the share of the abilities of the effect e of the item it
+// alone (its innate ability and its seals), as sealShare.
+func (g *Game) itemShare(it *Item, e SealEffect) float64 {
+	not := 1.0
+	c := it.Def.Category
+	if s := g.Dungeon.SealOn(it.Def.Seal, c); s != nil && s.Effect == e {
+		not *= 1 - float64(min(s.Strength, 100))/100
+	}
+	for _, glyph := range it.Seals {
+		if s := g.Dungeon.SealOn(glyph, c); s != nil && s.Effect == e {
+			not *= 1 - float64(min(s.AsSeal, 100))/100
+		}
+	}
+	return 1 - not
+}
+
+// grow is 成長 going down the stairs: the equipped weapon and shield
+// with it go up by one, each by its own chance, up to growCap.
+func (g *Game) grow() {
+	for _, c := range []Category{CategoryWeapon, CategoryShield} {
+		it := g.equipped(c)
+		if it == nil || it.Upgrade >= growCap {
+			continue
+		}
+		if share := g.itemShare(it, SealGrow); share > 0 && g.rng.Float64() < share {
+			it.Upgrade++
+			g.say(g.Name(it) + "が成長した！")
+		}
+	}
 }
 
 // equippedAbilities are the innate abilities and the seals of the

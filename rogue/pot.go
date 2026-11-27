@@ -164,6 +164,10 @@ func (g *Game) addSeal(base *Item, glyph string) {
 	if s := g.Dungeon.SealOn(glyph, base.Def.Category); s != nil && s.Effect == SealNoRust && g.hasNoRust(base) {
 		return
 	}
+	if s := g.Dungeon.SealOn(glyph, base.Def.Category); s != nil && s.AsSeal == 0 {
+		// (An ability that is no seal: 掘る, a heavy shield's.)
+		return
+	}
 	if len(base.Seals) < base.slots() {
 		base.Seals = append(base.Seals, glyph)
 	}

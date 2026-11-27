@@ -1818,6 +1818,22 @@ func abilityWorth(e SealEffect, n int) float64 {
 		return f / 20
 	case SealCritGuard:
 		return f / 25
+	case SealSleepBlow, SealConfuseBlow, SealSlowBlow, SealSealBlow, SealBindBlow:
+		return f / 4
+	case SealPoisonBlow:
+		return f / 5
+	case SealBlowAway:
+		return f / 10
+	case SealDouble:
+		return f / 3
+	case SealDesperate, SealHappy, SealReflect:
+		return f / 25
+	case SealGrow:
+		return f / 10
+	case SealFine:
+		return f / 20
+	case SealHeavy:
+		return -f / 10
 	}
 	return f / 50
 }

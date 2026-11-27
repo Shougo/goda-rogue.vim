@@ -445,7 +445,8 @@ func (g *Game) getHungry() {
 		return
 	}
 	// In hundredths of a turn's hunger: ハラヘラズ takes its share off.
-	g.hunger += int(math.Round(100 * (1 - g.sealShare(SealNoHunger))))
+	// A heavy shield (腹減り) adds its share.
+	g.hunger += int(math.Round(100 * (1 - g.sealShare(SealNoHunger)) * (1 + g.sealShare(SealHeavy))))
 	if g.wears(EffectRegen) || g.wears(EffectHungry) {
 		g.hunger += 100
 	}

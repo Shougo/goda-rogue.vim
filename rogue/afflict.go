@@ -47,6 +47,10 @@ func (g *Game) afflict(e MagicEffect) {
 		g.use(EffectNoSeal)
 		g.say("口封じよけの腕輪が守った。")
 		return
+	case e == MagicSleep && g.sealChance(SealNoSleep), e == MagicConfuse && g.sealChance(SealNoConfuse),
+		e == MagicBlind && g.sealChance(SealNoBlind):
+		g.say("盾が守った。")
+		return
 	}
 	g.States.take(e)
 	g.say(stateTexts[e].player)
@@ -60,6 +64,10 @@ func (g *Game) weakened(n int) int {
 	}
 	if g.DefenseDown > 0 {
 		n = int(math.Ceil(float64(n) * (1 + weakShare)))
+	}
+	if s := g.sealShare(SealFine); s > 0 && n > 0 && g.HP >= g.MaxHP {
+		// 絶好調: full HP takes less (not under 1).
+		n = max(int(math.Round(float64(n)*(1-s))), 1)
 	}
 	return n
 }
@@ -120,6 +128,10 @@ func (g *Game) afflictBy(m *Monster, a Ability) bool {
 		if g.wears(EffectNoWeak) {
 			g.use(EffectNoWeak)
 			g.say("弱りよけの腕輪が守った。")
+			return true
+		}
+		if g.sealChance(SealNoWeak) {
+			g.say("盾が守った。")
 			return true
 		}
 		w, name := &g.AttackDown, "攻撃力"

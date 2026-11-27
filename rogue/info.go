@@ -145,6 +145,29 @@ var sealTexts = map[SealEffect]string{
 	SealDodge:       "敵の攻撃が当たる確率が %d%% 下がる。",
 	SealCritGuard:   "敵の痛恨の一撃で受けるダメージを %d%% 減らす。",
 	SealDodgeThrown: "飛んできた道具（矢を含む。貫通の矢とはね返されたものは除く）を %d%% の確率でよけ、足元に落とす（足元の罠は発動する）。",
+	SealSleepBlow:   "正面の敵に当てると、%d%% の確率で眠らせる。",
+	SealConfuseBlow: "正面の敵に当てると、%d%% の確率で混乱させる。",
+	SealSlowBlow:    "正面の敵に当てると、%d%% の確率で鈍足にする。",
+	SealSealBlow:    "正面の敵に当てると、%d%% の確率で能力を封印する。",
+	SealPoisonBlow:  "正面の敵に当てると、%d%% の確率で毒（ダメージと、攻撃力半分、鈍足）。",
+	SealBindBlow:    "正面の敵に当てると、%d%% の確率でかなしばりにする。",
+	SealBlowAway:    "正面の敵に当てると、%d%% の確率で吹き飛ばす。",
+	SealDig:         "正面の壁を攻撃すると掘れる（フロアの端と店は掘れない）。",
+	SealDesperate:   "HP が最大の 1/3 以下のとき、与えるダメージが %d%% 増える。",
+	SealHappy:       "敵を倒して得る経験値が %d%% 増える。",
+	SealDouble:      "%d%% の確率で、正面の敵をもう一度攻撃する。",
+	SealGrow:        "装備して階段を降りると、%d%% の確率で修正値が +1（+20 まで）。",
+	SealNoSleep:     "%d%% の確率で睡眠を防ぐ。",
+	SealNoConfuse:   "%d%% の確率で混乱を防ぐ。",
+	SealNoBlind:     "%d%% の確率で目つぶしを防ぐ。",
+	SealNoWeak:      "%d%% の確率で弱り（攻撃力・防御力の低下）を防ぐ。",
+	SealNoCurse:     "%d%% の確率で呪いを防ぐ。",
+	SealNoStarve:    "%d%% の確率で、満腹度を吸われるのと腹減りの罠を防ぐ。",
+	SealNoTrap:      "%d%% の確率で、歩いて踏んだ罠が発動しない。",
+	SealBlastGuard:  "爆発で受けるダメージを %d%% 減らす。",
+	SealReflect:     "敵が振った杖の魔法弾を、%d%% の確率ではね返す。",
+	SealHeavy:       "お腹が減る速さが %d%% 速くなる。",
+	SealFine:        "HP が満タンのとき、受けるダメージを %d%% 減らす。",
 }
 
 // usePrefixes say when the effect of an item of each category happens.
@@ -214,9 +237,12 @@ func (g *Game) info(it *Item) []string {
 			lines = append(lines, "呪われている（装備すると外せない）")
 		}
 		if sd := g.Dungeon.SealOn(def.Seal, def.Category); sd != nil {
+			merged := fmt.Sprintf("　別の%sに合成すると【%s】：%s", def.Category, sd.Glyph, withStrength(sealTexts[sd.Effect], sd.AsSeal))
+			if sd.AsSeal == 0 {
+				merged = "　別の" + string(def.Category) + "に合成しても、印にはならない。"
+			}
 			lines = append(lines,
-				fmt.Sprintf("[%s]素の能力：%s", sd.Glyph, withStrength(sealTexts[sd.Effect], sd.Strength)),
-				fmt.Sprintf("　別の%sに合成すると【%s】：%s", def.Category, sd.Glyph, withStrength(sealTexts[sd.Effect], sd.AsSeal)))
+				fmt.Sprintf("[%s]素の能力：%s", sd.Glyph, withStrength(sealTexts[sd.Effect], sd.Strength)), merged)
 		}
 		for _, s := range it.Seals {
 			sd := g.Dungeon.SealOn(s, def.Category)

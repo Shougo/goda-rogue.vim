@@ -250,6 +250,7 @@ func (g *Game) descend() {
 		}
 	}
 
+	g.grow()
 	g.Depth++
 	g.event("floor %d", g.Depth)
 	// (One generator for the floor: the steps below draw from it in this
@@ -741,6 +742,9 @@ func (g *Game) attack() bool {
 		g.talkTo(m)
 		return false
 	}
+	if m == nil && g.sealShare(SealDig) > 0 && g.digAhead(d) {
+		return true
+	}
 	// No attack around a corner of rock.
 	if m == nil || !g.clearFrom(g.Player, d) {
 		g.say("空振りした。")
@@ -749,14 +753,20 @@ func (g *Game) attack() bool {
 		}
 		return true
 	}
-	g.strike(m, 1)
+	g.blow(m, 1, true)
+	if g.sealChance(SealDouble) && m.HP > 0 && slices.Contains(g.Monsters, m) && g.Over == "" {
+		// (A second blow, without the states of the seals: they come once
+		// a turn, so that 連撃 does not double their worth.)
+		g.say("連続攻撃！")
+		g.blow(m, 1, false)
+	}
 	if share := g.sealShare(SealThree); share > 0 {
 		// The two tiles beside it, ahead: the enemies there too.
 		i := slices.Index(clockwise, g.Facing)
 		for _, turn := range []int{len(clockwise) - 1, 1} {
 			sd := Directions[clockwise[(i+turn)%len(clockwise)]]
 			if o := g.MonsterAt(g.Player.Add(sd)); o != nil && !o.Ally && !(o.Keeper && !o.Angry) && g.clearFrom(g.Player, sd) && g.Over == "" {
-				g.strike(o, share)
+				g.blow(o, share, false)
 			}
 		}
 	}
@@ -766,7 +776,11 @@ func (g *Game) attack() bool {
 // strike is a blow of the player on the monster m, with the share of its
 // damage (the side blows of 三方向 deal less): it may miss; a hit may be
 // a critical one.
-func (g *Game) strike(m *Monster, share float64) {
+func (g *Game) strike(m *Monster, share float64) { g.blow(m, share, share >= 1) }
+
+// blow is strike, with the states of the seals of the weapon (sealBolts)
+// when ahead says so: the blow ahead, once a turn.
+func (g *Game) blow(m *Monster, share float64, ahead bool) {
 	m.Dozing = false
 	g.provoke(m)
 	r := g.Dungeon.Rules
@@ -790,6 +804,9 @@ func (g *Game) strike(m *Monster, share float64) {
 	if g.PowerUp > 0 {
 		n = n * powerUpRate / 100
 	}
+	if s := g.sealShare(SealDesperate); s > 0 && g.HP*3 <= g.MaxHP {
+		n = int(math.Round(float64(n) * (1 + s)))
+	}
 	n = m.harm(g.weakening(n))
 	m.HP -= n
 	// (A blow frees it of かなしばり.)
@@ -801,7 +818,47 @@ func (g *Game) strike(m *Monster, share float64) {
 	}
 	if m.HP <= 0 {
 		g.kill(m, nil, true, true)
+		return
 	}
+	if ahead {
+		g.sealBlow(m)
+	}
+}
+
+// sealBlow brings the states of the seals of the weapon (sealBolts) on m,
+// which a blow hit and left alive: each by its chance, while m is still
+// there (a poison may kill it, a blow away send it off).
+func (g *Game) sealBlow(m *Monster) {
+	d := Point{m.Pos.X - g.Player.X, m.Pos.Y - g.Player.Y}
+	for _, sb := range sealBolts {
+		if m.HP <= 0 || !slices.Contains(g.Monsters, m) || chebyshev(m.Pos, g.Player) != 1 || g.Over != "" {
+			return
+		}
+		if g.sealChance(sb.seal) {
+			g.magicOn(m, sb.bolt, d)
+		}
+	}
+}
+
+// digAhead is a blow at the rock ahead (d) with a weapon of 掘る: it digs
+// the tile into a corridor, and says whether it did (not the edge of the
+// floor, nor a shop).
+func (g *Game) digAhead(d Point) bool {
+	p := g.Player.Add(d)
+	if g.Level.At(p) != TileRock || p.X <= 0 || p.Y <= 0 || p.X >= g.Level.W-1 || p.Y >= g.Level.H-1 ||
+		g.Shop != nil && g.Shop.Area.Around(p) {
+		return false
+	}
+	if d.X != 0 && d.Y != 0 && !g.clearFrom(g.Player, d) {
+		// Diagonally past a corner: the tile beside first, as the staff.
+		side := g.Player.Add(Point{d.X, 0})
+		if g.Level.At(side) == TileRock {
+			p = side
+		}
+	}
+	g.Level.set(p, TileCorridor)
+	g.say("壁を掘った。")
+	return true
 }
 
 // endTurn ends a turn of the player: walking or waiting restores HP (other

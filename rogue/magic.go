@@ -14,6 +14,11 @@ func (g *Game) castAt(m *Monster, a Ability) bool {
 	g.say(m.Name + "は杖を振った！")
 	for p := m.Pos.Add(d); ; p = p.Add(d) {
 		if p == g.Player {
+			if g.sealChance(SealReflect) {
+				g.say("盾が魔法弾をはね返した！")
+				g.magicOn(m, e, Point{-d.X, -d.Y})
+				return true
+			}
 			g.magicOnPlayer(e, d, m)
 			return true
 		}
