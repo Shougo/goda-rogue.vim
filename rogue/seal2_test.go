@@ -53,11 +53,11 @@ func TestSealBlowState(t *testing.T) {
 func TestSealDouble(t *testing.T) {
 	g, _, _ := gearGame(t, "nitou")
 	m := place(g, kind("nezumi4"), g.Player.Add(Point{1, 0}))
-	m.HP, m.MaxHP = 9999, 9999
+	m.HP, m.MaxHP, m.Asleep = 9999, 9999, 99
 	if err := g.Do("attack", nil); err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(g.Message, "連続攻撃！") || strings.Count(g.Message, "のダメージ。") != 2 {
+	if !strings.Contains(g.Message, "連続攻撃！") || strings.Count(g.Message, m.Name+"に") != 2 {
 		t.Errorf("one blow only: %q", g.Message)
 	}
 }

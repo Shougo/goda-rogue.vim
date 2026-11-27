@@ -224,7 +224,7 @@ func (g *Game) spring(t *Trap, force bool) bool {
 	case TrapHunger:
 		if g.wears(EffectNoStarve) {
 			g.use(EffectNoStarve)
-			g.say("ハラヘリよけの腕輪が守った。")
+			g.say("空腹よけの腕輪が守った。")
 			break
 		}
 		if g.sealChance(SealNoStarve) {
@@ -281,7 +281,7 @@ func (g *Game) mayBreak(t *Trap) {
 }
 
 // trapperSees shows every trap of the floor to the player wearing a
-// bracelet of the trapper (罠師).
+// bracelet of the trapper (罠使い).
 func (g *Game) trapperSees() {
 	if !g.wears(EffectTrapper) {
 		return
@@ -295,7 +295,7 @@ func (g *Game) trapperSees() {
 }
 
 // monsterSprings is the monster m stepping on the trap t while the player
-// wears a bracelet of the trapper (罠師): monsters set traps off then
+// wears a bracelet of the trapper (罠使い): monsters set traps off then
 // (never an ally, nor a calm shopkeeper). What it does to m: a pit takes
 // it off the floor, a mine halves its HP, the poisoned arrow hurts it, a
 // snare holds it and the trap of sleep puts it to sleep (both: turns of

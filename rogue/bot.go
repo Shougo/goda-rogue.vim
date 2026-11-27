@@ -216,7 +216,7 @@ func (b *Bot) answer(g *Game) (string, []string) {
 	switch p.kind {
 	case promptBlank:
 		// What helps most of what it knows; else the first.
-		for _, want := range []string{"困った時の巻物", "全滅の巻物", "天の恵みの巻物", "識別の巻物"} {
+		for _, want := range []string{"救いの巻物", "全滅の巻物", "武器強化の巻物", "識別の巻物"} {
 			if slices.Contains(p.Complete, want) {
 				return "name", []string{want}
 			}

@@ -11,7 +11,7 @@ func read(g *Game, id string) {
 	g.useItem(carry(g, id, 0))
 }
 
-// TestSlashScroll: 真空斬り hurts the enemies of the room, and kills
+// TestSlashScroll: 斬撃 hurts the enemies of the room, and kills
 // those it can.
 func TestSlashScroll(t *testing.T) {
 	g, r := trapGame(t)
@@ -157,7 +157,7 @@ func TestItemScrolls(t *testing.T) {
 	}
 }
 
-// TestPlateScroll: メッキ asks for any item, and puts 錆 on a weapon or a
+// TestPlateScroll: 錆止め asks for any item, and puts 錆 on a weapon or a
 // shield with room and no サビよけ yet; with it, nothing rusts. Unknown,
 // it asks "どれに使う？" and is identified once it worked.
 func TestPlateScroll(t *testing.T) {
@@ -188,7 +188,7 @@ func TestPlateScroll(t *testing.T) {
 	if sword.Upgrade != 0 {
 		t.Errorf("rusted: %+d", sword.Upgrade)
 	}
-	// 錆 does not add up: not by メッキ again, nor merged twice.
+	// 錆 does not add up: not by 錆止め again, nor merged twice.
 	read(g, "mekki")
 	choose(t, g, sword)
 	g.addSeal(sword, "錆")
@@ -236,7 +236,7 @@ func TestGatherFoesScroll(t *testing.T) {
 	}
 }
 
-// TestTroubleScroll: 困った時 heals in full and solves one trouble: with
+// TestTroubleScroll: 救い heals in full and solves one trouble: with
 // only hunger, the belly is full; surrounded, those next are bound.
 func TestTroubleScroll(t *testing.T) {
 	g, r := trapGame(t)
@@ -395,7 +395,7 @@ func TestPowerUpArrow(t *testing.T) {
 	}
 }
 
-// TestZowaScroll: under ゾワゾワ, an enemy next to the player hits the
+// TestZowaScroll: under 同士討ち, an enemy next to the player hits the
 // one behind it, not the player.
 func TestZowaScroll(t *testing.T) {
 	g, r := trapGame(t)
@@ -442,7 +442,7 @@ func TestBigRoomScroll(t *testing.T) {
 }
 
 // TestBadScrolls: 魔物部屋 fills the room, 呪い curses, 罠 sets traps
-// around, 拾えず keeps items on the floor, くちなし seals the mouth, and
+// around, 手ぶら keeps items on the floor, 口封じ seals the mouth, and
 // 敵加速 speeds the enemies up.
 func TestBadScrolls(t *testing.T) {
 	g, r := trapGame(t)
@@ -534,7 +534,7 @@ func TestSanctuary(t *testing.T) {
 func TestBlankScroll(t *testing.T) {
 	g, _ := trapGame(t)
 	blank := carry(g, "hakushi", 0)
-	if g.askBlank(blank) || g.Prompt == nil || !g.Prompt.Input || !slices.Contains(g.Prompt.Complete, "困った時の巻物") {
+	if g.askBlank(blank) || g.Prompt == nil || !g.Prompt.Input || !slices.Contains(g.Prompt.Complete, "救いの巻物") {
 		t.Fatalf("prompt %+v", g.Prompt)
 	}
 	if err := g.Do("cancel", nil); err != nil || !slices.Contains(g.Inventory, blank) {
@@ -549,7 +549,7 @@ func TestBlankScroll(t *testing.T) {
 	if g.Prompt == nil || g.Turn != turn || !slices.Contains(g.Inventory, blank) {
 		t.Fatalf("a name not known: prompt %v, turn %d -> %d", g.Prompt, turn, g.Turn)
 	}
-	if err := g.Do("name", []string{"困った時"}); err != nil {
+	if err := g.Do("name", []string{"救い"}); err != nil {
 		t.Fatal(err)
 	}
 	if slices.Contains(g.Inventory, blank) || g.HP != g.MaxHP || g.Turn != turn+1 {

@@ -28,7 +28,7 @@ const (
 	// TileCorridor is the floor of a corridor (doorways included).
 	TileCorridor
 	// TileWater is a waterway: no one walks there but swimmers and
-	// fliers (monsters.txt 属性) and the player with a bracelet of 水蜘蛛;
+	// fliers (monsters.txt 属性) and the player with a bracelet of 水渡り;
 	// what flies passes over it, what falls in sinks.
 	TileWater
 )

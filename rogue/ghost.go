@@ -61,7 +61,7 @@ func (g *Game) starve(m *Monster, a Ability) bool {
 	}
 	if g.wears(EffectNoStarve) {
 		g.use(EffectNoStarve)
-		g.say(m.Name + "は満腹度を吸おうとした。しかしハラヘリよけの腕輪が守った。")
+		g.say(m.Name + "は満腹度を吸おうとした。しかし空腹よけの腕輪が守った。")
 		return true
 	}
 	if g.sealChance(SealNoStarve) {

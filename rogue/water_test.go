@@ -17,7 +17,7 @@ func waterGame(t *testing.T) (*Game, Room) {
 	return g, r
 }
 
-// TestWaterWalk: the player crosses water only with a bracelet of 水蜘蛛;
+// TestWaterWalk: the player crosses water only with a bracelet of 水渡り;
 // taking it off there, it falls in and is washed away onto the floor.
 func TestWaterWalk(t *testing.T) {
 	g, r := waterGame(t)
@@ -39,7 +39,7 @@ func TestWaterWalk(t *testing.T) {
 	}
 }
 
-// TestDrain: the scroll of 水がれ dries the waterways up.
+// TestDrain: the scroll of 干上がり dries the waterways up.
 func TestDrain(t *testing.T) {
 	g, r := waterGame(t)
 	if !g.drain() || g.Level.At(Point{r.X + 3, r.Y}) != TileRoom || g.drain() {

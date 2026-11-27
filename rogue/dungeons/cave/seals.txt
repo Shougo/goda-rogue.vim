@@ -11,7 +11,7 @@
 #   サビよけ  the weapon and the shield do not rust; a monster of rust
 #             takes the seal away instead (one born with it, never). It
 #             does not add up: never twice on one item
-#   ハラヘラズ  the player gets hungry its % less fast
+#   節食  the player gets hungry its % less fast
 #   三方向    a blow also strikes the two tiles beside the one the player
 #             faces, ahead of it, for its % of the damage
 #   盗みよけ  with a chance of its %, nothing is stolen
@@ -33,8 +33,8 @@
 #   成長      going down the stairs with it equipped, by a chance of its %
 #             (of the item's own), its weapon or shield goes up by one, up
 #             to +20
-#   睡眠よけ 混乱よけ 目つぶしよけ 弱りよけ 呪いよけ ハラヘリよけ 罠よけ
-#             with a chance of its %, the thing is kept off (ハラヘリよけ:
+#   睡眠よけ 混乱よけ 目つぶしよけ 弱りよけ 呪いよけ 空腹よけ 罠よけ
+#             with a chance of its %, the thing is kept off (空腹よけ:
 #             the sucking of the fullness and the traps of hunger; 罠よけ:
 #             a trap stepped on by walking, which is found then)
 #   耐爆      an explosion does its % less damage to the player
@@ -59,7 +59,7 @@
 反	反撃の印	反撃	30	15	盾
 錆	サビよけの印	サビよけ	100	100	武器
 錆	サビよけの印	サビよけ	100	100	盾
-腹	ハラヘラズの印	ハラヘラズ	50	25	盾
+腹	節食の印	節食	50	25	盾
 力	力の印	攻撃	2	2	武器
 力	力の印	反撃	15	15	盾
 三	三方向の印	三方向	50	25	武器
@@ -85,7 +85,7 @@
 眩	目つぶしよけの印	目つぶしよけ	100	50	盾
 弱	弱りよけの印	弱りよけ	100	50	盾
 祓	呪いよけの印	呪いよけ	100	50	盾
-飢	ハラヘリよけの印	ハラヘリよけ	100	50	盾
+飢	空腹よけの印	空腹よけ	100	50	盾
 踏	罠よけの印	罠よけ	100	50	盾
 耐	耐爆の印	耐爆	50	25	盾
 返	反射の印	反射	50	25	盾

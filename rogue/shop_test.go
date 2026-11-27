@@ -345,7 +345,7 @@ func TestShopPrices(t *testing.T) {
 		t.Errorf("%q", entries)
 	}
 	info := strings.Join(g.info(grass), "\n")
-	for _, s := range []string{fmt.Sprintf("売値 %dG", sellPrice(grass)), "値段からの候補：弟切草、ちからの草"} {
+	for _, s := range []string{fmt.Sprintf("売値 %dG", sellPrice(grass)), "値段からの候補：上薬草、ちからの草"} {
 		if !strings.Contains(info, s) {
 			t.Errorf("no %q in\n%s", s, info)
 		}

@@ -32,7 +32,7 @@ func TestSwallow(t *testing.T) {
 	grass := carry(g, "chikarakusa", 0)
 	command(t, g, sword, commandThrow)
 	if !slices.Equal(m.belly, []*Item{sword}) || slices.Contains(g.Inventory, sword) || len(g.Items) != 0 ||
-		!strings.Contains(g.Message, "大混ぜ虫はカタナを飲み込んだ。") || m.HP != m.MaxHP {
+		!strings.Contains(g.Message, "大混ぜ虫は刀を飲み込んだ。") || m.HP != m.MaxHP {
 		t.Fatalf("belly %v, items %v, HP %d, %q", m.belly, g.Items, m.HP, g.Message)
 	}
 	command(t, g, other, commandThrow)

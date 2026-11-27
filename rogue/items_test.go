@@ -25,11 +25,11 @@ func TestGrasses(t *testing.T) {
 	from := g.Player
 	used(t, g, "takatobi")
 	if g.Player == from {
-		t.Error("高飛び草: no warp")
+		t.Error("転移草: no warp")
 	}
 	used(t, g, "subayasa")
 	if g.Hasted == 0 {
-		t.Error("すばやさ草: not fast")
+		t.Error("韋駄天草: not fast")
 	}
 	g, _ = roomGame(t, 8, 3)
 	used(t, g, "konran")
@@ -112,7 +112,7 @@ func TestStaffs(t *testing.T) {
 	}
 	used(t, g, "fukou")
 	if m.Def.ID != "kaeru1" {
-		t.Errorf("不幸の杖: %s, want kaeru1", m.Def.ID)
+		t.Errorf("衰えの杖: %s, want kaeru1", m.Def.ID)
 	}
 
 	g, r = roomGame(t, 10, 3)

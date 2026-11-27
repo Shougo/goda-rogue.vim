@@ -16,12 +16,12 @@
 #     目つぶしよけ  nothing blinds the player
 #     口封じよけ  nothing seals the mouth of the player
 #     弱りよけ  nothing takes its attack or defense down
-#     ハラヘリ  makes hungry twice as fast, and the blows of the player
+#     大食い  makes hungry twice as fast, and the blows of the player
 #               do 強さ % more
 #     垂れ流し  the monsters killed drop an item 強さ % more often; a
 #               turn in ten, an item carried (not equipped) falls at the
 #               player's feet
-#     罠師      shows every trap of the floor; the player never sets one
+#     罠使い      shows every trap of the floor; the player never sets one
 #               off by walking (stepping on one on purpose does), and
 #               the monsters do: a pit takes one away, a mine halves its
 #               HP, an arrow hurts it, a snare or sleep stops it for 強さ
@@ -30,7 +30,7 @@
 #               player (not under 1), which holds 25 less fullness
 #     魔物呼び  the monsters of the floor come for the player, and new
 #               ones come twice as often
-#     高飛び    a turn in a hundred 強さ, the player is sent somewhere on
+#     転移    a turn in a hundred 強さ, the player is sent somewhere on
 #               the floor
 #     爆発      a turn in a hundred 強さ, the player blows up: its HP
 #               halves, the monsters next to it are gone (no EXP), an
@@ -46,7 +46,7 @@
 #               there, the player is pushed out somewhere on the floor
 #     呪い力    each cursed item carried (not in pots) adds 強さ to the
 #               strength
-#     ハラヘリよけ  the monsters that suck the fullness (飢え) fail, and
+#     空腹よけ  the monsters that suck the fullness (飢え) fail, and
 #               the traps of hunger (腹減り)
 #     遠投      what the player throws or shoots flies through the
 #               monsters it hits (what it does, it does to each)
@@ -56,11 +56,11 @@
 #     胃拡張    the player holds 強さ more fullness
 #     値切り    the goods of shops cost 強さ % less (their prices tell
 #               the kinds less well)
-#     水蜘蛛    the player walks on the waterways; taken off there, the
+#     水渡り    the player walks on the waterways; taken off there, the
 #               player falls in and is washed away somewhere on the floor
-#     ヘタ投げ  what the player throws or shoots never hits: it falls at
+#     投げ下手  what the player throws or shoots never hits: it falls at
 #               the feet of the monster it would have hit, and a trap
-#               there goes off on it (as with 罠師)
+#               there goes off on it (as with 罠使い)
 #     痛恨      強さ % of the blows of the monsters on the player are
 #               critical, for 150% of the damage (a shield of 防恨 makes
 #               them weaker)
@@ -83,7 +83,7 @@
 #               half of it (at the player: its onigiri grill)
 #   巻物, read:
 #     あかり    lights the floor: its map, items and monsters
-#     水がれ    the waterways of the floor dry up into floor
+#     干上がり    the waterways of the floor dry up into floor
 #     識別      identifies an item (nothing to identify yet)
 #     武器強化  raises the upgrade value of the equipped weapon by 強さ
 #     盾強化    raises the upgrade value of the equipped shield by 強さ
@@ -93,7 +93,7 @@
 #               (10 at most)
 #     印消し    takes a seal chosen away (not the ability an item is
 #               born with)
-#     真空斬り  does 強さ damage to the enemies of the room (next to the
+#     斬撃  does 強さ damage to the enemies of the room (next to the
 #               player, in a corridor)
 #     全滅      the enemies of the room die (not a shopkeeper)
 #     罠消し    takes every trap of the floor away
@@ -106,18 +106,18 @@
 #     吸い出し  takes out everything in a pot chosen, around the player
 #     祝福      blesses an item chosen (takes the curse of a cursed one
 #               away instead)
-#     メッキ    a weapon or a shield chosen (with room, no サビよけ yet)
+#     錆止め    a weapon or a shield chosen (with room, no サビよけ yet)
 #               gets the seal of サビよけ (錆)
 #     引き寄せ  brings the enemies of the floor (not a shopkeeper) around
 #               the player
-#     困った時  the HP back in full, and one of the troubles at random
+#     救い  the HP back in full, and one of the troubles at random
 #               solved (surrounded: those next bound; hungry: full;
 #               cursed gear: uncursed; bad states: gone; strength down:
 #               back)
 #     パワーアップ  強さ turns of blows of 1.5 times the damage
 #     予防      the bad states pass, and none comes for the floor
 #     金縛り    the enemies next to the player are bound (かなしばり)
-#     ゾワゾワ  for 強さ turns, the enemies next to the player, about to
+#     同士討ち  for 強さ turns, the enemies next to the player, about to
 #               attack it, attack the other way, and use no ability
 #     大部屋    the floor is one big room; the shopkeepers come by the
 #               stairs (on them, while the player owes)
@@ -125,8 +125,8 @@
 #               monsters asleep, items, no traps)
 #     呪い      curses 強さ items carried at random
 #     罠        traps (seen) on the tiles around the player
-#     拾えず    nothing is picked up for the floor
-#     くちなし  the mouth of the player is sealed (口封じ)
+#     手ぶら    nothing is picked up for the floor
+#     口封じ  the mouth of the player is sealed (口封じ)
 #     聖域      read, nothing; put down, it sticks, and the enemies do
 #               not attack the player on it
 #     白紙      read, the player writes the name of a scroll it knows
@@ -135,7 +135,7 @@
 #     吹き飛ばし  blows the monster it hits 10 tiles away
 #     仲間      makes the monster it hits an ally (not a shopkeeper or a
 #               guard, and not past rules.txt 仲間の上限)
-#     場所替え  the player and the monster it hits change places
+#     入れ替え  the player and the monster it hits change places
 #     トンネル  digs 強さ tiles of rock to the front into a corridor (not
 #               the edge of the floor nor a shop; it stops at a creature)
 #   草, 巻物 and 杖 can also have an effect of the bolts of monsters
@@ -191,12 +191,12 @@
 ID	字	名前	種類	強さ	効果	ひび	回数	印	印数	値段
 bokutou	剣	木刀	武器	3	-	0	-	-	2	200
 tetsuken	剣	鉄の剣	武器	7	-	0	-	-	3	800
-katana	剣	カタナ	武器	10	-	0	-	-	4	1500
-kaishin	剣	会心剣	武器	6	-	0	-	会	3	1200
+katana	剣	刀	武器	10	-	0	-	-	4	1500
+kaishin	剣	鋭刃の剣	武器	6	-	0	-	会	3	1200
 seidoutachi	剣	青銅の太刀	武器	5	-	0	-	-	4	600
 hicchuu	剣	必中の剣	武器	4	-	0	-	必	3	1000
 seme	剣	攻めの剣	武器	5	-	0	-	攻	3	1000
-doutanuki	剣	どうたぬき	武器	9	-	0	-	-	3	1200
+doutanuki	剣	豪刀	武器	9	-	0	-	-	3	1200
 oodachi	剣	大太刀	武器	13	-	0	-	-	2	2500
 mikazuki	剣	三日月刀	武器	3	-	0	-	三	3	1500
 kinken	剣	金の剣	武器	8	-	0	-	錆	3	1500
@@ -222,12 +222,12 @@ nitou	剣	二刀	武器	7	-	0	-	連	3	2000
 seichouken	剣	成長の剣	武器	3	-	0	-	成	3	2000
 kitate	盾	木の盾	盾	3	-	0	-	-	2	200
 tetsutate	盾	鉄の盾	盾	7	-	0	-	-	3	800
-seidou	盾	青銅甲の盾	盾	5	-	0	-	-	3	700
+seidou	盾	青銅の盾	盾	5	-	0	-	-	3	700
 kintate	盾	金の盾	盾	4	-	0	-	錆	3	1000
 kawa	盾	皮の盾	盾	2	-	0	-	腹	3	600
 hangeki	盾	反撃の盾	盾	4	-	0	-	反	3	1000
 mamori	盾	守りの盾	盾	4	-	0	-	防	3	1000
-tekkou	盾	鉄甲の盾	盾	9	-	0	-	-	3	1200
+tekkou	盾	重鉄の盾	盾	9	-	0	-	-	3	1200
 ootate	盾	大盾	盾	12	-	0	-	-	2	2500
 nusumiyoke	盾	盗みよけの盾	盾	3	-	0	-	盗	3	1000
 mikiri	盾	見切りの盾	盾	3	-	0	-	避	3	1500
@@ -263,27 +263,27 @@ noroiyoke	腕	呪いよけの腕輪	腕輪	0	呪いよけ	15	-	-	0	1500
 metsubushiyoke	腕	目つぶしよけの腕輪	腕輪	0	目つぶしよけ	15	-	-	0	1500
 kuchifuujiyoke	腕	口封じよけの腕輪	腕輪	0	口封じよけ	15	-	-	0	1500
 yowariyoke	腕	弱りよけの腕輪	腕輪	0	弱りよけ	15	-	-	0	1500
-haraheri	腕	ハラヘリの腕輪	腕輪	20	ハラヘリ	0	-	-	0	1000
+haraheri	腕	大食いの腕輪	腕輪	20	大食い	0	-	-	0	1000
 taranagashi	腕	垂れ流しの腕輪	腕輪	100	垂れ流し	0	-	-	0	1000
-haraherazuu	腕	ハラヘラズの腕輪	腕輪	0	-	0	-	腹	0	2000
+haraherazuu	腕	節食の腕輪	腕輪	0	-	0	-	腹	0	2000
 kaishinu	腕	会心の腕輪	腕輪	0	-	0	-	会	0	2500
 mikiriu	腕	見切りの腕輪	腕輪	0	-	0	-	避	0	2000
 hangekiu	腕	反撃の腕輪	腕輪	0	-	0	-	反	0	2000
 mikawashiu	腕	身躱しの腕輪	腕輪	0	-	0	-	躱	0	2000
 hicchuuu	腕	必中の腕輪	腕輪	0	-	0	-	必	0	2500
-wanashi	腕	罠師の腕輪	腕輪	0	罠師	15	-	-	0	2000
+wanashi	腕	罠使いの腕輪	腕輪	0	罠使い	15	-	-	0	2000
 ishukushou	腕	胃縮小の腕輪	腕輪	20	胃縮小	0	-	-	0	1500
 tsuukon	腕	痛恨の腕輪	腕輪	50	痛恨	0	-	-	0	1000
 mamonoyobi	腕	魔物呼びの腕輪	腕輪	0	魔物呼び	0	-	-	0	1000
-takatobiu	腕	高飛びの腕輪	腕輪	10	高飛び	0	-	-	0	1500
+takatobiu	腕	転移の腕輪	腕輪	10	転移	0	-	-	0	1500
 bakuhatsu	腕	爆発の腕輪	腕輪	10	爆発	0	-	-	0	1500
-hetanage	腕	ヘタ投げの腕輪	腕輪	0	ヘタ投げ	0	-	-	0	1000
+hetanage	腕	投げ下手の腕輪	腕輪	0	投げ下手	0	-	-	0	1000
 taibaku	腕	耐爆の腕輪	腕輪	0	耐爆	15	-	-	0	1500
-mizugumo	腕	水蜘蛛の腕輪	腕輪	0	水蜘蛛	0	-	-	0	2000
+mizugumo	腕	水渡りの腕輪	腕輪	0	水渡り	0	-	-	0	2000
 fuyuu	腕	浮遊の腕輪	腕輪	0	浮遊	0	-	-	0	5000
 kabenuke	腕	壁抜けの腕輪	腕輪	0	壁抜け	0	-	-	0	3000
 noroiryoku	腕	呪い力の腕輪	腕輪	1	呪い力	0	-	-	0	1500
-harahetiyoke	腕	ハラヘリよけの腕輪	腕輪	0	ハラヘリよけ	15	-	-	0	1500
+harahetiyoke	腕	空腹よけの腕輪	腕輪	0	空腹よけ	15	-	-	0	1500
 entou	腕	遠投の腕輪	腕輪	0	遠投	0	-	-	0	2000
 shiawase	腕	しあわせの腕輪	腕輪	50	しあわせ	0	-	-	0	3000
 shinobiashi	腕	忍び足の腕輪	腕輪	0	忍び足	0	-	-	0	1500
@@ -294,16 +294,16 @@ tetsuya	矢	鉄の矢	矢	8	-	0	3-10	-	0	20
 ishi	矢	石	矢	3	-	0	1-1	-	0	2
 tetsudama	矢	鉄の玉	矢	12	-	0	1-1	-	0	10
 yakusou	草	薬草	草	50	HP回復	0	-	-	0	50
-otogiri	草	弟切草	草	100	HP回復	0	-	-	0	200
+otogiri	草	上薬草	草	100	HP回復	0	-	-	0	200
 chikarakusa	草	ちからの草	草	1	ちから	0	-	力	0	500
 megusuri	草	目薬草	草	0	目薬	0	-	-	0	100
-inochi	草	命の草	草	5	最大HP	0	-	-	0	300
-takatobi	草	高飛び草	草	0	ワープ	0	-	-	0	100
-subayasa	草	すばやさ草	草	0	倍速	0	-	-	0	150
+inochi	草	体力の草	草	5	最大HP	0	-	-	0	300
+takatobi	草	転移草	草	0	ワープ	0	-	-	0	100
+subayasa	草	韋駄天草	草	0	倍速	0	-	-	0	150
 konran	草	混乱草	草	0	混乱	0	-	-	0	100
 metsubushi	草	目つぶし草	草	0	目つぶし	0	-	-	0	100
 suimin	草	睡眠草	草	0	睡眠	0	-	-	0	150
-kuchinashisou	草	くちなし草	草	0	封印	0	-	-	0	100
+kuchinashisou	草	口封じ草	草	0	封印	0	-	-	0	100
 shiawasesou	草	しあわせ草	草	0	レベル+1	0	-	-	0	1000
 dokusou	草	毒草	草	0	毒	0	-	-	0	100
 mutekisou	草	無敵草	草	0	無敵	0	-	-	0	1500
@@ -313,15 +313,15 @@ fukkatsu	草	復活の草	草	0	復活	0	-	-	0	2500
 kaensou	草	火炎草	草	75	火炎	0	-	-	0	500
 shikibetsu	巻	識別の巻物	巻物	0	識別	0	-	-	0	100
 akari	巻	あかりの巻物	巻物	0	あかり	0	-	-	0	200
-mizugare	巻	水がれの巻物	巻物	0	水がれ	0	-	-	0	500
+mizugare	巻	干上がりの巻物	巻物	0	干上がり	0	-	-	0	500
 oharai	巻	おはらいの巻物	巻物	0	おはらい	0	-	-	0	300
 inzoudai	巻	印増大の巻物	巻物	0	印増大	0	-	-	0	800
 inkeshi	巻	印消しの巻物	巻物	0	印消し	0	-	-	0	300
-ten	巻	天の恵みの巻物	巻物	1	武器強化	0	-	-	0	500
-chi	巻	地の恵みの巻物	巻物	1	盾強化	0	-	-	0	500
+ten	巻	武器強化の巻物	巻物	1	武器強化	0	-	-	0	500
+chi	巻	盾強化の巻物	巻物	1	盾強化	0	-	-	0	500
 konranmaki	巻	混乱の巻物	巻物	0	混乱	0	-	-	0	300
-bakusui	巻	バクスイの巻物	巻物	0	睡眠	0	-	-	0	400
-shinkuu	巻	真空斬りの巻物	巻物	35	真空斬り	0	-	-	0	500
+bakusui	巻	眠りの巻物	巻物	0	睡眠	0	-	-	0	400
+shinkuu	巻	斬撃の巻物	巻物	35	斬撃	0	-	-	0	500
 zenmetsu	巻	全滅の巻物	巻物	0	全滅	0	-	-	0	1000
 tekifuuin	巻	敵封印の巻物	巻物	0	封印	0	-	-	0	500
 tekidonsoku	巻	敵鈍足の巻物	巻物	0	鈍足	0	-	-	0	300
@@ -333,29 +333,29 @@ onigirimaki	巻	おにぎりの巻物	巻物	0	おにぎり	0	-	-	0	200
 tsubozoudai	巻	壺増大の巻物	巻物	0	壺増大	0	-	-	0	500
 suidashi	巻	吸い出しの巻物	巻物	0	吸い出し	0	-	-	0	300
 shukufuku	巻	祝福の巻物	巻物	0	祝福	0	-	-	0	800
-mekki	巻	メッキの巻物	巻物	0	メッキ	0	-	-	0	500
+mekki	巻	サビよけの巻物	巻物	0	錆止め	0	-	-	0	500
 hikiyose	巻	引き寄せの巻物	巻物	0	引き寄せ	0	-	-	0	200
-komatta	巻	困った時の巻物	巻物	0	困った時	0	-	-	0	500
+komatta	巻	救いの巻物	巻物	0	救い	0	-	-	0	500
 powerup	巻	パワーアップの巻物	巻物	50	パワーアップ	0	-	-	0	500
 yobou	巻	予防の巻物	巻物	0	予防	0	-	-	0	300
 kanashibari	巻	金縛りの巻物	巻物	0	金縛り	0	-	-	0	500
-zowazowa	巻	ゾワゾワの巻物	巻物	10	ゾワゾワ	0	-	-	0	500
+zowazowa	巻	同士討ちの巻物	巻物	10	同士討ち	0	-	-	0	500
 ooheya	巻	大部屋の巻物	巻物	0	大部屋	0	-	-	0	200
 mamonobeya	巻	魔物部屋の巻物	巻物	0	魔物部屋	0	-	-	0	300
 tekikasoku	巻	敵加速の巻物	巻物	0	倍速	0	-	-	0	100
 noroimaki	巻	呪いの巻物	巻物	3	呪い	0	-	-	0	200
 wanamaki	巻	罠の巻物	巻物	0	罠	0	-	-	0	100
-hiroezu	巻	拾えずの巻物	巻物	0	拾えず	0	-	-	0	100
-kuchinashi	巻	くちなしの巻物	巻物	0	くちなし	0	-	-	0	100
+hiroezu	巻	手ぶらの巻物	巻物	0	手ぶら	0	-	-	0	100
+kuchinashi	巻	口封じの巻物	巻物	0	口封じ	0	-	-	0	100
 seiiki	巻	聖域の巻物	巻物	0	聖域	0	-	-	0	1000
 hakushi	巻	白紙の巻物	巻物	0	白紙	0	-	-	0	1000
 fukitobashi	杖	吹き飛ばしの杖	杖	0	吹き飛ばし	0	4-6	-	0	500
 nakama	杖	仲間の杖	杖	0	仲間	0	1-2	-	0	1500
-bashogae	杖	場所替えの杖	杖	0	場所替え	0	4-6	-	0	400
+bashogae	杖	入れ替えの杖	杖	0	入れ替え	0	4-6	-	0	400
 donsoku	杖	鈍足の杖	杖	0	鈍足	0	4-6	-	0	400
 fuuin	杖	封印の杖	杖	0	封印	0	4-6	-	0	500
-fukou	杖	不幸の杖	杖	0	レベル-1	0	3-5	-	0	600
-ichijishinogi	杖	一時しのぎの杖	杖	0	ワープ	0	4-6	-	0	400
+fukou	杖	衰えの杖	杖	0	レベル-1	0	3-5	-	0	600
+ichijishinogi	杖	追い払いの杖	杖	0	ワープ	0	4-6	-	0	400
 konranzue	杖	混乱の杖	杖	0	混乱	0	4-6	-	0	400
 suiminzue	杖	睡眠の杖	杖	0	睡眠	0	3-5	-	0	500
 metsubushizue	杖	目つぶしの杖	杖	0	目つぶし	0	4-6	-	0	400

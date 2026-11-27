@@ -103,7 +103,7 @@ type Game struct {
 	// the floor (the scroll of 予防).
 	Prevent bool
 	// NoPickup says that the player picks nothing up for the floor (the
-	// scroll of 拾えず).
+	// scroll of 手ぶら).
 	NoPickup bool
 	sprung   bool
 	// heldBy is the monster that holds the player (AbilityHold), while
@@ -1276,7 +1276,7 @@ func (g *Game) Status() string {
 		s += "  予防"
 	}
 	if g.NoPickup {
-		s += "  拾えず"
+		s += "  手ぶら"
 	}
 
 	if g.Debugged {

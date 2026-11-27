@@ -49,12 +49,12 @@ takes no room, and works in full while the item is equipped.  Merged
 into another weapon or shield, it becomes a seal of that one, weaker
 (half or so).  A synthesis keeps the ability of the base.  A scroll of
 印増大 adds a slot for seals (10 at most), one of 印消し takes a seal
-chosen away.  A scroll of メッキ puts the seal of サビよけ (錆) on a
+chosen away.  A scroll of サビよけ puts the seal of サビよけ (錆) on a
 weapon or a shield chosen.  With 錆 the weapon and the shield never rust,
 but a monster of rust takes the seal away instead.
 
 A scroll that asks for an item (識別, おはらい, 印増大, 印消し, おにぎり,
-壺増大, 吸い出し, 祝福, メッキ) offers every item carried (識別, the one
+壺増大, 吸い出し, 祝福, サビよけ) offers every item carried (識別, the one
 under the player too), and tells what it is once its effect is had:
 unknown, it asks "どれに使う？".  An item it cannot work on (or the goods
 of a shop, but for 識別) does nothing, and the scroll stays unknown, as
@@ -665,7 +665,7 @@ Every tile is one full-width character, two cells wide:
 	段	the stairs
 	罠	a trap the player has found ("GodaRogueTrap")
 	～	a waterway ("GodaRogueWater"): only those that swim or
-		float go over it, and the player with a bracelet of 水蜘蛛;
+		float go over it, and the player with a bracelet of 水渡り;
 		what is thrown flies over it, and what falls in sinks.
 		Some rooms have a pond, or an island of three items in a
 		ring of water
@@ -706,7 +706,7 @@ They are done one by one, a turn each.
 
 Lists of items show the icon, "E" for the equipped ones, and the name, in
 columns: >
-	 4: 剣 E 会心剣【会】
+	 4: 剣 E 鋭刃の剣【会】
 	 5: 盾   木の盾
 <
 
@@ -1045,21 +1045,21 @@ The built-in dungeons:
 				  腕輪: ちから 回復 気配察知 道具感知
 				        サビよけ 盗みよけ 睡眠よけ 混乱よけ
 				        呪いよけ 目つぶしよけ 口封じよけ
-				        弱りよけ ハラヘリ 垂れ流し 罠師 胃縮小
-				        痛恨 魔物呼び 高飛び 爆発 ヘタ投げ
-				        耐爆 水蜘蛛 浮遊 壁抜け 呪い力
-				        ハラヘリよけ 遠投 しあわせ 忍び足
+				        弱りよけ 大食い 垂れ流し 罠使い 胃縮小
+				        痛恨 魔物呼び 転移 爆発 投げ下手
+				        耐爆 水渡り 浮遊 壁抜け 呪い力
+				        空腹よけ 遠投 しあわせ 忍び足
 				        胃拡張 値切り
 				  草: HP回復 ちから 目薬 最大HP 最大満腹度+
 				      最大満腹度- 復活 火炎
-				  巻物: あかり 水がれ 識別 武器強化 盾強化
-				        おはらい 印増大 印消し 真空斬り 全滅
+				  巻物: あかり 干上がり 識別 武器強化 盾強化
+				        おはらい 印増大 印消し 斬撃 全滅
 				        罠消し 千里眼 道具寄せ 迷子 おにぎり
-				        壺増大 吸い出し 祝福 メッキ 引き寄せ
-				        困った時 パワーアップ 予防 金縛り
-				        ゾワゾワ 大部屋 魔物部屋 敵加速 呪い
-				        罠 拾えず くちなし 聖域 白紙
-				  杖: 吹き飛ばし 仲間 場所替え トンネル
+				        壺増大 吸い出し 祝福 錆止め 引き寄せ
+				        救い パワーアップ 予防 金縛り
+				        同士討ち 大部屋 魔物部屋 敵加速 呪い
+				        罠 手ぶら 口封じ 聖域 白紙
+				  杖: 吹き飛ばし 仲間 入れ替え トンネル
 				  食料: 満腹 腐った 焼き
 				  壺: 保存 合成 全回復 普通 底抜け 鑑定
 				      強化 弱化 換金 変化
@@ -1326,9 +1326,9 @@ with 家=x,y and 戸=x,y (its place and the door it guards), 敵対 (an angry
 shopkeeper).  Of a trap: 見える.
 
 The states, of a monster or of the player (the line 状態): 混乱=N, 鈍足=N,
-倍速=N, 睡眠=N, 封印, 目つぶし=N, かなしばり=N, ゾワゾワ=N (the turns
+倍速=N, 睡眠=N, 封印, 目つぶし=N, かなしばり=N, 同士討ち=N (the turns
 left); of the player only: 攻撃ダウン=N, 防御ダウン=N, パワーアップ=N, 予防,
-拾えず, 千里眼, あかり, 停止 (debug freeze), 不死身 (debug invincible).
+手ぶら, 千里眼, あかり, 停止 (debug freeze), 不死身 (debug invincible).
 
 The shop is its ID in shops.txt and its area x,y,w,h; its shopkeepers are
 the monsters with 店主.  The monster house is a tile of its room, and

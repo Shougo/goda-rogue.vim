@@ -27,7 +27,7 @@ func TestCatalog(t *testing.T) {
 		t.Errorf("lines %q", lines)
 	}
 	if !slices.ContainsFunc(lines, func(l string) bool {
-		return strings.HasPrefix(l, "  未識別: ") && strings.Contains(l, "弟切草 200G")
+		return strings.HasPrefix(l, "  未識別: ") && strings.Contains(l, "上薬草 200G")
 	}) {
 		t.Errorf("no kinds not identified: %q", lines)
 	}
@@ -37,7 +37,7 @@ func TestCatalog(t *testing.T) {
 	if err := g.Do("catalog", nil); err != nil {
 		t.Fatal(err)
 	}
-	want := "  " + g.fakeNames["otogiri"] + "? 200G: 弟切草"
+	want := "  " + g.fakeNames["otogiri"] + "? 200G: 上薬草"
 	if !slices.Contains(g.Prompt.Choices, want) {
 		t.Errorf("want %q in %q", want, g.Prompt.Choices)
 	}

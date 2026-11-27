@@ -51,9 +51,9 @@ import (
 // shopkeeper). Of a trap: 見える.
 //
 // The states, of a monster or of the player (the line 状態): 混乱=N,
-// 鈍足=N, 倍速=N, 睡眠=N, 封印, 目つぶし=N, かなしばり=N, ゾワゾワ=N (the
+// 鈍足=N, 倍速=N, 睡眠=N, 封印, 目つぶし=N, かなしばり=N, 同士討ち=N (the
 // turns left); of the player only: 攻撃ダウン=N, 防御ダウン=N,
-// パワーアップ=N, 予防, 拾えず, 千里眼, あかり, 停止, 不死身.
+// パワーアップ=N, 予防, 手ぶら, 千里眼, あかり, 停止, 不死身.
 //
 // The shop: 店 its ID (shops.txt) and its area x,y,w,h; its shopkeepers
 // are the monsters with 店主. The monster house: モンスターハウス x,y (a
@@ -609,7 +609,7 @@ func statesAttrs(s States) []string {
 	for _, f := range []struct {
 		n    int
 		name string
-	}{{s.Confused, "混乱"}, {s.Slowed, "鈍足"}, {s.Hasted, "倍速"}, {s.Asleep, "睡眠"}, {s.Blind, "目つぶし"}, {s.Bound, "かなしばり"}, {s.Zowa, "ゾワゾワ"}} {
+	}{{s.Confused, "混乱"}, {s.Slowed, "鈍足"}, {s.Hasted, "倍速"}, {s.Asleep, "睡眠"}, {s.Blind, "目つぶし"}, {s.Bound, "かなしばり"}, {s.Zowa, "同士討ち"}} {
 		if f.n > 0 {
 			a = append(a, fmt.Sprintf("%s=%d", f.name, f.n))
 		}
@@ -628,7 +628,7 @@ func stateAttr(s *States, k, v string) (bool, error) {
 		return true, nil
 	}
 	turns := map[string]*int{"混乱": &s.Confused, "鈍足": &s.Slowed, "倍速": &s.Hasted, "睡眠": &s.Asleep,
-		"目つぶし": &s.Blind, "かなしばり": &s.Bound, "ゾワゾワ": &s.Zowa}
+		"目つぶし": &s.Blind, "かなしばり": &s.Bound, "同士討ち": &s.Zowa}
 	p, ok := turns[k]
 	if !ok {
 		return false, nil
@@ -739,7 +739,7 @@ func (g *Game) playerStates() []string {
 	for _, f := range []struct {
 		on   bool
 		attr string
-	}{{g.Prevent, "予防"}, {g.NoPickup, "拾えず"}, {g.Seer, "千里眼"}, {g.Lit, "あかり"}, {g.Frozen, "停止"}, {g.Invincible, "不死身"}} {
+	}{{g.Prevent, "予防"}, {g.NoPickup, "手ぶら"}, {g.Seer, "千里眼"}, {g.Lit, "あかり"}, {g.Frozen, "停止"}, {g.Invincible, "不死身"}} {
 		if f.on {
 			a = append(a, f.attr)
 		}
@@ -751,7 +751,7 @@ func (g *Game) playerStates() []string {
 func (g *Game) playerState(a string) error {
 	k, v, _ := strings.Cut(a, "=")
 	turns := map[string]*int{"攻撃ダウン": &g.AttackDown, "防御ダウン": &g.DefenseDown, "パワーアップ": &g.PowerUp}
-	flags := map[string]*bool{"予防": &g.Prevent, "拾えず": &g.NoPickup, "千里眼": &g.Seer, "停止": &g.Frozen, "不死身": &g.Invincible}
+	flags := map[string]*bool{"予防": &g.Prevent, "手ぶら": &g.NoPickup, "千里眼": &g.Seer, "停止": &g.Frozen, "不死身": &g.Invincible}
 	switch {
 	case k == "あかり":
 		g.light()

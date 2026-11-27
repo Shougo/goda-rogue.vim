@@ -14,12 +14,12 @@ type States struct {
 	// Blind is the turns left blind (目つぶし): the player sees only the
 	// tiles next to it; a monster walks at random and attacks no one.
 	Blind int
-	// Bound says that it is bound (かなしばり, the scroll of 困った時): it
+	// Bound says that it is bound (かなしばり, the scroll of 救い): it
 	// does nothing until a blow (any loss of HP) frees it (Shougo,
 	// 2026-11-27, as in Shiren); an ally, also after boundTurns (the
 	// turns left), or when another state comes on it.
 	Bound int
-	// Zowa is the turns left of ゾワゾワ (the scroll): about to attack the
+	// Zowa is the turns left of 同士討ち (the scroll): about to attack the
 	// player, a monster attacks the other way, and uses no ability.
 	Zowa int
 	// Unhurt is the turns left of 無敵 (無敵草): nothing takes HP away.
@@ -89,7 +89,7 @@ func (s States) names(sealed string) []string {
 		name string
 	}{
 		{s.Confused > 0, "混乱"}, {s.Slowed > 0, "鈍足"}, {s.Hasted > 0, "倍速"},
-		{s.Asleep > 0, "睡眠"}, {s.Sealed, sealed}, {s.Blind > 0, "目つぶし"}, {s.Bound > 0, "かなしばり"}, {s.Zowa > 0, "ゾワゾワ"}, {s.Unhurt > 0, "無敵"},
+		{s.Asleep > 0, "睡眠"}, {s.Sealed, sealed}, {s.Blind > 0, "目つぶし"}, {s.Bound > 0, "かなしばり"}, {s.Zowa > 0, "同士討ち"}, {s.Unhurt > 0, "無敵"},
 	} {
 		if st.on {
 			ns = append(ns, st.name)

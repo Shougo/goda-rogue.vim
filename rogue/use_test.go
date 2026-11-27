@@ -29,7 +29,7 @@ func TestGrass(t *testing.T) {
 	}
 	use(t, g, "otogiri")
 	if g.HP != 100 {
-		t.Errorf("HP %d after 弟切草", g.HP)
+		t.Errorf("HP %d after 上薬草", g.HP)
 	}
 	// At full HP, the max HP goes up.
 	use(t, g, "yakusou")
@@ -297,8 +297,8 @@ func TestHungerShown(t *testing.T) {
 	}
 }
 
-// TestBoltItems: くちなし草 seals the mouth of who drinks it and the
-// abilities of the monster it hits; the staffs of 一時しのぎ, 混乱, 睡眠
+// TestBoltItems: 口封じ草 seals the mouth of who drinks it and the
+// abilities of the monster it hits; the staffs of 追い払い, 混乱, 睡眠
 // and 目つぶし warp, confuse, put to sleep and blind the monster their
 // bolt hits.
 func TestBoltItems(t *testing.T) {
@@ -307,7 +307,7 @@ func TestBoltItems(t *testing.T) {
 	g.HP, g.MaxHP = 9999, 9999
 	use(t, g, "kuchinashisou")
 	if !g.Sealed {
-		t.Error("くちなし草: the mouth is not sealed")
+		t.Error("口封じ草: the mouth is not sealed")
 	}
 	g.Sealed = false
 	g.Facing = "right"

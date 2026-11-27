@@ -183,7 +183,7 @@ func TestIdentifyScroll(t *testing.T) {
 		t.Fatalf("prompt %+v", p)
 	}
 	choose(t, g, grass)
-	if g.Name(grass) != "弟切草" || !strings.Contains(g.Message, "は弟切草だった。") ||
+	if g.Name(grass) != "上薬草" || !strings.Contains(g.Message, "は上薬草だった。") ||
 		!strings.Contains(g.Message, fake+"は識別の巻物だった。") || g.Turn != turn+1 {
 		t.Errorf("message %q, turn %d", g.Message, g.Turn)
 	}

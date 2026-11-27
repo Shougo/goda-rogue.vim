@@ -21,7 +21,7 @@ func (g *Game) call() {
 	}
 }
 
-// leap is the player wearing a bracelet of 高飛び sent somewhere on the
+// leap is the player wearing a bracelet of 転移 sent somewhere on the
 // floor, a turn in a hundred its strength; leaving a shop with what is not
 // paid for is theft. It says whether it leapt.
 func (g *Game) leap() bool {
@@ -106,7 +106,7 @@ func (g *Game) blastDamage(n int) int {
 }
 
 // clumsy is what the player threw or shot missing m, with a bracelet of
-// ヘタ投げ: it falls at m's feet (a pot breaks there), and a trap under m
+// 投げ下手: it falls at m's feet (a pot breaks there), and a trap under m
 // goes off on it, as with a bracelet of the trapper.
 func (g *Game) clumsy(it *Item, m *Monster) {
 	g.use(EffectClumsy)
@@ -122,7 +122,7 @@ func (g *Game) clumsy(it *Item, m *Monster) {
 }
 
 // standsOn says whether the player can stand on the tile t at p: a
-// floor; water with a bracelet of 水蜘蛛 or 浮遊; rock with a bracelet of
+// floor; water with a bracelet of 水渡り or 浮遊; rock with a bracelet of
 // 壁抜け, but the edge of the floor.
 func (g *Game) standsOn(t Tile, p Point) bool {
 	switch t {
@@ -180,7 +180,7 @@ func (g *Game) cursePower() int {
 	return n * b.Def.Strength
 }
 
-// drain is the scroll of 水がれ read: the waterways of the floor dry up
+// drain is the scroll of 干上がり read: the waterways of the floor dry up
 // into floor; the islands are reached on foot then. It says whether there
 // was water.
 func (g *Game) drain() bool {

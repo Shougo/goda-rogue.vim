@@ -277,14 +277,14 @@ const (
 	EffectNoWeak     Effect = "弱りよけ"
 	// EffectHungry: hungry twice as fast, the blows of the player do
 	// its strength in % more.
-	EffectHungry Effect = "ハラヘリ"
+	EffectHungry Effect = "大食い"
 	// EffectDrops: the monsters killed drop an item its strength in %
 	// more often; the player lets one of its own fall now and then
 	// (leakChance).
 	EffectDrops Effect = "垂れ流し"
 	// EffectTrapper: the player sees every trap and never sets one off
 	// by walking; the monsters set them off.
-	EffectTrapper Effect = "罠師"
+	EffectTrapper Effect = "罠使い"
 	// EffectSmallStomach: the player takes its strength in % less
 	// damage, and holds shrinkFullness less fullness.
 	EffectSmallStomach Effect = "胃縮小"
@@ -296,19 +296,19 @@ const (
 	EffectCall Effect = "魔物呼び"
 	// EffectLeap: a turn in a hundred, its strength in %, the player is
 	// sent to a tile of the floor at random.
-	EffectLeap Effect = "高飛び"
+	EffectLeap Effect = "転移"
 	// EffectBlast: its strength in % of the turns, the player blows up
 	// (blast).
 	EffectBlast Effect = "爆発"
 	// EffectClumsy: what the player throws or shoots never hits: it falls
 	// at the feet of the monster it would have hit, setting a trap there
 	// off on it.
-	EffectClumsy Effect = "ヘタ投げ"
+	EffectClumsy Effect = "投げ下手"
 	// EffectBlastGuard: an explosion (a monster's, a mine) does half its
 	// damage to the player.
 	EffectBlastGuard Effect = "耐爆"
 	// EffectWaterWalk: the player walks on the waterways (TileWater).
-	EffectWaterWalk Effect = "水蜘蛛"
+	EffectWaterWalk Effect = "水渡り"
 	// EffectFloat: the player floats: over the waterways, and over the
 	// traps without setting them off.
 	EffectFloat Effect = "浮遊"
@@ -320,7 +320,7 @@ const (
 	EffectCursePower Effect = "呪い力"
 	// EffectNoStarve: the monsters that suck the fullness (飢え) fail,
 	// and so do the traps of hunger.
-	EffectNoStarve Effect = "ハラヘリよけ"
+	EffectNoStarve Effect = "空腹よけ"
 	// EffectPierce: what the player throws or shoots flies through the
 	// monsters it hits.
 	EffectPierce Effect = "遠投"
@@ -335,8 +335,8 @@ const (
 	EffectBargain Effect = "値切り"
 	EffectHeal    Effect = "HP回復"
 	EffectLight   Effect = "あかり"
-	// EffectDrain: the waterways of the floor dry up (水がれ).
-	EffectDrain    Effect = "水がれ"
+	// EffectDrain: the waterways of the floor dry up (干上がり).
+	EffectDrain    Effect = "干上がり"
 	EffectIdentify Effect = "識別"
 	EffectBlowAway Effect = "吹き飛ばし"
 	EffectRecruit  Effect = "仲間"
@@ -350,7 +350,7 @@ const (
 	EffectFire     Effect = "火炎"
 	EffectUpWeapon Effect = "武器強化"
 	EffectUpShield Effect = "盾強化"
-	EffectSwap     Effect = "場所替え"
+	EffectSwap     Effect = "入れ替え"
 	EffectFood     Effect = "満腹"
 	// EffectGrilled: 強さ of fullness and of HP (焼きおにぎり, Shougo
 	// 2026-11-27: 50 and 50); an onigiri carried becomes one in a blast.
@@ -376,7 +376,7 @@ const (
 	EffectMoreSlots Effect = "印増大"
 	EffectEraseSeal Effect = "印消し"
 	// The scrolls of scroll.go.
-	EffectSlash      Effect = "真空斬り"
+	EffectSlash      Effect = "斬撃"
 	EffectWipe       Effect = "全滅"
 	EffectNoTraps    Effect = "罠消し"
 	EffectSeer       Effect = "千里眼"
@@ -386,21 +386,21 @@ const (
 	EffectPotUp      Effect = "壺増大"
 	EffectSuck       Effect = "吸い出し"
 	EffectBless      Effect = "祝福"
-	EffectPlate      Effect = "メッキ"
+	EffectPlate      Effect = "錆止め"
 	EffectGatherFoes Effect = "引き寄せ"
-	EffectTrouble    Effect = "困った時"
+	EffectTrouble    Effect = "救い"
 	EffectPowerUp    Effect = "パワーアップ"
 	EffectPrevent    Effect = "予防"
 	EffectBind       Effect = "金縛り"
-	EffectZowa       Effect = "ゾワゾワ"
+	EffectZowa       Effect = "同士討ち"
 	EffectBigRoom    Effect = "大部屋"
 	// The bad scrolls (Shougo, 2026-11-27: each has its use, but 敵加速,
-	// 拾えず and くちなし), and 聖域.
+	// 手ぶら and 口封じ), and 聖域.
 	EffectMonsterRoom Effect = "魔物部屋"
 	EffectCurse       Effect = "呪い"
 	EffectTraps       Effect = "罠"
-	EffectNoPickup    Effect = "拾えず"
-	EffectMute        Effect = "くちなし"
+	EffectNoPickup    Effect = "手ぶら"
+	EffectMute        Effect = "口封じ"
 	EffectSanctuary   Effect = "聖域"
 	EffectBlank       Effect = "白紙"
 )
@@ -978,6 +978,9 @@ func (l *loader) loadSeals() {
 	d := l.d
 	for _, row := range l.table("seals.txt", "印", "名前", "効果", "強さ") {
 		s := &SealDef{Glyph: row.cols["印"], Name: row.cols["名前"], Effect: SealEffect(row.cols["効果"])}
+		if e, ok := oldSealEffects[s.Effect]; ok {
+			s.Effect = e
+		}
 		if len([]rune(s.Glyph)) != 1 {
 			l.errorf(row.file, row.n, "印: want one character, not %q", s.Glyph)
 		}
@@ -1006,6 +1009,11 @@ func (l *loader) loadSeals() {
 		d.Seals = append(d.Seals, s)
 	}
 }
+
+// oldSealEffects are the names of effects of seals before they were
+// renamed (2026-11-28: names of their own, not Shiren's), for the
+// dungeons written with them (the frozen one of the tests).
+var oldSealEffects = map[SealEffect]SealEffect{"ハラヘラズ": SealNoHunger}
 
 // loadItems reads the items.
 func (l *loader) loadItems() {

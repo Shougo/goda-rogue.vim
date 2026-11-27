@@ -26,7 +26,7 @@ func TestInfo(t *testing.T) {
 
 	// Born with an ability: not a seal, and what it would be as one.
 	kaishin := carry(g, "kaishin", 0)
-	if lines := g.info(kaishin); lines[0] != "会心剣[会]（武器）" || !slices.Contains(lines, "[会]素の能力：25% の確率で会心の一撃（2 倍のダメージ）。") ||
+	if lines := g.info(kaishin); lines[0] != "鋭刃の剣[会]（武器）" || !slices.Contains(lines, "[会]素の能力：25% の確率で会心の一撃（2 倍のダメージ）。") ||
 		!slices.Contains(lines, "　別の武器に合成すると【会】：12% の確率で会心の一撃（2 倍のダメージ）。") || !slices.Contains(lines, "印 0/3") {
 		t.Errorf("born with 会: %q", lines)
 	}

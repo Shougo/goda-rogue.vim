@@ -20,7 +20,7 @@ const (
 	promptPlate   = "plate"
 )
 
-// slash is the scroll of 真空斬り: n damage to each enemy around, from the
+// slash is the scroll of 斬撃: n damage to each enemy around, from the
 // player (its EXP, when one dies). The weakness of the player (仙) does
 // not lessen it: it is the scroll's.
 func (g *Game) slash(n int) {
@@ -166,7 +166,7 @@ var choosers = map[string]chooser{
 		return it.Def.Category == CategoryPot && len(it.Contents) > 0
 	}, (*Game).suckOut},
 	promptBless: {"どれを祝福する？", func(g *Game, it *Item) bool { return it.cursable() && !it.Blessed }, (*Game).bless},
-	promptPlate: {"どれにメッキする？", func(g *Game, it *Item) bool {
+	promptPlate: {"どれに錆止めする？", func(g *Game, it *Item) bool {
 		return it.upgradable() && len(it.Seals) < it.slots() && !g.hasNoRust(it)
 	}, (*Game).plate},
 	promptSlot: {"どれの印の枠を増やす？", func(g *Game, it *Item) bool {
@@ -271,7 +271,7 @@ func (g *Game) bless(it *Item) {
 	g.say(g.Name(it) + "は祝福された。")
 }
 
-// plate puts 錆 on it (Shougo, 2026-11-27: メッキ is a seal, as in
+// plate puts 錆 on it (Shougo, 2026-11-27: 錆止め is a seal, as in
 // Shiren 6; 錆 does not add up, and its risk is a monster of rust taking
 // it away).
 func (g *Game) plate(it *Item) {
@@ -331,7 +331,7 @@ func (g *Game) nearFor(m *Monster, p Point) (Point, bool) {
 	return Point{}, false
 }
 
-// trouble is the scroll of 困った時 (Shougo, 2026-11-27): the HP comes back
+// trouble is the scroll of 救い (Shougo, 2026-11-27): the HP comes back
 // in full, and one of the troubles the player is in, at random, is
 // solved.
 func (g *Game) trouble() {
@@ -399,7 +399,7 @@ func (g *Game) adjacentEnemies() []*Monster {
 }
 
 // bindAround is the scroll of 金縛り (Shougo, 2026-11-27: the binding of
-// 困った時): the enemies next to the player are bound.
+// 救い): the enemies next to the player are bound.
 func (g *Game) bindAround() {
 	ms := g.adjacentEnemies()
 	if len(ms) == 0 {
@@ -451,7 +451,7 @@ func (g *Game) prevents(e MagicEffect) bool {
 	return true
 }
 
-// zowa is the scroll of ゾワゾワ (Shougo, 2026-11-27: the enemies next to
+// zowa is the scroll of 同士討ち (Shougo, 2026-11-27: the enemies next to
 // the player, as 金縛り): for n turns (10), they attack the other way
 // (actZowa).
 func (g *Game) zowa(n int) {
@@ -463,10 +463,10 @@ func (g *Game) zowa(n int) {
 	for _, m := range ms {
 		m.Zowa = n
 	}
-	g.say("敵はゾワゾワしている……。")
+	g.say("敵は同士討ちしている……。")
 }
 
-// zowaPasses is a turn passing for the monsters of ゾワゾワ.
+// zowaPasses is a turn passing for the monsters of 同士討ち.
 func (g *Game) zowaPasses() {
 	for _, m := range g.Monsters {
 		if m.Zowa > 0 {
@@ -475,7 +475,7 @@ func (g *Game) zowaPasses() {
 	}
 }
 
-// actZowa is a turn of the enemy m of ゾワゾワ: no
+// actZowa is a turn of the enemy m of 同士討ち: no
 // ability; next to the player, it attacks the tile on its other side
 // (another monster there takes the blow); else it comes on.
 func (g *Game) actZowa(m *Monster) bool {
@@ -604,7 +604,7 @@ func (g *Game) curseCarried(n int) {
 }
 
 // trapsAround is the scroll of 罠 (Shougo, 2026-11-27: for the traps, and
-// with 罠師): traps of the floor's kinds on the tiles around the player
+// with 罠使い): traps of the floor's kinds on the tiles around the player
 // where one may lie, found (seen).
 func (g *Game) trapsAround() {
 	d := g.Dungeon

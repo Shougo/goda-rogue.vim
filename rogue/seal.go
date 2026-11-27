@@ -32,7 +32,7 @@ const (
 	SealSure     SealEffect = "必中"
 	SealCounter  SealEffect = "反撃"
 	SealNoRust   SealEffect = "サビよけ"
-	SealNoHunger SealEffect = "ハラヘラズ"
+	SealNoHunger SealEffect = "節食"
 	// SealThree: a blow also strikes the two tiles beside the one the
 	// player faces, ahead of it.
 	SealThree SealEffect = "三方向"
@@ -83,7 +83,7 @@ const (
 	SealNoBlind   SealEffect = "目つぶしよけ"
 	SealNoWeak    SealEffect = "弱りよけ"
 	SealNoCurse   SealEffect = "呪いよけ"
-	SealNoStarve  SealEffect = "ハラヘリよけ"
+	SealNoStarve  SealEffect = "空腹よけ"
 	SealNoTrap    SealEffect = "罠よけ"
 	// SealBlastGuard: an explosion does its % less damage to the player.
 	SealBlastGuard SealEffect = "耐爆"

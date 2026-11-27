@@ -124,7 +124,7 @@ func TestSynthesis(t *testing.T) {
 	if len(p.Contents) != 1 || base.Upgrade != 3 || !slices.Equal(base.Seals, []string{"会", "会", "必"}) {
 		t.Fatalf("contents %d, upgrade %d, seals %v", len(p.Contents), base.Upgrade, base.Seals)
 	}
-	if !strings.Contains(g.Message, "カタナと会心剣が合成された！") {
+	if !strings.Contains(g.Message, "刀と鋭刃の剣が合成された！") {
 		t.Errorf("message %q", g.Message)
 	}
 	// No more seals than the slots; the same seal again too.
@@ -137,7 +137,7 @@ func TestSynthesis(t *testing.T) {
 	if !slices.Equal(base.Seals, []string{"会", "会", "必", "会"}) || len(p.Contents) != 2 {
 		t.Errorf("seals %v, contents %d", base.Seals, len(p.Contents))
 	}
-	if g.describe(base) != "カタナ+3【会会必会】" {
+	if g.describe(base) != "刀+3【会会必会】" {
 		t.Errorf("label %q", g.describe(base))
 	}
 	// Four items went in, two merged: the pot is full.
@@ -181,7 +181,7 @@ func TestMixedSynthesis(t *testing.T) {
 	if !g.merge(sword, carry(g, "chikarakusa", 0), true) || !slices.Equal(sword.Seals, []string{"力"}) {
 		t.Fatalf("seals %v", sword.Seals)
 	}
-	if !strings.Contains(g.Message, "カタナとちからの草が合成された！") {
+	if !strings.Contains(g.Message, "刀とちからの草が合成された！") {
 		t.Errorf("message %q", g.Message)
 	}
 	shield := carry(g, "tetsutate", 0)
@@ -296,7 +296,7 @@ func TestSeals(t *testing.T) {
 		t.Errorf("upgrade %d, message %q", sword.Upgrade, g.Message)
 	}
 
-	// ハラヘラズ, born with it: half as hungry.
+	// 節食, born with it: half as hungry.
 	shield.Equipped = false
 	carry(g, "kawa", 0).Equipped = true
 	g.Fullness, g.hunger = 50, 0

@@ -427,7 +427,7 @@ var hungerMessages = []struct {
 }
 
 // getHungry makes the player hungrier as turns pass (twice as fast with a
-// 回復 or ハラヘリ bracelet), and hurts it once it is starving: no HP
+// 回復 or 大食い bracelet), and hurts it once it is starving: no HP
 // comes back, and a point goes every turn.
 func (g *Game) getHungry() {
 	// A bracelet of 胃縮小 put on: what is over its cap is gone.
@@ -444,7 +444,7 @@ func (g *Game) getHungry() {
 		}
 		return
 	}
-	// In hundredths of a turn's hunger: ハラヘラズ takes its share off.
+	// In hundredths of a turn's hunger: 節食 takes its share off.
 	// A heavy shield (腹減り) adds its share.
 	g.hunger += int(math.Round(100 * (1 - g.sealShare(SealNoHunger)) * (1 + g.sealShare(SealHeavy))))
 	if g.wears(EffectRegen) || g.wears(EffectHungry) {
