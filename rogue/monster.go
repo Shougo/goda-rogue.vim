@@ -716,7 +716,11 @@ func (g *Game) dropFrom(m *Monster) {
 	if def == nil {
 		return
 	}
-	g.land(g.newItemOf(g.rng, def, m.Pos), m.Pos)
+	it := g.newItemOf(g.rng, def, m.Pos)
+	g.land(it, m.Pos)
+	if it.Relic > 0 && g.Visible(m.Pos) {
+		g.say("何かが光った！")
+	}
 }
 
 // levelUps raises the player's level as far as its EXP goes.

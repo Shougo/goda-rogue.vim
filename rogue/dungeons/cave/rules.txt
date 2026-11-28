@@ -54,6 +54,12 @@
 # time). A shop sells blessed items at twice their price (optional: 0, as
 # if missing, for never).
 祝福	20
+# How rarely a weapon or a shield is a 神器 (a relic): one in so many
+# (optional: 0, as if missing, for never). A blue one (青) is stronger
+# by +5 to +10; a gold one (金), one in four of them, by +3 to +8, with
+# one or two slots more and one to three seals in them. The higher the
+# bonus, the rarer.
+神器	32
 # How rarely a scroll of identification, of おはらい or of upgrade does
 # more: one in so many (always when blessed). Lucky, the first identifies
 # everything carried, the second takes every curse away, the others give

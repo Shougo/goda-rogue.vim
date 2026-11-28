@@ -753,7 +753,10 @@ The built-in dungeons:
 				道具の呪い, optional, default 0: never), how
 				rarely such an item is blessed (祝福, the
 				same), how rarely a scroll is lucky (ラッキー,
-				the same), the percents of its attack and of
+				the same), how rarely a weapon or a shield
+				is a relic (神器, the same: stronger by +5
+				to +10, blue, or a gold one, by +3 to +8
+				with more slots and seals in them), the percents of its attack and of
 				its defense a monster of rank 4 gets each time
 				it ranks up beyond (超過攻撃 and 超過防御,
 				optional, default 130 and 120; its max HP

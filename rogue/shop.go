@@ -56,13 +56,14 @@ func price(it *Item) int {
 	if it.Def.Category == CategoryArrow {
 		return it.Def.Price * max(it.Count, 1)
 	}
+	p := it.Def.Price * relicPrice(it) / 100
 	switch {
 	case it.Cursed:
-		return it.Def.Price * curseRate / 100
+		return p * curseRate / 100
 	case it.Blessed:
-		return it.Def.Price * blessRate / 100
+		return p * blessRate / 100
 	}
-	return it.Def.Price
+	return p
 }
 
 // sellPrice is what a shop pays for it.

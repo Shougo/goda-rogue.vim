@@ -251,3 +251,35 @@ func TestPoisonBlow(t *testing.T) {
 		}
 	}
 }
+
+// TestRelic: a relic is stronger than its kind, shows it in its name and
+// costs more; a gold one has seals in more slots.
+func TestRelic(t *testing.T) {
+	g, _ := roomGame(t, 6, 5)
+	g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.Relic = 1 })
+	var blue, gold *Item
+	for i := 0; i < 400 && (blue == nil || gold == nil); i++ {
+		it := g.newItemOf(g.rng, g.Dungeon.Item("katana"), g.Player)
+		switch it.Relic {
+		case RelicBlue:
+			blue = it
+		case RelicGold:
+			gold = it
+		}
+	}
+	if blue == nil || gold == nil {
+		t.Fatal("no relics")
+	}
+	if b := blue.RelicBonus; b < 5 || b > 10 {
+		t.Errorf("blue bonus %d", b)
+	}
+	if blue.Strength() != blue.Def.Strength+blue.RelicBonus+blue.Upgrade {
+		t.Errorf("strength %d", blue.Strength())
+	}
+	if gold.slots() <= gold.Def.Slots || len(gold.Seals) == 0 {
+		t.Errorf("gold slots %d, seals %v", gold.slots(), gold.Seals)
+	}
+	if price(blue) != 2*blue.Def.Price || !strings.Contains(g.Label(blue), "（青神器）") {
+		t.Errorf("price %d, label %q", price(blue), g.Label(blue))
+	}
+}

@@ -83,6 +83,10 @@ type Game struct {
 	// houseFound says whether the player has entered it.
 	House      int
 	houseFound bool
+	// glinted are the rooms of the floor glintDepth where a relic was
+	// told of (relic.go).
+	glinted    map[int]bool
+	glintDepth int
 	// States are the states of the player that pass with time
 	// (state.go). hasteSkip says whether the monsters skip the next
 	// action of a fast player.
@@ -264,6 +268,7 @@ func (g *Game) descend() {
 	g.markSafe(g.Player)
 	g.say(fmt.Sprintf("%dF に着いた。", g.Depth))
 	g.enterHouse()
+	g.relicGlint()
 	g.arriveWithMimics()
 }
 
@@ -1173,6 +1178,7 @@ func (g *Game) step(d Point, pick bool) bool {
 		g.wake(from)
 		g.wake(room)
 		g.enterHouse()
+		g.relicGlint()
 		g.enterShop(wasInShop)
 	}
 	g.look()
@@ -1210,6 +1216,7 @@ func (g *Game) shove(to Point) {
 		g.wake(from)
 		g.wake(room)
 		g.enterHouse()
+		g.relicGlint()
 		g.enterShop(wasInShop)
 	}
 	g.look()

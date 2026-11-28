@@ -59,8 +59,12 @@ type Item struct {
 	// Seals are the seals of a weapon or a shield (their glyphs).
 	Seals []string
 	// MoreSlots are the slots for seals a scroll of 印増大 added to those
-	// of its kind (seals.go).
+	// of its kind (seals.go), and those of a gold relic.
 	MoreSlots int
+	// Relic says whether it is a 神器 (relic.go): RelicBlue or RelicGold;
+	// RelicBonus is what it adds to the strength of its kind.
+	Relic      int
+	RelicBonus int
 	// Contents are the items in a pot; Charges is how many it holds.
 	Contents []*Item
 	// Known says whether the player knows the upgrade value of a weapon
@@ -106,7 +110,7 @@ func (it *Item) upgradable() bool {
 }
 
 // Strength is the strength of a weapon or a shield, upgrade included.
-func (it *Item) Strength() int { return max(it.Def.Strength+it.Upgrade, 0) }
+func (it *Item) Strength() int { return max(it.Def.Strength+it.RelicBonus+it.Upgrade, 0) }
 
 // Label is the item as the inventory shows it: its glyph as an icon, its
 // name ("?" after the name of an unidentified kind), its upgrade value or
@@ -144,6 +148,7 @@ func (g *Game) describe(it *Item) string {
 			s += fmt.Sprintf("%+d", it.Upgrade)
 		}
 		s += sealsLabel(it)
+		s += relicLabel(it)
 	case it.Def.Category == CategoryPot:
 		s += g.potLabel(it)
 	case it.Def.Category == CategoryArrow:

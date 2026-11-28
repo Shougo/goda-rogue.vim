@@ -59,6 +59,7 @@ func (g *Game) Clone() *Game {
 	c.fakeNames = maps.Clone(g.fakeNames)
 	c.met = maps.Clone(g.met)
 	c.priced = maps.Clone(g.priced)
+	c.glinted = maps.Clone(g.glinted)
 	c.names = maps.Clone(g.names)
 	c.guaranteed = map[int][]string{}
 	for k, v := range g.guaranteed {

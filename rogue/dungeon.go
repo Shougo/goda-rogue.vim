@@ -129,6 +129,9 @@ type Rules struct {
 	// Bless is how rarely an item that can be cursed is blessed
 	// instead: one in so many (rules.txt 祝福; 0 for never; bless.go).
 	Bless int
+	// Relic is how rarely a weapon or a shield is a 神器 (relic.go): one
+	// in so many (0 for never).
+	Relic int
 	// Lucky is how rarely a scroll that luck makes better does more:
 	// one in so many (rules.txt ラッキー; 0 for never unless blessed;
 	// lucky.go).
@@ -773,7 +776,7 @@ func (l *loader) loadRules() {
 	rk := l.keys("rules.txt", []string{
 		"最大HP", "ちから", "回復ターン", "湧きターン", "最大モンスター数",
 		"風1", "風2", "風3", "防御K", "主の命中", "敵の命中", "成長", "最初の仲間", "強敵ランク差",
-		"持ち物の数", "ひびの段階", "腕輪の傷みやすさ", "満腹度", "腹減りターン", "見つけた罠", "デバッグ",
+		"持ち物の数", "ひびの段階", "腕輪の傷みやすさ", "神器", "満腹度", "腹減りターン", "見つけた罠", "デバッグ",
 		"お金投げ", "落とし物", "仲間の命中", "主の投擲命中", "敵の投擲命中", "仲間の上限", "武具の呪い", "腕輪の呪い", "道具の呪い", "食料の呪い", "祝福", "ラッキー",
 		"超過攻撃", "超過防御",
 	})
@@ -866,6 +869,9 @@ func (l *loader) loadRules() {
 	}
 	if _, ok := rk["祝福"]; ok {
 		r.Bless = l.keyInt("rules.txt", rk, "祝福", 0)
+	}
+	if _, ok := rk["神器"]; ok {
+		r.Relic = l.keyInt("rules.txt", rk, "神器", 0)
 	}
 	if _, ok := rk["食料の呪い"]; ok {
 		r.CurseFood = l.keyInt("rules.txt", rk, "食料の呪い", 0)

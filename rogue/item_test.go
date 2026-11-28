@@ -505,8 +505,8 @@ func TestWear(t *testing.T) {
 	for _, tc := range []struct {
 		wear, cracks int
 	}{
-		{0, 0},   // never
-		{700, 3}, // 15 x 7 = 105 %: every floor
+		{0, 0},    // never
+		{1300, 3}, // 8 x 13 = 104 %: every floor
 	} {
 		g, _ := roomGame(t, 4, 3)
 		d := *g.Dungeon
