@@ -365,9 +365,11 @@ func TestBotStepBack(t *testing.T) {
 	if len(ms) != 2 {
 		t.Fatalf("%d next", len(ms))
 	}
+	// (Into the corridor: back, or another tile of it the layout gives.)
 	name, ok := b.stepBack(g, ms)
-	if !ok || at.Add(Directions[name]) != back {
-		t.Fatalf("%v %v", name, ok)
+	to := at.Add(Directions[name])
+	if !ok || to != back && (g.Level.RoomAt(to) >= 0 || !g.Level.At(to).Walkable()) {
+		t.Fatalf("%v %v to %v, back %v", name, ok, to, back)
 	}
 	if oneByOneDeath(g, ms, g.HP) >= deathChance(g, ms) {
 		t.Error("one by one is not safer")
