@@ -126,7 +126,7 @@ func (b *Bot) stopper(g *Game, m *Monster) (botAnswer, bool) {
 		}
 		cost := b.worth(g, it, false)
 		if !found || cost < best.cost {
-			best = botAnswer{cost, 0, it, command, m, nil, false}
+			best = botAnswer{cost, 0, it, command, m, nil, false, ""}
 			found = true
 		}
 	}

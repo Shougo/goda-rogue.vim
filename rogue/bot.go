@@ -787,20 +787,20 @@ func (b *Bot) answers(g *Game, near, ms []*Monster) []botAnswer {
 		switch it.Def.Category {
 		case CategoryGrass:
 			chance := meanOf(kinds, func(def *ItemDef) float64 { return drinkDeath(g, ms, def) })
-			answers = append(answers, botAnswer{cost, chance, it, commandDrink, nil, nil, false})
+			answers = append(answers, botAnswer{cost, chance, it, commandDrink, nil, nil, false, ""})
 			// A known grass that is better thrown.
 			if g.identified[it.Def.ID] {
 				if target, chance := b.best(near, func(m *Monster) float64 { return throwDeath(g, ms, m, it.Def) }); target != nil {
-					answers = append(answers, botAnswer{cost, chance, it, commandThrow, target, nil, false})
+					answers = append(answers, botAnswer{cost, chance, it, commandThrow, target, nil, false, ""})
 				}
 			}
 		case CategoryScroll:
 			chance := meanOf(kinds, func(def *ItemDef) float64 { return readDeath(g, ms, def) })
-			answers = append(answers, botAnswer{cost, chance, it, commandRead, nil, nil, false})
+			answers = append(answers, botAnswer{cost, chance, it, commandRead, nil, nil, false, ""})
 		case CategoryFood:
 			// At a hungry ghost: it eats it and is gone.
 			if target, chance := b.best(near, func(m *Monster) float64 { return feedDeath(g, ms, m) }); target != nil {
-				answers = append(answers, botAnswer{b.worth(g, it, false), chance, it, commandThrow, target, nil, false})
+				answers = append(answers, botAnswer{b.worth(g, it, false), chance, it, commandThrow, target, nil, false, ""})
 			}
 		case CategoryStaff:
 			if it.Known && it.Charges == 0 {
@@ -819,7 +819,10 @@ func (b *Bot) answers(g *Game, near, ms []*Monster) []botAnswer {
 				return meanOf(kinds, func(def *ItemDef) float64 { return waveDeath(g, ms, m, def) })
 			})
 			if target != nil {
-				answers = append(answers, botAnswer{cost, chance, it, commandWave, target, nil, false})
+				answers = append(answers, botAnswer{cost, chance, it, commandWave, target, nil, false, ""})
+			}
+			if len(kinds) == 1 {
+				answers = append(answers, b.staffAnswers(g, ms, it, kinds[0], cost)...)
 			}
 		}
 		if len(kinds) > 1 {
@@ -829,12 +832,12 @@ func (b *Bot) answers(g *Game, near, ms []*Monster) []botAnswer {
 		}
 	}
 	if pot, fuel, ok := b.healingPot(g); ok {
-		answers = append(answers, botAnswer{b.healPrice(g) + b.worth(g, fuel, false), fightDeath(g, ms, g.MaxHP, 1), pot, commandPutIn, nil, fuel, false})
+		answers = append(answers, botAnswer{b.healPrice(g) + b.worth(g, fuel, false), fightDeath(g, ms, g.MaxHP, 1), pot, commandPutIn, nil, fuel, false, ""})
 	}
 	// (Held, it cannot step away.)
 	if len(ms) > 1 && g.Stuck == 0 {
 		if d, ok := b.stepBack(g, ms); ok {
-			answers = append(answers, botAnswer{0, oneByOneDeath(g, ms, g.HP), nil, "move " + d, nil, nil, false})
+			answers = append(answers, botAnswer{0, oneByOneDeath(g, ms, g.HP), nil, "move " + d, nil, nil, false, ""})
 		}
 	}
 	if b.seesStairs(g) && g.Stuck == 0 {
@@ -843,7 +846,7 @@ func (b *Bot) answers(g *Game, near, ms []*Monster) []botAnswer {
 			if b.Style == BotCareful {
 				cost = leaveCost
 			}
-			answers = append(answers, botAnswer{cost, fleeDeath(g, ms, g.HP, dist, step), nil, "", nil, nil, false})
+			answers = append(answers, botAnswer{cost, fleeDeath(g, ms, g.HP, dist, step), nil, "", nil, nil, false, ""})
 		}
 	}
 	return answers
@@ -864,6 +867,8 @@ func (b *Bot) take(g *Game, pick *botAnswer) (string, []string) {
 		if name := directionName(Point{sign(d.X), sign(d.Y)}); g.Facing != name {
 			return "turn", []string{name}
 		}
+	case pick.dir != "" && g.Facing != pick.dir:
+		return "turn", []string{pick.dir}
 	}
 	b.spent++
 	if pick.fuel != nil {
@@ -1032,6 +1037,9 @@ type botAnswer struct {
 	// unsure says the bot does not know what the item is: such answers
 	// are the last resort.
 	unsure bool
+	// dir is the way to face first, for a staff that sends no bolt at a
+	// monster (飛びつき).
+	dir string
 }
 
 // mayBe returns the kinds it may be, as the player knows: its kind when
@@ -1147,6 +1155,10 @@ func (b *Bot) light(g *Game) (string, []string) {
 	}
 	if it := carried(g, func(it *Item) bool { return b.known(g, it, EffectLight) }); it != nil {
 		return b.use(it, commandRead)
+	}
+	// A staff of 導き shows the stairs.
+	if it := carried(g, func(it *Item) bool { return b.known(g, it, EffectGuide) && !(it.Known && it.Charges == 0) }); it != nil {
+		return b.use(it, commandWave)
 	}
 	return "", nil
 }
@@ -2621,7 +2633,7 @@ func cause(g *Game) string {
 		return "cleared"
 	case o == "":
 		return "unfinished"
-	case strings.Contains(o, "クロンの風"):
+	case strings.Contains(o, "風に吹き飛ばされた"):
 		return "wind"
 	case strings.Contains(o, "飢え死に"):
 		return "hunger"
