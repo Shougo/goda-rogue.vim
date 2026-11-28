@@ -926,3 +926,20 @@ func TestBotCannonHurt(t *testing.T) {
 		t.Errorf("stepped to %v, on a line of the cannon at %v [%s]", p, m.Pos, b.rule)
 	}
 }
+
+// TestBotPulledBack tests that walking away from a crab beside a frog,
+// which pulls the player back next to it, counts as staying under the
+// crab's blows.
+func TestBotPulledBack(t *testing.T) {
+	g, r := roomGame(t, 8, 3)
+	g.Player = Point{r.X + 2, r.Y}
+	crab := place(g, kind("kani1"), Point{r.X + 3, r.Y})
+	ms := []*Monster{crab}
+	step := Point{r.X + 1, r.Y}
+	away := fleeDeath(g, ms, 3, 5, step)
+	frog := place(g, kind("kaeru1"), Point{r.X + 4, r.Y})
+	pulled := fleeDeath(g, append(ms, frog), 3, 5, step)
+	if !pulledBack(g, step) || pulled <= away {
+		t.Errorf("flee death %.2f with a frog, %.2f without", pulled, away)
+	}
+}

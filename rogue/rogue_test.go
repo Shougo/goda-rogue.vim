@@ -162,7 +162,7 @@ func TestTurnCostsNothing(t *testing.T) {
 }
 
 func TestSwapWithAlly(t *testing.T) {
-	g := NewGame(cave(), "ally")
+	g := NewGame(allyCave(), "ally")
 	var ally *Monster
 	for _, m := range g.Monsters {
 		if m.Ally {
@@ -299,12 +299,8 @@ func TestSafe(t *testing.T) {
 
 func TestAttack(t *testing.T) {
 	g := find(t, func(g *Game) bool { return g.Level.At(g.Player.Add(Point{1, 0})).Walkable() })
-	var ally *Monster
-	for _, m := range g.Monsters {
-		if m.Ally {
-			ally = m
-		}
-	}
+	ally := newMonster(kind("nezumi1"))
+	ally.Ally = true
 	g.Monsters = nil
 	g.Items = nil
 	right := g.Player.Add(Point{1, 0})
@@ -953,6 +949,13 @@ func cave() *Dungeon {
 	if err != nil {
 		panic(err)
 	}
+	return d
+}
+
+// allyCave returns the built-in dungeon with a rat along from the start.
+func allyCave() *Dungeon {
+	d := cave()
+	d.Rules.FirstAlly = "nezumi1"
 	return d
 }
 

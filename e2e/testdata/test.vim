@@ -147,7 +147,8 @@ function! s:start() abort
   for group in ['GodaRogueWall', 'GodaRogueFloor', 'GodaRoguePlayer']
     call s:check('group ' . group, index(groups, group) >= 0, 1)
   endfor
-  call s:check('ally', len(filter(copy(groups), {_, g -> g =~# '^GodaRogueAlly[1-4]$'})), 1)
+  " No ally comes along from the start.
+  call s:check('ally', len(filter(copy(groups), {_, g -> g =~# '^GodaRogueAlly[1-4]$'})), 0)
 
   let dungeons = goda_rogue#dungeons()
   call s:check('dungeons', index(map(copy(dungeons), 'v:val.id'), 'cave') >= 0, 1)
@@ -236,8 +237,7 @@ function! s:actions() abort
   endfor
   call s:check('move', s:status() =~# '  ターン 1（', 1)
   call s:check('cursor after move', s:cursor_char(), '主')
-  " Walked tiles show as safe (the ally following the player may stand on
-  " the first one).
+  " Walked tiles show as safe.
   for dir in ['left', 'right', 'up', 'down', 'left', 'right', 'up', 'down']
     if index(s:all_groups(), 'GodaRogueFloorSafe') >= 0
       break

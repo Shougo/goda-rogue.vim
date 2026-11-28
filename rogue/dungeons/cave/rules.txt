@@ -32,8 +32,8 @@
 敵の投擲命中	84
 # The growth table of the player (and of monsters without their own).
 成長	普通
-# The ally at the start (empty: none).
-最初の仲間	nezumi1
+# The ally at the start (optional: none if missing), as 最初の仲間 and
+# the monster's ID.
 # How many allies the player has at most (optional: 3 if missing).
 仲間の上限	3
 # How rarely a weapon or a shield (武具の呪い), a bracelet (腕輪の呪い),

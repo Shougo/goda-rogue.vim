@@ -541,6 +541,17 @@ func oneByOneDeath(g *Game, ms []*Monster, hp int) float64 {
 // blows of a crowd, with a scroll that would have put it to sleep.
 func fleeDeath(g *Game, ms []*Monster, hp, turns int, step Point) float64 {
 	var foes []foe
+	if pulledBack(g, step) {
+		// A puller brings the player back next to them every turn: they
+		// all keep hitting (the bots walked away from a crab beside a
+		// frog to their death, pulled back each step).
+		for _, m := range ms {
+			if !m.still() || chebyshev(m.Pos, g.Player) <= 1 {
+				foes = append(foes, foe{hitDamages(g, m), 1, min(turns, riskTurns), m})
+			}
+		}
+		return deathDP(g, hp, foes)
+	}
 	for _, m := range ms {
 		if a, ok := m.ability(AbilityKnight); ok {
 			// It jumps after the player and swoops on it every turn
@@ -564,6 +575,25 @@ func fleeDeath(g *Game, ms []*Monster, hp, turns int, step Point) float64 {
 		}
 	}
 	return deathDP(g, hp, foes)
+}
+
+// pulledBack reports whether an awake enemy in sight would likely pull
+// the player back after its step to step.
+func pulledBack(g *Game, step Point) bool {
+	for _, m := range g.visibleEnemies() {
+		a, ok := m.ability(AbilityPull)
+		if !ok || m.Dozing || a.Values[1] < 50 {
+			continue
+		}
+		if a.Values[0] == 0 {
+			if i := g.Level.RoomAt(m.Pos); i >= 0 && i == g.Level.RoomAt(step) && chebyshev(m.Pos, step) > 1 {
+				return true
+			}
+		} else if _, _, ok := g.lineTo(m.Pos, step, a.Values[0]); ok {
+			return true
+		}
+	}
+	return false
 }
 
 // deathDP returns the chance that the player with hp dies to the attacks

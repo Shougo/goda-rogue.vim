@@ -150,7 +150,7 @@
 床	1	30	suidashi	1
 床	1	30	shukufuku	1
 床	1	30	mekki	1
-床	1	30	hikiyose	1
+床	3	30	hikiyose	1
 床	1	30	komatta	1
 床	1	30	powerup	1
 床	1	30	yobou	1
@@ -340,7 +340,7 @@
 よろず	1	30	suidashi	1
 よろず	1	30	shukufuku	1
 よろず	1	30	mekki	1
-よろず	1	30	hikiyose	1
+よろず	3	30	hikiyose	1
 よろず	1	30	komatta	1
 よろず	1	30	powerup	1
 よろず	1	30	yobou	1
@@ -656,7 +656,7 @@
 変化	1	30	suidashi	1
 変化	1	30	shukufuku	1
 変化	1	30	mekki	1
-変化	1	30	hikiyose	1
+変化	3	30	hikiyose	1
 変化	1	30	komatta	1
 変化	1	30	powerup	1
 変化	1	30	yobou	1
