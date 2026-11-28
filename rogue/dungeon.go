@@ -403,7 +403,12 @@ const (
 	EffectRefresh Effect = "元気"
 	EffectForget  Effect = "物忘れ"
 	// EffectTunnel is the staff of トンネル: it digs to its front.
-	EffectTunnel    Effect = "トンネル"
+	EffectTunnel Effect = "トンネル"
+	// The staffs of 2026-11-28 that send no bolt (staff2.go): 壁作り, 飛び
+	// つき and 導き.
+	EffectWall      Effect = "壁作り"
+	EffectLeapTo    Effect = "飛びつき"
+	EffectGuide     Effect = "導き"
 	EffectUncurse   Effect = "おはらい"
 	EffectMoreSlots Effect = "印増大"
 	EffectEraseSeal Effect = "印消し"
@@ -449,7 +454,7 @@ var effects = map[Category][]Effect{
 		EffectSlash, EffectWipe, EffectNoTraps, EffectSeer, EffectGather, EffectLost, EffectOnigiri, EffectPotUp, EffectSuck, EffectBless, EffectPlate,
 		EffectGatherFoes, EffectTrouble, EffectPowerUp, EffectPrevent, EffectBind,
 		EffectZowa, EffectBigRoom, EffectMonsterRoom, EffectCurse, EffectTraps, EffectNoPickup, EffectMute, EffectSanctuary, EffectBlank},
-	CategoryStaff: {EffectBlowAway, EffectRecruit, EffectSwap, EffectTunnel},
+	CategoryStaff: {EffectBlowAway, EffectRecruit, EffectSwap, EffectTunnel, EffectWall, EffectLeapTo, EffectGuide},
 	CategoryFood:  {EffectFood, EffectRotten, EffectGrilled},
 	CategoryPot: {EffectKeep, EffectSynthesis, EffectHealPot, EffectPlain, EffectBottomless,
 		EffectAppraise, EffectStronger, EffectWeaker, EffectCash, EffectChange,

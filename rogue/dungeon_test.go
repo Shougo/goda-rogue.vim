@@ -168,8 +168,8 @@ func TestDungeonErrors(t *testing.T) {
 			m["items.txt"].Data = append(m["items.txt"].Data, "x\t腕\tx\t腕輪\t0\t飛行\t0\t-\t-\t0\t0\n"...)
 		}, `効果: 腕輪 has no effect "飛行"`},
 		{"effect of a grass", func(m fstest.MapFS) {
-			m["items.txt"].Data = append(m["items.txt"].Data, "x\t草\tx\t草\t0\t回復\t0\t-\t-\t0\t0\n"...)
-		}, `効果: 草 has no effect "回復"`},
+			m["items.txt"].Data = append(m["items.txt"].Data, "x\t草\tx\t草\t0\t保存\t0\t-\t-\t0\t0\n"...)
+		}, `効果: 草 has no effect "保存"`},
 		{"charges of a grass", func(m fstest.MapFS) {
 			m["items.txt"].Data = append(m["items.txt"].Data, "x\t草\tx\t草\t0\t-\t0\t3\t-\t0\t0\n"...)
 		}, `回数: only staffs, arrows and pots`},

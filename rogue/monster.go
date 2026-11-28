@@ -482,7 +482,11 @@ func (g *Game) hitPlayer(m *Monster) {
 		g.say(name + "の攻撃は外れた。")
 		return
 	}
-	n := g.cushioned(g.weakened(g.criticalOn(m, damage(g.rng, m.Attack, g.Defense(), r.DefenseK))))
+	base := damage(g.rng, m.Attack, g.Defense(), r.DefenseK)
+	if m.Rage > 0 {
+		base = base * rageRate / 100
+	}
+	n := g.cushioned(g.weakened(g.criticalOn(m, base)))
 	g.HP -= n
 	g.say(fmt.Sprintf("%sの攻撃。%dのダメージ。", name, n))
 	g.event("hurt %d %s", n, m.Def.ID)

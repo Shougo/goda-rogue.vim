@@ -24,6 +24,11 @@ type States struct {
 	Zowa int
 	// Unhurt is the turns left of 無敵 (無敵草): nothing takes HP away.
 	Unhurt int
+	// Rage is the turns left of 怒り (the staff): its blows do rageRate %.
+	Rage int
+	// Invisible says that a monster is seen no more (the staff of 透明),
+	// as one of 影, until 目薬草.
+	Invisible bool
 }
 
 // The turns of the states.
@@ -74,6 +79,10 @@ func (s *States) take(e MagicEffect) bool {
 		s.Bound = boundTurns
 	case MagicUnhurt:
 		s.Unhurt = unhurtTurns
+	case MagicRage:
+		s.Rage = rageTurns
+	case MagicInvisible:
+		s.Invisible = true
 	default:
 		return false
 	}
@@ -104,6 +113,9 @@ func (s States) names(sealed string) []string {
 func (s *States) actions(n, turn int) int {
 	if s.Unhurt > 0 {
 		s.Unhurt--
+	}
+	if s.Rage > 0 {
+		s.Rage--
 	}
 	if s.Bound > 0 {
 		// (An ally's count is in alliesBound.)

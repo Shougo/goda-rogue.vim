@@ -747,6 +747,9 @@ func (g *Game) attack() bool {
 		g.talkTo(m)
 		return false
 	}
+	if m == nil && g.breakWall(g.Player.Add(d)) {
+		return true
+	}
 	if m == nil && g.sealShare(SealDig) > 0 && g.digAhead(d) {
 		return true
 	}
@@ -811,6 +814,9 @@ func (g *Game) blow(m *Monster, share float64, ahead bool) {
 	}
 	if g.PowerUp > 0 {
 		n = n * powerUpRate / 100
+	}
+	if g.Rage > 0 {
+		n = n * rageRate / 100
 	}
 	if s := g.slayShare(m); s > 0 {
 		n = int(math.Round(float64(n) * (1 + s)))
@@ -975,6 +981,11 @@ func (g *Game) tick(rest bool) {
 	if g.PowerUp > 0 {
 		if g.PowerUp--; g.PowerUp == 0 {
 			g.say("パワーアップの効果が切れた。")
+		}
+	}
+	if g.Rage > 0 {
+		if g.Rage--; g.Rage == 0 {
+			g.say("怒りがおさまった。")
 		}
 	}
 	g.zowaPasses()

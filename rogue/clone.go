@@ -17,6 +17,7 @@ func (g *Game) Clone() *Game {
 	lv := *g.Level
 	lv.Tiles = slices.Clone(g.Level.Tiles)
 	lv.Rooms = slices.Clone(g.Level.Rooms)
+	lv.Made = maps.Clone(g.Level.Made)
 	c.Level = &lv
 	c.distCache = distCache{}
 	c.sights = nil

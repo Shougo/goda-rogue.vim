@@ -391,3 +391,49 @@ func TestRefreshForget(t *testing.T) {
 		t.Errorf("known %d, after %d: %q", known, after, g.Message)
 	}
 }
+
+// TestNewStaffs: the staffs of 2026-11-28.
+func TestNewStaffs(t *testing.T) {
+	g, r := roomGame(t, 9, 5)
+	g.Player, g.Facing = Point{r.X, r.Y + 2}, "right"
+	m := place(g, kind("nezumi4"), Point{r.X + 5, r.Y + 2})
+	m.HP, m.MaxHP = 200, 200
+	g.magicOn(m, MagicPull, Directions[g.Facing])
+	if m.Pos != g.Player.Add(Point{1, 0}) {
+		t.Errorf("pulled to %v", m.Pos)
+	}
+	g.HP, g.MaxHP = 10, 100
+	g.magicOn(m, MagicDrain, Directions[g.Facing])
+	if m.HP != 150 || g.HP != 10+drainHP {
+		t.Errorf("drain: monster %d, player %d", m.HP, g.HP)
+	}
+	g.magicOn(m, MagicRage, Directions[g.Facing])
+	if m.Rage != rageTurns {
+		t.Errorf("rage %d", m.Rage)
+	}
+	// 飛びつき: up to the monster.
+	m.Pos = Point{r.X + 6, r.Y + 2}
+	g.leapTo()
+	if want := (Point{r.X + 5, r.Y + 2}); g.Player != want {
+		t.Errorf("leapt to %v", g.Player)
+	}
+	// 壁作り, and a blow breaks it.
+	g.Monsters = nil
+	g.Facing = "left"
+	ahead := g.Player.Add(Point{-1, 0})
+	g.makeWall()
+	if g.Level.At(ahead) != TileRock {
+		t.Fatalf("no wall: %q", g.Message)
+	}
+	if err := g.Do("attack", nil); err != nil {
+		t.Fatal(err)
+	}
+	if g.Level.At(ahead) == TileRock {
+		t.Errorf("the wall stands: %q", g.Message)
+	}
+	g.Stairs = Point{r.X + 1, r.Y}
+	g.guide()
+	if !g.IsSeen(g.Stairs) {
+		t.Error("stairs unseen")
+	}
+}

@@ -194,6 +194,15 @@ const (
 	MagicLevelUp MagicEffect = "レベル+1"
 	MagicUnhurt  MagicEffect = "無敵"
 	MagicPoison  MagicEffect = "毒"
+	// The bolts of the staffs of 2026-11-28 (Shougo): 引き寄せ (the one hit
+	// comes to the caster), 回復 (HP), 透明 (a monster is seen no more),
+	// 怒り (its blows do 1.5 times the damage, rageTurns) and 吸収 (the
+	// player takes drainHP of its HP).
+	MagicPull      MagicEffect = "引き寄せ"
+	MagicHeal      MagicEffect = "回復"
+	MagicInvisible MagicEffect = "透明"
+	MagicRage      MagicEffect = "怒り"
+	MagicDrain     MagicEffect = "吸収"
 )
 
 // magicEffects are the effects, in a fixed order, for the error that lists
@@ -202,7 +211,17 @@ var magicEffects = []MagicEffect{
 	MagicWarp, MagicHaste, MagicBlow, MagicConfuse, MagicSlow, MagicSleep,
 	MagicSeal, MagicHalf, MagicQuarter, MagicLevel1, MagicLevel3, MagicBlind,
 	MagicBind, MagicLevelUp, MagicUnhurt, MagicPoison,
+	MagicPull, MagicHeal, MagicInvisible, MagicRage, MagicDrain,
 }
+
+// The strengths of the bolts of 2026-11-28.
+const (
+	healBolt  = 100
+	drainHP   = 50
+	rageTurns = 20
+	// rageRate is the damage (%) of the blows of one angry.
+	rageRate = 150
+)
 
 // parseMagic reads the effects of AbilityMagic: separated by commas.
 func parseMagic(s string) ([]MagicEffect, error) {

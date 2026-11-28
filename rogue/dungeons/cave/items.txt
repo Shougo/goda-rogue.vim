@@ -375,6 +375,16 @@ suiminzue	杖	睡眠の杖	杖	0	睡眠	0	3-5	-	0	500
 metsubushizue	杖	目つぶしの杖	杖	0	目つぶし	0	4-6	-	0	400
 kanashibarizue	杖	かなしばりの杖	杖	0	かなしばり	0	4-6	-	0	500
 tonneru	杖	トンネルの杖	杖	10	トンネル	0	4-6	-	0	400
+hikiyosezue	杖	引き寄せの杖	杖	0	引き寄せ	0	4-6	-	0	400
+kaifukuzue	杖	回復の杖	杖	0	回復	0	4-6	-	0	250
+kasokuzue	杖	加速の杖	杖	0	倍速	0	4-6	-	0	150
+toumeizue	杖	透明の杖	杖	0	透明	0	4-6	-	0	120
+kabezue	杖	壁作りの杖	杖	0	壁作り	0	4-6	-	0	450
+gekigenzue	杖	激減の杖	杖	0	HP1/4	0	3-5	-	0	700
+ikarizue	杖	怒りの杖	杖	0	怒り	0	4-6	-	0	350
+tobitsukizue	杖	飛びつきの杖	杖	0	飛びつき	0	4-6	-	0	550
+kyuushuuzue	杖	吸収の杖	杖	0	吸収	0	3-5	-	0	800
+michibikizue	杖	導きの杖	杖	0	導き	0	3-5	-	0	320
 hozon	壺	保存の壺	壺	0	保存	0	3-5	-	0	300
 gousei	壺	合成の壺	壺	0	合成	0	2-3	-	0	1000
 kaifukutsubo	壺	回復の壺	壺	0	全回復	0	2-3	-	0	800

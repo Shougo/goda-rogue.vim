@@ -40,6 +40,36 @@ func (g *Game) magicOnPlayer(e MagicEffect, d Point, m *Monster) {
 	case MagicHaste:
 		g.Hasted, g.Slowed = hasteTurns, 0
 		g.say("体が速くなった！")
+	case MagicPull:
+		p := g.Player
+		for {
+			next := p.Sub(d)
+			if !g.clearFrom(p, Point{-d.X, -d.Y}) || !g.Level.At(next).Walkable() || g.occupied(next) {
+				break
+			}
+			p = next
+		}
+		g.say("引き寄せられた。")
+		if p != g.Player {
+			g.shove(p)
+		}
+	case MagicHeal:
+		healed := min(healBolt, g.MaxHP-g.HP)
+		g.HP += healed
+		g.say(fmt.Sprintf("HPが%d回復した。", healed))
+	case MagicDrain:
+		g.say("HPを吸い取られた。")
+		if m != nil {
+			m.HP = min(m.HP+drainHP, m.MaxHP)
+			g.playerHurt(drainHP, m)
+		} else {
+			g.trapDamage(drainHP, "吸収")
+		}
+	case MagicRage:
+		g.Rage = rageTurns
+		g.say("怒りがわいてきた！")
+	case MagicInvisible:
+		g.say("しかし何も起こらなかった。")
 	case MagicBlow:
 		g.say("吹き飛ばされた。")
 		g.flingPlayer(d, m)
@@ -85,6 +115,38 @@ func (g *Game) magicOn(f *Monster, e MagicEffect, d Point) {
 	case MagicBlow:
 		say("は吹き飛ばされた。")
 		g.fling(f, d, false)
+	case MagicPull:
+		// It flies back along the bolt, to the one who sent it.
+		for {
+			next := f.Pos.Sub(d)
+			if !g.clearFrom(f.Pos, Point{-d.X, -d.Y}) || !g.Level.At(next).Open() || g.occupied(next) || next == g.Player {
+				break
+			}
+			f.Pos = next
+		}
+		say("は引き寄せられた。")
+	case MagicHeal:
+		healed := min(healBolt, f.MaxHP-f.HP)
+		f.HP += healed
+		say(fmt.Sprintf("のHPが%d回復した。", healed))
+	case MagicDrain:
+		n := min(drainHP, f.HP)
+		f.HP -= n
+		f.Bound = 0
+		up := min(n, g.MaxHP-g.HP)
+		g.HP += up
+		say(fmt.Sprintf("からHPを%d吸い取った。", n))
+		if f.HP <= 0 {
+			g.kill(f, nil, true, shown)
+		} else {
+			g.wounded(f)
+		}
+	case MagicRage:
+		f.States.take(e)
+		say("は怒り出した！")
+	case MagicInvisible:
+		f.States.take(e)
+		say("の姿が消えた！")
 	case MagicConfuse, MagicSlow, MagicSleep, MagicSeal, MagicBlind, MagicBind, MagicUnhurt:
 		f.States.take(e)
 		if f.Ally && e != MagicBind {

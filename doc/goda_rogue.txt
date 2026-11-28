@@ -756,8 +756,9 @@ The built-in dungeons:
 				the same), how rarely a weapon or a shield
 				is a relic (神器, the same: stronger by +5
 				to +10, blue, or a gold one, by +3 to +8
-				with more slots and seals in them), the percents of its attack and of
-				its defense a monster of rank 4 gets each time
+				with more slots and seals in them), the
+				percents of its attack and of its defense a
+				monster of rank 4 gets each time
 				it ranks up beyond (超過攻撃 and 超過防御,
 				optional, default 130 and 120; its max HP
 				stays, its name gets the level: 熊王2,
@@ -1018,7 +1019,12 @@ The built-in dungeons:
 				             レベル+1, 無敵 (20 turns: no
 				             damage), 毒 (5 damage, and a
 				             point of strength, or half the
-				             attack of a monster, slowed)
+				             attack of a monster, slowed),
+				             引き寄せ (to the one who sent
+				             it), 回復 (100 HP), 透明 (a
+				             monster unseen), 怒り (20
+				             turns of blows of 1.5 times),
+				             吸収 (50 HP to the player)
 				眠り, optional, is the share of the kind
 				asleep on a new floor, a percent (- for a
 				third).  落とし物, optional, is what it
@@ -1055,7 +1061,7 @@ The built-in dungeons:
 				        空腹よけ 遠投 しあわせ 忍び足
 				        胃拡張 値切り
 				  草: HP回復 ちから 目薬 最大HP 最大満腹度+
-				      最大満腹度- 復活 火炎
+				      最大満腹度- 復活 火炎 解毒 元気 物忘れ
 				  巻物: あかり 干上がり 識別 武器強化 盾強化
 				        おはらい 印増大 印消し 斬撃 全滅
 				        罠消し 千里眼 道具寄せ 迷子 おにぎり
@@ -1064,9 +1070,11 @@ The built-in dungeons:
 				        同士討ち 大部屋 魔物部屋 敵加速 呪い
 				        罠 手ぶら 口封じ 聖域 白紙
 				  杖: 吹き飛ばし 仲間 入れ替え トンネル
+				      壁作り 飛びつき 導き
 				  食料: 満腹 腐った 焼き
 				  壺: 保存 合成 全回復 普通 底抜け 鑑定
-				      強化 弱化 換金 変化
+				      強化 弱化 換金 変化 祝福の壺 呪いの壺
+				      解呪 印の壺 修理 眠りの壺 煙
 				A bracelet with a 印 (and no 効果) has the
 				ability of the seal while worn, at the
 				strength an item is born with (seals.txt
@@ -1075,7 +1083,8 @@ The built-in dungeons:
 				an effect of the bolts of monsters (能力
 				魔法 of monsters.txt: ワープ 倍速 混乱 鈍足
 				睡眠 封印 HP1/2 HP1/4 レベル-1 レベル-3
-				かなしばり レベル+1 無敵 毒
+				かなしばり レベル+1 無敵 毒 引き寄せ 回復
+				透明 怒り 吸収
 				目つぶし: 10 turns, the player sees only
 				next to it, a monster walks at random):
 				a grass on who drinks it, or on the monster

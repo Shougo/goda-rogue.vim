@@ -4,7 +4,7 @@ package rogue
 // unless eye drops cleared its eyes on the floor.
 func (g *Game) hidden(m *Monster) bool {
 	_, ok := m.ability(AbilityInvisible)
-	return ok && !g.Clear
+	return (ok || m.Invisible) && !g.Clear
 }
 
 // seenName is the name of m as the player sees it: "何者か" if hidden.

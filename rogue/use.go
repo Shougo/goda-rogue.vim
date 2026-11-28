@@ -184,6 +184,12 @@ func (g *Game) effectOf(it *Item, lucky bool) {
 		g.swapPlaces()
 	case EffectTunnel:
 		g.tunnel(n)
+	case EffectWall:
+		g.makeWall()
+	case EffectLeapTo:
+		g.leapTo()
+	case EffectGuide:
+		g.guide()
 	case EffectMoreSlots:
 		if !g.asks(it, g.ask(promptSlot)) {
 			g.say("何も起こらなかった。")

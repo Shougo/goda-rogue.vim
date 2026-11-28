@@ -79,6 +79,9 @@ type Level struct {
 	Island map[Point]bool
 	// Isles are the tiles of the islands where their items go.
 	Isles []Point
+	// Made are the walls a staff of 壁作り made, with the tiles they took
+	// the place of: a blow breaks one (staff2.go).
+	Made map[Point]Tile
 	// version counts the changes of its tiles (set), for what is worked
 	// out from them (Game.distances).
 	version int
