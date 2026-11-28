@@ -19,18 +19,18 @@ their rank is their color.
 ＃＃＃＃＃＃＃＃＃＃＃＃＃
 ```
 
-> Status: a prototype. It shows the dungeon: floors made from a seed, the
-> player `主`, walls, stairs, enemies and items, moving around,
-> attacking, and a mini-map. Enemies wander, chase and attack the player,
-> who levels up, and can fall; 30 floors to clear. Items can be picked
-> up and dropped, weapons, shields and bracelets equipped, and grasses,
-> scrolls, staffs and food used, arrows shot, items thrown and
-> identified; the player gets hungry, and finds traps by swinging at
-> nothing. Pots keep and merge items; weapons and shields have seals, and
-> equipment may be cursed.
-> Some floors are a big room, a maze, or have a monster house or a shop
-> (buy, sell, or steal). A run can be suspended and resumed, and watched
-> again as a replay.
+> Status: version 0.1.0, the first for others to try. はじまりの洞窟 (30
+> floors) is balanced and can be played from start to end; 奈落の洞窟 and
+> 果ての洞窟 are not balanced yet (調整中 in the menu). The messages are in
+> Japanese only.
+
+What there is: floors made from a seed (big rooms, mazes, monster houses,
+shops to buy from, sell to or steal from), 53 families of monsters in four
+ranks, weapons and shields with seals, up to two bracelets, grasses,
+scrolls, staffs, pots and food to identify, curses and blessings, traps,
+hunger, allies, and the wind that ends a run lingering on a floor. A run
+can be suspended and resumed, and watched again as a replay; bots play
+the dungeons to show how they play, and to compare with your run.
 
 ## Requirements
 
@@ -96,7 +96,8 @@ call goda_rogue#records()
 ```
 
 The binary is built on the first start (it takes a while), into a cache
-directory. See `:help goda-rogue` for everything else.
+directory. `:help goda-rogue-playing` tells how to play a first run, and
+`:help goda-rogue` everything else.
 
 ## Dungeons
 
@@ -104,8 +105,8 @@ Dungeons are data: tab-separated text files in `rogue/dungeons/{id}/`
 (monsters, which floors they appear on, items, rules, growth tables).
 There are three: `cave` (はじまりの洞窟, 30 floors), `deep` (奈落の洞窟, 50
 floors, with the monsters of the higher ranks) and `far` (果ての洞窟, 99
-floors, not balanced yet); a dungeon can be based on another and have
-only the files that differ.
+floors); `deep` and `far` are not balanced yet. A dungeon can be based on
+another and have only the files that differ.
 See `:help goda-rogue-dungeons`.
 
 To see how a dungeon plays, let bots play it many times:
@@ -113,6 +114,19 @@ To see how a dungeon plays, let bots play it many times:
 ```sh
 go run ./cmd/analyze -dungeon cave -runs 200
 ```
+
+## Reporting a bug
+
+Please open an issue with:
+
+- What happened, and what you expected.
+- The replay of the run: `:call goda_rogue#save_replay()` saves the
+  replay of the last run and returns its path (`:echo` it). Attach the
+  file: it replays the run exactly, with the seed and the version in it.
+- `:version` of Vim or Neovim, the OS, and the revision of goda.vim and of
+  goda-rogue.vim (`git rev-parse --short HEAD` in each).
+
+Impressions are welcome too, as an issue or on social media.
 
 ## License
 

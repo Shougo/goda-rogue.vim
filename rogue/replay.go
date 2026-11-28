@@ -27,6 +27,7 @@ import (
 //	hash	1a2b3c4d
 //	seed	12345
 //	started	2026-11-18T08:30:00+09:00
+//	version	0.1.0
 //	revision	abcdef0
 //	debug	1
 //	---
@@ -55,9 +56,11 @@ type Replay struct {
 	Dungeon string
 	Hash    string
 	Seed    string
-	// Started is when the run began; Revision is the revision of the
-	// binary that played it, if known: both only for information.
+	// Started is when the run began; Version is the version of the game
+	// that played it (Version), and Revision the revision of its binary,
+	// if known: all only for information.
 	Started  time.Time
+	Version  string
 	Revision string
 	// Debug says whether the run could use the debug mode.
 	Debug bool
@@ -149,6 +152,8 @@ func ParseReplay(r io.Reader) (*Replay, error) {
 				case "started":
 					// Only for information: a bad time is no error.
 					rp.Started, _ = time.Parse(time.RFC3339, value)
+				case "version":
+					rp.Version = value
 				case "revision":
 					rp.Revision = value
 				case "debug":
@@ -298,6 +303,7 @@ func NewRecorder(path string, g *Game) (*Recorder, error) {
 	fmt.Fprintf(&b, "hash\t%s\n", g.Dungeon.Hash)
 	fmt.Fprintf(&b, "seed\t%s\n", g.Seed)
 	fmt.Fprintf(&b, "started\t%s\n", g.Started.Format(time.RFC3339))
+	fmt.Fprintf(&b, "version\t%s\n", Version)
 	if rev := revision(); rev != "" {
 		fmt.Fprintf(&b, "revision\t%s\n", rev)
 	}

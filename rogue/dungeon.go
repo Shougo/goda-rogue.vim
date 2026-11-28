@@ -60,6 +60,9 @@ type Dungeon struct {
 	Name        string
 	Description string
 	Floors      int
+	// Tuning says what is left to tune of a dungeon not balanced yet
+	// (header.txt 調整中; "" for a balanced one).
+	Tuning string
 	// Base is the dungeon it is based on (header.txt 元; "" for none):
 	// the files it does not have are the base's.
 	Base        string
@@ -781,7 +784,7 @@ func (l *loader) load() {
 // loadHeader reads the header: the name, the description and the floors.
 func (l *loader) loadHeader() {
 	d := l.d
-	h := l.keys("header.txt", []string{"名前", "説明", "階数", headerBase})
+	h := l.keys("header.txt", []string{"名前", "説明", "階数", headerBase, "調整中"})
 	if ln, ok := h["名前"]; ok {
 		d.Name = ln.fields[1]
 	} else {
@@ -791,6 +794,9 @@ func (l *loader) loadHeader() {
 		d.Description = ln.fields[1]
 	}
 	d.Floors = l.keyInt("header.txt", h, "階数", 1)
+	if ln, ok := h["調整中"]; ok {
+		d.Tuning = ln.fields[1]
+	}
 	if ln, ok := h[headerBase]; ok {
 		d.Base = ln.fields[1]
 	}

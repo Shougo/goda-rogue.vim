@@ -6,7 +6,7 @@
 
 " The version of this Vim script that the binary goes with (ScriptVersion of
 " its Go side): goda.vim refuses a binary of another one, and builds it again.
-let s:version = #{version: 6, module: 'github.com/Shougo/goda-rogue.vim'}
+let s:version = #{version: 7, module: 'github.com/Shougo/goda-rogue.vim'}
 
 " The repository: the Go module of the binary.
 let s:root = expand('<sfile>:p:h:h', 1)
@@ -162,6 +162,11 @@ function! goda_rogue#dungeons() abort
   return goda#request('rogue', 'dungeons')
 endfunction
 
+" The version of goda-rogue.vim (of its binary), as "0.1.0".
+function! goda_rogue#version() abort
+  return goda#request('rogue', 'version')
+endfunction
+
 " Start a new game in the current window. {options}:
 "   dungeon	The ID of the dungeon (goda_rogue#dungeons()).  Default: ask
 "		which one, with the selection UI.
@@ -213,21 +218,28 @@ function! s:choose_dungeon(options) abort
   endif
   try
     let dungeons = goda_rogue#dungeons()
+    let game_version = goda_rogue#version()
   catch
     call s:print_error(v:exception)
     return
   endtry
-  let choices = map(copy(dungeons),
-        \ {_, d -> printf('%s（%dF）', d.name, d.floors)})
-  call s:select('ダンジョン', choices,
+  let choices = map(copy(dungeons), {_, d -> s:dungeon_label(d)})
+  call s:select(printf('ダンジョン（goda-rogue %s）', game_version), choices,
         \ {idx -> idx > 0 ? s:dungeon_menu(options, dungeons[idx - 1]) : 0})
+endfunction
+
+" The name of {dungeon} (an entry of goda_rogue#dungeons()) in the menus:
+" its floors, and 調整中 when it is not balanced yet.
+function! s:dungeon_label(dungeon) abort
+  let tuning = get(a:dungeon, 'tuning', '') !=# '' ? '・調整中' : ''
+  return printf('%s（%dF%s）', a:dungeon.name, a:dungeon.floors, tuning)
 endfunction
 
 " What to do with the dungeon {dungeon} (an entry of goda_rogue#dungeons()):
 " play it, read its description, watch a bot play it, or leave it.
 function! s:dungeon_menu(options, dungeon) abort
   let options = extend(copy(a:options), #{dungeon: a:dungeon.id})
-  call s:select(printf('%s（%dF）', a:dungeon.name, a:dungeon.floors),
+  call s:select(s:dungeon_label(a:dungeon),
         \ ['冒険に出る', '説明を見る', 'Bot の冒険を見る', 'やめる'],
         \ {idx -> idx == 1 ? s:start_game(options)
         \       : idx == 2 ? s:describe_dungeon(a:options, a:dungeon)
@@ -250,8 +262,11 @@ endfunction
 
 " Show the description of {dungeon}, then its menu again.
 function! s:describe_dungeon(options, dungeon) abort
-  call s:select(printf('%s（%dF）： %s',
-        \ a:dungeon.name, a:dungeon.floors, a:dungeon.description),
+  let text = a:dungeon.description
+  if get(a:dungeon, 'tuning', '') !=# ''
+    let text .= '（調整中：' . a:dungeon.tuning . '）'
+  endif
+  call s:select(printf('%s： %s', s:dungeon_label(a:dungeon), text),
         \ ['戻る'],
         \ {idx -> s:dungeon_menu(a:options, a:dungeon)})
 endfunction

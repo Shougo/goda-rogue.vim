@@ -4,3 +4,5 @@
 説明	50階を目指す、持ち込みなしの素潜りダンジョン。深い階にはランク3・4の魔物が出る。
 階数	50
 元	cave
+# Not balanced yet: shown in the menu and the description.
+調整中	バランスはまだ合わせていない（Bot はほとんどクリアできない）。

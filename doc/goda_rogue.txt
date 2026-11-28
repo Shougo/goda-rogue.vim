@@ -5,6 +5,7 @@ License: MIT license
 
 CONTENTS                                                 *goda-rogue-contents*
 
+Playing			|goda-rogue-playing|
 Introduction		|goda-rogue-introduction|
 Install			|goda-rogue-install|
 Examples		|goda-rogue-examples|
@@ -21,6 +22,38 @@ Replays			|goda-rogue-replays|
 State files		|goda-rogue-states|
 
 ==============================================================================
+PLAYING                                                   *goda-rogue-playing*
+
+A first run, in short:
+
+1. Map the keys: copy the mappings of |goda-rogue-examples| to your vimrc
+   (there are no default mappings).  The keys below are theirs.
+2. Run `:call goda_rogue#start()` and choose はじまりの洞窟 (30 floors),
+   then 冒険に出る.  The first start builds the binary (|goda-rogue-install|):
+   it takes a while.
+3. 主 is you.  Find the stairs 段 of each floor and press > on them.  Going
+   down from the 30th floor clears the dungeon.  Falling ends the run: you
+   start again from the first floor, with nothing.
+4. Enemies are kanji, their color is their rank (green, blue, purple, red:
+   the stronger).  Walking into one does nothing: face it (t, or g and a
+   direction) and attack with <Space>.  x tells what is around.
+5. Items: , picks up the item under you, i opens the inventory (to use,
+   equip, throw or put down).  Grasses, scrolls, staffs, bracelets and pots
+   have made-up names (赤い草?) until you identify them: by using one, or
+   with a scroll of identification.  An unknown item may be cursed: a
+   cursed weapon, shield or bracelet does not come off.
+6. Shops: pick up what you want, and walk into the shopkeeper standing in
+   the door to pay; put an item down in the shop to sell it.  c lists the
+   prices you have seen, a way to tell unknown items apart.
+7. You get hungry: eat (おにぎり) before your fullness runs out, or you
+   lose HP every turn.  Rest (.) to heal when no enemy is around.
+8. Do not linger: the wind blows on a floor after a while, a warning
+   first, and the third time it ends the run (|goda-rogue-introduction|).
+9. A run can be suspended (S) and resumed later with |goda_rogue#start()|.
+   When it is over, |goda_rogue#save_replay()| keeps its replay: send it
+   with a bug report (|goda-rogue-replays|).
+
+==============================================================================
 INTRODUCTION                                         *goda-rogue-introduction*
 
 goda-rogue.vim is a mystery-dungeon roguelike in Vim and Neovim.  It looks
@@ -28,9 +61,11 @@ like rogue: the map is drawn with full-width characters, enemies are kanji,
 and their rank is their color.  The game is Go, in a binary built from this
 plugin, and Vim talks to it through goda.vim.
 
-It is a prototype: it shows the dungeon and a mini-map, the player moves
-around and attacks, and the enemies wander, chase and attack the player.
-Going down the stairs of the 30th floor clears the dungeon.  Items can be
+This is version 0.1.0 (|goda_rogue#version()|), the first for others to
+try: はじまりの洞窟 (30 floors) is balanced, 奈落の洞窟 and 果ての洞窟 are
+not yet (調整中 in the menu).  The player moves around and attacks, and the
+enemies wander, chase and attack the player.  Going down the stairs of the
+last floor clears the dungeon.  Items can be
 picked up and dropped, and a weapon, a shield and up to two bracelets
 equipped (weapons add to the attack, shields make the defense, a bracelet
 has its effect while it is worn; two worn crack twice as fast).
@@ -168,7 +203,7 @@ defeated, the turns, the play time and the seed, and under it the floor as it
 was at the end, with the last messages, to see what happened.
 
 Lingering on a floor does not pay: now and then a monster appears out of
-sight, and it gives nothing for defeating it.  Then Kron's wind blows:
+sight, and it gives nothing for defeating it.  Then the wind blows:
 the first time as a warning (the status line shows the turns until the
 next one), the second time a strong monster comes for the player and
 every enemy grows one rank stronger (one of rank 4 goes beyond: 熊王2,
@@ -266,7 +301,14 @@ goda_rogue#start([{options}])
                                                        *goda_rogue#dungeons()*
 goda_rogue#dungeons()
 		The dungeons there are: a |List| of |Dictionary| with
-		"id", "name", "description" and "floors".
+		"id", "name", "description", "floors" and "tuning" (what
+		is left to tune of one not balanced yet, header.txt 調整中;
+		"" for a balanced one).
+
+                                                        *goda_rogue#version()*
+goda_rogue#version()
+		The version of goda-rogue.vim, as "0.1.0".  The menu of
+		the dungeons shows it, and a replay keeps it.
 
                                                              *goda_rogue#do()*
 goda_rogue#do({action} [, {arg}...])
@@ -741,9 +783,11 @@ The built-in dungeons:
 				("deep" has its own tables, monsters and
 				growth, and the cave's items, traps, shops
 				and rules).  A file replaces the base's
-				whole file.
+				whole file.  Optional: 調整中, what is left
+				to tune of a dungeon not balanced yet: the
+				menu shows 調整中 by its name.
 	rules.txt		The rules: the player at the start, HP
-				regeneration, fullness, spawning, Kron's wind,
+				regeneration, fullness, spawning, the wind,
 				combat constants, the growth table of the
 				player, the first ally, how many allies at
 				most (仲間の上限, optional, default 3), how

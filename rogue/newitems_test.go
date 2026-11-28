@@ -113,7 +113,7 @@ func TestReviveGrass(t *testing.T) {
 	g, _ = roomGame(t, 4, 3)
 	carry(g, "fukkatsu", 0)
 	g.blown = true
-	g.end("クロンの風に吹き飛ばされた", false)
+	g.end("風に吹き飛ばされた", false)
 	if g.Over == "" {
 		t.Error("revived against the wind")
 	}

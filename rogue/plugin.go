@@ -26,7 +26,7 @@ const PluginName = "rogue"
 // ScriptVersion is the version of the Vim script (autoload/goda_rogue.vim)
 // this binary goes with (sdk.ScriptVersioner). Bump it with s:version there
 // when they no longer work together.
-const ScriptVersion = 6
+const ScriptVersion = 7
 
 // Plugin serves the game.
 type Plugin struct {
@@ -429,6 +429,9 @@ func (p *Plugin) Handlers() map[string]sdk.Handler {
 			}
 			return p.game.DumpState(), nil
 		},
+		"version": func(ctx context.Context, h sdk.Host, params []any) (any, error) {
+			return Version, nil
+		},
 		"dungeons": func(ctx context.Context, h sdk.Host, params []any) (any, error) {
 			var list []map[string]any
 			for _, id := range BuiltinDungeons() {
@@ -438,6 +441,7 @@ func (p *Plugin) Handlers() map[string]sdk.Handler {
 				}
 				list = append(list, map[string]any{
 					"id": d.ID, "name": d.Name, "description": d.Description, "floors": d.Floors,
+					"tuning": d.Tuning,
 				})
 			}
 			return sdk.Generic(list)

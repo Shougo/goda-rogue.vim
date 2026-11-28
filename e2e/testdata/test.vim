@@ -104,8 +104,11 @@ function! s:start() abort
   let g:goda_rogue#prompt_func = function('s:fake_prompt')
   let s:asked = {}
   call goda_rogue#start(#{seed: 'e2e'})
-  call s:check('dungeon prompt', get(s:asked, 'title', ''), 'ダンジョン')
+  call s:check('dungeon prompt', get(s:asked, 'title', ''),
+        \ 'ダンジョン（goda-rogue ' . goda_rogue#version() . '）')
+  call s:check('version', goda_rogue#version() =~# '^\d\+\.\d\+\.\d\+$', 1)
   call s:check('dungeon choice', get(s:asked, 'choices', [''])[0], 'はじまりの洞窟（30F）')
+  call s:check('dungeon choice tuning', get(s:asked, 'choices', ['', ''])[1], '奈落の洞窟（50F・調整中）')
   call s:answer(1)
   " Then what to do with it: its description, and back.
   call s:check('dungeon menu', get(s:asked, 'title', ''), 'はじまりの洞窟（30F）')
@@ -400,7 +403,7 @@ function! s:replays() abort
   let g:goda_rogue#prompt_func = function('s:fake_prompt')
   let s:asked = {}
   call goda_rogue#start()
-  if get(s:asked, 'title', '') !=# 'ダンジョン'
+  if get(s:asked, 'title', '') !~# '^ダンジョン'
     " (The run left behind: not resumed.)
     call s:answer(2)
   endif

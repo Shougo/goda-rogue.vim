@@ -1072,7 +1072,7 @@ func (g *Game) linger() {
 	case 3:
 		// (No grass of 復活 against it.)
 		g.blown = true
-		g.end("クロンの風に吹き飛ばされた", false)
+		g.end("風に吹き飛ばされた", false)
 	}
 }
 
