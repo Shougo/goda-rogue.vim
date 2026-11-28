@@ -68,6 +68,7 @@
 床	3	30	kusakari	1
 床	9	30	mori	1
 床	5	30	nagayari	1
+床	3	30	sorasaki	1
 床	20	30	ryuurin	1
 床	3	30	fuuinyoke	1
 床	1	30	chikara	1
@@ -253,6 +254,7 @@
 よろず	3	30	kusakari	2
 よろず	9	30	mori	2
 よろず	5	30	nagayari	2
+よろず	3	30	sorasaki	2
 よろず	20	30	ryuurin	2
 よろず	3	30	fuuinyoke	2
 よろず	1	30	chikara	1
@@ -460,6 +462,7 @@
 武具	3	30	kusakari	2
 武具	9	30	mori	2
 武具	5	30	nagayari	2
+武具	3	30	sorasaki	2
 武具	20	30	ryuurin	2
 武具	3	30	fuuinyoke	2
 # The bracelet shop: rarer bracelets.
@@ -568,6 +571,7 @@
 変化	3	30	kusakari	1
 変化	9	30	mori	1
 変化	5	30	nagayari	1
+変化	3	30	sorasaki	1
 変化	20	30	ryuurin	1
 変化	3	30	fuuinyoke	1
 変化	1	30	chikara	1

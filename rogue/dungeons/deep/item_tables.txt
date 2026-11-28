@@ -71,6 +71,7 @@
 床	3	50	kusakari	1
 床	9	50	mori	1
 床	5	50	nagayari	1
+床	3	50	sorasaki	1
 床	15	50	ryuurin	1
 床	3	50	fuuinyoke	1
 床	1	50	chikara	1
@@ -245,6 +246,7 @@
 よろず	3	50	kusakari	2
 よろず	9	50	mori	2
 よろず	5	50	nagayari	2
+よろず	3	50	sorasaki	2
 よろず	15	50	ryuurin	2
 よろず	3	50	fuuinyoke	2
 よろず	1	50	chikara	1
@@ -430,6 +432,7 @@
 武具	3	50	kusakari	2
 武具	9	50	mori	2
 武具	5	50	nagayari	2
+武具	3	50	sorasaki	2
 武具	15	50	ryuurin	2
 武具	3	50	fuuinyoke	2
 # The bracelet shop: rarer bracelets.
