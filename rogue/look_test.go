@@ -33,7 +33,7 @@ func TestLook(t *testing.T) {
 	if err := g.Do("choose", []string{"2"}); err != nil {
 		t.Fatal(err)
 	}
-	if !strings.HasPrefix(g.Message, far.Name+"：ランク1  ") || !strings.HasSuffix(g.Message, "眠っている") || g.Turn != 0 {
+	if !strings.HasPrefix(g.Message, far.Name+"：ランク1  ") || !strings.Contains(g.Message, "眠っている") || g.Turn != 0 {
 		t.Errorf("message %q, turn %d", g.Message, g.Turn)
 	}
 	if err := g.Do("look", nil); err != nil {

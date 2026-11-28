@@ -171,6 +171,7 @@ var sealTexts = map[SealEffect]string{
 	SealSlay:        "%s の敵に与えるダメージが %d%% 増える。",
 	SealReach:       "正面の隣に敵がいなければ、2 マス先の敵を %d%% のダメージで攻撃する。",
 	SealNoSealing:   "%d%% の確率で封印（口封じ）を防ぐ。",
+	SealNoPoison:    "%d%% の確率で毒（ちからが下がる）を防ぐ。",
 	SealFireGuard:   "炎（龍の炎、投げられた火炎草）で受けるダメージを %d%% 減らす。",
 }
 

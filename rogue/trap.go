@@ -206,9 +206,8 @@ func (g *Game) spring(t *Trap, force bool) bool {
 		if g.trapDamage(n, "毒矢") {
 			return true
 		}
-		if g.Strength > 1 {
-			g.Strength--
-			g.say("ちからが1下がった。")
+		if !g.poisonWarded() {
+			g.loseStrength(1)
 		}
 	case TrapSleep:
 		if g.prevents(MagicSleep) {

@@ -19,7 +19,7 @@
 # only by ranking up (a monster that defeats another, Kron's wind).
 開始	終了	ID	頻度
 1	6	nezumi1	4
-1	6	hebi1	4
+3	6	hebi1	4
 3	6	ookami1	4
 1	6	rei1	4
 1	6	touzoku1	4

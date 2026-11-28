@@ -492,6 +492,10 @@ func (g *Game) hitPlayer(m *Monster) {
 		return
 	}
 	g.holdBy(m)
+	if a, ok := m.ability(AbilityPoison); ok && g.rng.IntN(100) < a.Values[0] && !g.poisonWarded() {
+		g.say("毒が回った。")
+		g.loseStrength(a.Values[1])
+	}
 	if g.sealChance(SealCounter) {
 		g.say("反撃した！")
 		g.hurt(m, n)

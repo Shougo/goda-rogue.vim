@@ -161,6 +161,8 @@ func (g *Game) abilityText(a Ability) string {
 			s += "（そのあと殴る）"
 		}
 		return s
+	case AbilityPoison:
+		return fmt.Sprintf("殴りが当たると%d%%で、ちからを%d下げる", v[0], v[1])
 	case AbilityBreath:
 		var from string
 		switch {

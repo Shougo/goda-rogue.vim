@@ -225,3 +225,29 @@ func TestAfflictMute(t *testing.T) {
 		t.Error("sealed with 封印よけ")
 	}
 }
+
+// TestPoisonBlow: a blow of 蛇 that hits poisons (the strength down), not
+// with 毒よけ.
+func TestPoisonBlow(t *testing.T) {
+	for _, guard := range []bool{false, true} {
+		id := "katana"
+		if guard {
+			id = "dokuyoke"
+		}
+		g, _, _ := gearGame(t, id)
+		g.Dungeon = withRules(g.Dungeon, func(r *Rules) { r.MonsterHitRate = 100 })
+		m := place(g, kind("hebi4"), g.Player.Add(Point{1, 0}))
+		g.HP, g.MaxHP, g.Strength = 999, 999, 8
+		poisoned := false
+		for range 40 {
+			g.hitPlayer(m)
+			if g.Strength < 8 {
+				poisoned = true
+				break
+			}
+		}
+		if poisoned == guard {
+			t.Errorf("guard %v: strength %d", guard, g.Strength)
+		}
+	}
+}

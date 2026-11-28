@@ -112,6 +112,9 @@ const (
 	// any source: a bolt, a monster, a trap, an item (Shougo, 2026-11-28;
 	// a seal taken away is another thing).
 	SealNoSealing SealEffect = "封印よけ"
+	// SealNoPoison: a ward of poison (毒草, the trap of 毒矢, the blows of
+	// 蛇, a bolt of 毒).
+	SealNoPoison SealEffect = "毒よけ"
 )
 
 var sealEffects = []SealEffect{SealAttack, SealDefense, SealCrit, SealSure, SealCounter, SealNoRust, SealNoHunger,
@@ -119,7 +122,7 @@ var sealEffects = []SealEffect{SealAttack, SealDefense, SealCrit, SealSure, Seal
 	SealSleepBlow, SealConfuseBlow, SealSlowBlow, SealSealBlow, SealPoisonBlow, SealBindBlow, SealBlowAway,
 	SealDig, SealDesperate, SealHappy, SealDouble, SealGrow,
 	SealNoSleep, SealNoConfuse, SealNoBlind, SealNoWeak, SealNoCurse, SealNoStarve, SealNoTrap,
-	SealBlastGuard, SealReflect, SealHeavy, SealFine, SealSlay, SealReach, SealFireGuard, SealNoSealing}
+	SealBlastGuard, SealReflect, SealHeavy, SealFine, SealSlay, SealReach, SealFireGuard, SealNoSealing, SealNoPoison}
 
 // sealBolts are the seals of weapons that bring the effect of a bolt with
 // a blow, in a fixed order.

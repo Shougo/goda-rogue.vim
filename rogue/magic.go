@@ -133,6 +133,9 @@ const poisonDamage = 5
 // poisoned is the poison of a bolt of m (nil: 毒草 drunk) on the player:
 // poisonDamage, and a point of its strength (not under 1).
 func (g *Game) poisoned(m *Monster) {
+	if g.poisonWarded() {
+		return
+	}
 	var fell bool
 	if m != nil {
 		fell = g.playerHurt(poisonDamage, m)
@@ -142,10 +145,30 @@ func (g *Game) poisoned(m *Monster) {
 	if fell {
 		return
 	}
-	if g.Strength > 1 {
-		g.Strength--
-		g.say("ちからが1下がった。")
+	g.loseStrength(1)
+}
+
+// poisonWarded says whether a poison on the player is kept off: by the
+// ward of 予防, or by 毒よけ (and says so).
+func (g *Game) poisonWarded() bool {
+	if g.prevents(MagicPoison) {
+		return true
 	}
+	if g.sealChance(SealNoPoison) {
+		g.say("盾が毒を防いだ。")
+		return true
+	}
+	return false
+}
+
+// loseStrength takes n of the strength of the player away (not under 1).
+func (g *Game) loseStrength(n int) {
+	if g.Strength <= 1 {
+		return
+	}
+	n = min(n, g.Strength-1)
+	g.Strength -= n
+	g.say(fmt.Sprintf("ちからが%d下がった。", n))
 }
 
 // fraction is what the bolt e divides HP by.

@@ -76,6 +76,7 @@
 床	3	99	sorasaki	1
 床	15	99	ryuurin	1
 床	3	99	fuuinyoke	1
+床	3	99	dokuyoke	1
 床	1	99	chikara	1
 床	1	99	kaifuku	1
 床	1	99	kehai	1
@@ -253,6 +254,7 @@
 よろず	3	99	sorasaki	2
 よろず	15	99	ryuurin	2
 よろず	3	99	fuuinyoke	2
+よろず	3	99	dokuyoke	2
 よろず	1	99	chikara	1
 よろず	1	99	kaifuku	1
 よろず	1	14	kehai	1
@@ -441,6 +443,7 @@
 武具	3	99	sorasaki	2
 武具	15	99	ryuurin	2
 武具	3	99	fuuinyoke	2
+武具	3	99	dokuyoke	2
 # The bracelet shop: rarer bracelets.
 腕輪	1	99	chikara	1
 腕輪	1	99	kaifuku	1

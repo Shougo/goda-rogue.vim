@@ -48,6 +48,8 @@
 #             tiles ahead, for its % of the damage
 #   封印よけ  with a chance of its %, the mouth of the player is not
 #             sealed (口封じ), from any source
+#   毒よけ    with a chance of its %, a poison is kept off (the strength
+#             it takes)
 #   耐火      fire (the breath of 龍, 火炎草 thrown at the player) does its %
 #             less damage
 # A seal of 印の強さ 0 is no seal: born with it, an item keeps it, and
@@ -110,3 +112,4 @@
 鱗	龍鱗の印	耐火	50	25	盾	-
 鍵	封印よけの印	封印よけ	100	50	盾	-
 落	空裂きの印	特攻	25	10	武器	浮遊
+清	毒よけの印	毒よけ	100	50	盾	-

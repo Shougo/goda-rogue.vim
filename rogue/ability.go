@@ -165,6 +165,10 @@ const (
 	// waits half the distance (in tiles) before the next, none in its
 	// room on a line (breath.go).
 	AbilityBreath AbilityName = "炎"
+	// AbilityPoison: by a chance (a percent), a blow of it that hits
+	// poisons the player: its strength goes down by so much (蛇, Shougo
+	// 2026-11-28).
+	AbilityPoison AbilityName = "毒"
 )
 
 // MagicEffect is an effect of the bolt of AbilityMagic.
@@ -263,6 +267,7 @@ var abilityDefs = map[AbilityName]abilityDef{
 	AbilityHunger:    {[]string{"chance %", "fullness", "max fullness"}, []int{1, 0, 0}, []int{100, 999, 999}, 0},
 	AbilityCurse:     {[]string{"chance %", "what", "items"}, []int{1, curseArms, 1}, []int{100, curseAny, 5}, 0},
 	AbilitySteal:     {[]string{"chance %", "what", "items", "equipped"}, []int{1, stealGold, 0, 0}, []int{100, stealItems, 5, 1}, 0},
+	AbilityPoison:    {[]string{"chance %", "strength"}, []int{1, 1}, []int{100, 9}, 0},
 	AbilityBreath:    {[]string{"reach", "chance %", "damage"}, []int{0, 1, 1}, []int{breathFloor, 100, 999}, 0},
 }
 
@@ -271,7 +276,7 @@ const maxReach = 20
 
 // abilityNames are the abilities in a fixed order, for the error that
 // lists them.
-var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot, AbilitySynthesis, AbilityCurse, AbilityHunger, AbilityStill, AbilityHold, AbilityBurn, AbilityHeal, AbilityCheer, AbilityRevive, AbilityExplode, AbilityPack, AbilityFlee, AbilityTrap, AbilityLong, AbilityBlink, AbilityKnight, AbilityInvisible, AbilityWalls, AbilityThrow, AbilityReflect, AbilityRuin, AbilityRust, AbilityAfflict, AbilityBreath}
+var abilityNames = []AbilityName{AbilityAnger, AbilityCritical, AbilityErratic, AbilityCharge, AbilityPull, AbilityShoot, AbilityMagic, AbilityMimic, AbilitySteal, AbilitySplit, AbilityRot, AbilitySynthesis, AbilityCurse, AbilityHunger, AbilityStill, AbilityHold, AbilityBurn, AbilityHeal, AbilityCheer, AbilityRevive, AbilityExplode, AbilityPack, AbilityFlee, AbilityTrap, AbilityLong, AbilityBlink, AbilityKnight, AbilityInvisible, AbilityWalls, AbilityThrow, AbilityReflect, AbilityRuin, AbilityRust, AbilityAfflict, AbilityBreath, AbilityPoison}
 
 // lineAbilities are the abilities that reach the player from afar along
 // a line, their reach their first number.
