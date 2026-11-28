@@ -38,8 +38,8 @@ func TestBotPriceIdentify(t *testing.T) {
 }
 
 // TestBotEarlyIdentify: on the first floors the bot tries an unknown
-// grass at 70% of its HP and reads an unknown scroll anywhere; deeper,
-// only at full HP and on the stairs.
+// grass at 70% of its HP, deeper only at full HP; it reads an unknown
+// scroll on the stairs only, on every floor (2026-11-28).
 func TestBotEarlyIdentify(t *testing.T) {
 	g, _ := roomGame(t, 4, 3)
 	forget(g, CategoryGrass)
@@ -59,9 +59,14 @@ func TestBotEarlyIdentify(t *testing.T) {
 	g.Inventory = nil
 	sc := carry(g, "akari", 0)
 	g.Depth = 2
-	if a, _ := b.identify(g); a != "inventory" || b.plan[0].item != sc {
-		t.Errorf("early scroll: %s %+v", a, b.plan)
+	if a, _ := b.identify(g); a != "" {
+		t.Errorf("early scroll off the stairs: %s %+v", a, b.plan)
 	}
+	g.Stairs = g.Player
+	if a, _ := b.identify(g); a != "inventory" || b.plan[0].item != sc {
+		t.Errorf("early scroll on the stairs: %s %+v", a, b.plan)
+	}
+	g.Stairs = Point{-1, -1}
 	g.Depth = g.Dungeon.Floors
 	if a, _ := b.identify(g); a != "" {
 		t.Errorf("deep scroll off the stairs: %s %+v", a, b.plan)

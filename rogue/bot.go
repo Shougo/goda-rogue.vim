@@ -1903,9 +1903,12 @@ func (b *Bot) identify(g *Game) (string, []string) {
 	// what it does not know as soon as it is safe: a known healing grass
 	// is worth more than an unknown one when it matters.
 	early := g.Depth*earlyFloors <= g.Dungeon.Floors
-	if s := unknown(CategoryScroll); s != nil && (g.Player == g.Stairs || early) {
-		// Else near the stairs once the floor is done: a scroll may
-		// not be undone (the article "原始に続く穴 安定攻略への道").
+	if s := unknown(CategoryScroll); s != nil && g.Player == g.Stairs {
+		// On the stairs only, on every floor: a scroll may not be undone
+		// (the article "原始に続く穴 安定攻略への道"), and some bring the
+		// monsters of the floor round the player (引き寄せ, 魔物部屋):
+		// the bots read them anywhere on the first floors, and that was
+		// three of seven of their deaths on 1-5F (2026-11-28).
 		return b.use(s, commandRead)
 	}
 	if s := unknown(CategoryGrass); s != nil && (g.HP == g.MaxHP || early && g.HP*10 >= g.MaxHP*7) {
