@@ -355,3 +355,39 @@ func TestAntidote(t *testing.T) {
 		t.Errorf("snake alive: %q", g.Message)
 	}
 }
+
+// TestRefreshForget: 元気草 cures the bad states; 物忘れ草 makes a kind
+// known unknown again.
+func TestRefreshForget(t *testing.T) {
+	g, _ := roomGame(t, 6, 5)
+	g.Confused, g.Slowed = 5, 5
+	it := carry(g, "genki", 0)
+	it.Cursed = false
+	g.useItem(it)
+	if g.Confused > 0 || g.Slowed > 0 {
+		t.Errorf("confused %d, slowed %d", g.Confused, g.Slowed)
+	}
+	known := 0
+	for id := range g.identified {
+		if g.fakeNames[id] != "" {
+			known++
+		}
+	}
+	if known == 0 {
+		g.identified["dokusou"] = true
+		known = 1
+	}
+	f := carry(g, "monowasure", 0)
+	f.Cursed = false
+	g.useItem(f)
+	after := 0
+	for id := range g.identified {
+		if g.fakeNames[id] != "" {
+			after++
+		}
+	}
+	// (Using 物忘れ草 identifies it, then forgets another.)
+	if after > known {
+		t.Errorf("known %d, after %d: %q", known, after, g.Message)
+	}
+}

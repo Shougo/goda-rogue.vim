@@ -549,3 +549,10 @@
 よろず	2	99	nemuritsubo	1
 床	2	99	kemuritsubo	1
 よろず	2	99	kemuritsubo	1
+# 元気草, 物忘れ草 (2026-11-28).
+床	1	99	genki	1
+よろず	1	99	genki	1
+草	1	99	genki	1
+床	1	99	monowasure	1
+よろず	1	99	monowasure	1
+草	1	99	monowasure	1

@@ -120,6 +120,14 @@ func (g *Game) hitBy(it *Item, m *Monster) bool {
 		case EffectFire:
 			g.identify(it)
 			g.burnMonster(m, g.fireDamage(it.Def.Strength, false))
+		case EffectRefresh:
+			g.identify(it)
+			m.Confused, m.Slowed, m.Blind, m.Bound = 0, 0, 0, 0
+			g.say(m.Name + "の調子が元に戻った。")
+		case EffectForget:
+			g.identify(it)
+			g.provoke(m)
+			g.magicOn(m, MagicSeal, Directions[g.Facing])
 		case EffectAntidote:
 			g.identify(it)
 			g.provoke(m)

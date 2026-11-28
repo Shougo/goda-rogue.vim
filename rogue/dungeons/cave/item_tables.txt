@@ -717,3 +717,12 @@
 床	2	30	kemuritsubo	1
 よろず	2	30	kemuritsubo	1
 変化	2	30	kemuritsubo	1
+# 元気草, 物忘れ草 (2026-11-28).
+床	1	30	genki	1
+よろず	1	30	genki	1
+草	1	30	genki	1
+変化	1	30	genki	1
+床	1	30	monowasure	1
+よろず	1	30	monowasure	1
+草	1	30	monowasure	1
+変化	1	30	monowasure	1

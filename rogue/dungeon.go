@@ -397,6 +397,11 @@ const (
 	// it kills a monster of poison (AbilityPoison) at once, and cures
 	// another of a poison (its attack back) (解毒草, Shougo 2026-11-28).
 	EffectAntidote Effect = "解毒"
+	// EffectRefresh: the bad states pass (元気草; thrown, a monster's);
+	// EffectForget: a kind identified is forgotten (物忘れ草; thrown, it
+	// seals the monster's abilities).
+	EffectRefresh Effect = "元気"
+	EffectForget  Effect = "物忘れ"
 	// EffectTunnel is the staff of トンネル: it digs to its front.
 	EffectTunnel    Effect = "トンネル"
 	EffectUncurse   Effect = "おはらい"
@@ -439,7 +444,7 @@ var effects = map[Category][]Effect{
 		EffectCall, EffectLeap, EffectBlast, EffectClumsy, EffectBlastGuard, EffectWaterWalk,
 		EffectFloat, EffectWalls, EffectCursePower,
 		EffectNoStarve, EffectPierce, EffectHappy, EffectStealth, EffectBigStomach, EffectBargain},
-	CategoryGrass: {EffectHeal, EffectStrength, EffectEyeDrops, EffectMaxHP, EffectMaxFull, EffectLessFull, EffectRevive, EffectFire, EffectAntidote},
+	CategoryGrass: {EffectHeal, EffectStrength, EffectEyeDrops, EffectMaxHP, EffectMaxFull, EffectLessFull, EffectRevive, EffectFire, EffectAntidote, EffectRefresh, EffectForget},
 	CategoryScroll: {EffectLight, EffectDrain, EffectIdentify, EffectUpWeapon, EffectUpShield, EffectUncurse, EffectMoreSlots, EffectEraseSeal,
 		EffectSlash, EffectWipe, EffectNoTraps, EffectSeer, EffectGather, EffectLost, EffectOnigiri, EffectPotUp, EffectSuck, EffectBless, EffectPlate,
 		EffectGatherFoes, EffectTrouble, EffectPowerUp, EffectPrevent, EffectBind,

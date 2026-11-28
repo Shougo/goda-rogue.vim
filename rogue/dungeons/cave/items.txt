@@ -318,6 +318,8 @@ kuchinashisou	草	口封じ草	草	0	封印	0	-	-	0	100
 shiawasesou	草	しあわせ草	草	0	レベル+1	0	-	-	0	1000
 dokusou	草	毒草	草	0	毒	0	-	-	0	100
 gedoku	草	解毒草	草	0	解毒	0	-	-	0	250
+genki	草	元気草	草	0	元気	0	-	-	0	350
+monowasure	草	物忘れ草	草	0	物忘れ	0	-	-	0	120
 mutekisou	草	無敵草	草	0	無敵	0	-	-	0	1500
 ikakuchoutane	草	胃拡張の種	草	5	最大満腹度+	0	-	-	0	300
 ishukushoutane	草	胃縮小の種	草	5	最大満腹度-	0	-	-	0	300

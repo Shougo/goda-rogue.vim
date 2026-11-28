@@ -116,3 +116,21 @@ func (g *Game) askIdentify() bool {
 	g.Prompt = p
 	return true
 }
+
+// forget is 物忘れ草: a kind of item with a fake name the player knows,
+// at random, is unknown again (not the grass itself, used up).
+func (g *Game) forget() {
+	var ids []string
+	for _, def := range g.Dungeon.Items {
+		if g.identified[def.ID] && g.fakeNames[def.ID] != "" && def.Effect != EffectForget {
+			ids = append(ids, def.ID)
+		}
+	}
+	if len(ids) == 0 {
+		g.say("しかし何も起こらなかった。")
+		return
+	}
+	id := ids[g.rng.IntN(len(ids))]
+	delete(g.identified, id)
+	g.say(g.Dungeon.Item(id).Name + "が何だったか忘れてしまった。")
+}
