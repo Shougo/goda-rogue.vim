@@ -78,7 +78,7 @@ func (g *Game) weakened(n int) int {
 // cushioned is the damage n of a blow of a monster on the player, less
 // with a bracelet of 胃縮小 (Shougo: blows only; never under 1).
 func (g *Game) cushioned(n int) int {
-	if b := g.equipped(CategoryBracelet); b != nil && b.Def.Effect == EffectSmallStomach && n > 0 {
+	if b := g.bracelet(EffectSmallStomach); b != nil && n > 0 {
 		g.use(EffectSmallStomach)
 		n = max(int(math.Round(float64(n)*float64(100-b.Def.Strength)/100)), 1)
 	}

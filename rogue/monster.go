@@ -669,7 +669,7 @@ func (g *Game) leak() {
 // dropRate is the chance (%) of a drop, rate by the monster or the rule,
 // with the bracelet worn: more with one of drops (垂れ流し).
 func (g *Game) dropRate(rate int) int {
-	if b := g.equipped(CategoryBracelet); b != nil && b.Def.Effect == EffectDrops && rate > 0 {
+	if b := g.bracelet(EffectDrops); b != nil && rate > 0 {
 		g.use(EffectDrops)
 		return min(rate*(100+b.Def.Strength)/100, 100)
 	}

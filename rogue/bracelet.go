@@ -25,8 +25,8 @@ func (g *Game) call() {
 // floor, a turn in a hundred its strength; leaving a shop with what is not
 // paid for is theft. It says whether it leapt.
 func (g *Game) leap() bool {
-	b := g.equipped(CategoryBracelet)
-	if b == nil || b.Def.Effect != EffectLeap || g.rng.IntN(100) >= b.Def.Strength {
+	b := g.bracelet(EffectLeap)
+	if b == nil || g.rng.IntN(100) >= b.Def.Strength {
 		return false
 	}
 	g.use(EffectLeap)
@@ -53,8 +53,8 @@ func (g *Game) warpAway() {
 // the walls around crumble (not the edge of the floor). It says whether
 // it blew up.
 func (g *Game) blast() bool {
-	b := g.equipped(CategoryBracelet)
-	if b == nil || b.Def.Effect != EffectBlast || g.rng.IntN(100) >= b.Def.Strength {
+	b := g.bracelet(EffectBlast)
+	if b == nil || g.rng.IntN(100) >= b.Def.Strength {
 		return false
 	}
 	g.use(EffectBlast)
@@ -167,8 +167,8 @@ func (g *Game) inWalls() {
 // its strength for each cursed item carried (the bracelet too), not those
 // in pots.
 func (g *Game) cursePower() int {
-	b := g.equipped(CategoryBracelet)
-	if b == nil || b.Def.Effect != EffectCursePower {
+	b := g.bracelet(EffectCursePower)
+	if b == nil {
 		return 0
 	}
 	n := 0
@@ -197,7 +197,7 @@ func (g *Game) drain() bool {
 // happy is the EXP n of a defeat, more with a bracelet of しあわせ (its
 // strength in %), and with the seal of しあわせ.
 func (g *Game) happy(n int) int {
-	if b := g.equipped(CategoryBracelet); b != nil && b.Def.Effect == EffectHappy {
+	if b := g.bracelet(EffectHappy); b != nil {
 		g.use(EffectHappy)
 		n = n * (100 + b.Def.Strength) / 100
 	}
@@ -212,7 +212,7 @@ func (g *Game) happy(n int) int {
 // the kind as well, then.
 func (g *Game) buyPrice(it *Item) int {
 	n := price(it)
-	if b := g.equipped(CategoryBracelet); b != nil && b.Def.Effect == EffectBargain {
+	if b := g.bracelet(EffectBargain); b != nil {
 		return n * (100 - b.Def.Strength) / 100
 	}
 	return n

@@ -800,7 +800,7 @@ func (g *Game) blow(m *Monster, share float64, ahead bool) {
 		g.say("会心の一撃！")
 	}
 	g.use(EffectStrength)
-	if b := g.equipped(CategoryBracelet); b != nil && b.Def.Effect == EffectHungry {
+	if b := g.bracelet(EffectHungry); b != nil {
 		n = int(math.Round(float64(n) * float64(100+b.Def.Strength) / 100))
 		g.use(EffectHungry)
 	}

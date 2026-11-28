@@ -278,8 +278,11 @@ func (g *Game) equippedAbilities() []anAbility {
 	}
 	// A bracelet with a seal (会心の腕輪...) has its ability at the
 	// strength it is born with, as a weapon or a shield.
-	if b := g.equipped(CategoryBracelet); b != nil {
-		if s := g.Dungeon.Seal(b.Def.Seal); s != nil {
+	var worn []*SealDef
+	for _, b := range g.bracelets() {
+		// (Two of the same kind do as much as one.)
+		if s := g.Dungeon.Seal(b.Def.Seal); s != nil && !slices.Contains(worn, s) {
+			worn = append(worn, s)
 			as = append(as, anAbility{s, true})
 		}
 	}

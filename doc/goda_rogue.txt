@@ -31,9 +31,10 @@ plugin, and Vim talks to it through goda.vim.
 It is a prototype: it shows the dungeon and a mini-map, the player moves
 around and attacks, and the enemies wander, chase and attack the player.
 Going down the stairs of the 30th floor clears the dungeon.  Items can be
-picked up and dropped, and a weapon, a shield and a bracelet equipped
-(weapons add to the attack, shields make the defense, a bracelet has its
-effect while it is worn).  Grasses are drunk, scrolls read, staffs waved
+picked up and dropped, and a weapon, a shield and up to two bracelets
+equipped (weapons add to the attack, shields make the defense, a bracelet
+has its effect while it is worn; two worn crack twice as fast).
+Grasses are drunk, scrolls read, staffs waved
 (a magic bolt to the front) and food eaten, arrows shot, and any item
 thrown.  Pots hold items: a pot of keeping to take them out again, a pot
 of synthesis merges them (a weapon or a shield gets the seals and the
@@ -1096,9 +1097,8 @@ The built-in dungeons:
 				only), it gives its seal for weapons or for
 				shields, and is used up.  ひび is how easily a
 				bracelet cracks, a percent (0 for never).
-				Leaving a floor where a bracelet had its
-				effect (it showed a monster out of sight,
-				restored HP, added to an attack), it cracks
+				Leaving a floor with a bracelet worn, it
+				cracks (twice as easily with two worn)
 				with ひび x (cracks + 1) % (times
 				腕輪の傷みやすさ, a percent, in rules.txt:
 				100 as items.txt says, 0 never, 200 twice

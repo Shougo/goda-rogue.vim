@@ -281,7 +281,7 @@ func (g *Game) info(it *Item) []string {
 		case def.Crack == 0:
 			lines = append(lines, "ひびは入らない。")
 		default:
-			lines = append(lines, fmt.Sprintf("ひび %d/%d（効果を発揮したフロアを出るとき、ひびが入ることがある）", it.Cracks, g.Dungeon.Rules.CrackStages))
+			lines = append(lines, fmt.Sprintf("ひび %d/%d（着けたままフロアを出るとき、ひびが入ることがある。2 個着けると入りやすい）", it.Cracks, g.Dungeon.Rules.CrackStages))
 		}
 	case CategoryStaff:
 		lines = append(lines, effectText(def))

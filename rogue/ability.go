@@ -398,7 +398,7 @@ func (g *Game) critical(m *Monster, n int, shown bool) (int, bool) {
 // 痛恨; a critical blow does less with the guard of 防恨.
 func (g *Game) criticalOn(m *Monster, n int) int {
 	n, crit := g.critical(m, n, true)
-	if b := g.equipped(CategoryBracelet); !crit && b != nil && b.Def.Effect == EffectCritTaken && g.rng.IntN(100) < b.Def.Strength {
+	if b := g.bracelet(EffectCritTaken); !crit && b != nil && g.rng.IntN(100) < b.Def.Strength {
 		g.use(EffectCritTaken)
 		g.say("痛恨の一撃！")
 		n, crit = n*critTakenRate/100, true

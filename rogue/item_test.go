@@ -294,12 +294,18 @@ func TestBracelets(t *testing.T) {
 		t.Errorf("entry %q", g.Entry(power))
 	}
 
-	// One bracelet at a time.
+	// Two bracelets at a time; a third takes the place of the first.
 	regen := carry(g, "kaifuku", 0)
 	command(t, g, regen, commandEquip)
-	if power.Equipped || g.CurrentStrength() != base {
-		t.Errorf("both bracelets: strength %d", g.CurrentStrength())
+	if !power.Equipped || !regen.Equipped || g.CurrentStrength() != base+3 {
+		t.Errorf("two bracelets: strength %d", g.CurrentStrength())
 	}
+	third := carry(g, "kehai", 0)
+	command(t, g, third, commandEquip)
+	if power.Equipped || !regen.Equipped || !third.Equipped {
+		t.Errorf("three bracelets: %v %v %v", power.Equipped, regen.Equipped, third.Equipped)
+	}
+	command(t, g, third, commandUnequip)
 
 	// HP comes back twice as fast.
 	restored := func() int {
@@ -391,17 +397,15 @@ func TestCracks(t *testing.T) {
 	}
 	command(t, g, b, commandEquip)
 
-	// No crack without the effect: no monster out of sight.
-	g.Monsters = nil
-	b.used = false
+	// No crack when not worn.
+	command(t, g, b, commandUnequip)
 	for range 20 {
 		leave(t, g)
-		g.Monsters = nil
-		b.used = false
 	}
 	if b.Cracks != 0 {
-		t.Fatalf("%d cracks without the effect", b.Cracks)
+		t.Fatalf("%d cracks not worn", b.Cracks)
 	}
+	command(t, g, b, commandEquip)
 
 	// Cracks, one stage after another, and breaks.
 	stages := g.Dungeon.Rules.CrackStages
@@ -452,7 +456,7 @@ func TestCrackLabel(t *testing.T) {
 	if g.Entry(b) != "腕 E 道具感知の腕輪 [ひび2]" {
 		t.Errorf("entry %q", g.Entry(b))
 	}
-	// A bracelet that never cracks.
+	// A bracelet not worn.
 	p := carry(g, "chikara", 0)
 	p.used = true
 	g.Stairs = g.Player

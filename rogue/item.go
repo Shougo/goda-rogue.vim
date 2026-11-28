@@ -794,7 +794,18 @@ func (g *Game) equipped(c Category) *Item {
 
 // equip equips it, in place of the item of its category.
 func (g *Game) equip(it *Item) {
-	if old := g.equipped(it.Def.Category); old != nil {
+	if it.Def.Category == CategoryBracelet {
+		// Up to two bracelets: a third takes the place of the first
+		// worn that is not cursed.
+		if bs := g.bracelets(); len(bs) >= maxBracelets {
+			for _, b := range bs {
+				if !b.Cursed {
+					b.Equipped = false
+					break
+				}
+			}
+		}
+	} else if old := g.equipped(it.Def.Category); old != nil {
 		old.Equipped = false
 	}
 	it.Equipped, it.CurseTold = true, true
@@ -815,9 +826,36 @@ func (g *Game) unequip(it *Item) {
 }
 
 // wears says whether the player wears a bracelet with the effect e.
-func (g *Game) wears(e Effect) bool {
-	b := g.equipped(CategoryBracelet)
-	return b != nil && b.Def.Effect == e
+func (g *Game) wears(e Effect) bool { return g.bracelet(e) != nil }
+
+// maxBracelets is how many bracelets the player can wear (Shougo,
+// 2026-11-28: two, at the cost of the cracks: braceletWear).
+const maxBracelets = 2
+
+// braceletWear is how much more easily bracelets crack with two worn.
+const braceletWear = 2
+
+// bracelets are the bracelets the player wears, in the order of the
+// inventory.
+func (g *Game) bracelets() []*Item {
+	var bs []*Item
+	for _, it := range g.Inventory {
+		if it.Equipped && it.Def.Category == CategoryBracelet {
+			bs = append(bs, it)
+		}
+	}
+	return bs
+}
+
+// bracelet is the bracelet with the effect e the player wears, if any
+// (two of the same kind do as much as one).
+func (g *Game) bracelet(e Effect) *Item {
+	for _, b := range g.bracelets() {
+		if b.Def.Effect == e {
+			return b
+		}
+	}
+	return nil
 }
 
 // sensesMonster says whether a bracelet of sensing shows a monster on p:
@@ -830,8 +868,8 @@ func (g *Game) sensesMonster(p Point) bool {
 	if g.Seer {
 		return true
 	}
-	b := g.equipped(CategoryBracelet)
-	if b == nil || b.Def.Effect != EffectSenseEnemy {
+	b := g.bracelet(EffectSenseEnemy)
+	if b == nil {
 		return false
 	}
 	return b.Def.Strength == 0 || chebyshev(p, g.Player) <= b.Def.Strength
@@ -845,7 +883,7 @@ func (g *Game) CurrentStrength() int {
 
 // braceletStrength is what the bracelet worn adds to the strength.
 func (g *Game) braceletStrength() int {
-	if b := g.equipped(CategoryBracelet); b != nil && b.Def.Effect == EffectStrength {
+	if b := g.bracelet(EffectStrength); b != nil {
 		return b.Def.Strength
 	}
 	return 0
@@ -874,7 +912,7 @@ func (g *Game) Defense() int {
 // use notes that the bracelet with the effect e, if the player wears it,
 // had its effect: that tells what it is.
 func (g *Game) use(e Effect) {
-	if b := g.equipped(CategoryBracelet); b != nil && b.Def.Effect == e {
+	if b := g.bracelet(e); b != nil {
 		b.used = true
 		// Its effect showing tells what it is.
 		g.identify(b)
@@ -898,17 +936,21 @@ func (g *Game) sense() {
 	}
 }
 
-// wearAndTear cracks, as the player leaves the floor, the bracelets that
-// had their effect on it: with ひび x (cracks + 1) % times the wear of the
-// dungeon, so a crack is more likely with each crack, and one crack too
-// many breaks a bracelet.
+// wearAndTear cracks, as the player leaves the floor, the bracelets it
+// wears (Shougo, 2026-11-28: every bracelet worn, not only one that had
+// its effect): with ひび x (cracks + 1) % times the wear of the dungeon,
+// twice that with two worn (braceletWear), so a crack is more likely with
+// each crack, and one crack too many breaks a bracelet.
 func (g *Game) wearAndTear() {
-	for _, it := range slices.Clone(g.Inventory) {
-		if !it.used {
-			continue
-		}
+	for _, it := range g.Inventory {
 		it.used = false
+	}
+	worn := g.bracelets()
+	for _, it := range worn {
 		chance := it.Def.Crack * (it.Cracks + 1) * g.Dungeon.Rules.Wear // in 1/10000
+		if len(worn) > 1 {
+			chance *= braceletWear
+		}
 		if chance == 0 || g.rng.IntN(10000) >= chance {
 			continue
 		}

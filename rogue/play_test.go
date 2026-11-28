@@ -326,11 +326,14 @@ func checkGame(g *Game) error {
 			if !it.equipment() {
 				fail("%s equipped", it.Def.ID)
 			}
-			if o := worn[it.Def.Category]; o != nil {
+			if o := worn[it.Def.Category]; o != nil && it.Def.Category != CategoryBracelet {
 				fail("%s and %s equipped", o.Def.ID, it.Def.ID)
 			}
 			worn[it.Def.Category] = it
 		}
+	}
+	if n := len(g.bracelets()); n > maxBracelets {
+		fail("%d bracelets worn", n)
 	}
 	if g.debt() > 0 && !g.keepersCalm() {
 		fail("a debt of %dG to no shopkeeper", g.debt())

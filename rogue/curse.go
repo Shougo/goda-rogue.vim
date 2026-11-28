@@ -1,6 +1,9 @@
 package rogue
 
-import "math/rand/v2"
+import (
+	"math/rand/v2"
+	"slices"
+)
 
 // Curses. An item of the dungeon, but arrows and money, may be cursed
 // (rules.txt 武具の呪い, 腕輪の呪い, 道具の呪い, 食料の呪い).
@@ -122,6 +125,15 @@ func (g *Game) curseBlocks(it *Item, c string) bool {
 			return true
 		}
 	case commandEquip:
+		if it.Def.Category == CategoryBracelet {
+			// A third bracelet takes the place of one not cursed.
+			bs := g.bracelets()
+			if len(bs) >= maxBracelets && !slices.ContainsFunc(bs, func(b *Item) bool { return !b.Cursed }) {
+				g.say(g.Name(bs[0]) + "は呪われていて外せない！")
+				return true
+			}
+			break
+		}
 		if old := g.equipped(it.Def.Category); old != nil && old.Cursed {
 			g.say(g.Name(old) + "は呪われていて外せない！")
 			return true

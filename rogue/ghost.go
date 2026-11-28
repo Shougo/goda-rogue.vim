@@ -29,7 +29,7 @@ func (g *Game) fullnessCap() int {
 	if g.wears(EffectSmallStomach) {
 		return max(g.MaxFullness-shrinkFullness, 1)
 	}
-	if b := g.equipped(CategoryBracelet); b != nil && b.Def.Effect == EffectBigStomach {
+	if b := g.bracelet(EffectBigStomach); b != nil {
 		return g.MaxFullness + b.Def.Strength
 	}
 	return g.MaxFullness

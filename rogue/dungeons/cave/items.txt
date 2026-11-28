@@ -152,9 +152,9 @@
 #     焼き      restores 強さ of fullness and of HP, and never rots (the
 #               grilled onigiri: a blast makes it of an onigiri carried)
 # ひび is how easily a bracelet cracks (a percent, 0 for never): leaving
-# a floor where it had its effect, it cracks with ひび x (cracks + 1) %
-# (times 腕輪の傷みやすさ in rules.txt), and breaks with too many cracks
-# (ひびの段階 in rules.txt).
+# a floor with it worn, it cracks with ひび x (cracks + 1) % (times
+# 腕輪の傷みやすさ in rules.txt, and twice that with two bracelets worn),
+# and breaks with too many cracks (ひびの段階 in rules.txt).
 #   矢: 強さ is the attack of an arrow, shot or thrown
 #   壺, things put in it:
 #     保存      keeps them, to take out
@@ -262,44 +262,44 @@ seichoutate	盾	成長の盾	盾	3	-	0	-	成	3	2000
 ryuurin	盾	龍鱗の盾	盾	7	-	0	-	鱗	3	2500
 fuuinyoke	盾	封印よけの盾	盾	5	-	0	-	鍵	3	1500
 dokuyoke	盾	毒よけの盾	盾	5	-	0	-	清	3	1200
-chikara	腕	力の腕輪	腕輪	3	ちから	0	-	-	0	1000
-kaifuku	腕	回復の腕輪	腕輪	0	回復	0	-	-	0	1500
-kehai	腕	気配察知の腕輪	腕輪	10	気配察知	15	-	-	0	2000
-dougu	腕	道具感知の腕輪	腕輪	0	道具感知	15	-	-	0	2000
-sabiyoke	腕	サビよけの腕輪	腕輪	0	サビよけ	15	-	-	0	1500
-nusumiyokeu	腕	盗みよけの腕輪	腕輪	0	盗みよけ	15	-	-	0	1500
-suiminyoke	腕	睡眠よけの腕輪	腕輪	0	睡眠よけ	15	-	-	0	1500
-konranyoke	腕	混乱よけの腕輪	腕輪	0	混乱よけ	15	-	-	0	1500
-noroiyoke	腕	呪いよけの腕輪	腕輪	0	呪いよけ	15	-	-	0	1500
-metsubushiyoke	腕	目つぶしよけの腕輪	腕輪	0	目つぶしよけ	15	-	-	0	1500
-kuchifuujiyoke	腕	口封じよけの腕輪	腕輪	0	口封じよけ	15	-	-	0	1500
-yowariyoke	腕	弱りよけの腕輪	腕輪	0	弱りよけ	15	-	-	0	1500
-haraheri	腕	大食いの腕輪	腕輪	20	大食い	0	-	-	0	1000
-taranagashi	腕	垂れ流しの腕輪	腕輪	100	垂れ流し	0	-	-	0	1000
-haraherazuu	腕	節食の腕輪	腕輪	0	-	0	-	腹	0	2000
-kaishinu	腕	会心の腕輪	腕輪	0	-	0	-	会	0	2500
-mikiriu	腕	見切りの腕輪	腕輪	0	-	0	-	避	0	2000
-hangekiu	腕	反撃の腕輪	腕輪	0	-	0	-	反	0	2000
-mikawashiu	腕	身躱しの腕輪	腕輪	0	-	0	-	躱	0	2000
-hicchuuu	腕	必中の腕輪	腕輪	0	-	0	-	必	0	2500
-wanashi	腕	罠使いの腕輪	腕輪	0	罠使い	15	-	-	0	2000
-ishukushou	腕	胃縮小の腕輪	腕輪	20	胃縮小	0	-	-	0	1500
-tsuukon	腕	痛恨の腕輪	腕輪	50	痛恨	0	-	-	0	1000
-mamonoyobi	腕	魔物呼びの腕輪	腕輪	0	魔物呼び	0	-	-	0	1000
-takatobiu	腕	転移の腕輪	腕輪	10	転移	0	-	-	0	1500
-bakuhatsu	腕	爆発の腕輪	腕輪	10	爆発	0	-	-	0	1500
-hetanage	腕	投げ下手の腕輪	腕輪	0	投げ下手	0	-	-	0	1000
-taibaku	腕	耐爆の腕輪	腕輪	0	耐爆	15	-	-	0	1500
-mizugumo	腕	水渡りの腕輪	腕輪	0	水渡り	0	-	-	0	2000
-fuyuu	腕	浮遊の腕輪	腕輪	0	浮遊	0	-	-	0	5000
-kabenuke	腕	壁抜けの腕輪	腕輪	0	壁抜け	0	-	-	0	3000
-noroiryoku	腕	呪い力の腕輪	腕輪	1	呪い力	0	-	-	0	1500
-harahetiyoke	腕	空腹よけの腕輪	腕輪	0	空腹よけ	15	-	-	0	1500
-entou	腕	遠投の腕輪	腕輪	0	遠投	0	-	-	0	2000
-shiawase	腕	しあわせの腕輪	腕輪	50	しあわせ	0	-	-	0	3000
-shinobiashi	腕	忍び足の腕輪	腕輪	0	忍び足	0	-	-	0	1500
-ikakuchou	腕	胃拡張の腕輪	腕輪	50	胃拡張	0	-	-	0	1500
-negiri	腕	値切りの腕輪	腕輪	20	値切り	0	-	-	0	2500
+chikara	腕	力の腕輪	腕輪	3	ちから	8	-	-	0	1000
+kaifuku	腕	回復の腕輪	腕輪	0	回復	8	-	-	0	1500
+kehai	腕	気配察知の腕輪	腕輪	10	気配察知	8	-	-	0	2000
+dougu	腕	道具感知の腕輪	腕輪	0	道具感知	8	-	-	0	2000
+sabiyoke	腕	サビよけの腕輪	腕輪	0	サビよけ	8	-	-	0	1500
+nusumiyokeu	腕	盗みよけの腕輪	腕輪	0	盗みよけ	8	-	-	0	1500
+suiminyoke	腕	睡眠よけの腕輪	腕輪	0	睡眠よけ	8	-	-	0	1500
+konranyoke	腕	混乱よけの腕輪	腕輪	0	混乱よけ	8	-	-	0	1500
+noroiyoke	腕	呪いよけの腕輪	腕輪	0	呪いよけ	8	-	-	0	1500
+metsubushiyoke	腕	目つぶしよけの腕輪	腕輪	0	目つぶしよけ	8	-	-	0	1500
+kuchifuujiyoke	腕	口封じよけの腕輪	腕輪	0	口封じよけ	8	-	-	0	1500
+yowariyoke	腕	弱りよけの腕輪	腕輪	0	弱りよけ	8	-	-	0	1500
+haraheri	腕	大食いの腕輪	腕輪	20	大食い	8	-	-	0	1000
+taranagashi	腕	垂れ流しの腕輪	腕輪	100	垂れ流し	8	-	-	0	1000
+haraherazuu	腕	節食の腕輪	腕輪	0	-	8	-	腹	0	2000
+kaishinu	腕	会心の腕輪	腕輪	0	-	8	-	会	0	2500
+mikiriu	腕	見切りの腕輪	腕輪	0	-	8	-	避	0	2000
+hangekiu	腕	反撃の腕輪	腕輪	0	-	8	-	反	0	2000
+mikawashiu	腕	身躱しの腕輪	腕輪	0	-	8	-	躱	0	2000
+hicchuuu	腕	必中の腕輪	腕輪	0	-	8	-	必	0	2500
+wanashi	腕	罠使いの腕輪	腕輪	0	罠使い	8	-	-	0	2000
+ishukushou	腕	胃縮小の腕輪	腕輪	20	胃縮小	8	-	-	0	1500
+tsuukon	腕	痛恨の腕輪	腕輪	50	痛恨	8	-	-	0	1000
+mamonoyobi	腕	魔物呼びの腕輪	腕輪	0	魔物呼び	8	-	-	0	1000
+takatobiu	腕	転移の腕輪	腕輪	10	転移	8	-	-	0	1500
+bakuhatsu	腕	爆発の腕輪	腕輪	10	爆発	8	-	-	0	1500
+hetanage	腕	投げ下手の腕輪	腕輪	0	投げ下手	8	-	-	0	1000
+taibaku	腕	耐爆の腕輪	腕輪	0	耐爆	8	-	-	0	1500
+mizugumo	腕	水渡りの腕輪	腕輪	0	水渡り	8	-	-	0	2000
+fuyuu	腕	浮遊の腕輪	腕輪	0	浮遊	8	-	-	0	5000
+kabenuke	腕	壁抜けの腕輪	腕輪	0	壁抜け	8	-	-	0	3000
+noroiryoku	腕	呪い力の腕輪	腕輪	1	呪い力	8	-	-	0	1500
+harahetiyoke	腕	空腹よけの腕輪	腕輪	0	空腹よけ	8	-	-	0	1500
+entou	腕	遠投の腕輪	腕輪	0	遠投	8	-	-	0	2000
+shiawase	腕	しあわせの腕輪	腕輪	50	しあわせ	8	-	-	0	3000
+shinobiashi	腕	忍び足の腕輪	腕輪	0	忍び足	8	-	-	0	1500
+ikakuchou	腕	胃拡張の腕輪	腕輪	50	胃拡張	8	-	-	0	1500
+negiri	腕	値切りの腕輪	腕輪	20	値切り	8	-	-	0	2500
 kiya	矢	木の矢	矢	4	-	0	5-15	-	0	10
 tetsuya	矢	鉄の矢	矢	8	-	0	3-10	-	0	20
 ishi	矢	石	矢	3	-	0	1-1	-	0	2

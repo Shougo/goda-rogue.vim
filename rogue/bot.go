@@ -1700,6 +1700,17 @@ func (b *Bot) bracelet(g *Game, worn *Item) (string, []string) {
 	if (worn != nil && worn.Cursed) || len(g.visibleEnemies()) > 0 {
 		return "", nil
 	}
+	// The bots wear one bracelet (two crack twice as fast): another
+	// comes on after the worn one comes off.
+	if bs := g.bracelets(); len(bs) > 1 {
+		return b.use(bs[len(bs)-1], commandUnequip)
+	}
+	swap := func(it *Item) (string, []string) {
+		if worn != nil {
+			return b.use(worn, commandUnequip)
+		}
+		return b.use(it, commandEquip)
+	}
 	regen := func(it *Item) bool { return b.known(g, it, EffectRegen) }
 	// A bracelet of hunger (twice as hungry, for stronger blows) comes
 	// off when the food runs short, and goes on again with food for a
@@ -1722,13 +1733,13 @@ func (b *Bot) bracelet(g *Game, worn *Item) (string, []string) {
 	})
 	if worn != nil && bad(worn) {
 		if other != nil {
-			return b.use(other, commandEquip)
+			return swap(other)
 		}
 		return b.use(worn, commandUnequip)
 	}
 	if worn != nil && hungry(worn) && b.foodFloors(g) < regenOff {
 		if other != nil {
-			return b.use(other, commandEquip)
+			return swap(other)
 		}
 		return b.use(worn, commandUnequip)
 	}
@@ -1737,13 +1748,13 @@ func (b *Bot) bracelet(g *Game, worn *Item) (string, []string) {
 			return "", nil
 		}
 		if other != nil {
-			return b.use(other, commandEquip)
+			return swap(other)
 		}
 		return b.use(worn, commandUnequip)
 	}
 	if g.HP*10 < g.MaxHP*regenFrom && b.foodFloors(g) >= regenOn {
-		if it := carried(g, func(it *Item) bool { return it.Def.Category == CategoryBracelet && regen(it) }); it != nil {
-			return b.use(it, commandEquip)
+		if it := carried(g, func(it *Item) bool { return it.Def.Category == CategoryBracelet && regen(it) && !it.Equipped }); it != nil {
+			return swap(it)
 		}
 	}
 	if worn == nil && other != nil {

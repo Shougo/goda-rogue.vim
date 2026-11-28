@@ -822,15 +822,26 @@ func TestBotRegenBracelet(t *testing.T) {
 	if a, _ := b.equip(g); a != "" {
 		t.Errorf("at full HP: %s", a)
 	}
+	// (It wears one bracelet: the worn one comes off first.)
 	g.HP = g.MaxHP / 2
-	if a, _ := b.equip(g); a != "inventory" || b.plan[0].item != regen || b.plan[1].label != commandEquip {
+	if a, _ := b.equip(g); a != "inventory" || b.plan[0].item != other || b.plan[1].label != commandUnequip {
 		t.Errorf("hurt: %s %+v", a, b.plan)
+	}
+	b.plan = nil
+	other.Equipped = false
+	if a, _ := b.equip(g); a != "inventory" || b.plan[0].item != regen || b.plan[1].label != commandEquip {
+		t.Errorf("hurt, none worn: %s %+v", a, b.plan)
 	}
 	b.plan = nil
 	g.equip(regen)
 	g.HP = g.MaxHP
-	if a, _ := b.equip(g); a != "inventory" || b.plan[0].item != other || b.plan[1].label != commandEquip {
+	if a, _ := b.equip(g); a != "inventory" || b.plan[0].item != regen || b.plan[1].label != commandUnequip {
 		t.Errorf("healed: %s %+v", a, b.plan)
+	}
+	b.plan = nil
+	regen.Equipped = false
+	if a, _ := b.equip(g); a != "inventory" || b.plan[0].item != other || b.plan[1].label != commandEquip {
+		t.Errorf("healed, none worn: %s %+v", a, b.plan)
 	}
 	// Neither is useless: one of each use.
 	if useless(g, regen) || useless(g, other) {
