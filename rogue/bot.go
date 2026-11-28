@@ -500,7 +500,9 @@ const comeReach = 5
 func (b *Bot) threats(g *Game) []*Monster {
 	ms := b.adjacent(g)
 	for _, m := range g.visibleEnemies() {
-		if d := chebyshev(m.Pos, g.Player); d > 1 && d <= comeReach && !m.Dozing {
+		// (Not a thief that fled with its loot: it keeps away, and the
+		// bots stepped to a shop and back, seeing it from one tile.)
+		if d := chebyshev(m.Pos, g.Player); d > 1 && d <= comeReach && !m.Dozing && !m.Fled {
 			ms = append(ms, m)
 		}
 	}
@@ -1238,9 +1240,12 @@ func (b *Bot) wants(g *Game, p Point) bool {
 	if wanted(g, p) {
 		return true
 	}
+	// With a full inventory, it goes for an item to trade for (trade);
+	// not with its mouth sealed: trading often eats or drinks, and the
+	// bots walked to the item and away again for the floor.
 	it, ok := g.ItemAt(p)
 	return ok && g.IsSeen(p) && p != g.Player && len(g.Inventory) >= g.Dungeon.Rules.Capacity &&
-		!g.inShop(p) && !it.Stuck && !g.NoPickup && b.least(g, it) != nil
+		!g.inShop(p) && !it.Stuck && !g.NoPickup && !g.Sealed && b.least(g, it) != nil
 }
 
 // fits says whether eating the food it now wastes none of it.
