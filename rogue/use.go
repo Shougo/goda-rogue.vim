@@ -138,6 +138,13 @@ func (g *Game) effectOf(it *Item, lucky bool) {
 		g.recruit()
 	case EffectEyeDrops:
 		g.eyeDrops()
+	case EffectAntidote:
+		if g.Strength < g.MaxStrength {
+			g.say(fmt.Sprintf("ちからが%d回復した。", g.MaxStrength-g.Strength))
+			g.Strength = g.MaxStrength
+		} else {
+			g.say("しかし何も起こらなかった。")
+		}
 	case EffectFood:
 		g.fill(n)
 		g.say("お腹がふくれた。")

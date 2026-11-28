@@ -120,6 +120,21 @@ func (g *Game) hitBy(it *Item, m *Monster) bool {
 		case EffectFire:
 			g.identify(it)
 			g.burnMonster(m, g.fireDamage(it.Def.Strength, false))
+		case EffectAntidote:
+			g.identify(it)
+			g.provoke(m)
+			if _, ok := m.ability(AbilityPoison); ok {
+				g.say(m.Name + "の毒が消え、" + m.Name + "は倒れた。")
+				m.HP = 0
+				g.kill(m, nil, true, true)
+				break
+			}
+			if m.Attack < m.Def.Attack {
+				m.Attack = m.Def.Attack
+				g.say(m.Name + "の毒が消えた。")
+			} else {
+				g.say("何も起こらなかった。")
+			}
 		default:
 			e := MagicEffect(it.Def.Effect)
 			if !castable(CategoryGrass, e) {

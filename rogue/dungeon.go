@@ -382,6 +382,21 @@ const (
 	EffectWeaker   Effect = "弱化"
 	EffectCash     Effect = "換金"
 	EffectChange   Effect = "変化"
+	// The pots of 2026-11-28 (Shougo): 祝福, 呪い, 解呪 and 修理 (the cracks
+	// of a bracelet) change what is put in; 印 gives a weapon or a shield
+	// a slot; 眠り and 煙 (目つぶし) work on the monsters of the room where
+	// they break.
+	EffectBlessPot Effect = "祝福の壺"
+	EffectCursePot Effect = "呪いの壺"
+	EffectClearPot Effect = "解呪"
+	EffectSlotPot  Effect = "印の壺"
+	EffectMendPot  Effect = "修理"
+	EffectSleepPot Effect = "眠りの壺"
+	EffectSmokePot Effect = "煙"
+	// EffectAntidote: drunk, the strength comes back to its max; thrown,
+	// it kills a monster of poison (AbilityPoison) at once, and cures
+	// another of a poison (its attack back) (解毒草, Shougo 2026-11-28).
+	EffectAntidote Effect = "解毒"
 	// EffectTunnel is the staff of トンネル: it digs to its front.
 	EffectTunnel    Effect = "トンネル"
 	EffectUncurse   Effect = "おはらい"
@@ -424,7 +439,7 @@ var effects = map[Category][]Effect{
 		EffectCall, EffectLeap, EffectBlast, EffectClumsy, EffectBlastGuard, EffectWaterWalk,
 		EffectFloat, EffectWalls, EffectCursePower,
 		EffectNoStarve, EffectPierce, EffectHappy, EffectStealth, EffectBigStomach, EffectBargain},
-	CategoryGrass: {EffectHeal, EffectStrength, EffectEyeDrops, EffectMaxHP, EffectMaxFull, EffectLessFull, EffectRevive, EffectFire},
+	CategoryGrass: {EffectHeal, EffectStrength, EffectEyeDrops, EffectMaxHP, EffectMaxFull, EffectLessFull, EffectRevive, EffectFire, EffectAntidote},
 	CategoryScroll: {EffectLight, EffectDrain, EffectIdentify, EffectUpWeapon, EffectUpShield, EffectUncurse, EffectMoreSlots, EffectEraseSeal,
 		EffectSlash, EffectWipe, EffectNoTraps, EffectSeer, EffectGather, EffectLost, EffectOnigiri, EffectPotUp, EffectSuck, EffectBless, EffectPlate,
 		EffectGatherFoes, EffectTrouble, EffectPowerUp, EffectPrevent, EffectBind,
@@ -432,7 +447,8 @@ var effects = map[Category][]Effect{
 	CategoryStaff: {EffectBlowAway, EffectRecruit, EffectSwap, EffectTunnel},
 	CategoryFood:  {EffectFood, EffectRotten, EffectGrilled},
 	CategoryPot: {EffectKeep, EffectSynthesis, EffectHealPot, EffectPlain, EffectBottomless,
-		EffectAppraise, EffectStronger, EffectWeaker, EffectCash, EffectChange},
+		EffectAppraise, EffectStronger, EffectWeaker, EffectCash, EffectChange,
+		EffectBlessPot, EffectCursePot, EffectClearPot, EffectSlotPot, EffectMendPot, EffectSleepPot, EffectSmokePot},
 }
 
 // FloorRow is a row of an appearance table: id appears on the floors

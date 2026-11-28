@@ -317,6 +317,7 @@ suimin	草	睡眠草	草	0	睡眠	0	-	-	0	150
 kuchinashisou	草	口封じ草	草	0	封印	0	-	-	0	100
 shiawasesou	草	しあわせ草	草	0	レベル+1	0	-	-	0	1000
 dokusou	草	毒草	草	0	毒	0	-	-	0	100
+gedoku	草	解毒草	草	0	解毒	0	-	-	0	250
 mutekisou	草	無敵草	草	0	無敵	0	-	-	0	1500
 ikakuchoutane	草	胃拡張の種	草	5	最大満腹度+	0	-	-	0	300
 ishukushoutane	草	胃縮小の種	草	5	最大満腹度-	0	-	-	0	300
@@ -382,6 +383,13 @@ kyoukatsubo	壺	強化の壺	壺	1	強化	0	2-3	-	0	1000
 jakkatsubo	壺	弱化の壺	壺	1	弱化	0	2-3	-	0	300
 kankin	壺	換金の壺	壺	0	換金	0	3-5	-	0	500
 henka	壺	変化の壺	壺	0	変化	0	2-4	-	0	800
+shukufukutsubo	壺	祝福の壺	壺	0	祝福の壺	0	2-3	-	0	2000
+noroitsubo	壺	呪いの壺	壺	0	呪いの壺	0	2-4	-	0	300
+kaijutsubo	壺	解呪の壺	壺	0	解呪	0	2-4	-	0	800
+innotsubo	壺	印の壺	壺	0	印の壺	0	1-2	-	0	3000
+shuuritsubo	壺	修理の壺	壺	0	修理	0	2-3	-	0	800
+nemuritsubo	壺	眠りの壺	壺	0	眠りの壺	0	2-4	-	0	500
+kemuritsubo	壺	煙の壺	壺	0	煙	0	2-4	-	0	400
 onigiri	食	おにぎり	食料	50	満腹	0	-	-	0	100
 ookiionigiri	食	大きなおにぎり	食料	100	満腹	0	-	-	0	200
 kusatta	食	腐ったおにぎり	食料	30	腐った	0	-	-	0	10

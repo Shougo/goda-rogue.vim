@@ -1,6 +1,7 @@
 package rogue
 
 import (
+	"slices"
 	"strings"
 	"testing"
 )
@@ -279,7 +280,78 @@ func TestRelic(t *testing.T) {
 	if gold.slots() <= gold.Def.Slots || len(gold.Seals) == 0 {
 		t.Errorf("gold slots %d, seals %v", gold.slots(), gold.Seals)
 	}
+	blue.Cursed, blue.Blessed = false, false
 	if price(blue) != 2*blue.Def.Price || !strings.Contains(g.Label(blue), "（青神器）") {
 		t.Errorf("price %d, label %q", price(blue), g.Label(blue))
+	}
+}
+
+// TestNewPots: the pots of 2026-11-28 change what is put in.
+func TestNewPots(t *testing.T) {
+	g, _ := roomGame(t, 6, 5)
+	put := func(potID string, it *Item) {
+		t.Helper()
+		pot := carry(g, potID, 0)
+		pot.Charges = 3
+		g.putIn(pot, it)
+	}
+	a := carry(g, "katana", 0)
+	a.Cursed, a.Blessed = false, false
+	put("shukufukutsubo", a)
+	if !a.Blessed {
+		t.Error("not blessed")
+	}
+	b := carry(g, "katana", 0)
+	b.Cursed, b.Blessed = false, false
+	put("noroitsubo", b)
+	if !b.Cursed {
+		t.Error("not cursed")
+	}
+	put("kaijutsubo", b)
+	if b.Cursed {
+		t.Error("still cursed")
+	}
+	slots := b.slots()
+	put("innotsubo", b)
+	if b.slots() != slots+1 {
+		t.Errorf("slots %d, want %d", b.slots(), slots+1)
+	}
+	br := carry(g, "kehai", 0)
+	br.Cracks = 2
+	put("shuuritsubo", br)
+	if br.Cracks != 0 {
+		t.Errorf("cracks %d", br.Cracks)
+	}
+}
+
+// TestSleepPot: a pot of 眠り broken puts the monsters of its room to
+// sleep.
+func TestSleepPot(t *testing.T) {
+	g, _ := roomGame(t, 8, 5)
+	m := place(g, kind("nezumi1"), g.Player.Add(Point{3, 0}))
+	pot := carry(g, "nemuritsubo", 0)
+	g.smash(pot, m.Pos)
+	if m.Asleep == 0 {
+		t.Errorf("not asleep: %q", g.Message)
+	}
+}
+
+// TestAntidote: drunk, the strength comes back; thrown, a monster of
+// poison falls at once.
+func TestAntidote(t *testing.T) {
+	g, _ := roomGame(t, 6, 5)
+	g.Strength = g.MaxStrength - 3
+	it := carry(g, "gedoku", 0)
+	it.Cursed = false
+	g.useItem(it)
+	if g.Strength != g.MaxStrength {
+		t.Errorf("strength %d of %d", g.Strength, g.MaxStrength)
+	}
+	m := place(g, kind("hebi4"), g.Player.Add(Point{1, 0}))
+	a := carry(g, "gedoku", 0)
+	a.Cursed = false
+	g.hitBy(a, m)
+	if m.HP > 0 || slices.Contains(g.Monsters, m) {
+		t.Errorf("snake alive: %q", g.Message)
 	}
 }

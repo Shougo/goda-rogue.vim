@@ -99,7 +99,8 @@ func (g *Game) putIn(pot, it *Item) {
 		return
 	}
 	switch pot.Def.Effect {
-	case EffectAppraise, EffectStronger, EffectWeaker, EffectCash, EffectChange:
+	case EffectAppraise, EffectStronger, EffectWeaker, EffectCash, EffectChange,
+		EffectBlessPot, EffectCursePot, EffectClearPot, EffectSlotPot, EffectMendPot, EffectSleepPot, EffectSmokePot:
 		pot.Contents = append(pot.Contents, g.changedIn(pot, it))
 		return
 	}
@@ -274,8 +275,39 @@ func (g *Game) smash(pot *Item, p Point) {
 		g.land(it, p)
 	}
 	pot.Contents = nil
-	if pot.Def.Effect == EffectBottomless {
+	switch pot.Def.Effect {
+	case EffectBottomless:
 		g.pitAt(p)
+	case EffectSleepPot:
+		g.potCloud(p, MagicSleep)
+	case EffectSmokePot:
+		g.potCloud(p, MagicBlind)
+	}
+}
+
+// potCloud brings the bolt e on the monsters of the room where a pot
+// broke on p (in a corridor, those next to p), and on the player if it is
+// there.
+func (g *Game) potCloud(p Point, e MagicEffect) {
+	room := g.Level.RoomAt(p)
+	near := func(q Point) bool {
+		if room >= 0 {
+			return g.Level.RoomAt(q) == room
+		}
+		return chebyshev(q, p) <= 1
+	}
+	if e == MagicSleep {
+		g.say("眠りの煙が広がった。")
+	} else {
+		g.say("煙が広がった。")
+	}
+	for _, m := range slices.Clone(g.Monsters) {
+		if near(m.Pos) && m.HP > 0 {
+			g.magicOn(m, e, Point{})
+		}
+	}
+	if near(g.Player) {
+		g.afflict(e)
 	}
 }
 
@@ -336,6 +368,35 @@ func (g *Game) changedIn(pot, it *Item) *Item {
 		cash := &Item{Def: money, Glyph: money.Glyph, Amount: max(sellPrice(it), 1)}
 		g.say(fmt.Sprintf("%sは%dGになった。", g.Name(it), cash.Amount))
 		return cash
+	case EffectBlessPot:
+		if it.cursable() && !it.Blessed {
+			g.bless(it)
+		}
+	case EffectCursePot:
+		// (Put in on purpose: no ward keeps it off.)
+		switch {
+		case !it.cursable() || it.Cursed:
+		case it.Blessed:
+			it.Blessed, it.CurseTold = false, true
+			g.say(g.Name(it) + "の祝福が消えた。")
+		default:
+			it.Cursed, it.CurseTold = true, true
+			g.say(g.Name(it) + "は呪われた。")
+		}
+	case EffectClearPot:
+		if it.Cursed {
+			it.Cursed, it.CurseTold = false, true
+			g.say(g.Name(it) + "の呪いが解けた。")
+		}
+	case EffectSlotPot:
+		if it.upgradable() && it.slots() < maxSlots {
+			g.addSlot(it)
+		}
+	case EffectMendPot:
+		if it.Cracks > 0 {
+			it.Cracks = 0
+			g.say(g.Name(it) + "のひびが直った。")
+		}
 	case EffectChange:
 		t := g.Dungeon.ItemTable(changeTable)
 		if t == nil || len(t.categories(g.Depth)) == 0 {

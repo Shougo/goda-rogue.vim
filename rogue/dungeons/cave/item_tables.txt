@@ -693,3 +693,27 @@
 変化	1	30	kankin	1
 変化	1	30	onigiri	1
 変化	1	30	ookiionigiri	2
+# 2026-11-28: 解毒草 and seven pots.
+床	5	30	gedoku	1
+よろず	5	30	gedoku	1
+草	5	30	gedoku	1
+変化	5	30	gedoku	1
+床	5	30	shukufukutsubo	1
+よろず	5	30	shukufukutsubo	1
+床	2	30	noroitsubo	1
+よろず	2	30	noroitsubo	1
+変化	2	30	noroitsubo	1
+床	2	30	kaijutsubo	1
+よろず	2	30	kaijutsubo	1
+変化	2	30	kaijutsubo	1
+床	10	30	innotsubo	1
+よろず	10	30	innotsubo	1
+床	3	30	shuuritsubo	1
+よろず	3	30	shuuritsubo	1
+変化	3	30	shuuritsubo	1
+床	2	30	nemuritsubo	1
+よろず	2	30	nemuritsubo	1
+変化	2	30	nemuritsubo	1
+床	2	30	kemuritsubo	1
+よろず	2	30	kemuritsubo	1
+変化	2	30	kemuritsubo	1
