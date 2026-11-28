@@ -545,6 +545,21 @@ function! s:records() abort
   call s:check('all records', search('^すべての記録（\d\+回', 'n') > 0, 1)
 endfunction
 
+" A run that this version cannot resume: a short reason in Japanese, the
+" error in the messages (the long English error cut the prompt off).
+function! s:broken() abort
+  call goda_rogue#suspend()
+  call writefile(['# goda-rogue replay', 'format	2', 'dungeon	cave',
+        \ 'hash	00000000', 'seed	broken', '---'], goda_rogue#last_replay())
+  let g:goda_rogue#prompt_func = function('s:fake_prompt')
+  let s:asked = {}
+  call goda_rogue#start()
+  call s:check('broken prompt', get(s:asked, 'title', ''),
+        \ '再開できない冒険があります（はじまりの洞窟：ゲームが更新された）')
+  call s:check('broken error', execute('messages') =~# 'has changed', 1)
+  unlet g:goda_rogue#prompt_func
+endfunction
+
 " The status line {status} without its play time.
 function! s:timeless(status) abort
   return substitute(a:status, '時間 \S\+', '', '')
@@ -556,6 +571,7 @@ try
   call s:records()
   call s:replays()
   call s:debug()
+  call s:broken()
 catch
   call add(s:errors, v:throwpoint . ': ' . v:exception)
 endtry

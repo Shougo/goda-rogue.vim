@@ -195,7 +195,10 @@ function! goda_rogue#start(options = {}) abort
   elseif last.state ==# 'broken'
     " Another version, say: it can still be saved, to watch it with the
     " version that played it.
-    call s:select('再開できない冒険があります（' . last.error . '）',
+    " (The error is long, and for a bug report: in the messages.)
+    echomsg '[goda-rogue] ' . last.error
+    let what = get(last, 'name', '') !=# '' ? last.name . '：' : ''
+    call s:select('再開できない冒険があります（' . what . get(last, 'reason', '') . '）',
           \ ['リプレイを保存して新しく始める', '捨てて新しく始める'],
           \ {idx -> idx == 1 ? s:save_and_choose(options)
           \       : idx == 2 ? s:choose_dungeon(options) : 0})

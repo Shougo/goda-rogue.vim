@@ -1303,9 +1303,10 @@ A replay is checked as it is replayed: after each action, the file has what
 happened in it (lines "# turn event": floors, damage, kills, levels, items
 picked up, used or identified, the end), and replaying must make the same.
 Another version of the game, or of the data of the dungeon, may not: such a
-run cannot be resumed nor watched with it.  |goda_rogue#start()| offers to
-save it with |goda_rogue#save_replay()|, to watch it with the version that
-played it.
+run cannot be resumed nor watched with it.  |goda_rogue#start()| says why
+in short (ゲームが更新された), puts the error in the |:messages| (for a bug
+report), and offers to save it with |goda_rogue#save_replay()|, to watch it
+with the version that played it.
 
 At the end of a run, the result screen has it in a line, to share (the
 dungeon, the floor and how it ended, the time, the turns and the seed).

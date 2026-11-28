@@ -160,6 +160,9 @@ type LastRun struct {
 	// why).
 	State string `json:"state"`
 	Error string `json:"error,omitempty"`
+	// Reason is why it cannot be resumed, short, for the player (Error
+	// is for a bug report: the player saw it cut off in the prompt).
+	Reason string `json:"reason,omitempty"`
 	// (Not omitted when zero: a run left at turn 0 has turn 0, which
 	// the Vim script shows.)
 	Dungeon string `json:"dungeon"`
@@ -169,6 +172,13 @@ type LastRun struct {
 	Time    string `json:"time"`
 }
 
+// The reasons a run cannot be resumed (LastRun.Reason).
+const (
+	reasonUpdated    = "ゲームが更新された"
+	reasonNoDungeon  = "ダンジョンがない"
+	reasonUnreadable = "リプレイが読めない"
+)
+
 // lastRun reads the replay file path.
 func lastRun(path string) LastRun {
 	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
@@ -176,15 +186,19 @@ func lastRun(path string) LastRun {
 	}
 	rp, err := ReadReplay(path)
 	if err != nil {
-		return LastRun{State: "broken", Error: err.Error()}
+		return LastRun{State: "broken", Error: err.Error(), Reason: reasonUnreadable}
 	}
 	d, err := LoadBuiltin(rp.Dungeon)
 	if err != nil {
-		return LastRun{State: "broken", Error: fmt.Sprintf("dungeon %q: %v", rp.Dungeon, err)}
+		return LastRun{State: "broken", Error: fmt.Sprintf("dungeon %q: %v", rp.Dungeon, err), Reason: reasonNoDungeon}
 	}
 	suspended, g, err := rp.Suspended(d)
 	if err != nil {
-		return LastRun{State: "broken", Error: err.Error(), Dungeon: d.ID, Name: d.Name}
+		reason := reasonUnreadable
+		if errors.Is(err, ErrReplayMismatch) {
+			reason = reasonUpdated
+		}
+		return LastRun{State: "broken", Error: err.Error(), Reason: reason, Dungeon: d.ID, Name: d.Name}
 	}
 	r := LastRun{State: "over", Dungeon: d.ID, Name: d.Name, Depth: g.Depth, Turn: g.Turn, Time: playTime(g.PlayTime())}
 	if suspended {

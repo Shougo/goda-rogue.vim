@@ -278,7 +278,7 @@ func TestLastRun(t *testing.T) {
 		t.Fatal(err)
 	}
 	q.rec.Close()
-	if got := lastRun(path); got.State != "broken" || !strings.Contains(got.Error, "does not replay the same") {
+	if got := lastRun(path); got.State != "broken" || !strings.Contains(got.Error, "does not replay the same") || got.Reason != reasonUpdated {
 		t.Errorf("changed by hand: %+v", got)
 	}
 }
