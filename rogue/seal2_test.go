@@ -437,3 +437,18 @@ func TestNewStaffs(t *testing.T) {
 		t.Error("stairs unseen")
 	}
 }
+
+// TestBotReach: with 長槍, the bot strikes an enemy coming two tiles away
+// on a line, rather than waiting for it.
+func TestBotReach(t *testing.T) {
+	g, _, _ := gearGame(t, "nagayari")
+	place(g, kind("nezumi1"), g.Player.Add(Point{0, 2}))
+	b := NewBot(BotCareful, 1)
+	if action, args := b.await(g); action != "turn" || len(args) != 1 || args[0] != "down" {
+		t.Fatalf("%s %v, want turn down", action, args)
+	}
+	g.Facing = "down"
+	if action, _ := b.await(g); action != "attack" {
+		t.Errorf("%s, want attack", action)
+	}
+}

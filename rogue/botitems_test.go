@@ -66,8 +66,14 @@ func TestAffected(t *testing.T) {
 			t.Errorf("%s changed the monster itself", e)
 		}
 	}
-	if after := affected(g, ms, m, MagicHaste); after[0] != m {
-		t.Error("haste changes the fight")
+	// Hasted or enraged, it is worse.
+	for _, e := range []MagicEffect{MagicHaste, MagicRage} {
+		if c := fightDeath(g, affected(g, ms, m, e), g.HP, 1); c <= fight {
+			t.Errorf("%s: chance %.3f, not above %.3f", e, c, fight)
+		}
+	}
+	if after := affected(g, ms, m, MagicInvisible); after[0] != m {
+		t.Error("invisible changes the fight")
 	}
 	// Asleep by a grass, the player is hit all the while.
 	if c := drinkDeath(g, ms, g.Dungeon.Item("suimin")); c <= fight {

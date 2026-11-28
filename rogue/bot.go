@@ -379,8 +379,26 @@ func (b *Bot) risk() float64 {
 func killTurns(g *Game, m *Monster) float64 {
 	r := g.Dungeon.Rules
 	k := float64(r.DefenseK)
-	deal := float64(g.Attack()) * k / (k + float64(m.Defense)) * float64(r.PlayerHitRate) / 100
-	return float64(m.MaxHP) / max(deal, 0.1)
+	// The blows it takes, each of the mean damage (at least 1), each
+	// hitting by the hit rate.
+	blow := max(float64(g.Attack())*k/(k+float64(m.Defense)), 1)
+	blows := math.Ceil(float64(m.MaxHP)/blow - 1e-9)
+	return blows * 100 / float64(max(r.PlayerHitRate, 1))
+}
+
+// killedFoe returns m as a foe attacking from the turn first until the
+// player, acting first on each turn, kills it in t turns from the start:
+// on every turn before, and on the turn t falls in by its fraction (the
+// bots reckoned two rats a death at 12 HP, attacking on the turn they die
+// too, and gambled on an unknown staff).
+func killedFoe(g *Game, m *Monster, first int, t float64) foe {
+	n := max(t-1, 0)
+	last := int(math.Floor(n))
+	tail := n - float64(last)
+	if last >= riskTurns {
+		last, tail = riskTurns, 0
+	}
+	return foe{hitDamages(g, m), first, last, m, tail}
 }
 
 // hitDamages returns the chances of the damage of an attack of m on the
@@ -427,8 +445,8 @@ func hitDamages(g *Game, m *Monster) []float64 {
 // deathChance returns the chance that the player dies fighting the
 // enemies ms (next to it), as a player who knows the kinds would reckon:
 // it kills them one by one, the quickest first, in the turns it expects
-// (rounded up, which leaves a turn for a miss), and each of them attacks
-// on every turn it acts until it is killed (its speed counted).
+// (the blows it takes over the hit rate), and each of them attacks on
+// every turn it acts until it is killed (its speed counted).
 func deathChance(g *Game, ms []*Monster) float64 {
 	return fightDeath(g, ms, g.HP, 0)
 }
@@ -440,6 +458,8 @@ type foe struct {
 	hits        []float64
 	first, last int
 	m           *Monster
+	// tail is the chance that it attacks on the turn after its last too.
+	tail float64
 }
 
 // fightDeath returns the chance that the player with hp dies fighting
@@ -470,7 +490,7 @@ func fightDeath(g *Game, ms []*Monster, hp, delay int) float64 {
 			first = max(a, delay+held) + 1
 		}
 		t = max(t, float64(a)) + killTurns(g, m)
-		foes[i] = foe{hitDamages(g, m), first, min(int(math.Ceil(t)), riskTurns), m}
+		foes[i] = killedFoe(g, m, first, t)
 	}
 	return deathDP(g, hp, foes)
 }
@@ -517,7 +537,7 @@ func oneByOneDeath(g *Game, ms []*Monster, hp int) float64 {
 	foes := make([]foe, 0, 2*len(ms))
 	for _, m := range ms {
 		if arrival(g, m) == 0 {
-			foes = append(foes, foe{hitDamages(g, m), 1, 1, m})
+			foes = append(foes, foe{hitDamages(g, m), 1, 1, m, 0})
 		}
 	}
 	slices.SortStableFunc(ms, func(a, c *Monster) int {
@@ -527,7 +547,7 @@ func oneByOneDeath(g *Game, ms []*Monster, hp int) float64 {
 	for _, m := range ms {
 		first := int(math.Ceil(sum)) + 1
 		sum += killTurns(g, m)
-		foes = append(foes, foe{hitDamages(g, m), first, min(int(math.Ceil(sum)), riskTurns), m})
+		foes = append(foes, killedFoe(g, m, first, sum))
 	}
 	return deathDP(g, hp, foes)
 }
@@ -547,7 +567,7 @@ func fleeDeath(g *Game, ms []*Monster, hp, turns int, step Point) float64 {
 		// frog to their death, pulled back each step).
 		for _, m := range ms {
 			if !m.still() || chebyshev(m.Pos, g.Player) <= 1 {
-				foes = append(foes, foe{hitDamages(g, m), 1, min(turns, riskTurns), m})
+				foes = append(foes, foe{hitDamages(g, m), 1, min(turns, riskTurns), m, 0})
 			}
 		}
 		return deathDP(g, hp, foes)
@@ -559,11 +579,11 @@ func fleeDeath(g *Game, ms []*Monster, hp, turns int, step Point) float64 {
 			// back and forth).
 			hits := make([]float64, a.Values[0]+1)
 			hits[a.Values[0]] = 1
-			foes = append(foes, foe{hits, 1, min(turns, riskTurns), m})
+			foes = append(foes, foe{hits, 1, min(turns, riskTurns), m, 0})
 			continue
 		}
 		if !m.Speed.fast() && !m.still() && chebyshev(m.Pos, step) <= 1 && m.Speed != SpeedSlow {
-			foes = append(foes, foe{hitDamages(g, m), 1, min(turns, riskTurns), m})
+			foes = append(foes, foe{hitDamages(g, m), 1, min(turns, riskTurns), m, 0})
 			continue
 		}
 		if m.Speed.fast() {
@@ -571,7 +591,7 @@ func fleeDeath(g *Game, ms []*Monster, hp, turns int, step Point) float64 {
 			// standing.
 			slow := *m
 			slow.Speed = SpeedNormal
-			foes = append(foes, foe{hitDamages(g, m), 0, min(turns, riskTurns), &slow})
+			foes = append(foes, foe{hitDamages(g, m), 0, min(turns, riskTurns), &slow, 0})
 		}
 	}
 	return deathDP(g, hp, foes)
@@ -608,6 +628,9 @@ func deathDP(g *Game, hp int, foes []foe) float64 {
 	end := 0
 	for _, f := range foes {
 		end = max(end, f.last)
+		if f.tail > 0 {
+			end = max(end, f.last+1)
+		}
 	}
 	// alive[h] is the chance of having h HP left (and being alive).
 	alive := make([]float64, hp+1)
@@ -616,8 +639,17 @@ func deathDP(g *Game, hp int, foes []foe) float64 {
 	dead := 0.0
 	for t := 1; t <= end; t++ {
 		for _, f := range foes {
-			if t < f.first || t > f.last {
+			hits := f.hits
+			switch {
+			case t < f.first || t > f.last+1 || t == f.last+1 && f.tail == 0:
 				continue
+			case t == f.last+1:
+				// It is alive to attack by the chance tail.
+				hits = make([]float64, len(f.hits))
+				for d, q := range f.hits {
+					hits[d] = f.tail * q
+				}
+				hits[0] += 1 - f.tail
 			}
 			for range f.m.Speed.attacks(g.Turn + t) {
 				clear(next)
@@ -625,7 +657,7 @@ func deathDP(g *Game, hp int, foes []foe) float64 {
 					if p == 0 {
 						continue
 					}
-					for d, q := range f.hits {
+					for d, q := range hits {
 						if h-d <= 0 {
 							dead += p * q
 						} else {
@@ -677,7 +709,7 @@ func (b *Bot) dangerous(g *Game, ms []*Monster) bool {
 // or one in sight. (The cache of dangerous keeps no place: a monster
 // reckoned far away must not count as harmless next to the player.)
 func oneOnOneDeath(g *Game, m *Monster) float64 {
-	f := foe{hitDamages(g, m), 1, min(int(math.Ceil(killTurns(g, m))), riskTurns), m}
+	f := killedFoe(g, m, 1, killTurns(g, m))
 	return deathDP(g, g.HP, []foe{f})
 }
 
@@ -1553,9 +1585,35 @@ func (b *Bot) await(g *Game) (string, []string) {
 			continue
 		}
 		b.awaited, b.awaitedAt = m, m.Pos
+		if action, args := b.reachAt(g, m); action != "" {
+			return action, args
+		}
 		return "wait", nil
 	}
 	return "", nil
+}
+
+// reachAt strikes m, coming two tiles away on a line, with a weapon of 間合い
+// (長槍) as it comes, rather than waiting for it.
+func (b *Bot) reachAt(g *Game, m *Monster) (string, []string) {
+	if g.sealShare(SealReach) <= 0 {
+		return "", nil
+	}
+	v := m.Pos.Sub(g.Player)
+	if v.X != 0 && v.Y != 0 && abs(v.X) != abs(v.Y) {
+		return "", nil
+	}
+	d := Point{sign(v.X), sign(v.Y)}
+	mid := g.Player.Add(d)
+	if !g.clearFrom(g.Player, d) || !g.Level.At(mid).Open() || !g.clearFrom(mid, d) || g.MonsterAt(mid) != nil {
+		return "", nil
+	}
+	if name := directionName(d); g.Facing != name {
+		// (Turning takes no turn: it waits on no longer.)
+		b.awaited = nil
+		return "turn", []string{name}
+	}
+	return "attack", nil
 }
 
 // strikesFromAfar says whether m strikes the player from where it stands
@@ -1730,11 +1788,6 @@ func (b *Bot) bracelet(g *Game, worn *Item) (string, []string) {
 	if (worn != nil && worn.Cursed) || len(g.visibleEnemies()) > 0 {
 		return "", nil
 	}
-	// The bots wear one bracelet (two crack twice as fast): another
-	// comes on after the worn one comes off.
-	if bs := g.bracelets(); len(bs) > 1 {
-		return b.use(bs[len(bs)-1], commandUnequip)
-	}
 	swap := func(it *Item) (string, []string) {
 		if worn != nil {
 			return b.use(worn, commandUnequip)
@@ -1761,6 +1814,17 @@ func (b *Bot) bracelet(g *Game, worn *Item) (string, []string) {
 	other := carried(g, func(it *Item) bool {
 		return it.Def.Category == CategoryBracelet && !it.Equipped && !regen(it) && !(short && hungry(it)) && !bad(it)
 	})
+	// A bracelet worth a second: known, and none of those above.
+	good := func(it *Item) bool { return !b.unsure(g, it) && !regen(it) && !hungry(it) && !bad(it) }
+	// The bots wear a second bracelet (two crack twice as fast) only
+	// when both are known to be good; another comes on after the worn
+	// one comes off.
+	if bs := g.bracelets(); len(bs) > 1 {
+		if good(bs[0]) && good(bs[1]) {
+			return "", nil
+		}
+		return b.use(bs[len(bs)-1], commandUnequip)
+	}
 	if worn != nil && bad(worn) {
 		if other != nil {
 			return swap(other)
@@ -1789,6 +1853,14 @@ func (b *Bot) bracelet(g *Game, worn *Item) (string, []string) {
 	}
 	if worn == nil && other != nil {
 		return b.use(other, commandEquip)
+	}
+	if worn != nil && good(worn) {
+		if second := carried(g, func(it *Item) bool {
+			// (Not a second of the same kind: it adds nothing.)
+			return it.Def.Category == CategoryBracelet && !it.Equipped && it.Def != worn.Def && good(it)
+		}); second != nil {
+			return b.use(second, commandEquip)
+		}
 	}
 	return "", nil
 }

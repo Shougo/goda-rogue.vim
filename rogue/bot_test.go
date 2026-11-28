@@ -943,3 +943,70 @@ func TestBotPulledBack(t *testing.T) {
 		t.Errorf("flee death %.2f with a frog, %.2f without", pulled, away)
 	}
 }
+
+// TestBotTwoRats tests the reckoning of a fight at the start: two rats
+// next to a player of level 1 with 12 HP are no death to gamble an
+// unknown staff on (the bots reckoned 89%: each rat attacking on the
+// turn it dies too, the turns rounded up).
+func TestBotTwoRats(t *testing.T) {
+	g, r := roomGame(t, 8, 3)
+	g.Player = Point{r.X + 1, r.Y + 1}
+	a := place(g, kind("nezumi1"), Point{r.X + 2, r.Y + 1})
+	c := place(g, kind("nezumi1"), Point{r.X, r.Y + 1})
+	g.HP = 12
+	if d := fightDeath(g, []*Monster{a, c}, g.HP, 0); d > 0.2 {
+		t.Errorf("death %.2f", d)
+	}
+}
+
+// TestBotTwoBracelets: the bot wears a second bracelet only when both are
+// known to be good, and not two of a kind.
+func TestBotTwoBracelets(t *testing.T) {
+	g, _ := roomGame(t, 6, 3)
+	b := NewBot(BotCareful, 1)
+	worn := carry(g, "kehai", 0)
+	g.equip(worn)
+	same := carry(g, "kehai", 0)
+	if a, _ := b.equip(g); a != "" {
+		t.Errorf("two of a kind: %s %+v", a, b.plan)
+	}
+	g.Inventory = slices.DeleteFunc(g.Inventory, func(it *Item) bool { return it == same })
+	second := carry(g, "sabiyoke", 0)
+	// (Two kinds not known: it may be either.)
+	delete(g.identified, second.Def.ID)
+	delete(g.identified, "bakuhatsu")
+	second.Known = false
+	if a, _ := b.equip(g); a != "" {
+		t.Errorf("an unknown one: %s %+v", a, b.plan)
+	}
+	g.identified[second.Def.ID], second.Known = true, true
+	if a, _ := b.equip(g); a != "inventory" || b.plan[0].item != second || b.plan[1].label != commandEquip {
+		t.Errorf("a known good one: %s %+v", a, b.plan)
+	}
+	b.plan = nil
+	g.equip(second)
+	if a, _ := b.equip(g); a != "" {
+		t.Errorf("both worn: %s %+v", a, b.plan)
+	}
+}
+
+// TestBotStaffWorse: the bots count the staffs that make an enemy worse
+// (faster, enraged) as worse than waving nothing, and one of drain as
+// better.
+func TestBotStaffWorse(t *testing.T) {
+	g, r := roomGame(t, 8, 3)
+	g.Player = Point{r.X + 1, r.Y + 1}
+	m := place(g, kind("kuma1"), Point{r.X + 2, r.Y + 1})
+	ms := []*Monster{m}
+	g.HP = 20
+	none := fightDeath(g, ms, g.HP, 1)
+	for _, c := range []struct {
+		id     string
+		better bool
+	}{{"kasokuzue", false}, {"ikarizue", false}, {"kyuushuuzue", true}} {
+		d := waveDeath(g, ms, m, g.Dungeon.Item(c.id))
+		if c.better && d >= none || !c.better && d <= none {
+			t.Errorf("%s: death %.3f, %.3f waving nothing", c.id, d, none)
+		}
+	}
+}

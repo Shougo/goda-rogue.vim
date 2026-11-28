@@ -28,9 +28,10 @@ func (b *Bot) best(ms []*Monster, chance func(*Monster) float64) (*Monster, floa
 }
 
 // affected returns the enemies ms with m as a bolt of e leaves it: out of
-// the fight (warped), or changed (asleep, confused, slowed, sealed, a
-// rank down, its HP cut). An effect that does not help leaves them as
-// they are.
+// the fight (warped, or drained to death), changed for the better
+// (asleep, confused, slowed, sealed, a rank down, its HP cut), or for the
+// worse (faster, enraged, a rank up: the bots waved unknown staffs as if
+// such a staff did nothing). Another effect leaves them as they are.
 func affected(g *Game, ms []*Monster, m *Monster, e MagicEffect) []*Monster {
 	c := *m
 	switch e {
@@ -59,6 +60,24 @@ func affected(g *Game, ms []*Monster, m *Monster, e MagicEffect) []*Monster {
 		}
 	case MagicHalf, MagicQuarter:
 		c.MaxHP = max(c.MaxHP/fraction(e), 1)
+	case MagicDrain:
+		if c.MaxHP <= drainHP {
+			return slices.DeleteFunc(slices.Clone(ms), func(o *Monster) bool { return o == m })
+		}
+		c.MaxHP -= drainHP
+	case MagicHaste:
+		switch c.Speed {
+		case SpeedSlow:
+			c.Speed = SpeedNormal
+		case SpeedNormal:
+			c.Speed = SpeedDouble
+		}
+	case MagicRage:
+		c.Attack = c.Attack * 3 / 2
+	case MagicLevelUp:
+		if next := g.Dungeon.nextRank(c.Def); next != nil {
+			c.Def, c.MaxHP, c.Attack, c.Defense, c.Speed = next, next.HP, next.Attack, next.Defense, next.Speed
+		}
 	default:
 		return ms
 	}
@@ -83,7 +102,7 @@ func drinkDeath(g *Game, ms []*Monster, def *ItemDef) float64 {
 		var foes []foe
 		for _, m := range ms {
 			if arrival(g, m) == 0 {
-				foes = append(foes, foe{hitDamages(g, m), 1, 1, m})
+				foes = append(foes, foe{hitDamages(g, m), 1, 1, m, 0})
 			}
 		}
 		return deathDP(g, g.HP, foes)
@@ -99,7 +118,7 @@ func drinkDeath(g *Game, ms []*Monster, def *ItemDef) float64 {
 func throwDeath(g *Game, ms []*Monster, m *Monster, def *ItemDef) float64 {
 	miss := fightDeath(g, ms, g.HP, 1)
 	e := MagicEffect(def.Effect)
-	if !castable(CategoryGrass, e) || e == MagicHaste || m.room() > 0 {
+	if !castable(CategoryGrass, e) || m.room() > 0 {
 		// (One of synthesis swallows it.)
 		return miss
 	}
@@ -182,7 +201,7 @@ func waveDeath(g *Game, ms []*Monster, m *Monster, def *ItemDef) float64 {
 			return without()
 		}
 	default:
-		if e := MagicEffect(def.Effect); castable(CategoryStaff, e) && e != MagicHaste && e != MagicBlow {
+		if e := MagicEffect(def.Effect); castable(CategoryStaff, e) && e != MagicBlow {
 			return fightDeath(g, affected(g, ms, m, e), g.HP, 1)
 		}
 	}
