@@ -1,4 +1,4 @@
-// Package rogue is goda-rogue.vim: a mystery-dungeon roguelike in Vim and
+// Package rogue is goda-rogue.vim: a roguelike in Vim and
 // Neovim, whose map is drawn with full-width characters (enemies are
 // kanji, their rank is their color).
 //

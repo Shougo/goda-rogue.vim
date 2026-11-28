@@ -1,4 +1,4 @@
-" goda-rogue.vim - a mystery-dungeon roguelike for Vim/Neovim on goda.vim.
+" goda-rogue.vim - a roguelike for Vim/Neovim on goda.vim.
 "
 " The Go side (the binary built from this repository) owns the whole game;
 " this file sends it the actions and shows the screens it returns: lines,

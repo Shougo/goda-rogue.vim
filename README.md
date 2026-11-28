@@ -4,7 +4,7 @@
 
 # goda-rogue.vim
 
-A mystery-dungeon roguelike in Vim and Neovim on
+A roguelike in Vim and Neovim on
 [goda.vim](https://github.com/Shougo/goda.vim). It looks like `rogue`, with no
 images: the map is drawn with full-width characters, enemies are kanji, and
 their rank is their color.

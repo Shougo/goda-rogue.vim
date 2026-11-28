@@ -1,4 +1,4 @@
-*goda_rogue.txt*	A mystery-dungeon roguelike on goda.vim
+*goda_rogue.txt*	A roguelike on goda.vim
 
 Author: Shougo <Shougo.Matsu at gmail.com>
 License: MIT license
@@ -56,7 +56,7 @@ A first run, in short:
 ==============================================================================
 INTRODUCTION                                         *goda-rogue-introduction*
 
-goda-rogue.vim is a mystery-dungeon roguelike in Vim and Neovim.  It looks
+goda-rogue.vim is a roguelike in Vim and Neovim.  It looks
 like rogue: the map is drawn with full-width characters, enemies are kanji,
 and their rank is their color.  The game is Go, in a binary built from this
 plugin, and Vim talks to it through goda.vim.
